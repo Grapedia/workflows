@@ -24,7 +24,10 @@ output file : <TAB_DELIMITED_FILE>
 nextflow run main.nf --genome_old /path/to/Vitis12x.fa --genome_new /path/to/PN12Xv2_chloro_mito.fa --coords_old /path/to/SNPs_GrapeReseq.vcf --coords_new /path/to/coords_new.vcf --working_dir /path/to/
 ```
 
-```nextflow.config``` should contains the ```--working_dir``` path as follow
+Please note that:
+* input files should always contain the full path;
+* ```--working_dir``` should be contained in every file path;
+* ```nextflow.config``` should contains the ```--working_dir``` path as follow:
 
 ``` 
 docker {
