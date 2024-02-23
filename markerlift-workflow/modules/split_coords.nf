@@ -1,18 +1,18 @@
 process SPLIT_COORDS {
 
     input:
-    path(coords_old)
+    val(coords_old)
 
     output:
-        val "START_$coords_old", emit: start_coords
-        val "END_$coords_old", emit: end_coords
+        val "$coords_old" + "_START", emit: start_coords
+        val "$coords_old" + "_END", emit: end_coords
     """
     #!/usr/bin/python3
     
-    f1 = open("$projectDir/START_$coords_old", "w")
-    f2 = open("$projectDir/END_$coords_old", "w")
+    f1 = open("$coords_old" + "_START", "w")
+    f2 = open("$coords_old" + "_END", "w")
 
-    with open("$projectDir/$coords_old") as f:
+    with open("$coords_old") as f:
         for l in f:
             s = l.strip().split('\t')
             f1.write('\t'.join([s[0], s[1], s[1], s[3]]) + '\\n')

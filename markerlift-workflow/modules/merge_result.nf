@@ -14,12 +14,12 @@ process MERGE_RESULT {
     
     d_start = {}
     d_end = {}
-    with open("$projectDir/$start_coords") as f:
+    with open("$start_coords") as f:
       for l in f:
         s = l.strip().split('\t')
         d_start[s[3]] = s
 
-    with open("$projectDir/$end_coords") as f:
+    with open("$end_coords") as f:
       for l in f:
         s = l.strip().split('\t')
         d_end[s[3]] = s

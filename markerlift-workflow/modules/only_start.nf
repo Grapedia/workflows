@@ -1,5 +1,5 @@
 process CREATE_CONFIG_ONLY_START {
-    publishDir "${projectDir}/", mode:'copy'
+    publishDir "${working_dir}/", mode:'copy'
 
     scratch true
 
@@ -10,6 +10,7 @@ process CREATE_CONFIG_ONLY_START {
     val coords_old
     val coords_new
     val window_lenght
+    val working_dir
     
     output:
     path("config_only_start.sh"), emit: config_file
@@ -20,12 +21,12 @@ process CREATE_CONFIG_ONLY_START {
     #!/bin/bash
 
     # Input files
-    export OLD_GENOME="${projectDir}/${genome_old}"
-    export NEW_GENOME="${projectDir}/${genome_new}"
+    export OLD_GENOME="${genome_old}"
+    export NEW_GENOME="${genome_new}"
 
     # Output files
-    export INPUT_FILE="${projectDir}/${coords_old}"
-    export OUTPUT_FILE="${projectDir}/${coords_new}"
+    export INPUT_FILE="${coords_old}"
+    export OUTPUT_FILE="${coords_new}"
 
     # Skipping genome indexing
     export SKIP_INDEXING=0      # Use 0 if genome is not indexed. Use 1 to save time if genome already

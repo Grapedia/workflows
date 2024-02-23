@@ -3,14 +3,15 @@ process SNPLIFT {
 
     input:
     val(x)
-    path(config)
+    val(config)
     val(new_filename)
+    val(working_dir)
 
     output:
-    path(config), emit: config_file
+    val(config), emit: config_file
 
     script:
     """
-    time /snplift/snplift "$projectDir/$config" > $projectDir/output_$new_filename
+    time /snplift/snplift "$working_dir/$config" > $new_filename
     """
 }

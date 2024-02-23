@@ -1,9 +1,10 @@
 nextflow.enable.dsl=2
 
-params.genome_old = "$projectDir/genome_old.fasta"
-params.genome_new = "$projectDir/genome_new.fasta"
-params.coords_old = "$projectDir/coords_old.vcf"
-params.coords_new = "$projectDir/coords_new.vcf"
+params.genome_old = "genome_old.fasta"
+params.genome_new = "genome_new.fasta"
+params.coords_old = "coords_old.vcf"
+params.coords_new = "coords_new.vcf"
+params.working_dir = "${projectDir}"
 params.window_lenght = 300
 
 include { SNPLIFT } from "./modules/snplift"
@@ -31,6 +32,7 @@ log.info """
      old genome  : ${params.genome_old}
      new genome  : ${params.genome_new}
      coords file : ${params.coords_old}
+     working directory: ${params.working_dir}
      window length: ${params.window_lenght}
      ---- OUTPUT
      output file : ${params.coords_new}
@@ -46,37 +48,40 @@ workflow ONLY_START {
         params.genome_new,
         params.coords_old,
         params.coords_new,
-        params.window_lenght
+        params.window_lenght,
+        params.working_dir
       )
-      SNPLIFT(config_file, "$projectDir/config_only_start.sh", params.coords_new)
+      SNPLIFT(config_file, "config_only_start.sh", params.coords_new, params.working_dir)
 }
 
 workflow START_END {
     take:
       second_ch
     main:
-      split = SPLIT_COORDS("$projectDir/$params.coords_old")
+      split = SPLIT_COORDS("$params.coords_old")
       config_start = CREATE_CONFIG_START(second_ch,
         params.genome_old,
         params.genome_new,
         split.start_coords,
-        "START_$params.coords_new",
-        params.window_lenght
+        "$params.coords_new" + "_START",
+        params.window_lenght,
+        params.working_dir
       )
       config_end = CREATE_CONFIG_END(second_ch,
         params.genome_old,
         params.genome_new,
         split.end_coords,
-        "END_$params.coords_new",
-        params.window_lenght
+        "$params.coords_new" + "_END",
+        params.window_lenght,
+        params.working_dir
       )
-      config_1 = SNPLIFT_START(config_start, "$projectDir/config_start.sh", split.start_coords)
-      config_2 = SNPLIFT_END(config_1, "$projectDir/config_end.sh", split.end_coords)
-      MERGE_RESULT(config_2, "$projectDir/START_$params.coords_new", "$projectDir/END_$params.coords_new", "$projectDir/$params.coords_new")
+      config_1 = SNPLIFT_START(config_start, "config_start.sh", split.start_coords, params.working_dir)
+      config_2 = SNPLIFT_END(config_1, "config_end.sh", split.end_coords, params.working_dir)
+      MERGE_RESULT(config_2, "$params.coords_new" + "_START", "$params.coords_new" + "_END", "$params.coords_new")
 }
 
 workflow{
-    coords_type = CHECK_COORDS("$projectDir/$params.coords_old").toInteger()
+    coords_type = CHECK_COORDS("$params.coords_old").toInteger()
     
     coords_type.branch {
         only_start: it == 1
