@@ -1,0 +1,250 @@
+[33mNextflow 24.04.2 is available - Please consider updating your version to it(B[m
+N E X T F L O W  ~  version 23.10.1
+Launching `main.nf` [ecstatic_lattes] DSL2 - revision: 4078eec20b
+WARN: The `echo` directive has been deprecated - use to `debug` instead
+[-        ] process > prepare_RNAseq_fastq_files -
+[-        ] process > trimming_fastq             -
+[-        ] process > gmap_build_database        -
+[-        ] process > gsnap_alignment            -
+[-        ] process > extracting_primary_mapping -
+
+[-        ] process > prepare_RNAseq_fastq_files [  0%] 0 of 9
+[-        ] process > trimming_fastq             -
+[-        ] process > gmap_build_database        [  0%] 0 of 1
+[-        ] process > gsnap_alignment            -
+[-        ] process > extracting_primary_mapping -
+
+executor >  local (3)
+[de/5577bc] process > prepare_RNAseq_fastq_files ... [  0%] 0 of 9
+[-        ] process > trimming_fastq                 -
+[68/0833ae] process > gmap_build_database (gmap_b... [  0%] 0 of 1
+[-        ] process > gsnap_alignment                -
+[-        ] process > extracting_primary_mapping     -
+
+executor >  local (4)
+[de/5577bc] process > prepare_RNAseq_fastq_files ... [ 11%] 1 of 9
+[-        ] process > trimming_fastq                 [  0%] 0 of 1
+[68/0833ae] process > gmap_build_database (gmap_b... [  0%] 0 of 1
+[-        ] process > gsnap_alignment                -
+[-        ] process > extracting_primary_mapping     -
+
+
+executor >  local (6)
+[f6/8ae687] process > prepare_RNAseq_fastq_files ... [ 22%] 2 of 9
+[d0/5e2200] process > trimming_fastq (FASTP on SR... [  0%] 0 of 2
+[68/0833ae] process > gmap_build_database (gmap_b... [  0%] 0 of 1
+[-        ] process > gsnap_alignment                -
+[-        ] process > extracting_primary_mapping     -
+
+
+
+executor >  local (7)
+[00/cac44f] process > prepare_RNAseq_fastq_files ... [ 33%] 3 of 9
+[d0/5e2200] process > trimming_fastq (FASTP on SR... [  0%] 0 of 3
+[68/0833ae] process > gmap_build_database (gmap_b... [  0%] 0 of 1
+[-        ] process > gsnap_alignment                -
+[-        ] process > extracting_primary_mapping     -
+
+
+
+
+executor >  local (8)
+[61/d01d94] process > prepare_RNAseq_fastq_files ... [ 44%] 4 of 9
+[d0/5e2200] process > trimming_fastq (FASTP on SR... [  0%] 0 of 4
+[68/0833ae] process > gmap_build_database (gmap_b... [  0%] 0 of 1
+[-        ] process > gsnap_alignment                -
+[-        ] process > extracting_primary_mapping     -
+
+
+
+
+
+executor >  local (10)
+[f5/75e8cb] process > prepare_RNAseq_fastq_files ... [ 55%] 5 of 9
+[d0/5e2200] process > trimming_fastq (FASTP on SR... [  0%] 0 of 5
+[68/0833ae] process > gmap_build_database (gmap_b... [  0%] 0 of 1
+[-        ] process > gsnap_alignment                -
+[-        ] process > extracting_primary_mapping     -
+
+
+
+
+
+
+
+executor >  local (10)
+[95/aeb49c] process > prepare_RNAseq_fastq_files ... [ 66%] 6 of 9
+[d0/5e2200] process > trimming_fastq (FASTP on SR... [  0%] 0 of 6
+[68/0833ae] process > gmap_build_database (gmap_b... [  0%] 0 of 1
+[-        ] process > gsnap_alignment                -
+[-        ] process > extracting_primary_mapping     -
+
+
+
+
+
+
+
+executor >  local (11)
+[6c/de9839] process > prepare_RNAseq_fastq_files ... [ 77%] 7 of 9
+[d0/5e2200] process > trimming_fastq (FASTP on SR... [  0%] 0 of 7
+[68/0833ae] process > gmap_build_database (gmap_b... [  0%] 0 of 1
+[-        ] process > gsnap_alignment                -
+[-        ] process > extracting_primary_mapping     -
+
+
+
+
+
+
+
+
+executor >  local (16)
+[95/aeb49c] process > prepare_RNAseq_fastq_files ... [ 88%] 8 of 9
+[d1/590511] process > trimming_fastq (FASTP on SR... [  0%] 0 of 8
+[68/0833ae] process > gmap_build_database (gmap_b... [  0%] 0 of 1
+[-        ] process > gsnap_alignment                -
+[-        ] process > extracting_primary_mapping     -
+
+
+
+
+
+
+
+
+
+executor >  local (19)
+[6c/de9839] process > prepare_RNAseq_fastq_files ... [100%] 9 of 9 ✔
+[2c/5dfcfa] process > trimming_fastq (FASTP on ER... [  0%] 0 of 9
+[68/0833ae] process > gmap_build_database (gmap_b... [  0%] 0 of 1
+[-        ] process > gsnap_alignment                -
+[-        ] process > extracting_primary_mapping     -
+
+
+
+
+
+
+
+
+
+
+executor >  local (19)
+[6c/de9839] process > prepare_RNAseq_fastq_files ... [100%] 9 of 9 ✔
+[2c/5dfcfa] process > trimming_fastq (FASTP on ER... [  0%] 0 of 9
+[68/0833ae] process > gmap_build_database (gmap_b... [  0%] 0 of 1
+[-        ] process > gsnap_alignment                -
+[-        ] process > extracting_primary_mapping     -
+
+
+
+
+
+
+
+
+
+
+executor >  local (19)
+[6c/de9839] process > prepare_RNAseq_fastq_files ... [100%] 9 of 9 ✔
+[f5/1fa74c] process > trimming_fastq (FASTP on SR... [ 11%] 1 of 9
+[68/0833ae] process > gmap_build_database (gmap_b... [  0%] 0 of 1
+[-        ] process > gsnap_alignment                -
+[-        ] process > extracting_primary_mapping     -
+
+
+
+
+
+
+
+
+
+
+executor >  local (19)
+[6c/de9839] process > prepare_RNAseq_fastq_files ... [100%] 9 of 9 ✔
+[d0/5e2200] process > trimming_fastq (FASTP on SR... [ 22%] 2 of 9
+[68/0833ae] process > gmap_build_database (gmap_b... [  0%] 0 of 1
+[-        ] process > gsnap_alignment                -
+[-        ] process > extracting_primary_mapping     -
+
+
+
+
+
+
+
+
+
+
+executor >  local (19)
+[6c/de9839] process > prepare_RNAseq_fastq_files ... [100%] 9 of 9 ✔
+[11/ef3d4a] process > trimming_fastq (FASTP on SR... [ 33%] 3 of 9
+[68/0833ae] process > gmap_build_database (gmap_b... [  0%] 0 of 1
+[-        ] process > gsnap_alignment                -
+[-        ] process > extracting_primary_mapping     -
+
+executor >  local (19)
+[6c/de9839] process > prepare_RNAseq_fastq_files ... [100%] 9 of 9 ✔
+[8b/5636db] process > trimming_fastq (FASTP on SR... [ 44%] 4 of 9
+[68/0833ae] process > gmap_build_database (gmap_b... [  0%] 0 of 1
+[-        ] process > gsnap_alignment                -
+[-        ] process > extracting_primary_mapping     -
+
+executor >  local (19)
+[6c/de9839] process > prepare_RNAseq_fastq_files ... [100%] 9 of 9 ✔
+[d1/590511] process > trimming_fastq (FASTP on SR... [ 55%] 5 of 9
+[68/0833ae] process > gmap_build_database (gmap_b... [  0%] 0 of 1
+[-        ] process > gsnap_alignment                -
+[-        ] process > extracting_primary_mapping     -
+
+executor >  local (24)
+[6c/de9839] process > prepare_RNAseq_fastq_files ... [100%] 9 of 9 ✔
+[d1/590511] process > trimming_fastq (FASTP on SR... [ 55%] 5 of 9
+[68/0833ae] process > gmap_build_database (gmap_b... [100%] 1 of 1 ✔
+[0a/089fd1] process > gsnap_alignment (GSNAP on S... [  0%] 0 of 5
+[-        ] process > extracting_primary_mapping     -
+
+executor >  local (25)
+[6c/de9839] process > prepare_RNAseq_fastq_files ... [100%] 9 of 9 ✔
+[d1/590511] process > trimming_fastq (FASTP on SR... [ 55%] 5 of 9
+[68/0833ae] process > gmap_build_database (gmap_b... [100%] 1 of 1 ✔
+[32/2f68e9] process > gsnap_alignment (GSNAP on E... [  0%] 0 of 6
+[-        ] process > extracting_primary_mapping     -
+
+executor >  local (26)
+[6c/de9839] process > prepare_RNAseq_fastq_files ... [100%] 9 of 9 ✔
+[8b/e30c8f] process > trimming_fastq (FASTP on ER... [ 77%] 7 of 9
+[68/0833ae] process > gmap_build_database (gmap_b... [100%] 1 of 1 ✔
+[84/422df6] process > gsnap_alignment (GSNAP on E... [  0%] 0 of 7
+[-        ] process > extracting_primary_mapping     -
+
+executor >  local (27)
+[6c/de9839] process > prepare_RNAseq_fastq_files ... [100%] 9 of 9 ✔
+[ca/445167] process > trimming_fastq (FASTP on ER... [ 88%] 8 of 9
+[68/0833ae] process > gmap_build_database (gmap_b... [100%] 1 of 1 ✔
+[e1/48c8e2] process > gsnap_alignment (GSNAP on E... [  0%] 0 of 8
+[-        ] process > extracting_primary_mapping     -
+
+executor >  local (28)
+[6c/de9839] process > prepare_RNAseq_fastq_files ... [100%] 9 of 9 ✔
+[2c/5dfcfa] process > trimming_fastq (FASTP on ER... [100%] 9 of 9 ✔
+[68/0833ae] process > gmap_build_database (gmap_b... [100%] 1 of 1 ✔
+[e4/d96fa2] process > gsnap_alignment (GSNAP on E... [  0%] 0 of 9
+[-        ] process > extracting_primary_mapping     -
+
+executor >  local (29)
+[6c/de9839] process > prepare_RNAseq_fastq_files ... [100%] 9 of 9 ✔
+[2c/5dfcfa] process > trimming_fastq (FASTP on ER... [100%] 9 of 9 ✔
+[68/0833ae] process > gmap_build_database (gmap_b... [100%] 1 of 1 ✔
+[0e/fd9bde] process > gsnap_alignment (GSNAP on S... [ 11%] 1 of 9
+[87/b3fe5a] process > extracting_primary_mapping ... [  0%] 0 of 1
+
+executor >  local (29)
+[6c/de9839] process > prepare_RNAseq_fastq_files ... [100%] 9 of 9 ✔
+[2c/5dfcfa] process > trimming_fastq (FASTP on ER... [100%] 9 of 9 ✔
+[68/0833ae] process > gmap_build_database (gmap_b... [100%] 1 of 1 ✔
+[0e/fd9bde] process > gsnap_alignment (GSNAP on S... [ 11%] 1 of 9
+[87/b3fe5a] process > extracting_primary_mapping ... [100%] 1 of 1
+[SRR520373, unstranded, single, /data2/avelt/2024_annotation_pipeline/workflows/genes_annotation-workflow/work/87/b3fe5a001192237f51a6623b171340/SRR520373_vs_new_assembly.bam]

@@ -22,6 +22,16 @@ Channel.fromPath( file(params.RNAseq_samplesheet) )
                     }
                     .set{ samples_list }
 
+Channel.fromPath( file(params.protein_samplesheet) )
+                    .splitCsv(header: true, sep: ',')
+                    .map { row ->
+                          def organism = row.organism
+                          def filename = row.filename
+
+                          return [organism, filename]
+                    }
+                    .set{ protein_list }
+
 workflow {
   // ----------------------------------------------------------------------------------------
   //                                Transcriptomes assembly
