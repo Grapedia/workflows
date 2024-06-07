@@ -76,16 +76,17 @@ data/pasa_config_file : contains the config file for PASA (pasa.alignAssembly.Te
           subcluster_builder.dbi:-m=50
           ```
 
-data/protein_data : contains all the protein data files (FASTA) to perform protein alignments
+data/protein_data : contains all the protein data files (FASTA) to perform protein alignments. Contains also a samplesheet describing the protein data file to use.
 
           Example :
 
           ```
-          arabidopsis = "arabidopsis_prot_2022_01.fasta"
-          viridiplantae = "Viridiplantae_swissprot.fasta"
-          eudicotyledones_uniprot = "eudicotyledons_uniprot.fasta"
-          eudicotyledones_orthoDB = "eudicotyledons_odb10.fasta"
-          vitales = "vitales.fasta"
+          organism,filename
+          arabidopsis,arabidopsis_prot_2022_01.fasta
+          viridiplantae,Viridiplantae_swissprot.fasta
+          eudicotyledones_uniprot,eudicotyledons_uniprot.fasta
+          eudicotyledones_orthoDB,eudicotyledons_odb10.fasta
+          vitales,vitales.fasta
           ```
 data/RNAseq_data/{stranded,unstranded} : contains all the RNAseq data for transcriptome assembly. Contains also the RNAseq_samplesheet. If FASTQ, the fastq file must be in the right folder, if SRA, the workflow will download the SRA file and convert it to fastq.gz file.
 
