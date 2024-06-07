@@ -11,6 +11,8 @@ process conversion_gtf_gff3 {
   input:
     val(genome_path)
     val(genome)
+    path(assembly_transcriptome_stranded)
+    path(assembly_transcriptome_unstranded)
 
   output:
     file("transcriptome_RNAseq_stranded.gff3")
@@ -20,7 +22,7 @@ process conversion_gtf_gff3 {
 
   script:
     """
-    /scripts/psiclass_gff3_formatting.sh -g /genome_path/$genome -i /transcriptomes/RNAseq_stranded/RNAseq_stranded_vote.gtf -o transcriptome_RNAseq_stranded.gff3 -f transcriptome_RNAseq_stranded.gff3.transcripts.fasta -s RNAseq_stranded
-    /scripts/psiclass_gff3_formatting.sh -g /genome_path/$genome -i /transcriptomes/RNAseq_unstranded/RNAseq_unstranded_vote.gtf -o transcriptome_RNAseq_unstranded.gff3 -f transcriptome_RNAseq_unstranded.gff3.transcripts.fasta -s RNAseq_unstranded
+    /scripts/psiclass_gff3_formatting.sh -d /scripts -g /genome_path/$genome -i /transcriptomes/RNAseq_stranded/RNAseq_stranded_vote.gtf -o transcriptome_RNAseq_stranded.gff3 -f transcriptome_RNAseq_stranded.gff3.transcripts.fasta -s RNAseq_stranded
+    /scripts/psiclass_gff3_formatting.sh -d /scripts -g /genome_path/$genome -i /transcriptomes/RNAseq_unstranded/RNAseq_unstranded_vote.gtf -o transcriptome_RNAseq_unstranded.gff3 -f transcriptome_RNAseq_unstranded.gff3.transcripts.fasta -s RNAseq_unstranded
     """
 }
