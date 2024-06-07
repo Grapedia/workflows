@@ -3,17 +3,24 @@ process conversion_gtf_gff3 {
 
   tag "Convert GTF to GFF3 for transcriptome assembly"
   container 'quay.io/biocontainers/gffread:0.12.7--hdcf5f25_4'
-  containerOptions "--volume $params.outdir/evidence_data/RNAseq_$stranded_or_unstranded/alignments/new_assembly:/alignments"
-  publishDir "$params.outdir/evidence_data/transcriptomes/$stranded_or_unstranded"
+  containerOptions "--volume $params.outdir/evidence_data/transcriptomes:/transcriptomes --volume ${projectDir}/scripts/:/scripts --volume $genome_path:/genome_path"
+  publishDir "$params.outdir/evidence_data/transcriptomes/RNAseq_stranded", pattern: "*RNAseq_stranded*"
+  publishDir "$params.outdir/evidence_data/transcriptomes/RNAseq_unstranded", pattern: "*RNAseq_unstranded*"
   cpus 4
 
   input:
+    val(genome_path)
+    val(genome)
 
   output:
-    file("$stranded_or_unstranded_vote.gtf")
+    file("transcriptome_RNAseq_stranded.gff3")
+    file("transcriptome_RNAseq_stranded.gff3.transcripts.fasta")
+    file("transcriptome_RNAseq_unstranded.gff3")
+    file("transcriptome_RNAseq_unstranded.gff3.transcripts.fasta")
 
   script:
     """
-    ${projectDir}/scripts/psiclass_gff3_formatting.sh -g {input.assembly_file} -i {input.gtf} -o {output.gff3} -f {output.fasta} -s $stranded_or_unstranded
+    /scripts/psiclass_gff3_formatting.sh -g /genome_path/$genome -i /transcriptomes/RNAseq_stranded/RNAseq_stranded_vote.gtf -o transcriptome_RNAseq_stranded.gff3 -f transcriptome_RNAseq_stranded.gff3.transcripts.fasta -s RNAseq_stranded
+    /scripts/psiclass_gff3_formatting.sh -g /genome_path/$genome -i /transcriptomes/RNAseq_unstranded/RNAseq_unstranded_vote.gtf -o transcriptome_RNAseq_unstranded.gff3 -f transcriptome_RNAseq_unstranded.gff3.transcripts.fasta -s RNAseq_unstranded
     """
 }
