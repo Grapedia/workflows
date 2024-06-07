@@ -31,6 +31,7 @@ workflow {
   gmap_build_database(params.assemblies_folder,params.new_assembly)
   gsnap_alignment(gmap_build_database.out,trimming_fastq.out)
   // extracting_primary_mapping(gsnap_alignment.out) | collect
+  // extracting_primary_mapping.out.view()
   // assembly_transcriptome_stranded(extracting_primary_mapping.out)
   // assembly_transcriptome_unstranded(extracting_primary_mapping.out)
   // conversion_gtf_gff3(params.assemblies_folder,params.new_assembly, assembly_transcriptome_stranded.out, assembly_transcriptome_unstranded.out)
