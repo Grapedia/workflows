@@ -9,6 +9,7 @@ include { extracting_primary_mapping } from "./modules/extracting_primary_mappin
 include { assembly_transcriptome_stranded } from "./modules/assembly_transcriptome_stranded"
 include { assembly_transcriptome_unstranded } from "./modules/assembly_transcriptome_unstranded"
 include { conversion_gtf_gff3 } from "./modules/conversion_gtf_gff3"
+include { split_proteins } from "./modules/split_proteins"
 
 Channel.fromPath( file(params.RNAseq_samplesheet) )
                     .splitCsv(header: true, sep: ',')
@@ -49,4 +50,5 @@ workflow {
   // ----------------------------------------------------------------------------------------
   //                                   Protein alignments
   // ----------------------------------------------------------------------------------------
+  // split_proteins(protein_list)
 }
