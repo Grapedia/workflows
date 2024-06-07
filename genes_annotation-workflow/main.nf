@@ -10,6 +10,7 @@ include { assembly_transcriptome_stranded } from "./modules/assembly_transcripto
 include { assembly_transcriptome_unstranded } from "./modules/assembly_transcriptome_unstranded"
 include { conversion_gtf_gff3 } from "./modules/conversion_gtf_gff3"
 include { split_proteins } from "./modules/split_proteins"
+include { pblat_protein_alignment } from "./modules/pblat_protein_alignment"
 
 Channel.fromPath( file(params.RNAseq_samplesheet) )
                     .splitCsv(header: true, sep: ',')
@@ -51,4 +52,5 @@ workflow {
   //                                   Protein alignments
   // ----------------------------------------------------------------------------------------
   // split_proteins(protein_list)
+  // pblat_protein_alignment(params.assemblies_folder,params.new_assembly, split_proteins.out.transpose())
 }

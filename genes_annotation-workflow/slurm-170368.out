@@ -248,3 +248,11 @@ executor >  local (29)
 [0e/fd9bde] process > gsnap_alignment (GSNAP on S... [ 11%] 1 of 9
 [87/b3fe5a] process > extracting_primary_mapping ... [100%] 1 of 1
 [SRR520373, unstranded, single, /data2/avelt/2024_annotation_pipeline/workflows/genes_annotation-workflow/work/87/b3fe5a001192237f51a6623b171340/SRR520373_vs_new_assembly.bam]
+
+executor >  local (30)
+[6c/de9839] process > prepare_RNAseq_fastq_files ... [100%] 9 of 9 ✔
+[2c/5dfcfa] process > trimming_fastq (FASTP on ER... [100%] 9 of 9 ✔
+[68/0833ae] process > gmap_build_database (gmap_b... [100%] 1 of 1 ✔
+[67/991623] process > gsnap_alignment (GSNAP on S... [ 22%] 2 of 9
+[e6/6c57aa] process > extracting_primary_mapping ... [ 50%] 1 of 2
+
