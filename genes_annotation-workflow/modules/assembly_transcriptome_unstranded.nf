@@ -1,5 +1,5 @@
 // 4. Transcriptome assembly
-process assembly_transcriptome {
+process assembly_transcriptome_unstranded {
 
   tag "psiclass transcriptome assembly"
   container 'quay.io/biocontainers/psiclass:1.0.2--h87f3376_2'

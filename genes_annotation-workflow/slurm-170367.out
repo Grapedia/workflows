@@ -1,0 +1,7 @@
+[33mNextflow 24.04.2 is available - Please consider updating your version to it(B[m
+N E X T F L O W  ~  version 23.10.1
+Launching `main.nf` [confident_dalembert] DSL2 - revision: 4078eec20b
+Cannot find a component with name 'assembly_transcriptome_stranded' in module: /data2/avelt/2024_annotation_pipeline/workflows/genes_annotation-workflow/./modules/assembly_transcriptome_stranded.nf
+
+ -- Check script 'main.nf' at line: 9 or see '.nextflow.log' file for more details
+Your remaining balance (at the time of job end)
