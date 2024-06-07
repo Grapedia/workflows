@@ -7,11 +7,7 @@ previous_assembly : <FASTA_FILE>
 new_assembly : <FASTA_FILE>
 previous_annotations : <GFF3_FILE>
 RNAseq_samplesheet : <CSV_FILE>
-arabidopsis : <FASTA_FILE>
-viridiplantae : <FASTA_FILE>
-eudicotyledones_uniprot : <FASTA_FILE>
-eudicotyledones_orthoDB : <FASTA_FILE>
-vitales : <FASTA_FILE>
+protein_samplesheet : <CSV_FILE>
 geneid_param_file : <TAB_DELIMITED_FILE>
 pasa_config_file : <TAB_DELIMITED_FILE>
 ---- OUTPUT
