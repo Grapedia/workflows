@@ -3,7 +3,7 @@
 usage() {
 	cat <<-__EOF__
 		Usage:
-			./psiclass_gff3_formatting.sh -i gtf_input -o gff3_output -f fasta_output -s stranded_or_unstranded -g genome [-h]
+			./psiclass_gff3_formatting.sh -i gtf_input -o gff3_output -f fasta_output -s stranded_or_unstranded -g genome -d directory [-h]
 
 		Description:
 			Formatting of GTF file from PSIclass to GFF3 file for EVM.
