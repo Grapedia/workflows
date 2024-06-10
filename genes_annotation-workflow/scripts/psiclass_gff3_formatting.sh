@@ -74,7 +74,7 @@ do
 done
 
 gffread -E ${INPUT_GFF3} -o ${INPUT_GFF3}.gff3
-${DIRECTORY}/scripts/add_IDs_to_exons.py -g ${INPUT_GFF3}.gff3 -o ${OUTPUT_GFF3}
+${DIRECTORY}/add_IDs_to_exons.py -g ${INPUT_GFF3}.gff3 -o ${OUTPUT_GFF3}
 sed -i "s/PsiCLASS/PsiCLASS_${STRANDED}/" ${OUTPUT_GFF3}
 rm ${INPUT_GFF3}.gff3
 gffread -E --keep-genes ${OUTPUT_GFF3} -o- > ${OUTPUT_GFF3}.tmp

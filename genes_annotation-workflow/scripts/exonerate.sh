@@ -90,7 +90,7 @@ do
 	# retrieve all the psl results for the protein
 	awk -v prot="$protein" '$10 == prot { print $0 }' $ALIGNMENTS > ${exonerate_tmp_path}/${protein}.psl
 	# extract regions
-	${DIRECTORY}/scripts/extract_mapped_regions_from_psl.py -i ${exonerate_tmp_path}/${protein}.psl -o ${exonerate_tmp_path}/${protein}.bed
+	${DIRECTORY}/extract_mapped_regions_from_psl.py -i ${exonerate_tmp_path}/${protein}.psl -o ${exonerate_tmp_path}/${protein}.bed
 	# sort, merge and expand each coordinates by 100
 	bedtools sort -i ${exonerate_tmp_path}/${protein}.bed > ${exonerate_tmp_path}/${protein}.sorted.bed
 	bedtools merge -i ${exonerate_tmp_path}/${protein}.sorted.bed > ${exonerate_tmp_path}/${protein}.merged.bed
@@ -100,7 +100,7 @@ do
 	cut -f1,2 ${GENOME}.fai > ${exonerate_tmp_path}/genome.txt
 	bedtools slop -i ${exonerate_tmp_path}/${protein}.merged.bed -g ${exonerate_tmp_path}/genome.txt -b 500 > ${exonerate_tmp_path}/${protein}.mergedfinal.bed
 	# extract target region of the query for exonerate
-	${DIRECTORY}/scripts/bed_to_coords_for_fasta_extraction.py -i ${exonerate_tmp_path}/${protein}.mergedfinal.bed -o ${exonerate_tmp_path}/${protein}.converted.txt
+	${DIRECTORY}/bed_to_coords_for_fasta_extraction.py -i ${exonerate_tmp_path}/${protein}.mergedfinal.bed -o ${exonerate_tmp_path}/${protein}.converted.txt
 	samtools faidx --region-file ${exonerate_tmp_path}/${protein}.converted.txt ${GENOME} -o ${exonerate_tmp_path}/regions_mapped_on_new_assembly.${protein}.fasta
 	# retrieve protin sequence (query)
 	samtools faidx ${QUERY}.tmp "$protein" > ${exonerate_tmp_path}/${protein}.fasta
