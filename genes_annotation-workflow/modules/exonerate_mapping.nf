@@ -17,6 +17,6 @@ process exonerate_mapping {
   script:
     protein = ${psl_file.baseName}.replaceFirst(/.psl/, "")
     """
-    /scripts/exonerate.sh -g /genome_path/$genome -a $psl_file -q /fasta_splitted/$organism/$protein -o ${protein}.gff
+    /scripts/exonerate.sh -g /genome_path/$genome -a $psl_file -q /fasta_splitted/$organism/$protein -o ${protein}.gff -d /scripts
     """
 }
