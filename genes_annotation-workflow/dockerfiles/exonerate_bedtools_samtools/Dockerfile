@@ -6,7 +6,7 @@ MAINTAINER Amandine Velt <amandine.velt@inrae.fr>
 
 # install bedtools
 RUN apt-get update --fix-missing && \
-apt-get install -y wget gcc g++ make zlib1g zlib1g-dev python3.8 && \
+apt-get install -y wget gcc g++ make zlib1g zlib1g-dev python libbz2-dev libclang-dev liblzma-dev bzip2 libncurses5-dev libncursesw5-dev libglib2.0-dev && \
 wget -O bedtools.tar.gz https://github.com/arq5x/bedtools2/archive/refs/tags/v2.30.0.tar.gz && \
 tar -xzvf bedtools.tar.gz && \
 cd bedtools2-2.30.0 && \

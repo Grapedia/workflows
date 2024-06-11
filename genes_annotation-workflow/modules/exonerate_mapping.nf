@@ -1,7 +1,7 @@
 process exonerate_mapping {
 
   tag "Exonerate alignment on the following protein sequences $organism"
-  container 'quay.io/biocontainers/exonerate:2.4.0--h09da616_8'
+  container 'avelt/exonerate_bedtools_samtools:latest'
   containerOptions "--volume $params.outdir/evidence_data/protein/fasta_splitted:/fasta_splitted --volume ${projectDir}/scripts/:/scripts --volume $genome_path:/genome_path"
   publishDir "$params.outdir/evidence_data/protein_alignments_split/"
   cpus 4
