@@ -15,6 +15,7 @@ include { exonerate_mapping } from "./modules/exonerate_mapping"
 // include { merge_exonerate_output } from "./modules/merge_exonerate_output"
 // include { filtering_and_conversion } from "./modules/filtering_and_conversion"
 // include { gtf_to_gff3 } from "./modules/gtf_to_gff3"
+// include { liftoff_annotations } from "./modules/liftoff_annotations"
 
 Channel.fromPath( file(params.RNAseq_samplesheet) )
                     .splitCsv(header: true, sep: ',')
@@ -61,4 +62,10 @@ workflow {
   // merge_exonerate_output(exonerate_mapping.out)
   // filtering_and_conversion(merge_exonerate_output.out)
   // gtf_to_gff3(filtering_and_conversion.out)
+
+  // ----------------------------------------------------------------------------------------
+  //                                Liftoff previous annotations
+  // ----------------------------------------------------------------------------------------
+  // liftoff_annotations(params.assemblies_folder,params.new_assembly,params.previous_assembly,params.previous_annotations)
+
 }
