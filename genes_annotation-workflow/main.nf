@@ -12,6 +12,9 @@ include { conversion_gtf_gff3 } from "./modules/conversion_gtf_gff3"
 include { split_proteins } from "./modules/split_proteins"
 include { pblat_protein_alignment } from "./modules/pblat_protein_alignment"
 include { exonerate_mapping } from "./modules/exonerate_mapping"
+// include { merge_exonerate_output } from "./modules/merge_exonerate_output"
+// include { filtering_and_conversion } from "./modules/filtering_and_conversion"
+// include { gtf_to_gff3 } from "./modules/gtf_to_gff3"
 
 Channel.fromPath( file(params.RNAseq_samplesheet) )
                     .splitCsv(header: true, sep: ',')
@@ -54,5 +57,8 @@ workflow {
   // ----------------------------------------------------------------------------------------
   // split_proteins(protein_list)
   // pblat_protein_alignment(params.assemblies_folder,params.new_assembly, split_proteins.out.transpose())
-  // exonerate_mapping(params.assemblies_folder,params.new_assembly, pblat_protein_alignment.out)
+  // exonerate_mapping(params.assemblies_folder,params.new_assembly, pblat_protein_alignment.out) | collect
+  // merge_exonerate_output(exonerate_mapping.out)
+  // filtering_and_conversion(merge_exonerate_output.out)
+  // gtf_to_gff3(filtering_and_conversion.out)
 }
