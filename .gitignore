@@ -4,3 +4,4 @@ genes_annotation-workflow/work/*
 genes_annotation-workflow/.nextflow.log*
 genes_annotation-workflow/.nextflow/
 genes_annotation-workflow/commands.sh
+genes_annotation-workflow/slurm-*
