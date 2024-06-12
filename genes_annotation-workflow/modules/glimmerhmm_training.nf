@@ -2,8 +2,8 @@ process glimmerhmm_training {
 
   tag "Executing GlimmerHMM training"
   container 'avelt/glimmerhmm_gffutils:latest'
-  containerOptions "--volume $genome_path:/genome_path"
-  publishDir "$params.outdir/evidence_data/databases/"
+  containerOptions "--volume $genome_path:/genome_path --volume ${projectDir}/scripts/:/scripts -volume $params.outdir/evidence_data/transcriptomes/RNAseq_stranded:/transcriptomes_RNAseq_stranded"
+  publishDir "$params.outdir/GlimmerHMM/"
   cpus 4
 
   input:
@@ -11,10 +11,10 @@ process glimmerhmm_training {
     val(genome)
 
   output:
-    path("new_assembly_database")
+    path("training")
 
   script:
     """
-    gmap_build --nthreads ${task.cpus} --dir \$PWD --genomedb new_assembly_database /genome_path/$genome
+    /scripts/trainglimmerhmm.sh -a /genome_path/$genome -t /transcriptomes_RNAseq_stranded/*gff3 -d training
     """
 }
