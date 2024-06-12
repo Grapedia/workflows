@@ -16,6 +16,7 @@ include { exonerate_mapping } from "./modules/exonerate_mapping"
 // include { filtering_and_conversion } from "./modules/filtering_and_conversion"
 // include { gtf_to_gff3 } from "./modules/gtf_to_gff3"
 // include { liftoff_annotations } from "./modules/liftoff_annotations"
+// include { glimmerhmm_training } from "./modules/glimmerhmm_training"
 
 Channel.fromPath( file(params.RNAseq_samplesheet) )
                     .splitCsv(header: true, sep: ',')
@@ -51,7 +52,7 @@ workflow {
   extracting_primary_mapping.out.view()
   // assembly_transcriptome_stranded(extracting_primary_mapping.out)
   // assembly_transcriptome_unstranded(extracting_primary_mapping.out)
-  // conversion_gtf_gff3(params.assemblies_folder,params.new_assembly, assembly_transcriptome_stranded.out, assembly_transcriptome_unstranded.out)
+  // conversion_gtf_gff3(params.assemblies_folder,params.new_assembly, assembly_transcriptome_stranded.out, assembly_transcriptome_unstranded.out) | collect
 
   // ----------------------------------------------------------------------------------------
   //                                   Protein alignments
@@ -67,5 +68,17 @@ workflow {
   //                                Liftoff previous annotations
   // ----------------------------------------------------------------------------------------
   // liftoff_annotations(params.assemblies_folder,params.new_assembly,params.previous_assembly,params.previous_annotations)
+
+  // ----------------------------------------------------------------------------------------
+  //                                        GlimmerHMM
+  // ----------------------------------------------------------------------------------------
+
+  // GlimmerHMM is a gene finder based on Generalized Hidden Markov Model (GHMM) used to ...
+  // ...predict annotations using JMM. This tool takes in input the RNA-Seq transcriptome ...
+  // ... assembled with this pipeline and generates in output a TSV file containing the ...
+  // ... exons location for each transcript (one exon per line and exons comming from ...
+  // ... different transcripts are separated by a blank line)
+
+  // glimmerhmm_training(params.assemblies_folder,params.new_assembly,conversion_gtf_gff3.out)
 
 }
