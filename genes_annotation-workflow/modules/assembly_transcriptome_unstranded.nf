@@ -1,7 +1,7 @@
 // 4. Transcriptome assembly
 process assembly_transcriptome_unstranded {
 
-  tag "psiclass transcriptome assembly"
+  tag "psiclass transcriptome assembly - unstranded"
   container 'quay.io/biocontainers/psiclass:1.0.2--h87f3376_2'
   containerOptions "--volume $params.outdir/evidence_data/RNAseq_unstranded/alignments/new_assembly:/alignments"
   publishDir "$params.outdir/evidence_data/transcriptomes/RNAseq_unstranded"
@@ -15,6 +15,7 @@ process assembly_transcriptome_unstranded {
 
   script:
     """
-    psiclass -p ${task.cpus} -b `ls -1 /alignments/*bam | tr '\n' ',' | sed 's/,\$//'` -o RNAseq_unstranded
+    bam="\$(ls -1 /alignments/*bam | tr '\n' ',' | sed 's/,\$//')"
+    psiclass -p ${task.cpus} -b \${bam} -o RNAseq_unstranded
     """
 }

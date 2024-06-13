@@ -44,22 +44,22 @@ workflow {
   // ----------------------------------------------------------------------------------------
   //                                Transcriptomes assembly
   // ----------------------------------------------------------------------------------------
-  prepare_RNAseq_fastq_files(samples_list)
-  trimming_fastq(prepare_RNAseq_fastq_files.out)
-  gmap_build_database(params.assemblies_folder,params.new_assembly)
-  gsnap_alignment(gmap_build_database.out,trimming_fastq.out)
-  extracting_primary_mapping(gsnap_alignment.out) | collect
+  prepare_RNAseq_fastq_files(samples_list) // VALIDATED
+  trimming_fastq(prepare_RNAseq_fastq_files.out) // VALIDATED
+  gmap_build_database(params.assemblies_folder,params.new_assembly) // VALIDATED
+  gsnap_alignment(gmap_build_database.out,trimming_fastq.out) // VALIDATED
+  extracting_primary_mapping(gsnap_alignment.out) | collect // VALIDATED
   extracting_primary_mapping.out.view()
-  // assembly_transcriptome_stranded(extracting_primary_mapping.out)
-  // assembly_transcriptome_unstranded(extracting_primary_mapping.out)
+  assembly_transcriptome_stranded(extracting_primary_mapping.out)
+  assembly_transcriptome_unstranded(extracting_primary_mapping.out)
   // conversion_gtf_gff3(params.assemblies_folder,params.new_assembly, assembly_transcriptome_stranded.out, assembly_transcriptome_unstranded.out) | collect
 
   // ----------------------------------------------------------------------------------------
   //                                   Protein alignments
   // ----------------------------------------------------------------------------------------
-  // split_proteins(protein_list)
-  // pblat_protein_alignment(params.assemblies_folder,params.new_assembly, split_proteins.out.transpose())
-  // exonerate_mapping(params.assemblies_folder,params.new_assembly, pblat_protein_alignment.out) | collect
+  // split_proteins(protein_list) // VALIDATED
+  // pblat_protein_alignment(params.assemblies_folder,params.new_assembly, split_proteins.out.transpose()) // VALIDATED
+  // exonerate_mapping(params.assemblies_folder,params.new_assembly, pblat_protein_alignment.out) | collect // VALIDATED
   // merge_exonerate_output(exonerate_mapping.out)
   // filtering_and_conversion(merge_exonerate_output.out)
   // gtf_to_gff3(filtering_and_conversion.out)
