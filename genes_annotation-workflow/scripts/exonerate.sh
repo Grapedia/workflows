@@ -3,7 +3,7 @@
 function usage {
 	cat <<-__EOF__
 		Usage:
-			./exonerate.sh -g assembly -a alignments -q query -o outpref -d directory [-h]
+			./exonerate.sh -g assembly -a alignments -q query -o outpref -d directory -e exonerate_dir [-h]
 
 		Description:
 			Run exonerate alignment with exonerate-server
@@ -14,14 +14,15 @@ function usage {
 			-q, --query Sequences you want to map
 			-o, --outpref Output file prefix (organism for exemple)
 			-d, --directory scriptdir
+			-e, --exonerate_dir exonerate_dir
 			-h, --help
 
-		Exemple: ./exonerate.sh -g assembly.fasta -a alignments.psl -q query.fasta -o prefix -d scriptdir
+		Exemple: ./exonerate.sh -g assembly.fasta -a alignments.psl -q query.fasta -o prefix -d scriptdir -e exonerate_dir
 		__EOF__
 }
 
 # Eval command line arguments given in input
-ARGS=$(getopt -o "a:g:q:o:d:h" --long "alignments:,genome:,query:,outpref:,directory:,help" -- $@ 2> /dev/null)
+ARGS=$(getopt -o "a:g:q:o:d:e:h" --long "alignments:,genome:,query:,outpref:,directory:,exonerate_dir:,help" -- $@ 2> /dev/null)
 
 # Check if the return code of the previous command is not equal to 0 (command ...
 # ... didn't work)
@@ -55,6 +56,10 @@ do
 			DIRECTORY=$2
 			shift 2
 			;;
+		-e|--exonerate_dir)
+			EXONERATE_DIR=$2
+			shift 2
+			;;
 		-h|--help)
 			usage
 			exit 0
@@ -68,16 +73,14 @@ do
 	esac
 done
 
-target_file=${TARGET##*/}
-target_file_name=${target_file%%.*}
+exonerate_subset_path="$EXONERATE_DIR/exonerate/${OUT_PREFIX}"
+exonerate_tmp_path="$EXONERATE_DIR/exonerate/${OUT_PREFIX}/TMP"
+log_path="$EXONERATE_DIR/exonerate/logs/${OUT_PREFIX}"
 
-exonerate_subset_path="intermediate_files/evidence_data/protein/exonerate/${OUT_PREFIX}"
-exonerate_tmp_path="intermediate_files/evidence_data/protein/exonerate/${OUT_PREFIX}/TMP"
-exonerate_concat_path="intermediate_files/evidence_data/protein_final_alignments"
-log_path="logs/exonerate/${OUT_PREFIX}"
-
+mkdir -p $EXONERATE_DIR/exonerate
 mkdir -p ${exonerate_subset_path}
 mkdir -p ${exonerate_tmp_path}
+mkdir -p ${log_path}
 
 # Exonerate doesn't works with ambiguous or exceptional amino acid (like B, J, O, U, Z)
 # so it generates an error for eudicotyledons_odb10 fasta file for example
@@ -122,10 +125,8 @@ do
 	fi
 done
 
-rm -fr $exonerate_tmp_path
+# rm -fr $exonerate_tmp_path
 
-mkdir -p ${exonerate_concat_path}
-
-find ${exonerate_subset_path} -type f -name "*.exonerate.gff" -exec cat {} + > ${exonerate_concat_path}/${OUT_PREFIX}.gff
-find ${exonerate_subset_path} -name "*.exonerate.gff" -type f -delete
-rm ${QUERY}.tmp
+find ${exonerate_subset_path} -type f -name "*.exonerate.gff" -exec cat {} + > ${OUT_PREFIX}.gff
+# find ${exonerate_subset_path} -name "*.exonerate.gff" -type f -delete
+# rm ${QUERY}.tmp

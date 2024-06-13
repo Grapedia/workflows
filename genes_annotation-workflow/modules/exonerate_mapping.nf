@@ -2,9 +2,10 @@ process exonerate_mapping {
 
   tag "Exonerate alignment on the following protein sequences $organism"
   container 'avelt/exonerate_bedtools_samtools:latest'
-  containerOptions "--volume $params.outdir/evidence_data/protein/fasta_splitted:/fasta_splitted --volume ${projectDir}/scripts/:/scripts --volume $genome_path:/genome_path"
+  containerOptions "--volume $params.outdir/evidence_data/protein/:/exonerate --volume $params.outdir/evidence_data/protein/fasta_splitted:/fasta_splitted --volume ${projectDir}/scripts/:/scripts --volume $genome_path:/genome_path"
   publishDir "$params.outdir/evidence_data/protein_alignments_split/"
   cpus 4
+  echo true
 
   input:
     val(genome_path)
@@ -15,8 +16,10 @@ process exonerate_mapping {
     tuple val(organism), file("*.gff")
 
   script:
-    protein = ${psl_file.baseName}.replaceFirst(/.psl/, "")
     """
-    /scripts/exonerate.sh -g /genome_path/$genome -a $psl_file -q /fasta_splitted/$organism/$protein -o ${protein}.gff -d /scripts
+    echo ${psl_file}
+    protein="\$(basename $psl_file | sed 's/.fasta.psl//')"
+    echo \$protein
+    /scripts/exonerate.sh -g /genome_path/$genome -a $psl_file -q /fasta_splitted/$organism/\${protein}.fasta -o \${protein} -d /scripts -e /exonerate
     """
 }

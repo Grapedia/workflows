@@ -320,3 +320,90 @@ executor >  local (33)
 [cf/68bb87] process > gsnap_alignment (GSNAP on S... [ 55%] 5 of 9
 [bd/9cdfff] process > extracting_primary_mapping ... [100%] 5 of 5
 [SRR3046429, unstranded, paired, /data2/avelt/2024_annotation_pipeline/workflows/genes_annotation-workflow/work/bd/9cdfff66ea194db96b4bba2f47ef2b/SRR3046429_vs_new_assembly.bam]
+
+executor >  local (33)
+[6c/de9839] process > prepare_RNAseq_fastq_files ... [100%] 9 of 9 ✔
+[2c/5dfcfa] process > trimming_fastq (FASTP on ER... [100%] 9 of 9 ✔
+[68/0833ae] process > gmap_build_database (gmap_b... [100%] 1 of 1 ✔
+[e4/d96fa2] process > gsnap_alignment (GSNAP on E... [ 66%] 6 of 9
+[bd/9cdfff] process > extracting_primary_mapping ... [100%] 5 of 5
+
+
+executor >  local (34)
+[6c/de9839] process > prepare_RNAseq_fastq_files ... [100%] 9 of 9 ✔
+[2c/5dfcfa] process > trimming_fastq (FASTP on ER... [100%] 9 of 9 ✔
+[68/0833ae] process > gmap_build_database (gmap_b... [100%] 1 of 1 ✔
+[e4/d96fa2] process > gsnap_alignment (GSNAP on E... [ 66%] 6 of 9
+[ee/a59715] process > extracting_primary_mapping ... [ 83%] 5 of 6
+
+
+executor >  local (34)
+[6c/de9839] process > prepare_RNAseq_fastq_files ... [100%] 9 of 9 ✔
+[2c/5dfcfa] process > trimming_fastq (FASTP on ER... [100%] 9 of 9 ✔
+[68/0833ae] process > gmap_build_database (gmap_b... [100%] 1 of 1 ✔
+[e4/d96fa2] process > gsnap_alignment (GSNAP on E... [ 66%] 6 of 9
+[ee/a59715] process > extracting_primary_mapping ... [100%] 6 of 6
+[ERR1059554, stranded, paired, /data2/avelt/2024_annotation_pipeline/workflows/genes_annotation-workflow/work/ee/a59715f4b77ce8a837c16398149103/ERR1059554_vs_new_assembly.bam]
+
+executor >  local (35)
+[6c/de9839] process > prepare_RNAseq_fastq_files ... [100%] 9 of 9 ✔
+[2c/5dfcfa] process > trimming_fastq (FASTP on ER... [100%] 9 of 9 ✔
+[68/0833ae] process > gmap_build_database (gmap_b... [100%] 1 of 1 ✔
+[32/2f68e9] process > gsnap_alignment (GSNAP on E... [ 77%] 7 of 9
+[be/b3080c] process > extracting_primary_mapping ... [ 85%] 6 of 7
+
+
+executor >  local (35)
+[6c/de9839] process > prepare_RNAseq_fastq_files ... [100%] 9 of 9 ✔
+[2c/5dfcfa] process > trimming_fastq (FASTP on ER... [100%] 9 of 9 ✔
+[68/0833ae] process > gmap_build_database (gmap_b... [100%] 1 of 1 ✔
+[32/2f68e9] process > gsnap_alignment (GSNAP on E... [ 77%] 7 of 9
+[be/b3080c] process > extracting_primary_mapping ... [ 85%] 6 of 7
+
+
+executor >  local (35)
+[6c/de9839] process > prepare_RNAseq_fastq_files ... [100%] 9 of 9 ✔
+[2c/5dfcfa] process > trimming_fastq (FASTP on ER... [100%] 9 of 9 ✔
+[68/0833ae] process > gmap_build_database (gmap_b... [100%] 1 of 1 ✔
+[32/2f68e9] process > gsnap_alignment (GSNAP on E... [ 77%] 7 of 9
+[be/b3080c] process > extracting_primary_mapping ... [100%] 7 of 7
+[ERR1059555, stranded, paired, /data2/avelt/2024_annotation_pipeline/workflows/genes_annotation-workflow/work/be/b3080c6cb2a4cf093265a88bd891db/ERR1059555_vs_new_assembly.bam]
+
+executor >  local (36)
+[6c/de9839] process > prepare_RNAseq_fastq_files ... [100%] 9 of 9 ✔
+[2c/5dfcfa] process > trimming_fastq (FASTP on ER... [100%] 9 of 9 ✔
+[68/0833ae] process > gmap_build_database (gmap_b... [100%] 1 of 1 ✔
+[e1/48c8e2] process > gsnap_alignment (GSNAP on E... [ 88%] 8 of 9
+[ba/741e52] process > extracting_primary_mapping ... [ 87%] 7 of 8
+
+
+executor >  local (36)
+[6c/de9839] process > prepare_RNAseq_fastq_files ... [100%] 9 of 9 ✔
+[2c/5dfcfa] process > trimming_fastq (FASTP on ER... [100%] 9 of 9 ✔
+[68/0833ae] process > gmap_build_database (gmap_b... [100%] 1 of 1 ✔
+[e1/48c8e2] process > gsnap_alignment (GSNAP on E... [ 88%] 8 of 9
+[ba/741e52] process > extracting_primary_mapping ... [100%] 8 of 8
+[ERR1059553, stranded, paired, /data2/avelt/2024_annotation_pipeline/workflows/genes_annotation-workflow/work/ba/741e5281dca4c4867346bdb494f5c0/ERR1059553_vs_new_assembly.bam]
+
+executor >  local (37)
+[6c/de9839] process > prepare_RNAseq_fastq_files ... [100%] 9 of 9 ✔
+[2c/5dfcfa] process > trimming_fastq (FASTP on ER... [100%] 9 of 9 ✔
+[68/0833ae] process > gmap_build_database (gmap_b... [100%] 1 of 1 ✔
+[84/422df6] process > gsnap_alignment (GSNAP on E... [100%] 9 of 9 ✔
+[46/8ca303] process > extracting_primary_mapping ... [ 88%] 8 of 9
+
+
+executor >  local (37)
+[6c/de9839] process > prepare_RNAseq_fastq_files ... [100%] 9 of 9 ✔
+[2c/5dfcfa] process > trimming_fastq (FASTP on ER... [100%] 9 of 9 ✔
+[68/0833ae] process > gmap_build_database (gmap_b... [100%] 1 of 1 ✔
+[84/422df6] process > gsnap_alignment (GSNAP on E... [100%] 9 of 9 ✔
+[46/8ca303] process > extracting_primary_mapping ... [100%] 9 of 9 ✔
+[ERR1059552, stranded, paired, /data2/avelt/2024_annotation_pipeline/workflows/genes_annotation-workflow/work/46/8ca3036e859fcf12043ed28ea5a19b/ERR1059552_vs_new_assembly.bam]
+Completed at: 13-Jun-2024 15:07:56
+Duration    : 6d 2h 3m 4s
+CPU hours   : 2'343.2
+Succeeded   : 37
+
+
+Your remaining balance (at the time of job end)
