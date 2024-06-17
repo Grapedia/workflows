@@ -17,9 +17,7 @@ process exonerate_mapping {
 
   script:
     """
-    echo ${psl_file}
     protein="\$(basename $psl_file | sed 's/.fasta.psl//')"
-    echo \$protein
     /scripts/exonerate.sh -g /genome_path/$genome -a $psl_file -q /fasta_splitted/$organism/\${protein}.fasta -o \${protein} -d /scripts -e /exonerate
     """
 }
