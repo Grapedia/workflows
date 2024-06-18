@@ -49,16 +49,14 @@ workflow {
   gmap_build_database(params.assemblies_folder,params.new_assembly) // VALIDATED
   gsnap_alignment(gmap_build_database.out,trimming_fastq.out) // VALIDATED
   extracting_primary_mapping(gsnap_alignment.out) | collect // VALIDATED
-  // extracting_primary_mapping.out.view()
   extracting_primary_mapping
   .out
   .collect()
   .map { it[0] }
   .set{ concat_in }
-  concat_in.view()
-  assembly_transcriptome_stranded(concat_in)  // VALIDATED
-  assembly_transcriptome_unstranded(concat_in)  // VALIDATED
-  // conversion_gtf_gff3(params.assemblies_folder,params.new_assembly, assembly_transcriptome_stranded.out, assembly_transcriptome_unstranded.out) | collect
+  assembly_transcriptome_stranded(concat_in) // VALIDATED
+  assembly_transcriptome_unstranded(concat_in) // VALIDATED
+  conversion_gtf_gff3(params.assemblies_folder,params.new_assembly, assembly_transcriptome_stranded.out, assembly_transcriptome_unstranded.out) // VALIDATED
 
   // ----------------------------------------------------------------------------------------
   //                                   Protein alignments

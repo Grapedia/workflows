@@ -2,7 +2,7 @@
 process conversion_gtf_gff3 {
 
   tag "Convert GTF to GFF3 for transcriptome assembly"
-  container 'quay.io/biocontainers/gffread:0.12.7--hdcf5f25_4'
+  container 'avelt/gffread_gffutils:latest'
   containerOptions "--volume $params.outdir/evidence_data/transcriptomes:/transcriptomes --volume ${projectDir}/scripts/:/scripts --volume $genome_path:/genome_path"
   publishDir "$params.outdir/evidence_data/transcriptomes/RNAseq_stranded", pattern: "*RNAseq_stranded*"
   publishDir "$params.outdir/evidence_data/transcriptomes/RNAseq_unstranded", pattern: "*RNAseq_unstranded*"
