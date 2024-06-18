@@ -15,7 +15,7 @@ include { exonerate_mapping } from "./modules/exonerate_mapping"
 // include { merge_exonerate_output } from "./modules/merge_exonerate_output"
 // include { filtering_and_conversion } from "./modules/filtering_and_conversion"
 // include { gtf_to_gff3 } from "./modules/gtf_to_gff3"
-// include { liftoff_annotations } from "./modules/liftoff_annotations"
+include { liftoff_annotations } from "./modules/liftoff_annotations"
 // include { glimmerhmm_training } from "./modules/glimmerhmm_training"
 
 Channel.fromPath( file(params.RNAseq_samplesheet) )
@@ -71,7 +71,7 @@ workflow {
   // ----------------------------------------------------------------------------------------
   //                                Liftoff previous annotations
   // ----------------------------------------------------------------------------------------
-  // liftoff_annotations(params.assemblies_folder,params.new_assembly,params.previous_assembly,params.previous_annotations)
+  liftoff_annotations(params.assemblies_folder,params.new_assembly,params.annotations_folder,params.previous_assembly,params.previous_annotations) // VALIDATED
 
   // ----------------------------------------------------------------------------------------
   //                                        GlimmerHMM

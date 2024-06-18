@@ -7,13 +7,14 @@ process liftoff_annotations {
 
   tag "Executing liftoff on the new assembly"
   container 'quay.io/biocontainers/liftoff:1.5.1--py_0'
-  containerOptions "--volume $genome_path:/genome_path"
+  containerOptions "--volume $genome_path:/genome_path --volume $annotations_path:/annotations_path"
   publishDir "$params.outdir/liftoff/"
   cpus 4
 
   input:
     val(genome_path)
     val(genome)
+    val(annotations_path)
     val(previous_assembly)
     val(previous_annotations)
 
@@ -22,6 +23,6 @@ process liftoff_annotations {
 
   script:
     """
-    liftoff -g $previous_annotations -o liftoff_previous_annotations.gff3 -u unmapped_features.txt /genome_path/$genome /genome_path/$previous_assembly
+    liftoff -g /annotations_path/$previous_annotations -o liftoff_previous_annotations.gff3 -u unmapped_features.txt /genome_path/$genome /genome_path/$previous_assembly
     """
 }
