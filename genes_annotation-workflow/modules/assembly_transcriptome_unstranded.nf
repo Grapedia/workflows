@@ -4,7 +4,7 @@ process assembly_transcriptome_unstranded {
   tag "psiclass transcriptome assembly - unstranded"
   container 'avelt/psiclass_samtools:latest'
   containerOptions "--volume ${projectDir}/scripts:/scripts --volume ${projectDir}/work:/work --volume $params.outdir/evidence_data/RNAseq_unstranded/alignments/new_assembly:/alignments"
-  publishDir "$params.outdir/evidence_data/transcriptomes/RNAseq_unstranded"
+  publishDir "$params.outdir/evidence_data/transcriptomes/rnaseq_unstranded"
   cpus 4
 
   input:
