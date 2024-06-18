@@ -56,8 +56,8 @@ workflow {
   .map { it[0] }
   .set{ concat_in }
   concat_in.view()
-  // assembly_transcriptome_stranded(concat_in)
-  assembly_transcriptome_unstranded(concat_in)
+  assembly_transcriptome_stranded(concat_in)  // VALIDATED
+  assembly_transcriptome_unstranded(concat_in)  // VALIDATED
   // conversion_gtf_gff3(params.assemblies_folder,params.new_assembly, assembly_transcriptome_stranded.out, assembly_transcriptome_unstranded.out) | collect
 
   // ----------------------------------------------------------------------------------------
