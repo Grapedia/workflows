@@ -16,6 +16,6 @@ process assembly_transcriptome_stranded {
   script:
     """
     bam=\$(/scripts/retrieve_path_bam.sh /alignments)
-    /PsiCLASS-1.0.2/psiclass -p ${task.cpus} -b \${bam} -o RNAseq_unstranded
+    /PsiCLASS-1.0.2/psiclass -p ${task.cpus} -b \${bam} -o RNAseq_stranded
     """
 }
