@@ -100,3 +100,5 @@ data/RNAseq_data/{stranded,unstranded} : contains all the RNAseq data for transc
           SRR3046438,unstranded,SRA,paired
           SRR520373,unstranded,SRA,single
           ```
+
+WARNING : in data/RNAseq_data/{stranded,unstranded}, for the FASTQ files, the name need to be ${sampleID}.fastq.gz for single-end and ${sampleID}_1.fastq.gz and ${sampleID}_2.fastq.gz for paired-end.
