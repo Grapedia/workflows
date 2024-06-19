@@ -19,6 +19,8 @@ include { liftoff_annotations } from "./modules/liftoff_annotations"
 include { glimmerhmm_training } from "./modules/glimmerhmm_training"
 include { split_fasta } from "./modules/split_fasta"
 // include { glimmerhmm_prediction } from "./modules/glimmerhmm_prediction"
+// include { concat_glimmerhmm_prediction } from "./modules/concat_glimmerhmm_prediction"
+// include { glimmerhmm_gff_to_gff3 } from "./modules/glimmerhmm_gff_to_gff3"
 
 Channel.fromPath( file(params.RNAseq_samplesheet) )
                     .splitCsv(header: true, sep: ',')
@@ -86,6 +88,16 @@ workflow {
   // ... different transcripts are separated by a blank line)
   glimmerhmm_training(params.assemblies_folder,params.new_assembly,conversion_gtf_gff3.out.stranded_gff3)
   split_fasta(params.assemblies_folder,params.new_assembly)
-  split_fasta.out.view()
-  // glimmerhmm_prediction(split_fasta.out,glimmerhmm_training.out)
+  Channel
+    .fromList(split_fasta.out)
+    .set { chr_fasta_files }
+  chr_fasta_files.view()
+  // glimmerhmm_prediction(chr_fasta_files,glimmerhmm_training.out) | collect
+  // glimmerhmm_prediction
+  // .out
+  // .collect()
+  // .map { it[0] }
+  // .set{ glimmerhmm_pred }
+  // concat_glimmerhmm_prediction(glimmerhmm_pred)
+  // glimmerhmm_gff_to_gff3(concat_glimmerhmm_prediction.out)
 }

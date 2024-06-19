@@ -2,20 +2,20 @@ process glimmerhmm_prediction {
 
   tag "Annotations prediction using GlimmerHMM"
   container 'avelt/glimmerhmm_gffutils:latest'
-  containerOptions "--volume $params.outdir/GlimmerHMM/:/glimmerhmm"
   publishDir "$params.outdir/GlimmerHMM/"
   cpus 4
 
   input:
-    val(genome_path)
-    val(genome)
-    val(stranded_gff3)
+    val(chr_fasta_file)
+    val(glimmerhmm_training)
 
   output:
-    path("training")
+    file("*.gff")
 
   script:
     """
-    glimmerhmm {params.chromosome_file} {input.training_dir} -o glimmerhmm_prediction_${chromosome}.gff -n 1 -g
+    chromosome=\$(echo \$chr_fasta_file | basename)
+    echo \$chromosome
+    glimmerhmm $chr_fasta_file $glimmerhmm_training -o glimmerhmm_prediction_\$chromosome.gff -n 1 -g
     """
 }
