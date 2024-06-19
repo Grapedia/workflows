@@ -86,5 +86,6 @@ workflow {
   // ... different transcripts are separated by a blank line)
   glimmerhmm_training(params.assemblies_folder,params.new_assembly,conversion_gtf_gff3.out.stranded_gff3)
   split_fasta(params.assemblies_folder,params.new_assembly)
+  split_fasta.out.view()
   // glimmerhmm_prediction(split_fasta.out,glimmerhmm_training.out)
 }
