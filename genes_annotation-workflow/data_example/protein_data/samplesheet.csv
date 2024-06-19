@@ -1,6 +1,6 @@
-organism,filename
-arabidopsis,arabidopsis_prot_2022_01.fasta
-viridiplantae,Viridiplantae_swissprot.fasta
-eudicotyledones_uniprot,eudicotyledons_uniprot.fasta
-eudicotyledones_orthoDB,eudicotyledons_odb10.fasta
-vitales,vitales.fasta
+organism,filename,maker
+arabidopsis,arabidopsis_prot_2022_01.fasta,no
+viridiplantae,Viridiplantae_swissprot.fasta,yes
+eudicotyledones_uniprot,eudicotyledons_uniprot.fasta,no
+eudicotyledones_orthoDB,eudicotyledons_odb10.fasta,yes
+vitales,vitales.fasta,no

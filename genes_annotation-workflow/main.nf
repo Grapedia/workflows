@@ -21,6 +21,8 @@ include { split_fasta } from "./modules/split_fasta"
 // include { glimmerhmm_prediction } from "./modules/glimmerhmm_prediction"
 // include { concat_glimmerhmm_prediction } from "./modules/concat_glimmerhmm_prediction"
 // include { glimmerhmm_gff_to_gff3 } from "./modules/glimmerhmm_gff_to_gff3"
+// include { run_maker } from "./modules/run_maker"
+// include { rename_maker_gff_to_gff3 } from "./modules/rename_maker_gff_to_gff3"
 
 Channel.fromPath( file(params.RNAseq_samplesheet) )
                     .splitCsv(header: true, sep: ',')
@@ -39,8 +41,9 @@ Channel.fromPath( file(params.protein_samplesheet) )
                     .map { row ->
                           def organism = row.organism
                           def filename = row.filename
+                          def maker = row.maker
 
-                          return [organism, filename]
+                          return [organism, filename, maker]
                     }
                     .set{ protein_list }
 
@@ -100,4 +103,13 @@ workflow {
   // .set{ glimmerhmm_pred }
   // concat_glimmerhmm_prediction(glimmerhmm_pred)
   // glimmerhmm_gff_to_gff3(concat_glimmerhmm_prediction.out)
+
+  // ----------------------------------------------------------------------------------------
+  //                                      MAKER (SNAP)
+  // ----------------------------------------------------------------------------------------
+
+  // MAKER is an annotation pipeline that integrates multiple predictor tools like SNAP
+  // run_maker(params.assemblies_folder,params.new_assembly,conversion_gtf_gff3.out.stranded_gff3,params.protein_samplesheet)
+  // rename_maker_gff_to_gff3(run_maker.out)
+
 }
