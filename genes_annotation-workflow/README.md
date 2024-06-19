@@ -77,12 +77,12 @@ data/protein_data : contains all the protein data files (FASTA) to perform prote
           Example :
 
           ```
-          organism,filename
-          arabidopsis,arabidopsis_prot_2022_01.fasta
-          viridiplantae,Viridiplantae_swissprot.fasta
-          eudicotyledones_uniprot,eudicotyledons_uniprot.fasta
-          eudicotyledones_orthoDB,eudicotyledons_odb10.fasta
-          vitales,vitales.fasta
+          organism,filename,maker
+          arabidopsis,arabidopsis_prot_2022_01.fasta,no
+          viridiplantae,Viridiplantae_swissprot.fasta,yes
+          eudicotyledones_uniprot,eudicotyledons_uniprot.fasta,no
+          eudicotyledones_orthoDB,eudicotyledons_odb10.fasta,yes
+          vitales,vitales.fasta,no
           ```
 data/RNAseq_data/{stranded,unstranded} : contains all the RNAseq data for transcriptome assembly. Contains also the RNAseq_samplesheet. If FASTQ, the fastq file must be in the right folder, if SRA, the workflow will download the SRA file and convert it to fastq.gz file.
 
