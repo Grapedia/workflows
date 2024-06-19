@@ -6,7 +6,7 @@ MAINTAINER Amandine Velt <amandine.velt@inrae.fr>
 
 # install gffutils
 RUN apt-get update --fix-missing && \
-apt-get install -y wget gcc g++ make zlib1g zlib1g-dev software-properties-common
+apt-get install -y wget gcc g++ make zlib1g zlib1g-dev software-properties-common bc
 RUN pip install gffutils
 
 # install GlimmerHMM

@@ -65,7 +65,9 @@ do
 	esac
 done
 
-transcript_number=$(grep "transcript" ${TRANSCRIPTOME} | wc -l)
+TRANSCRIPTOME_WORK=$( ls -l ${TRANSCRIPTOME} | sed 's/.*-> .*work\//\/work\//' )
+
+transcript_number=$(grep "transcript" ${TRANSCRIPTOME_WORK} | wc -l)
 
 for i in 1 1.2 1.5 1.7 2 3 4 5
 do
@@ -73,7 +75,7 @@ do
   transcript_subset=$(bc <<< ${transcript_number}/${i}-1)
 
   # Extract random transcripts from transcriptome
-  /scripts/extract_exons_random_transcripts.py -i ${TRANSCRIPTOME} -o $INTER/GlimmerHMM/exons.tsv -n ${transcript_subset}
+  /scripts/extract_exons_random_transcripts.py -i ${TRANSCRIPTOME_WORK} -o $INTER/GlimmerHMM/exons.tsv -n ${transcript_subset}
 
   # Train GlimmerHMM
   trainGlimmerHMM ${ASSEMBLY} $INTER/GlimmerHMM/exons.tsv -d ${DIR}

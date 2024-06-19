@@ -17,6 +17,8 @@ include { exonerate_mapping } from "./modules/exonerate_mapping"
 // include { gtf_to_gff3 } from "./modules/gtf_to_gff3"
 include { liftoff_annotations } from "./modules/liftoff_annotations"
 include { glimmerhmm_training } from "./modules/glimmerhmm_training"
+include { split_fasta } from "./modules/split_fasta"
+// include { glimmerhmm_prediction } from "./modules/glimmerhmm_prediction"
 
 Channel.fromPath( file(params.RNAseq_samplesheet) )
                     .splitCsv(header: true, sep: ',')
@@ -83,5 +85,6 @@ workflow {
   // ... exons location for each transcript (one exon per line and exons comming from ...
   // ... different transcripts are separated by a blank line)
   glimmerhmm_training(params.assemblies_folder,params.new_assembly,conversion_gtf_gff3.out.stranded_gff3)
-
+  split_fasta(params.assemblies_folder,params.new_assembly)
+  // glimmerhmm_prediction(split_fasta.out,glimmerhmm_training.out)
 }
