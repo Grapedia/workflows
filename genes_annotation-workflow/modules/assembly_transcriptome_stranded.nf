@@ -8,7 +8,7 @@ process assembly_transcriptome_stranded {
   cpus 4
 
   input:
-    tuple val(sample_ID)
+    val(sample_ID)
 
   output:
     file("RNAseq_stranded_vote.gtf")

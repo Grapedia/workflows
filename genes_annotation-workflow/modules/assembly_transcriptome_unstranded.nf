@@ -8,7 +8,7 @@ process assembly_transcriptome_unstranded {
   cpus 4
 
   input:
-    tuple val(sample_ID)
+    val(sample_ID)
 
   output:
     file("RNAseq_unstranded_vote.gtf")

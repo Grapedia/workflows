@@ -11,6 +11,7 @@ process braker2_prediction_stranded {
     val(genome_path)
     val(genome)
     val(protein_samplesheet)
+    val(sampleID)
 
   output:
     file("augustus.hints.gff3")
