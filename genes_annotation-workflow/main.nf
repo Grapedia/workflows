@@ -18,7 +18,7 @@ include { exonerate_mapping } from "./modules/exonerate_mapping"
 include { liftoff_annotations } from "./modules/liftoff_annotations"
 include { glimmerhmm_training } from "./modules/glimmerhmm_training"
 include { split_fasta } from "./modules/split_fasta"
-// include { glimmerhmm_prediction } from "./modules/glimmerhmm_prediction"
+include { glimmerhmm_prediction } from "./modules/glimmerhmm_prediction"
 // include { concat_glimmerhmm_prediction } from "./modules/concat_glimmerhmm_prediction"
 // include { glimmerhmm_gff_to_gff3 } from "./modules/glimmerhmm_gff_to_gff3"
 // include { run_maker } from "./modules/run_maker"
@@ -114,13 +114,9 @@ workflow {
   // ... assembled with this pipeline and generates in output a TSV file containing the ...
   // ... exons location for each transcript (one exon per line and exons comming from ...
   // ... different transcripts are separated by a blank line)
-  glimmerhmm_training(params.assemblies_folder,params.new_assembly,conversion_gtf_gff3.out.stranded_gff3)
-  split_fasta(params.assemblies_folder,params.new_assembly)
-  Channel
-    .fromList(split_fasta.out)
-    .set { chr_fasta_files }
-  chr_fasta_files.view()
-  // glimmerhmm_prediction(chr_fasta_files,glimmerhmm_training.out) | collect
+  glimmerhmm_training(params.assemblies_folder,params.new_assembly,conversion_gtf_gff3.out.stranded_gff3) // VALIDATED
+  split_fasta(params.assemblies_folder,params.new_assembly) // VALIDATED
+  glimmerhmm_prediction(split_fasta.out.flatten(),glimmerhmm_training.out) | collect
   // glimmerhmm_prediction
   // .out
   // .collect()
