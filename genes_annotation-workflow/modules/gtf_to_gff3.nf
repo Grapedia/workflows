@@ -11,8 +11,10 @@ process gtf_to_gff3 {
   output:
     tuple val(organism), file("*.gff3")
 
+  // replacement of /usr/local/opt/evidencemodeler-1.1.1/EvmUtils/misc/Exonerate_to_evm_gff3.pl $organism_filtered_gff_file > ${organism}.gff3
+  // by /usr/local/opt/evidencemodeler-1.1.1/EvmUtils/misc/Exonerate_to_evm_gff3.pl $organism_filtered_gff_file > ${organism}.gff3
   script:
     """
-    /usr/local/opt/evidencemodeler-1.1.1/EvmUtils/misc/exonerate_gff_to_alignment_gff3.pl $organism_filtered_gff_file prot > ${organism}.gff3
+    /usr/local/opt/evidencemodeler-1.1.1/EvmUtils/misc/Exonerate_to_evm_gff3.pl $organism_filtered_gff_file > ${organism}.gff3
     """
 }
