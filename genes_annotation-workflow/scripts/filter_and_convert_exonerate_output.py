@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+#!/usr/bin/env python
 # coding: utf-8
 import argparse
 import re
@@ -38,7 +38,7 @@ def filter_alignments(list_alignments, lines, scores):
 
 
 def filter_and_convert(input_file, output_file):
-    with open(input_file, 'r') as open_input_file:    
+    with open(input_file, 'r') as open_input_file:
         list_alignments = []
         list_gff_lines = []
         scores_dict = {
@@ -56,12 +56,12 @@ def filter_and_convert(input_file, output_file):
             if '# --- START OF GFF DUMP ---' in line:
                 is_gff_line = True
                 if len(list_gff_lines) > 0:
-                    # Filter and append or not the previous alignment 
+                    # Filter and append or not the previous alignment
                     filter_alignments(list_alignments, list_gff_lines, scores_dict)
                 # Start list for the new alignment
                 list_gff_lines = []
                 list_gff_lines.append(line[:-1])
-            
+
             # Means it's the end of GFF line, after this line are written the different ...
             # ... score values, and alignment and query length
             elif '# --- END OF GFF DUMP ---' in line:
@@ -78,7 +78,7 @@ def filter_and_convert(input_file, output_file):
                     list_gff_lines.append(line[:-1])
 
         # To filter the last alignment we have to call one last time the function ...
-        # ... after every lines are parsed 
+        # ... after every lines are parsed
         filter_alignments(list_alignments, list_gff_lines, scores_dict)
 
         # Write output file

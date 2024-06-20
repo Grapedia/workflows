@@ -94,8 +94,8 @@ workflow {
   //  .groupTuple()
   //  .set{ exonerate_map }
   // merge_exonerate_output(exonerate_map) // VALIDATED
-  // filtering_and_conversion(merge_exonerate_output.out)
-  // gtf_to_gff3(filtering_and_conversion.out)
+  // filtering_and_conversion(merge_exonerate_output.out) // VALIDATED
+  // gtf_to_gff3(filtering_and_conversion.out) // VALIDATED
 
   // ----------------------------------------------------------------------------------------
   // --------------------------------- Ab initio predictions --------------------------------
