@@ -14,11 +14,6 @@ process merge_exonerate_output {
 
   script:
     """
-    if ls /protein_alignments_split/${organism}.gff 1> /dev/null 2>&1
-    then
-      cp /protein_alignments_split/${organism}.gff ${organism}.gff
-    else
-      /scripts/merge_exonerate_output.sh /protein_alignments_split/${organism} ${organism}
-    fi
+    /scripts/merge_exonerate_output.sh /protein_alignments_split/${organism} ${organism}
     """
 }

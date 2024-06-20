@@ -88,8 +88,12 @@ workflow {
   // ----------------------------------------------------------------------------------------
   // split_proteins(protein_list) // VALIDATED
   // pblat_protein_alignment(params.assemblies_folder,params.new_assembly, split_proteins.out.transpose()) // VALIDATED
-  // exonerate_mapping(params.assemblies_folder,params.new_assembly, pblat_protein_alignment.out) | collect // VALIDATED
-  // merge_exonerate_output(exonerate_mapping.out)
+  // exonerate_mapping(params.assemblies_folder,params.new_assembly, pblat_protein_alignment.out)  | collect // VALIDATED
+  // exonerate_mapping
+  //  .out
+  //  .groupTuple()
+  //  .set{ exonerate_map }
+  // merge_exonerate_output(exonerate_map) // VALIDATED
   // filtering_and_conversion(merge_exonerate_output.out)
   // gtf_to_gff3(filtering_and_conversion.out)
 
