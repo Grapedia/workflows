@@ -12,9 +12,9 @@ include { conversion_gtf_gff3 } from "./modules/conversion_gtf_gff3"
 include { split_proteins } from "./modules/split_proteins"
 include { pblat_protein_alignment } from "./modules/pblat_protein_alignment"
 include { exonerate_mapping } from "./modules/exonerate_mapping"
-// include { merge_exonerate_output } from "./modules/merge_exonerate_output"
-// include { filtering_and_conversion } from "./modules/filtering_and_conversion"
-// include { gtf_to_gff3 } from "./modules/gtf_to_gff3"
+include { merge_exonerate_output } from "./modules/merge_exonerate_output"
+include { filtering_and_conversion } from "./modules/filtering_and_conversion"
+include { gtf_to_gff3 } from "./modules/gtf_to_gff3"
 include { liftoff_annotations } from "./modules/liftoff_annotations"
 include { glimmerhmm_training } from "./modules/glimmerhmm_training"
 include { split_fasta } from "./modules/split_fasta"
@@ -47,9 +47,9 @@ Channel.fromPath( file(params.protein_samplesheet) )
                     .map { row ->
                           def organism = row.organism
                           def filename = row.filename
-                          def maker = row.maker
+                          def maker_braker2 = row.maker_braker2
 
-                          return [organism, filename, maker]
+                          return [organism, filename, maker_braker2]
                     }
                     .set{ protein_list }
 

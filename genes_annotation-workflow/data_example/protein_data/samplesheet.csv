@@ -1,4 +1,4 @@
-organism,filename,maker
+organism,filename,maker_braker2
 arabidopsis,arabidopsis_prot_2022_01.fasta,no
 viridiplantae,Viridiplantae_swissprot.fasta,yes
 eudicotyledones_uniprot,eudicotyledons_uniprot.fasta,no
