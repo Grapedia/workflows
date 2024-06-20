@@ -2,7 +2,7 @@ process filtering_and_conversion {
 
   tag "Executing filtering and GFF line extractions on the following protein sequences: $organism"
   container 'avelt/exonerate_bedtools_samtools:latest'
-  containerOptions "--volume ${projectDir}/scripts/:/scripts"
+  containerOptions "--memory=100g --volume ${projectDir}/scripts/:/scripts"
   publishDir "$params.outdir/evidence_data/protein_final_alignments/"
   cpus 4
 
