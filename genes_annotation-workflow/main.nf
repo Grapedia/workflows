@@ -23,6 +23,12 @@ include { split_fasta } from "./modules/split_fasta"
 // include { glimmerhmm_gff_to_gff3 } from "./modules/glimmerhmm_gff_to_gff3"
 // include { run_maker } from "./modules/run_maker"
 // include { rename_maker_gff_to_gff3 } from "./modules/rename_maker_gff_to_gff3"
+// include { braker2_prediction_stranded } from "./modules/braker2_prediction_stranded"
+// include { braker2_prediction_unstranded } from "./modules/braker2_prediction_unstranded"
+// include { rename_braker2_gff_to_gff3 } from "./modules/rename_braker2_gff_to_gff3"
+// include { run_geneid } from "./modules/run_geneid"
+
+
 
 Channel.fromPath( file(params.RNAseq_samplesheet) )
                     .splitCsv(header: true, sep: ',')
@@ -48,6 +54,18 @@ Channel.fromPath( file(params.protein_samplesheet) )
                     .set{ protein_list }
 
 workflow {
+
+  // ----------------------------------------------------------------------------------------
+  // -------------------------------- Evidence data analysis --------------------------------
+  // ----------------------------------------------------------------------------------------
+
+  // This step will generate for each assembly:
+  //   * a transcriptome for stranded RNA-Seq data
+  //   * a transcriptome for unstranded RNA-Seq data
+  //   * an alignment file for protein sequences against the assembly
+  // The transcriptomes will be generated based on RNA-Seq data and protein alignments ...
+  // ... based on protein sequences
+
   // ----------------------------------------------------------------------------------------
   //                                Transcriptomes assembly
   // ----------------------------------------------------------------------------------------
@@ -74,6 +92,13 @@ workflow {
   // merge_exonerate_output(exonerate_mapping.out)
   // filtering_and_conversion(merge_exonerate_output.out)
   // gtf_to_gff3(filtering_and_conversion.out)
+
+  // ----------------------------------------------------------------------------------------
+  // --------------------------------- Ab initio predictions --------------------------------
+  // ----------------------------------------------------------------------------------------
+
+  // 4 ab initio predictions will be done with different tools: SNAP (using MAKER), Augustus ...
+  // ... (using BRAKER 2), GlimmerHMM and GeneID
 
   // ----------------------------------------------------------------------------------------
   //                                Liftoff previous annotations
@@ -111,5 +136,18 @@ workflow {
   // MAKER is an annotation pipeline that integrates multiple predictor tools like SNAP
   // run_maker(params.assemblies_folder,params.new_assembly,conversion_gtf_gff3.out.stranded_gff3,params.protein_samplesheet)
   // rename_maker_gff_to_gff3(run_maker.out)
+
+  // ----------------------------------------------------------------------------------------
+  //                                    BRAKER2 (AUGUSTUS)
+  // ----------------------------------------------------------------------------------------
+  // braker2_prediction_stranded(params.assemblies_folder,params.new_assembly,params.protein_samplesheet)
+  // braker2_prediction_unstranded()
+  // rename_braker2_gff_to_gff3()
+
+  // ----------------------------------------------------------------------------------------
+  //                                          GeneID
+  // ----------------------------------------------------------------------------------------
+
+  // run_geneid()
 
 }
