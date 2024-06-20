@@ -27,7 +27,8 @@ include { glimmerhmm_prediction } from "./modules/glimmerhmm_prediction"
 // include { braker2_prediction_unstranded } from "./modules/braker2_prediction_unstranded"
 // include { rename_braker2_gff_to_gff3 } from "./modules/rename_braker2_gff_to_gff3"
 // include { run_geneid } from "./modules/run_geneid"
-
+// include { tRNAscan_SE } from "./modules/tRNAscan_SE"
+// include { EDTA } from "./modules/EDTA"
 
 
 Channel.fromPath( file(params.RNAseq_samplesheet) )
@@ -149,5 +150,17 @@ workflow {
   // ----------------------------------------------------------------------------------------
 
   // run_geneid(params.assemblies_folder,params.new_assembly,params.geneid_param_file)
+
+  // ----------------------------------------------------------------------------------------#
+  // ----------------------------------- tRNAscan-SE annotation -----------------------------#
+  // ----------------------------------------------------------------------------------------#
+
+  // tRNAscan_SE(params.assemblies_folder,params.new_assembly)
+
+  // ----------------------------------------------------------------------------------------#
+  // ----------------------------------- EDTA annotation -----------------------------#
+  // ----------------------------------------------------------------------------------------#
+
+  // EDTA(params.assemblies_folder,params.new_assembly)
 
 }
