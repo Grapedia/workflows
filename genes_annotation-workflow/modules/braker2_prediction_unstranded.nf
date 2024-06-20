@@ -1,10 +1,10 @@
 // AUGUSTUS can be run directly using the pipeline BRAKER2
-process braker2_prediction_stranded {
+process braker2_prediction_unstranded {
 
-  tag "Executing BRAKER2/AUGUSTUS prediction on stranded data"
+  tag "Executing BRAKER2/AUGUSTUS prediction on unstranded data"
   container 'avelt/braker2_prothint_genemark:latest'
-  containerOptions "--volume ${projectDir}/scripts:/scripts --volume ${genome_path}:/genome_path --volume $params.outdir/evidence_data/RNAseq_stranded/alignments/new_assembly:/alignments --volume ${projectDir}:/outdir"
-  publishDir "$params.outdir/BRAKER2_RNAseq_stranded/"
+  containerOptions "--volume ${projectDir}/scripts:/scripts --volume ${genome_path}:/genome_path --volume $params.outdir/evidence_data/RNAseq_unstranded/alignments/new_assembly:/alignments --volume ${projectDir}:/outdir"
+  publishDir "$params.outdir/BRAKER2_RNAseq_unstranded/"
   cpus 4
 
   input:
@@ -17,7 +17,6 @@ process braker2_prediction_stranded {
 
   script:
     """
-    mkdir -p /outdir/TMP
     proteins=\$(/scripts/retrieve_proteins_for_maker.sh $protein_samplesheet)
     bam=\$(/scripts/retrieve_path_bam.sh /alignments)
     /BRAKER-2.1.6/scripts/braker.pl --genome=/genome_path/genome --bam=\${bam} \
