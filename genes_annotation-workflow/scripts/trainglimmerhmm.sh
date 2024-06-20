@@ -85,8 +85,11 @@ do
   # If not, delete the directory to test another number of transcripts for the training
   if [ $? = 0 ]
   then
-    echo "Success with ${i}"
-    break
+    if ls ${DIR}/config.file 1> /dev/null 2>&1
+    then
+      echo "Success with ${i}"
+      break
+    fi
   else
     rm -r $INTER/GlimmerHMM/
   fi
