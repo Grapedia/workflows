@@ -21,7 +21,7 @@ include { split_fasta } from "./modules/split_fasta"
 include { glimmerhmm_prediction } from "./modules/glimmerhmm_prediction"
 // include { concat_glimmerhmm_prediction } from "./modules/concat_glimmerhmm_prediction"
 // include { glimmerhmm_gff_to_gff3 } from "./modules/glimmerhmm_gff_to_gff3"
-// include { run_maker } from "./modules/run_maker"
+include { run_maker } from "./modules/run_maker"
 // include { rename_maker_gff_to_gff3 } from "./modules/rename_maker_gff_to_gff3"
 // include { braker2_prediction_stranded } from "./modules/braker2_prediction_stranded"
 // include { braker2_prediction_unstranded } from "./modules/braker2_prediction_unstranded"
@@ -136,7 +136,7 @@ workflow {
   // ----------------------------------------------------------------------------------------
 
   // MAKER is an annotation pipeline that integrates multiple predictor tools like SNAP
-  // run_maker(params.assemblies_folder,params.new_assembly,conversion_gtf_gff3.out.stranded_gff3,params.protein_samplesheet)
+  run_maker(params.assemblies_folder,params.new_assembly,conversion_gtf_gff3.out.stranded_gff3.parent,conversion_gtf_gff3.out.stranded_gff3.name,file(params.protein_samplesheet).getParent(),file(params.protein_samplesheet).getName())
   // rename_maker_gff_to_gff3(run_maker.out)
 
   // ----------------------------------------------------------------------------------------
