@@ -120,7 +120,7 @@ workflow {
   // ... assembled with this pipeline and generates in output a TSV file containing the ...
   // ... exons location for each transcript (one exon per line and exons comming from ...
   // ... different transcripts are separated by a blank line)
-  // glimmerhmm_training(params.assemblies_folder,params.new_assembly,conversion_gtf_gff3.out.stranded_gff3)
+  // glimmerhmm_training(params.assemblies_folder,params.new_assembly,conversion_gtf_gff3.out.stranded_gff3) // ERROR : ERROR 69: /usr/local/bin/score exited funny: 35584
   // split_fasta(params.assemblies_folder,params.new_assembly) // VALIDATED
   // glimmerhmm_prediction(split_fasta.out.flatten(),glimmerhmm_training.out) | collect
   // glimmerhmm_prediction
