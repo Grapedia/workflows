@@ -29,6 +29,7 @@ include { glimmerhmm_prediction } from "./modules/glimmerhmm_prediction"
 // include { run_geneid } from "./modules/run_geneid"
 // include { tRNAscan_SE } from "./modules/tRNAscan_SE"
 // include { EDTA } from "./modules/EDTA"
+// include { pasa } from "./modules/pasa"
 
 
 Channel.fromPath( file(params.RNAseq_samplesheet) )
@@ -149,18 +150,24 @@ workflow {
   //                                          GeneID
   // ----------------------------------------------------------------------------------------
 
-  // run_geneid(params.assemblies_folder,params.new_assembly,params.geneid_param_file)
+  // run_geneid(params.assemblies_folder,params.new_assembly,params.geneid_param_file.getParentFile(),params.geneid_param_file.getName())
 
-  // ----------------------------------------------------------------------------------------#
-  // ----------------------------------- tRNAscan-SE annotation -----------------------------#
-  // ----------------------------------------------------------------------------------------#
+  // ----------------------------------------------------------------------------------------
+  //                                  tRNAscan-SE annotation
+  // ----------------------------------------------------------------------------------------
 
   // tRNAscan_SE(params.assemblies_folder,params.new_assembly)
 
-  // ----------------------------------------------------------------------------------------#
-  // ----------------------------------- EDTA annotation -----------------------------#
-  // ----------------------------------------------------------------------------------------#
+  // ----------------------------------------------------------------------------------------
+  //                                        EDTA annotation
+  // ----------------------------------------------------------------------------------------
 
   // EDTA(params.assemblies_folder,params.new_assembly)
+
+  // ----------------------------------------------------------------------------------------
+  //                                      PASA UTR annotation
+  // ----------------------------------------------------------------------------------------
+
+  // pasa(gff3,params.assemblies_folder,params.new_assembly,conversion_gtf_gff3.out.stranded_fasta,params.pasa_config_file.getParentFile(),params.pasa_config_file.getName())
 
 }
