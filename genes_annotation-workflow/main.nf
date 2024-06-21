@@ -26,9 +26,9 @@ include { glimmerhmm_prediction } from "./modules/glimmerhmm_prediction"
 // include { braker2_prediction_stranded } from "./modules/braker2_prediction_stranded"
 // include { braker2_prediction_unstranded } from "./modules/braker2_prediction_unstranded"
 // include { rename_braker2_gff_to_gff3 } from "./modules/rename_braker2_gff_to_gff3"
-// include { run_geneid } from "./modules/run_geneid"
-// include { tRNAscan_SE } from "./modules/tRNAscan_SE"
-// include { EDTA } from "./modules/EDTA"
+include { run_geneid } from "./modules/run_geneid"
+include { tRNAscan_SE } from "./modules/tRNAscan_SE"
+include { EDTA } from "./modules/EDTA"
 // include { pasa } from "./modules/pasa"
 
 
@@ -120,9 +120,9 @@ workflow {
   // ... assembled with this pipeline and generates in output a TSV file containing the ...
   // ... exons location for each transcript (one exon per line and exons comming from ...
   // ... different transcripts are separated by a blank line)
-  glimmerhmm_training(params.assemblies_folder,params.new_assembly,conversion_gtf_gff3.out.stranded_gff3) // VALIDATED
-  split_fasta(params.assemblies_folder,params.new_assembly) // VALIDATED
-  glimmerhmm_prediction(split_fasta.out.flatten(),glimmerhmm_training.out) | collect
+  // glimmerhmm_training(params.assemblies_folder,params.new_assembly,conversion_gtf_gff3.out.stranded_gff3)
+  // split_fasta(params.assemblies_folder,params.new_assembly) // VALIDATED
+  // glimmerhmm_prediction(split_fasta.out.flatten(),glimmerhmm_training.out) | collect
   // glimmerhmm_prediction
   // .out
   // .collect()
@@ -150,24 +150,24 @@ workflow {
   //                                          GeneID
   // ----------------------------------------------------------------------------------------
 
-  // run_geneid(params.assemblies_folder,params.new_assembly,params.geneid_param_file.getParentFile(),params.geneid_param_file.getName())
+  // run_geneid(params.assemblies_folder,params.new_assembly,file(params.geneid_param_file).getParent(),file(params.geneid_param_file).getName()) // ERROR : buffer overflow detected
 
   // ----------------------------------------------------------------------------------------
   //                                  tRNAscan-SE annotation
   // ----------------------------------------------------------------------------------------
 
-  // tRNAscan_SE(params.assemblies_folder,params.new_assembly)
+  tRNAscan_SE(params.assemblies_folder,params.new_assembly) // VALIDATED
 
   // ----------------------------------------------------------------------------------------
   //                                        EDTA annotation
   // ----------------------------------------------------------------------------------------
 
-  // EDTA(params.assemblies_folder,params.new_assembly)
+  EDTA(params.assemblies_folder,params.new_assembly) // VALIDATED
 
   // ----------------------------------------------------------------------------------------
   //                                      PASA UTR annotation
   // ----------------------------------------------------------------------------------------
 
-  // pasa(gff3,params.assemblies_folder,params.new_assembly,conversion_gtf_gff3.out.stranded_fasta,params.pasa_config_file.getParentFile(),params.pasa_config_file.getName())
+  // pasa(gff3,params.assemblies_folder,params.new_assembly,conversion_gtf_gff3.out.stranded_fasta,file(params.pasa_config_file).getParent(),file(params.pasa_config_file).getName())
 
 }
