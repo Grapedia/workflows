@@ -162,7 +162,7 @@ workflow {
   //                                        EDTA annotation
   // ----------------------------------------------------------------------------------------
 
-  EDTA(params.assemblies_folder,params.new_assembly) // VALIDATED
+  // EDTA(params.assemblies_folder,params.new_assembly) // docker version don't work with absoluthe path and symlink, see : https://github.com/oushujun/EDTA?tab=readme-ov-file#install-with-docker-good-for-rootmacosapple-m-chip-users
 
   // ----------------------------------------------------------------------------------------
   //                                      PASA UTR annotation

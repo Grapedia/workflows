@@ -1,8 +1,8 @@
 process EDTA {
 
   tag "Executing EDTA TE annotation on the following genome: $genome"
-  container 'quay.io/biocontainers/edta:2.2.0--hdfd78af_1'
-  containerOptions "--volume ${genome_path}:/genome_path"
+  container 'avelt/edta:latest'
+  containerOptions "--volume ${genome_path}:/genome_path --volume ${projectDir}/scripts/:/scripts"
   publishDir "$projectDir/FINAL_OUTPUT"
   cpus 4
 
@@ -15,6 +15,6 @@ process EDTA {
 
   script:
     """
-    perl /usr/local/bin/EDTA.pl --genome /genome_path/$genome --species others --step all --sensitive 1 --anno 1 --threads ${task.cpus}
+    /scripts/edta.sh -g /genome_path/$genome -n ${task.cpus}
     """
 }
