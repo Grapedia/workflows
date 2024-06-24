@@ -1,14 +1,17 @@
-# base image: Ubuntu
-FROM ubuntu:16.04
+# base image: debian
+FROM debian:unstable-slim AS builder
 
 # File Author / Maintainer
 MAINTAINER Amandine Velt <amandine.velt@inrae.fr>
 
-# install geneid
-RUN apt-get update --fix-missing && \
-apt-get install -y wget gcc g++ make zlib1g zlib1g-dev python libbz2-dev libclang-dev liblzma-dev bzip2 libncurses5-dev libncursesw5-dev libglib2.0-dev && \
-wget https://genome.crg.es/pub/software/geneid/geneid_v1.4.4.Jan_13_2011.tar.gz && \
-tar -xzvf geneid_v1.4.4.Jan_13_2011.tar.gz && \
-cd geneid && \
-make && \
-mv bin/* /usr/local/bin
+RUN apt-get update && \
+    apt-get install --no-install-recommends -y \
+        curl libc6 \
+        ca-certificates \
+        build-essential
+
+RUN curl -L https://github.com/guigolab/geneid/archive/v1.4.4.tar.gz | \
+    tar xz && \
+    cd geneid-1.4.4 && \
+    make BIN=/build && \
+    mv /build/geneid /usr/local/bin/

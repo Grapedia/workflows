@@ -150,7 +150,8 @@ workflow {
   //                                          GeneID
   // ----------------------------------------------------------------------------------------
 
-  // run_geneid(params.assemblies_folder,params.new_assembly,file(params.geneid_param_file).getParent(),file(params.geneid_param_file).getName()) // ERROR : buffer overflow detected
+  // Work on PN40024_40X_REF_chloro_mito.chr_renamed.fasta, not on Chinese_ref_v2.fa : ERROR : buffer overflow detected. Reason : sequence too long ... email sent to the developper 
+  // run_geneid(params.assemblies_folder,params.new_assembly,file(params.geneid_param_file).getParent(),file(params.geneid_param_file).getName())
 
   // ----------------------------------------------------------------------------------------
   //                                  tRNAscan-SE annotation
