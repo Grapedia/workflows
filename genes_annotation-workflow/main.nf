@@ -164,7 +164,7 @@ workflow {
   //                              Evidence Modeler exonerate_filtering
   // ----------------------------------------------------------------------------------------#
 
-  // filter_evidencemodeler_gff3(evidence_modeler.out.annotations_gff3,evidence_modeler.out.annotations_EVM_out,,params.assemblies_folder,params.new_assembly,evidence_modeler.out.evm_at_least_2_ABINITIO_FINAL_gff3,evidence_modeler.out.evm_1_ABINITIO_FINAL_gff3,evidence_modeler.out.evm_evidencedata_only_FINAL_gff3,evidence_modeler.out.evm_1_ABINITIO_proteins_fasta,file(params.NR_proteins_fasta).getParent(),file(params.NR_proteins_fasta).getName(),file(params.uniprot_fasta).getParent(),file(params.uniprot_fasta).getName())
+  // filter_evidencemodeler_gff3(evidence_modeler.out.annotations_gff3,evidence_modeler.out.annotations_EVM_out,params.assemblies_folder,params.new_assembly,evidence_modeler.out.evm_at_least_2_ABINITIO_FINAL_gff3,evidence_modeler.out.evm_1_ABINITIO_FINAL_gff3,evidence_modeler.out.evm_evidencedata_only_FINAL_gff3,evidence_modeler.out.evm_1_ABINITIO_proteins_fasta,file(params.NR_proteins_fasta).getParent(),file(params.NR_proteins_fasta).getName(),file(params.uniprot_fasta).getParent(),file(params.uniprot_fasta).getName())
 
   // ----------------------------------------------------------------------------------------
   //                                  tRNAscan-SE annotation
