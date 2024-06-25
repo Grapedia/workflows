@@ -10,6 +10,9 @@ RNAseq_samplesheet : <CSV_FILE>
 protein_samplesheet : <CSV_FILE>
 geneid_param_file : <TAB_DELIMITED_FILE>
 pasa_config_file : <TAB_DELIMITED_FILE>
+evm_config_file : <TAB_DELIMITED_FILE>
+NR_proteins_fasta : <FASTA_FILE>
+uniprot_fasta : <FASTA_FILE>
 ---- OUTPUT
 output file : <GFF3_FILE>
 ```
@@ -23,6 +26,7 @@ output file : <GFF3_FILE>
 │   ├── geneid_param_file
 │   ├── pasa_config_file
 │   ├── protein_data
+│       ├── for_abinitio_gene_models_selection
 │   └── RNAseq_data
 │       ├── stranded
 │       └── unstranded
@@ -84,6 +88,9 @@ data/protein_data : contains all the protein data files (FASTA) to perform prote
           eudicotyledones_orthoDB,eudicotyledons_odb10.fasta,yes
           vitales,vitales.fasta,no
           ```
+
+data/protein_data/for_abinitio_gene_models_selection : contains the NR database and the uniprot database for the final process filter_evidencemodeler_gff3()
+
 data/RNAseq_data/{stranded,unstranded} : contains all the RNAseq data for transcriptome assembly. Contains also the RNAseq_samplesheet. If FASTQ, the fastq file must be in the right folder, if SRA, the workflow will download the SRA file and convert it to fastq.gz file.
 
           Example of RNAseq_samplesheet :

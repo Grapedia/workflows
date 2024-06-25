@@ -27,10 +27,11 @@ include { run_maker } from "./modules/run_maker"
 // include { braker2_prediction_unstranded } from "./modules/braker2_prediction_unstranded"
 // include { rename_braker2_gff_to_gff3 } from "./modules/rename_braker2_gff_to_gff3"
 include { run_geneid } from "./modules/run_geneid"
+// include { evidence_modeler } from "./modules/evidence_modeler"
+// include { filter_evidencemodeler_gff3 } from "./modules/filter_evidencemodeler_gff3"
 include { tRNAscan_SE } from "./modules/tRNAscan_SE"
 include { EDTA } from "./modules/EDTA"
 // include { pasa } from "./modules/pasa"
-
 
 Channel.fromPath( file(params.RNAseq_samplesheet) )
                     .splitCsv(header: true, sep: ',')
@@ -154,6 +155,18 @@ workflow {
   // run_geneid(params.assemblies_folder,params.new_assembly,file(params.geneid_param_file).getParent(),file(params.geneid_param_file).getName())
 
   // ----------------------------------------------------------------------------------------
+  //                                        Evidence Modeler
+  // ----------------------------------------------------------------------------------------
+
+  // evidence_modeler(params.assemblies_folder,params.new_assembly,file(params.evm_config_file).getParent(),file(params.evm_config_file).getName(),run_geneid.out,glimmerhmm_gff_to_gff3.out,liftoff_annotations.out.liftoff_previous_annotations,rename_maker_gff_to_gff3.out,rename_braker2_gff_to_gff3.out.braker2_prediction_stranded,rename_braker2_gff_to_gff3.out.braker2_prediction_unstranded,,conversion_gtf_gff3.out.stranded_gff3.parent,conversion_gtf_gff3.out.stranded_gff3.name,conversion_gtf_gff3.out.unstranded_gff3.parent,conversion_gtf_gff3.out.unstranded_gff3.name)
+
+  // ----------------------------------------------------------------------------------------#
+  //                              Evidence Modeler exonerate_filtering
+  // ----------------------------------------------------------------------------------------#
+
+  // filter_evidencemodeler_gff3(evidence_modeler.out.annotations_gff3,evidence_modeler.out.annotations_EVM_out,,params.assemblies_folder,params.new_assembly,evidence_modeler.out.evm_at_least_2_ABINITIO_FINAL_gff3,evidence_modeler.out.evm_1_ABINITIO_FINAL_gff3,evidence_modeler.out.evm_evidencedata_only_FINAL_gff3,evidence_modeler.out.evm_1_ABINITIO_proteins_fasta,file(params.NR_proteins_fasta).getParent(),file(params.NR_proteins_fasta).getName(),file(params.uniprot_fasta).getParent(),file(params.uniprot_fasta).getName())
+
+  // ----------------------------------------------------------------------------------------
   //                                  tRNAscan-SE annotation
   // ----------------------------------------------------------------------------------------
 
@@ -169,6 +182,6 @@ workflow {
   //                                      PASA UTR annotation
   // ----------------------------------------------------------------------------------------
 
-  // pasa(gff3,params.assemblies_folder,params.new_assembly,conversion_gtf_gff3.out.stranded_fasta,file(params.pasa_config_file).getParent(),file(params.pasa_config_file).getName())
+  // pasa(filter_evidencemodeler_gff3.out,params.assemblies_folder,params.new_assembly,conversion_gtf_gff3.out.stranded_fasta,file(params.pasa_config_file).getParent(),file(params.pasa_config_file).getName())
 
 }
