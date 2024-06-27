@@ -26,11 +26,12 @@ include { run_maker } from "./modules/run_maker"
 // include { braker2_prediction_stranded } from "./modules/braker2_prediction_stranded"
 // include { braker2_prediction_unstranded } from "./modules/braker2_prediction_unstranded"
 // include { rename_braker2_gff_to_gff3 } from "./modules/rename_braker2_gff_to_gff3"
+include { EDTA } from "./modules/EDTA"
+// include { RepeatMasker } from "./modules/RepeatMasker"
 include { run_geneid } from "./modules/run_geneid"
 // include { evidence_modeler } from "./modules/evidence_modeler"
 // include { filter_evidencemodeler_gff3 } from "./modules/filter_evidencemodeler_gff3"
 include { tRNAscan_SE } from "./modules/tRNAscan_SE"
-include { EDTA } from "./modules/EDTA"
 // include { pasa } from "./modules/pasa"
 
 Channel.fromPath( file(params.RNAseq_samplesheet) )
@@ -148,17 +149,29 @@ workflow {
   // rename_braker2_gff_to_gff3(braker2_prediction_stranded.out,braker2_prediction_unstranded.out)
 
   // ----------------------------------------------------------------------------------------
+  //                                        EDTA annotation
+  // ----------------------------------------------------------------------------------------
+
+  // EDTA(params.assemblies_folder,params.new_assembly) // docker version don't work with absoluthe path and symlink, see : https://github.com/oushujun/EDTA?tab=readme-ov-file#install-with-docker-good-for-rootmacosapple-m-chip-users
+
+  // ----------------------------------------------------------------------------------------
+  //                                        RepeatMasker
+  // ----------------------------------------------------------------------------------------
+
+  // RepeatMasker(params.assemblies_folder,params.new_assembly,EDTA.out.TElib_fasta)
+
+  // ----------------------------------------------------------------------------------------
   //                                          GeneID
   // ----------------------------------------------------------------------------------------
 
   // Work on PN40024_40X_REF_chloro_mito.chr_renamed.fasta, not on Chinese_ref_v2.fa : ERROR : buffer overflow detected. Reason : sequence too long ... email sent to the developper 
-  // run_geneid(params.assemblies_folder,params.new_assembly,file(params.geneid_param_file).getParent(),file(params.geneid_param_file).getName())
+  // run_geneid(RepeatMasker.out.masked_genome,file(params.geneid_param_file).getParent(),file(params.geneid_param_file).getName())
 
   // ----------------------------------------------------------------------------------------
   //                                        Evidence Modeler
   // ----------------------------------------------------------------------------------------
 
-  // evidence_modeler(params.assemblies_folder,params.new_assembly,file(params.evm_config_file).getParent(),file(params.evm_config_file).getName(),run_geneid.out,glimmerhmm_gff_to_gff3.out,liftoff_annotations.out.liftoff_previous_annotations,rename_maker_gff_to_gff3.out,rename_braker2_gff_to_gff3.out.braker2_prediction_stranded,rename_braker2_gff_to_gff3.out.braker2_prediction_unstranded,conversion_gtf_gff3.out.stranded_gff3.parent,conversion_gtf_gff3.out.stranded_gff3.name,conversion_gtf_gff3.out.unstranded_gff3.parent,conversion_gtf_gff3.out.unstranded_gff3.name,EDTA.out)
+  // evidence_modeler(params.assemblies_folder,params.new_assembly,file(params.evm_config_file).getParent(),file(params.evm_config_file).getName(),run_geneid.out,glimmerhmm_gff_to_gff3.out,liftoff_annotations.out.liftoff_previous_annotations,rename_maker_gff_to_gff3.out,rename_braker2_gff_to_gff3.out.braker2_prediction_stranded,rename_braker2_gff_to_gff3.out.braker2_prediction_unstranded,conversion_gtf_gff3.out.stranded_gff3.parent,conversion_gtf_gff3.out.stranded_gff3.name,conversion_gtf_gff3.out.unstranded_gff3.parent,conversion_gtf_gff3.out.unstranded_gff3.name,EDTA.out.TE_annotations_gff3)
 
   // ----------------------------------------------------------------------------------------#
   //                              Evidence Modeler exonerate_filtering
@@ -171,12 +184,6 @@ workflow {
   // ----------------------------------------------------------------------------------------
 
   tRNAscan_SE(params.assemblies_folder,params.new_assembly) // VALIDATED
-
-  // ----------------------------------------------------------------------------------------
-  //                                        EDTA annotation
-  // ----------------------------------------------------------------------------------------
-
-  // EDTA(params.assemblies_folder,params.new_assembly) // docker version don't work with absoluthe path and symlink, see : https://github.com/oushujun/EDTA?tab=readme-ov-file#install-with-docker-good-for-rootmacosapple-m-chip-users
 
   // ----------------------------------------------------------------------------------------
   //                                      PASA UTR annotation

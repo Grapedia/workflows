@@ -12,6 +12,8 @@ process EDTA {
 
   output:
     file("annotations.EDTA.txt")
+    // file("annotations.EDTA.txt"), emit : TElib_fasta
+    // file("annotations.EDTA.txt"), emit : TE_annotations_gff3
 
   script:
     """

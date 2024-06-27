@@ -5,13 +5,12 @@ process run_geneid {
 
   tag "Executing GeneID prediction"
   container 'avelt/geneid:latest'
-  containerOptions "--volume ${genome_path}:/genome_path --volume ${geneid_config_path}:/geneid_config_path"
+  containerOptions "--volume ${geneid_config_path}:/geneid_config_path"
   publishDir "$params.outdir/geneid"
   cpus 4
 
   input:
-    val(genome_path)
-    val(genome)
+    val(masked_genome)
     val(geneid_config_path)
     val(geneid_config_filename)
 
@@ -20,6 +19,6 @@ process run_geneid {
 
   script:
     """
-    geneid /genome_path/$genome -P /geneid_config_path/$geneid_config_filename -3 > geneid_predictions.gff3
+    geneid $masked_genome -P /geneid_config_path/$geneid_config_filename -3 > geneid_predictions.gff3
     """
 }
