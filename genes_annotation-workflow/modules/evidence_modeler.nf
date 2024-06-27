@@ -9,7 +9,7 @@ process evidence_modeler {
 
   tag "Executing EvidenceModeler"
   container 'avelt/evidencemodeler_gffread:latest'
-  containerOptions "--volume ${genome_path}:/genome_path --volume ${projectDir}/scripts/:/scripts --volume ${evm_config_file_path}:/evm_config_file_path --volume $params.outdir/evidence_data/protein_final_alignments/:/protein_final_alignments --volume $RNAseq_stranded_transcriptome_path:/RNAseq_stranded_transcriptome_path --volume $RNAseq_unstranded_transcriptome_path:/RNAseq_unstranded_transcriptome_path"
+  containerOptions "--volume ${genome_path}:/genome_path --volume ${projectDir}/scripts/:/scripts --volume ${evm_config_file_path}:/evm_config_file_path --volume $params.outdir/evidence_data/protein_final_alignments/:/protein_final_alignments --volume $RNAseq_stranded_transcriptome_path:/RNAseq_stranded_transcriptome_path --volume $RNAseq_unstranded_transcriptome_path:/RNAseq_unstranded_transcriptome_path --volume $TEs_annotations_path:/TEs_annotations_path"
   publishDir "$projectDir/FINAL_OUTPUT"
   cpus 4
 
@@ -28,6 +28,8 @@ process evidence_modeler {
     val(RNAseq_stranded_transcriptome_filename)
     val(RNAseq_unstranded_transcriptome_path)
     val(RNAseq_unstranded_transcriptome_filename)
+    val(TEs_annotations_path)
+    val(TEs_annotations_filename)
 
   output:
     path("annotations.gff3"), emit : annotations_gff3
@@ -41,7 +43,7 @@ process evidence_modeler {
     """
     /scripts/evidencemodeler.sh -e \$PWD \
         -a /genome_path/$genome -w /evm_config_file_path/$evm_config_file_filename -i $run_geneid_out \
-        -g $glimmerhmm_predictions_out -l $liftoff_previous_annotations_out -m $maker_predictions_out -b "$braker2_prediction_stranded braker2_prediction_unstranded" -r "" \
+        -g $glimmerhmm_predictions_out -l $liftoff_previous_annotations_out -m $maker_predictions_out -b "$braker2_prediction_stranded braker2_prediction_unstranded" -r /TEs_annotations_path/$TEs_annotations_filename \
         -p /protein_final_alignments/*gff3 -t /RNAseq_unstranded_transcriptome_path/RNAseq_unstranded_transcriptome_filename -s /RNAseq_stranded_transcriptome_path/RNAseq_stranded_transcriptome_filename \
         -o annotations.gff3 -u annotations.EVM.out -c evm.at_least_2_ABINITIO.FINAL.gff3 -d evm.1_ABINITIO.FINAL.gff3 -f evm.evidencedata_only.FINAL.gff3 -j evm.1_ABINITIO.proteins.fasta
     """

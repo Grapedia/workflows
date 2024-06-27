@@ -32,7 +32,7 @@ output file : <GFF3_FILE>
 │       └── unstranded
 ```
 
-data/annotations : contains the previous annotation in GFF3 format (eg : Vitis_vinifera_gene_annotation_on_V2_20.gff3)
+data/annotations : contains the previous annotation in GFF3 format (eg : Vitis_vinifera_gene_annotation_on_V2_20.gff3) and the TEs annotations for the genome assembly in GFF3 format (used by EvidenceModeler)
 
 data/assemblies : contains previous assembly (eg PN12Xv2.fasta) and new assembly (eg Chinese_ref_v2.fa)
 
