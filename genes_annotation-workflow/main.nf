@@ -158,13 +158,13 @@ workflow {
   //                                        Evidence Modeler
   // ----------------------------------------------------------------------------------------
 
-  // evidence_modeler(params.assemblies_folder,params.new_assembly,file(params.evm_config_file).getParent(),file(params.evm_config_file).getName(),run_geneid.out,glimmerhmm_gff_to_gff3.out,liftoff_annotations.out.liftoff_previous_annotations,rename_maker_gff_to_gff3.out,rename_braker2_gff_to_gff3.out.braker2_prediction_stranded,rename_braker2_gff_to_gff3.out.braker2_prediction_unstranded,,conversion_gtf_gff3.out.stranded_gff3.parent,conversion_gtf_gff3.out.stranded_gff3.name,conversion_gtf_gff3.out.unstranded_gff3.parent,conversion_gtf_gff3.out.unstranded_gff3.name)
+  // evidence_modeler(params.assemblies_folder,params.new_assembly,file(params.evm_config_file).getParent(),file(params.evm_config_file).getName(),run_geneid.out,glimmerhmm_gff_to_gff3.out,liftoff_annotations.out.liftoff_previous_annotations,rename_maker_gff_to_gff3.out,rename_braker2_gff_to_gff3.out.braker2_prediction_stranded,rename_braker2_gff_to_gff3.out.braker2_prediction_unstranded,conversion_gtf_gff3.out.stranded_gff3.parent,conversion_gtf_gff3.out.stranded_gff3.name,conversion_gtf_gff3.out.unstranded_gff3.parent,conversion_gtf_gff3.out.unstranded_gff3.name,EDTA.out)
 
   // ----------------------------------------------------------------------------------------#
   //                              Evidence Modeler exonerate_filtering
   // ----------------------------------------------------------------------------------------#
 
-  // filter_evidencemodeler_gff3(evidence_modeler.out.annotations_gff3,evidence_modeler.out.annotations_EVM_out,params.assemblies_folder,params.new_assembly,evidence_modeler.out.evm_at_least_2_ABINITIO_FINAL_gff3,evidence_modeler.out.evm_1_ABINITIO_FINAL_gff3,evidence_modeler.out.evm_evidencedata_only_FINAL_gff3,evidence_modeler.out.evm_1_ABINITIO_proteins_fasta,file(params.NR_proteins_fasta).getParent(),file(params.NR_proteins_fasta).getName(),file(params.uniprot_fasta).getParent(),file(params.uniprot_fasta).getName(),file(params.TEs_annotations).getParent(),file(params.TEs_annotations).getName())
+  // filter_evidencemodeler_gff3(evidence_modeler.out.annotations_gff3,evidence_modeler.out.annotations_EVM_out,params.assemblies_folder,params.new_assembly,evidence_modeler.out.evm_at_least_2_ABINITIO_FINAL_gff3,evidence_modeler.out.evm_1_ABINITIO_FINAL_gff3,evidence_modeler.out.evm_evidencedata_only_FINAL_gff3,evidence_modeler.out.evm_1_ABINITIO_proteins_fasta,file(params.NR_proteins_fasta).getParent(),file(params.NR_proteins_fasta).getName(),file(params.uniprot_fasta).getParent(),file(params.uniprot_fasta).getName())
 
   // ----------------------------------------------------------------------------------------
   //                                  tRNAscan-SE annotation
