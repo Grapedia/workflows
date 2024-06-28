@@ -15,6 +15,8 @@ include { exonerate_mapping } from "./modules/exonerate_mapping"
 include { merge_exonerate_output } from "./modules/merge_exonerate_output"
 include { filtering_and_conversion } from "./modules/filtering_and_conversion"
 include { gtf_to_gff3 } from "./modules/gtf_to_gff3"
+include { EDTA } from "./modules/EDTA"
+include { RepeatMasker } from "./modules/RepeatMasker"
 include { liftoff_annotations } from "./modules/liftoff_annotations"
 include { glimmerhmm_training } from "./modules/glimmerhmm_training"
 include { split_fasta } from "./modules/split_fasta"
@@ -26,8 +28,6 @@ include { run_maker } from "./modules/run_maker"
 // include { braker2_prediction_stranded } from "./modules/braker2_prediction_stranded"
 // include { braker2_prediction_unstranded } from "./modules/braker2_prediction_unstranded"
 // include { rename_braker2_gff_to_gff3 } from "./modules/rename_braker2_gff_to_gff3"
-include { EDTA } from "./modules/EDTA"
-// include { RepeatMasker } from "./modules/RepeatMasker"
 include { run_geneid } from "./modules/run_geneid"
 // include { evidence_modeler } from "./modules/evidence_modeler"
 // include { filter_evidencemodeler_gff3 } from "./modules/filter_evidencemodeler_gff3"
@@ -102,6 +102,23 @@ workflow {
   // gtf_to_gff3(filtering_and_conversion.out) // VALIDATED
 
   // ----------------------------------------------------------------------------------------
+  // -------------------------- Genome masking with EDTA/RepeatMasker -----------------------
+  // ----------------------------------------------------------------------------------------
+
+  // ----------------------------------------------------------------------------------------
+  //                                        EDTA annotation
+  // ----------------------------------------------------------------------------------------
+
+  EDTA(params.assemblies_folder,params.new_assembly) // EDTA's docker version available don't work with absoluthe path and symlink, see : https://github.com/oushujun/EDTA?tab=readme-ov-file#install-with-docker-good-for-rootmacosapple-m-chip-users
+  // so I installed EDTA with conda in a dockerimage file
+
+  // ----------------------------------------------------------------------------------------
+  //                                        RepeatMasker
+  // ----------------------------------------------------------------------------------------
+
+  RepeatMasker(params.assemblies_folder,params.new_assembly,EDTA.out.TElib_fasta)
+
+  // ----------------------------------------------------------------------------------------
   // --------------------------------- Ab initio predictions --------------------------------
   // ----------------------------------------------------------------------------------------
 
@@ -138,7 +155,7 @@ workflow {
   // ----------------------------------------------------------------------------------------
 
   // MAKER is an annotation pipeline that integrates multiple predictor tools like SNAP
-  run_maker(params.assemblies_folder,params.new_assembly,conversion_gtf_gff3.out.stranded_gff3.parent,conversion_gtf_gff3.out.stranded_gff3.name,file(params.protein_samplesheet).getParent(),file(params.protein_samplesheet).getName())
+  run_maker(RepeatMasker.out.masked_genome,conversion_gtf_gff3.out.stranded_gff3.parent,conversion_gtf_gff3.out.stranded_gff3.name,file(params.protein_samplesheet).getParent(),file(params.protein_samplesheet).getName())
   // rename_maker_gff_to_gff3(run_maker.out)
 
   // ----------------------------------------------------------------------------------------
@@ -149,23 +166,11 @@ workflow {
   // rename_braker2_gff_to_gff3(braker2_prediction_stranded.out,braker2_prediction_unstranded.out)
 
   // ----------------------------------------------------------------------------------------
-  //                                        EDTA annotation
-  // ----------------------------------------------------------------------------------------
-
-  // EDTA(params.assemblies_folder,params.new_assembly) // docker version don't work with absoluthe path and symlink, see : https://github.com/oushujun/EDTA?tab=readme-ov-file#install-with-docker-good-for-rootmacosapple-m-chip-users
-
-  // ----------------------------------------------------------------------------------------
-  //                                        RepeatMasker
-  // ----------------------------------------------------------------------------------------
-
-  // RepeatMasker(params.assemblies_folder,params.new_assembly,EDTA.out.TElib_fasta)
-
-  // ----------------------------------------------------------------------------------------
   //                                          GeneID
   // ----------------------------------------------------------------------------------------
 
-  // Work on PN40024_40X_REF_chloro_mito.chr_renamed.fasta, not on Chinese_ref_v2.fa : ERROR : buffer overflow detected. Reason : sequence too long ... email sent to the developper 
-  // run_geneid(RepeatMasker.out.masked_genome,file(params.geneid_param_file).getParent(),file(params.geneid_param_file).getName())
+  // Don' work on unmasked genome, so use the masked genome generated by RepeatMasker
+  run_geneid(RepeatMasker.out.masked_genome,file(params.geneid_param_file).getParent(),file(params.geneid_param_file).getName()) // VALIDATED
 
   // ----------------------------------------------------------------------------------------
   //                                        Evidence Modeler

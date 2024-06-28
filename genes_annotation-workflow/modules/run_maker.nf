@@ -14,8 +14,7 @@ process run_maker {
   cpus 4
 
   input:
-    val(genome_path)
-    val(genome)
+    val(masked_genome)
     val(RNAseq_stranded_transcriptome_path)
     val(RNAseq_stranded_transcriptome_filename)
     val(protein_samplesheet_path)
@@ -27,7 +26,7 @@ process run_maker {
   script:
     """
     proteins=\$(/scripts/retrieve_proteins_for_maker.sh /protein_samplesheet_path/$protein_samplesheet_filename)
-    /scripts/maker.sh -a /genome_path/${genome} \
+    /scripts/maker.sh -a $masked_genome \
     -t /RNAseq_stranded_transcriptome_path/$RNAseq_stranded_transcriptome_filename \
     -p \${proteins} \
     -o new_assembly -n ${task.cpus} -d /outdir

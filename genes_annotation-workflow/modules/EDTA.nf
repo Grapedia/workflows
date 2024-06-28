@@ -4,16 +4,15 @@ process EDTA {
   container 'avelt/edta:latest'
   containerOptions "--volume ${genome_path}:/genome_path --volume ${projectDir}/scripts/:/scripts"
   publishDir "$projectDir/FINAL_OUTPUT"
-  cpus 4
+  cpus 10
 
   input:
     val(genome_path)
     val(genome)
 
   output:
-    file("annotations.EDTA.txt")
-    // file("*.fa"), emit : TElib_fasta
-    // file("*.gff3"), emit : TE_annotations_gff3
+    file("*.fa"), emit : TElib_fasta
+    file("*.gff3"), emit : TE_annotations_gff3
 
   script:
     """
