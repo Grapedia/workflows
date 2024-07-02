@@ -4,7 +4,7 @@ process EDTA {
   container 'avelt/edta:latest'
   containerOptions "--volume ${genome_path}:/genome_path --volume ${projectDir}/scripts/:/scripts"
   publishDir "$projectDir/FINAL_OUTPUT"
-  cpus 10
+  cpus 5
 
   input:
     val(genome_path)
