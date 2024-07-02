@@ -19,8 +19,8 @@ process liftoff_annotations {
     val(previous_annotations)
 
   output:
-    file("liftoff_previous_annotations.gff3"), emit : liftoff_previous_annotations
-    file("unmapped_features.txt"), emit : unmapped_features
+    path("liftoff_previous_annotations.gff3"), emit : liftoff_previous_annotations
+    path("unmapped_features.txt"), emit : unmapped_features
 
   script:
     """

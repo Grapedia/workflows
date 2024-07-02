@@ -54,6 +54,6 @@ do
 done
 
 eval "$(conda shell.bash hook)"
-conda activate EDTA
+conda activate EDTA2
 
-perl /opt/conda/envs/EDTA/bin/EDTA.pl --genome $GENOME --species others --step all --sensitive 1 --anno 1 --threads $THREADS
+/EDTA/EDTA.pl --genome $GENOME --species others --step all --sensitive 1 --anno 1 --overwrite 1 --threads $THREADS

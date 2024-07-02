@@ -12,8 +12,8 @@ process RepeatMasker {
     val(TEs_lib_EDTA)
 
   output:
-    file("*.masked"), emit : masked_genome
-    file("*.gff"), emit : RepeatMasker_annot
+    path("*.masked"), emit : masked_genome
+    path("*.gff"), emit : RepeatMasker_annot
 
   script:
     """
