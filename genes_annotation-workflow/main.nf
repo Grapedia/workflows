@@ -162,7 +162,7 @@ workflow {
   //                                    BRAKER2 (AUGUSTUS)
   // ----------------------------------------------------------------------------------------
   braker2_prediction_stranded(params.assemblies_folder,params.new_assembly,file(params.protein_samplesheet).getParent(),file(params.protein_samplesheet).getName(),concat_in)  // VALIDATED
-  // braker2_prediction_unstranded(params.assemblies_folder,params.new_assembly,file(params.protein_samplesheet).getParent(),file(params.protein_samplesheet).getName(),concat_in)  // VALIDATED
+  braker2_prediction_unstranded(params.assemblies_folder,params.new_assembly,file(params.protein_samplesheet).getParent(),file(params.protein_samplesheet).getName(),concat_in)  // VALIDATED
   // rename_braker2_gff_to_gff3(braker2_prediction_stranded.out,braker2_prediction_unstranded.out)
 
   // ----------------------------------------------------------------------------------------

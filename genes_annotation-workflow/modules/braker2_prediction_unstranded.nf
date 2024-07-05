@@ -3,7 +3,7 @@ process braker2_prediction_unstranded {
 
   tag "Executing BRAKER2/AUGUSTUS prediction on unstranded data"
   container 'avelt/braker2_prothint_genemark_augustus_bamtools_blast_samtools_diamond:latest'
-  containerOptions "--user \$(id -u):\$(id -g) --volume ${protein_samplesheet_path}:/protein_samplesheet_path --volume ${projectDir}/scripts:/scripts --volume ${projectDir}/data/protein_data:/protein_path --volume ${projectDir}/work:/work --volume ${genome_path}:/genome_path --volume $params.outdir/evidence_data/RNAseq_unstranded/alignments/new_assembly:/alignments --volume ${projectDir}:/outdir:z"
+  containerOptions "--volume ${protein_samplesheet_path}:/protein_samplesheet_path --volume ${projectDir}/scripts:/scripts --volume ${projectDir}/data/protein_data:/protein_path --volume ${projectDir}/work:/work --volume ${genome_path}:/genome_path --volume $params.outdir/evidence_data/RNAseq_unstranded/alignments/new_assembly:/alignments --volume ${projectDir}:/outdir:z"
   publishDir "$params.outdir/BRAKER2_RNAseq_unstranded/"
   cpus 4
 
