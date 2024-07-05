@@ -6,4 +6,5 @@ genes_annotation-workflow/.nextflow/
 genes_annotation-workflow/commands.sh
 genes_annotation-workflow/slurm-*
 genes_annotation-workflow/FINAL_OUTPUT/*
-genes_annotation-workflow/TMP/*
+genes_annotation-workflow/TMP_stranded/*
+genes_annotation-workflow/TMP_unstranded/*

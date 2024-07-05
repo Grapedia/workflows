@@ -38,7 +38,8 @@ RUN git clone https://github.com/Gaius-Augustus/Augustus.git && \
 cd /Augustus && \
 make augustus && \
 cd /Augustus/auxprogs/joingenes/ && \
-make
+make && \
+chmod -R 777 /Augustus
 
 # Install bamtools
 RUN wget https://github.com/pezmaster31/bamtools/archive/refs/tags/v2.5.2.tar.gz && \
