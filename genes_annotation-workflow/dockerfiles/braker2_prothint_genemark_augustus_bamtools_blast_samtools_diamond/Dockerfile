@@ -6,7 +6,7 @@ MAINTAINER Amandine Velt <amandine.velt@inrae.fr>
 
 # install perl, python3, blast and braker2
 RUN apt-get update --fix-missing && \
-apt-get install -y wget gcc g++ make perl cpanminus git libboost-all-dev libmysql++-dev libsqlite3-dev libgsl-dev liblpsolve55-dev python3 cmake ncbi-blast+ libbz2-dev libclang-dev liblzma-dev bzip2 libncurses5-dev libncursesw5-dev libglib2.0-dev sudo python3-biopython && \
+apt-get install -y wget gcc g++ make perl cpanminus git libboost-all-dev libmysql++-dev libsqlite3-dev libgsl-dev liblpsolve55-dev python3 cmake ncbi-blast+ libbz2-dev libclang-dev liblzma-dev bzip2 libncurses5-dev libncursesw5-dev libglib2.0-dev sudo python3-biopython bamtools libbamtools-dev samtools libhts-dev && \
 cpanm Scalar::Util::Numeric File::HomeDir Parallel::ForkManager Math::Utils YAML Hash::Merge MCE::Mutex && \
 wget https://github.com/Gaius-Augustus/BRAKER/archive/refs/tags/v2.1.6.tar.gz && \
 tar -xvf v2.1.6.tar.gz
@@ -39,6 +39,21 @@ cd /Augustus && \
 make augustus && \
 cd /Augustus/auxprogs/joingenes/ && \
 make && \
+cd /Augustus/auxprogs/bam2hints/ && \
+make && \
+cd /Augustus/auxprogs/aln2wig/ && \
+make && \
+cd /Augustus/auxprogs/bam2wig/ && \
+make && \
+cd /Augustus/auxprogs/compileSpliceCands/ && \
+make && \
+cd /Augustus/auxprogs/filterBam/ && \
+make && \
+cd /Augustus/auxprogs/homGeneMapping/ && \
+make && \
+cd /Augustus/auxprogs/utrrnaseq/ && \
+make && \
+ln -s /Augustus/auxprogs/utrrnaseq/utrrnaseq /Augustus/bin/ && \
 chmod -R 777 /Augustus
 
 # Install bamtools
