@@ -23,7 +23,7 @@ process braker2_prediction_unstranded {
     bam=\$(/scripts/retrieve_path_bam.sh /alignments)
     /BRAKER-2.1.6/scripts/braker.pl --genome=/genome_path/$genome --bam=\${bam} \
     --prot_seq=\${proteins} \
-    --cores=${task.cpus} --workingdir=/outdir/TMP_unstranded --etpmode --softmasking --gff3 \
+    --cores=${task.cpus} --workingdir=\${PWD} --etpmode --softmasking --gff3 \
     --PROTHINT_PATH=/ProtHint-2.6.0/bin/ --GENEMARK_PATH=/GeneMark/ --AUGUSTUS_CONFIG_PATH=/Augustus/config
     """
 }
