@@ -13,6 +13,7 @@ process EDTA {
   output:
     path("*TElib.fa"), emit : TElib_fasta
     path("*TEanno.gff3"), emit : TE_annotations_gff3
+    path("*MAKER.masked"), emit : masked_genome
 
   script:
     """

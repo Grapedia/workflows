@@ -1,27 +1,23 @@
-# base image: Ubuntu
-FROM ubuntu:16.04
+# base image: Rocky linux
+FROM rockylinux:9
 
 # File Author / Maintainer
 MAINTAINER Amandine Velt <amandine.velt@inrae.fr>
 
 # Install base utilities
-RUN apt-get update && \
-apt-get install -y build-essential && \
-apt-get install -y wget gcc g++ make git zlib1g zlib1g-dev python libbz2-dev libclang-dev liblzma-dev bzip2 libncurses5-dev libncursesw5-dev libglib2.0-dev
+RUN dnf -y upgrade && \
+dnf install -y wget gcc gcc-c++ make git-all zlib-devel python3 zlib-devel ncurses-devel bzip2 bzip2-devel xz-devel glib2-devel python
 
 # install samtools
 RUN wget https://github.com/samtools/samtools/releases/download/1.9/samtools-1.9.tar.bz2 && \
 tar -xjf samtools-1.9.tar.bz2 && \
-rm samtools-1.9.tar.bz2 && \
 cd samtools-1.9 && \
 ./configure && \
 make && \
 make install
 
 # install bedtools
-RUN apt-get update --fix-missing && \
-apt-get install -y wget gcc g++ make zlib1g zlib1g-dev python libbz2-dev libclang-dev liblzma-dev bzip2 libncurses5-dev libncursesw5-dev libglib2.0-dev && \
-wget -O bedtools.tar.gz https://github.com/arq5x/bedtools2/archive/refs/tags/v2.30.0.tar.gz && \
+RUN wget -O bedtools.tar.gz https://github.com/arq5x/bedtools2/archive/refs/tags/v2.30.0.tar.gz && \
 tar -xzvf bedtools.tar.gz && \
 cd bedtools2-2.30.0 && \
 make && \
