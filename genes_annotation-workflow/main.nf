@@ -108,8 +108,7 @@ workflow {
   //                                        EDTA annotation
   // ----------------------------------------------------------------------------------------
 
-  // EDTA(params.assemblies_folder,params.new_assembly) // ERROR : see https://github.com/oushujun/EDTA/issues/478
-  // so we can't launch RepeatMasker, Maker and geneid for now
+  EDTA(params.assemblies_folder,params.new_assembly) // VALIDATED
 
   // ----------------------------------------------------------------------------------------
   // --------------------------------- Ab initio predictions --------------------------------
