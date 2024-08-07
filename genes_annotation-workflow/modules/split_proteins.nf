@@ -7,7 +7,7 @@ process split_proteins {
   cpus 4
 
   input:
-    tuple val(organism), val(filename), val(maker_braker2)
+    tuple val(organism), val(filename), val(braker2)
 
   output:
     tuple val(organism), file("*.fasta")
