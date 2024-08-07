@@ -12,7 +12,7 @@ process star_alignment {
     tuple val(sample_ID), val(stranded_or_unstranded), val(paired_or_single), path(reads)
 
   output:
-    tuple val(sample_ID), val(stranded_or_unstranded), val(paired_or_single), file("${sample_ID}_vs_new_assembly.sam")
+    tuple val(sample_ID), val(stranded_or_unstranded), val(paired_or_single), file("${sample_ID}_Aligned.sortedByCoord.out.bam")
 
   script:
     def basename_database = task.ext.prefix ?: "${star_database.getName()}"
