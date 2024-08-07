@@ -15,14 +15,14 @@ process star_alignment {
     tuple val(sample_ID), val(stranded_or_unstranded), val(paired_or_single), file("${sample_ID}_vs_new_assembly.sam")
 
   script:
-    def basename_database = task.ext.prefix ?: "${star_database.baseName}"
+    def basename_database = task.ext.prefix ?: "${star_database.getName()}"
     """
     if [[ $paired_or_single == "paired" ]]
     then
-      STAR --genomeDir /star_databases/$basename_database --runThreadN ${task.cpus} --readFilesIn ${reads[0]} ${reads[1]} --outFileNamePrefix ${sample_ID}_ --outSAMtype BAM SortedByCoordinate --outSAMunmapped Within --outSAMattributes Standard
+      STAR --readFilesCommand zcat --genomeDir /star_databases/${basename_database} --runThreadN ${task.cpus} --readFilesIn ${reads[0]} ${reads[1]} --outFileNamePrefix ${sample_ID}_ --outSAMtype BAM SortedByCoordinate --outSAMunmapped Within --outSAMattributes Standard
     elif [[ $paired_or_single == "single" ]]
     then
-      STAR --genomeDir /star_databases/$basename_database --runThreadN ${task.cpus} --readFilesIn ${reads} --outFileNamePrefix ${sample_ID}_ --outSAMtype BAM SortedByCoordinate --outSAMunmapped Within --outSAMattributes Standard
+      STAR --readFilesCommand zcat --genomeDir /star_databases/${basename_database} --runThreadN ${task.cpus} --readFilesIn ${reads} --outFileNamePrefix ${sample_ID}_ --outSAMtype BAM SortedByCoordinate --outSAMunmapped Within --outSAMattributes Standard
     fi
     """
 }

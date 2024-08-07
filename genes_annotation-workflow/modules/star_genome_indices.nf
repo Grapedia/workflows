@@ -17,5 +17,6 @@ process star_genome_indices {
   script:
     """
     STAR --runThreadN ${task.cpus} --runMode genomeGenerate --genomeDir ${genome}_index --genomeFastaFiles /genome_path/$genome
+    chmod -R 755 ${genome}_index
     """
 }
