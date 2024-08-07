@@ -6,6 +6,8 @@ include { trimming_fastq } from "./modules/trimming_fastq"
 include { gmap_build_database } from "./modules/gmap_build_database"
 include { gsnap_alignment } from "./modules/gsnap_alignment"
 include { extracting_primary_mapping } from "./modules/extracting_primary_mapping"
+// include { star_genome_indices } from "./modules/extracting_primary_mapping"
+// include { star_alignment } from "./modules/extracting_primary_mapping"
 include { assembly_transcriptome_stranded } from "./modules/assembly_transcriptome_stranded"
 include { assembly_transcriptome_unstranded } from "./modules/assembly_transcriptome_unstranded"
 include { conversion_gtf_gff3 } from "./modules/conversion_gtf_gff3"
@@ -59,10 +61,14 @@ workflow {
   // ... based on protein sequences
 
   // ----------------------------------------------------------------------------------------
-  //                                Transcriptomes assembly
+  //                           Download/prepare RNAseq reads
   // ----------------------------------------------------------------------------------------
   prepare_RNAseq_fastq_files(samples_list) // VALIDATED
   trimming_fastq(prepare_RNAseq_fastq_files.out) // VALIDATED
+
+  // ----------------------------------------------------------------------------------------
+  //                           RNAseq reads alignment with GNSAP
+  // ----------------------------------------------------------------------------------------
   gmap_build_database(params.assemblies_folder,params.new_assembly) // VALIDATED
   gsnap_alignment(gmap_build_database.out,trimming_fastq.out) // VALIDATED
   extracting_primary_mapping(gsnap_alignment.out) | collect // VALIDATED
@@ -70,13 +76,28 @@ workflow {
   .out
   .collect()
   .map { it[0] }
-  .set{ concat_in }
+  .set{ concat_in } // VALIDATED
+
+  // ----------------------------------------------------------------------------------------
+  //                           RNAseq reads alignment with STAR
+  // ----------------------------------------------------------------------------------------
+  // star_genome_indices(params.assemblies_folder,params.new_assembly) // VALIDATED
+  // star_alignment(star_genome_indices.out,trimming_fastq.out) // VALIDATED
+
+  // ----------------------------------------------------------------------------------------
+  //                           RNAseq reads alignment with HISAT2
+  // ----------------------------------------------------------------------------------------
+
+
+  // ----------------------------------------------------------------------------------------
+  //              transcriptome assembly with PsiCLASS on GSNAP alignment
+  // ----------------------------------------------------------------------------------------
   assembly_transcriptome_stranded(concat_in) // VALIDATED
   assembly_transcriptome_unstranded(concat_in) // VALIDATED
   conversion_gtf_gff3(params.assemblies_folder,params.new_assembly, assembly_transcriptome_stranded.out, assembly_transcriptome_unstranded.out) // VALIDATED
 
   // ----------------------------------------------------------------------------------------
-  //                                   Protein alignments
+  //                    Protein alignments with Pblat and Exonerate
   // ----------------------------------------------------------------------------------------
   split_proteins(protein_list) // VALIDATED
   pblat_protein_alignment(params.assemblies_folder,params.new_assembly, split_proteins.out.transpose()) // VALIDATED
