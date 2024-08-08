@@ -1,10 +1,10 @@
 // AUGUSTUS can be run directly using the pipeline BRAKER2
-process braker2_prediction_stranded {
+process braker2_prediction {
 
-  tag "Executing BRAKER2/AUGUSTUS prediction on stranded data"
+  tag "Executing BRAKER2/AUGUSTUS prediction"
   container 'avelt/braker2_prothint_genemark_augustus_bamtools_blast_samtools_diamond:latest'
-  containerOptions "--volume ${protein_samplesheet_path}:/protein_samplesheet_path --volume ${projectDir}/scripts:/scripts --volume ${projectDir}/work:/work --volume ${projectDir}/data/protein_data:/protein_path --volume ${genome_path}:/genome_path --volume $params.outdir/evidence_data/RNAseq_stranded/alignments/new_assembly:/alignments --volume ${projectDir}:/outdir:z"
-  publishDir "$params.outdir/BRAKER2_RNAseq_stranded/"
+  containerOptions "--volume ${protein_samplesheet_path}:/protein_samplesheet_path --volume ${projectDir}/scripts:/scripts --volume ${projectDir}/work:/work --volume ${projectDir}/data/protein_data:/protein_path --volume ${genome_path}:/genome_path --volume $params.outdir/evidence_data/RNAseq_alignments/STAR:/alignments --volume ${projectDir}:/outdir:z"
+  publishDir "$params.outdir/BRAKER2/"
   cpus 4
 
   input:

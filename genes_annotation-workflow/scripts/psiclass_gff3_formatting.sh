@@ -3,26 +3,25 @@
 usage() {
 	cat <<-__EOF__
 		Usage:
-			./psiclass_gff3_formatting.sh -i gtf_input -o gff3_output -f fasta_output -s stranded_or_unstranded -g genome -d directory [-h]
+			./psiclass_gff3_formatting.sh -i gtf_input -o gff3_output -f fasta_output -g genome -d directory [-h]
 
 		Description:
-			Formatting of GTF file from PSIclass to GFF3 file for EVM.
+			Formatting of GTF file from PSIclass to GFF3 file.
 
 		Arguments:
 			-i, --gtf_input GTF file from PSIclass (*_vote.gtf)
 			-o, --gff3_output GFF3 file formatted for EVM
 			-f, --fasta_output fasta from the gff3 output (transcript sequence to give to PASA)
-			-s, --stranded stranded or unstranded transcriptome
 			-g, --genome genome assembly
 			-d, --directory scriptdir
 			-h, --help
 
-		Exemple: ./psiclass_gff3_formatting.sh -i transcriptome.gff3 -o transcriptome_for_EVM.gff3 -s stranded_or_unstranded -g genome -f fasta_output -d scriptdir
+		Exemple: ./psiclass_gff3_formatting.sh -i transcriptome.gff3 -o transcriptome_for_EVM.gff3 -g genome -f fasta_output -d scriptdir
 		__EOF__
 }
 
 # Eval command line arguments given in input
-ARGS=$(getopt -o "i:o:f:s:g:d:h" --long "gtf_input:,gff3_output:,fasta_output:,stranded:,genome:,directory:,help" -- $@ 2> /dev/null)
+ARGS=$(getopt -o "i:o:f:g:d:h" --long "gtf_input:,gff3_output:,fasta_output:,genome:,directory:,help" -- $@ 2> /dev/null)
 
 # Check if the return code of the previous command is not equal to 0 (command ...
 # ... didn't work)
@@ -48,10 +47,6 @@ do
 			OUTPUT_FASTA=$2
 			shift 2
 			;;
-		-s|--stranded)
-			STRANDED=$2
-			shift 2
-			;;
 		-g|--genome)
 			GENOME=$2
 			shift 2
@@ -75,7 +70,6 @@ done
 
 gffread -E ${INPUT_GFF3} -o ${INPUT_GFF3}.gff3
 ${DIRECTORY}/add_IDs_to_exons.py -g ${INPUT_GFF3}.gff3 -o ${OUTPUT_GFF3}
-sed -i "s/PsiCLASS/PsiCLASS_${STRANDED}/" ${OUTPUT_GFF3}
 rm ${INPUT_GFF3}.gff3
 gffread -E --keep-genes ${OUTPUT_GFF3} -o- > ${OUTPUT_GFF3}.tmp
 

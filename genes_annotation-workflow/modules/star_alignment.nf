@@ -4,15 +4,15 @@ process star_alignment {
   tag "STAR on ${sample_ID}"
   container 'quay.io/biocontainers/star:2.7.11b--h43eeafb_2'
   containerOptions "--volume $params.outdir/evidence_data/star_databases/:/star_databases"
-  publishDir "$params.outdir/evidence_data/RNAseq_$stranded_or_unstranded/alignments/STAR_new_assembly"
+  publishDir "$params.outdir/evidence_data/RNAseq_alignments/STAR"
   cpus 4
 
   input:
     val(star_database)
-    tuple val(sample_ID), val(stranded_or_unstranded), val(paired_or_single), path(reads)
+    tuple val(sample_ID), val(paired_or_single), path(reads)
 
   output:
-    tuple val(sample_ID), val(stranded_or_unstranded), val(paired_or_single), file("${sample_ID}_Aligned.sortedByCoord.out.bam")
+    tuple val(sample_ID), val(paired_or_single), file("${sample_ID}_Aligned.sortedByCoord.out.bam")
 
   script:
     def basename_database = task.ext.prefix ?: "${star_database.getName()}"
