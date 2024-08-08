@@ -29,7 +29,7 @@ data/protein_data : contains all the protein data files (FASTA) to perform prote
           Example :
 
           ```
-          organism,filename,maker_braker2
+          organism,filename,braker2
           arabidopsis,arabidopsis_prot_2022_01.fasta,no
           viridiplantae,Viridiplantae_swissprot.fasta,yes
           eudicotyledones_uniprot,eudicotyledons_uniprot.fasta,no
