@@ -3,7 +3,7 @@ process star_alignment {
 
   tag "STAR on ${sample_ID}"
   container 'quay.io/biocontainers/star:2.7.11b--h43eeafb_2'
-  containerOptions "--volume $params.outdir/evidence_data/star_databases/:/star_databases"
+  containerOptions "--memory=20g --volume $params.outdir/evidence_data/star_databases/:/star_databases"
   publishDir "$params.outdir/evidence_data/RNAseq_alignments/STAR"
   cpus 4
 
