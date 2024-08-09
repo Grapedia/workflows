@@ -10,6 +10,8 @@ include { minimap2_alignment } from "./modules/minimap2_alignment"
 include { assembly_transcriptome_star_psiclass } from "./modules/assembly_transcriptome_star_psiclass"
 include { assembly_transcriptome_star_stringtie } from "./modules/assembly_transcriptome_star_stringtie"
 include { assembly_transcriptome_minimap2_stringtie } from "./modules/assembly_transcriptome_minimap2_stringtie"
+include { Stringtie_merging_short_reads } from "./modules/Stringtie_merging_short_reads"
+include { Stringtie_merging_long_reads } from "./modules/Stringtie_merging_long_reads"
 include { EDTA } from "./modules/EDTA"
 include { liftoff_annotations } from "./modules/liftoff_annotations"
 include { braker3_prediction } from "./modules/braker3_prediction"
@@ -114,8 +116,8 @@ workflow {
   // .out
   // .collect()
   // .map { it[0] }
-  // .set{ concat_stringtie_annot }
-  // merge_annot_stringtie(concat_stringtie_annot)
+  // .set{ concat_star_stringtie_annot }
+  // Stringtie_merging_short_reads(concat_star_stringtie_annot)
 
   // ----------------------------------------------------------------------------------------
   //      transcriptome assembly with Stringtie on minimap2 alignments (long reads)
@@ -127,7 +129,7 @@ workflow {
   // .collect()
   // .map { it[0] }
   // .set{ concat_minimap2_stringtie_annot }
-  // merge_annot_stringtie(concat_minimap2_stringtie_annot)
+  // Stringtie_merging_long_reads(concat_minimap2_stringtie_annot)
 
   // ----------------------------------------------------------------------------------------
   // -------------------------- Genome masking with EDTA ------------------------------------
