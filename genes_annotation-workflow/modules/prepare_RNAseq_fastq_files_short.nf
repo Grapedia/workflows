@@ -2,7 +2,7 @@
 // If the samples are SRA, we'll download the .sra file, convert it to fastq and gzip the fastq file.
 // Once done, the RNAseq samples are ready for transcritpome assembly.
 
-process prepare_RNAseq_fastq_files {
+process prepare_RNAseq_fastq_files_short {
   tag "prepare_RNAseq_fastq_files on $sample_ID"
   container 'quay.io/biocontainers/sra-tools:3.1.1--h4304569_0'
   containerOptions "--volume ${projectDir}/data/RNAseq_data:/RNAseq_data"
@@ -11,16 +11,16 @@ process prepare_RNAseq_fastq_files {
   errorStrategy 'retry'
 
   input:
-  tuple val(sample_ID), val(SRA_or_FASTQ), val(paired_or_single)
+  tuple val(sample_ID), val(SRA_or_FASTQ), val(library_layout)
 
   output:
-  tuple val(sample_ID), val(SRA_or_FASTQ), val(paired_or_single)
+  tuple val(sample_ID), val(SRA_or_FASTQ), val(library_layout)
 
   script:
   """
   if [[ $SRA_or_FASTQ == "SRA" ]]
   then
-    if [[ $paired_or_single == "paired" ]]
+    if [[ $library_layout == "paired" ]]
     then
       if ls /RNAseq_data/${sample_ID}*.fastq.gz 1> /dev/null 2>&1
       then
@@ -32,7 +32,7 @@ process prepare_RNAseq_fastq_files {
         gzip /RNAseq_data/${sample_ID}_1.fastq
         gzip /RNAseq_data/${sample_ID}_2.fastq
       fi
-    elif [[ $paired_or_single == "single" ]]
+    elif [[ $library_layout == "single" ||  ]]
     then
       if ls /RNAseq_data/${sample_ID}.fastq.gz 1> /dev/null 2>&1
       then
@@ -44,7 +44,7 @@ process prepare_RNAseq_fastq_files {
         gzip /RNAseq_data/${sample_ID}.fastq
       fi
     else
-      echo "WARNING : \$paired_or_single is not equal to paired or single !"
+      echo "WARNING : \$library_layout is not equal to paired or single !"
     fi
   elif [[ $SRA_or_FASTQ == "FASTQ" ]]
   then

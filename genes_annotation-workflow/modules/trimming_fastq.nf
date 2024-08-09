@@ -8,23 +8,23 @@ process trimming_fastq {
     cpus 4
 
     input:
-      tuple val(sample_ID), val(SRA_or_FASTQ), val(paired_or_single)
+      tuple val(sample_ID), val(SRA_or_FASTQ), val(library_layout)
 
     output:
-      tuple val(sample_ID), val(paired_or_single), file("*.trimmed.fastq.gz")
+      tuple val(sample_ID), val(library_layout), file("*.trimmed.fastq.gz")
 
     script:
     """
-    if [[ $paired_or_single == "paired" ]]
+    if [[ $library_layout == "paired" ]]
     then
       fastp --thread ${task.cpus} -i /RNAseq_data/${sample_ID}_1.fastq.gz -I /RNAseq_data/${sample_ID}_2.fastq.gz \
       -o ${sample_ID}_1.trimmed.fastq.gz -O ${sample_ID}_2.trimmed.fastq.gz
-    elif [[ $paired_or_single == "single" ]]
+    elif [[ $library_layout == "single" ]]
     then
       fastp --thread ${task.cpus} -i /RNAseq_data/${sample_ID}.fastq.gz \
       -o ${sample_ID}.trimmed.fastq.gz
     else
-      echo "WARNING : \$paired_or_single is not equal to paired or single !"
+      echo "WARNING : \$library_layout is not equal to paired or single !"
     fi
     """
 }

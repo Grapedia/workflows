@@ -1,4 +1,4 @@
-sampleID,SRA_or_FASTQ,paired_or_single
+sampleID,SRA_or_FASTQ,library_layout
 ERR1059552,FASTQ,paired
 ERR1059553,FASTQ,paired
 ERR1059554,SRA,paired
@@ -112,3 +112,4 @@ SRR8775073,SRA,paired
 SRR8775074,SRA,paired
 SRR8775075,SRA,paired
 SRR8775076,SRA,paired
+SRR17318658,SRA,long

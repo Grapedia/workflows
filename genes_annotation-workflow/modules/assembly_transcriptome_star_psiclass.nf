@@ -1,7 +1,7 @@
 // 4. Transcriptome assembly with PsiCLASS
 process assembly_transcriptome_star_psiclass {
 
-  tag "psiclass transcriptome assembly with STAR alignements"
+  tag "PsiCLASS - short reads"
   container 'avelt/psiclass_samtools:latest'
   containerOptions "--volume ${projectDir}/scripts:/scripts --volume ${projectDir}/work:/work --volume $params.outdir/evidence_data/RNAseq_alignments/STAR:/alignments"
   publishDir "$params.outdir/evidence_data/transcriptomes/PsiCLASS"

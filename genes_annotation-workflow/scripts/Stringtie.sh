@@ -3,7 +3,7 @@
 usage() {
 	cat <<-__EOF__
 		Usage:
-			./Stringtie.sh -t threads -o transcriptome_gtf -b bam_file [-h]
+			./Stringtie.sh -t threads -o transcriptome_gtf -b bam_file -r read [-h]
 
 		Description:
 			Launch Stringtie on bam file to create a transcriptome
@@ -12,14 +12,15 @@ usage() {
 			-t, --threads number of CPUs
 			-o, --output output transcriptome filename
 			-b, --bam input bam file
+			-r, --read read type (short or long)
 			-h, --help
 
-		Exemple: ./Stringtie.sh -t threads -o transcriptome_gtf -b bam_file
+		Exemple: ./Stringtie.sh -t threads -o transcriptome_gtf -b bam_file -r read
 		__EOF__
 }
 
 # Eval command line arguments given in input
-ARGS=$(getopt -o "t:o:b:h" --long "threads:,output:,bam:,help" -- $@ 2> /dev/null)
+ARGS=$(getopt -o "t:o:b:r:h" --long "threads:,output:,bam:,read:,help" -- $@ 2> /dev/null)
 
 # Check if the return code of the previous command is not equal to 0 (command ...
 # ... didn't work)
@@ -45,6 +46,10 @@ do
 			BAM=$2
 			shift 2
 			;;
+		-r|--read)
+			READ=$2
+			shift 2
+			;;
 		-h|--help)
 			usage
 			exit 0
@@ -58,9 +63,22 @@ do
 	esac
 done
 
+if [[ $READ == "short" ]]
+then
 
-OUTPUT_FINAL=$( basename $OUTPUT | sed "s/_Aligned.sortedByCoord.out.bam//" )
+	OUTPUT_FINAL=$( basename $OUTPUT | sed "s/_Aligned.sortedByCoord.out.bam//" )
 
-BAM_FINAL=$( echo $BAM | sed "s/.*\/work\//\/work\//" )
+	BAM_FINAL=$( echo $BAM | sed "s/.*\/work\//\/work\//" )
 
-stringtie -p $THREADS -o $OUTPUT_FINAL $BAM_FINAL
+	stringtie -p $THREADS -o $OUTPUT_FINAL $BAM_FINAL
+
+elif [[ $READ == "long" ||  ]]
+then
+
+	OUTPUT_FINAL=$( basename $OUTPUT | sed "s/_Aligned.sorted.bam//" )
+
+	BAM_FINAL=$( echo $BAM | sed "s/.*\/work\//\/work\//" )
+
+	stringtie -L -p $THREADS -o $OUTPUT_FINAL $BAM_FINAL
+
+fi
