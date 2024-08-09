@@ -72,7 +72,7 @@ then
 
 	stringtie -p $THREADS -o $OUTPUT_FINAL $BAM_FINAL
 
-elif [[ $READ == "long" ||  ]]
+elif [[ $READ == "long" ]]
 then
 
 	OUTPUT_FINAL=$( basename $OUTPUT | sed "s/_Aligned.sorted.bam//" )

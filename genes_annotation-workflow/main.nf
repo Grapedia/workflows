@@ -84,19 +84,19 @@ workflow {
   //               Pacbio/Nanopore long RNAseq reads alignment with Minimap2
   // ----------------------------------------------------------------------------------------
 
-  minimap2_alignment(file(params.new_assembly).getParent(),file(params.new_assembly).getName(),prepare_RNAseq_fastq_files_long.out)
+  minimap2_alignment(file(params.new_assembly).getParent(),file(params.new_assembly).getName(),prepare_RNAseq_fastq_files_long.out) // VALIDATED
 
   // ----------------------------------------------------------------------------------------
   //              transcriptome assembly with PsiCLASS on STAR alignments
   // ----------------------------------------------------------------------------------------
   // retrieve the first value to launch PsiClass assembly one time on all the bam files together
 
-  // star_alignment
-  // .out
-  // .collect()
-  // .map { it[0] }
-  // .set{ concat_star_bams_PsiCLASS } // VALIDATED
-  // assembly_transcriptome_star_psiclass(concat_star_bams_PsiCLASS) // VALIDATED
+  star_alignment
+  .out
+  .collect()
+  .map { it[0] }
+  .set{ concat_star_bams_PsiCLASS } // VALIDATED
+  assembly_transcriptome_star_psiclass(concat_star_bams_PsiCLASS) // VALIDATED
 
   // ----------------------------------------------------------------------------------------
   //        transcriptome assembly with Stringtie on STAR alignments (short reads)
@@ -104,13 +104,12 @@ workflow {
   // retrieve all the bam files to create a channel and launch StringTie one time per bam file
   // and then merge the transcriptomes
 
-  // star_alignment
-  // .out
-  // .collect()
-  // .flatten()
-  // .set{ concat_star_bams_stringtie } // VALIDATED
-  // concat_star_bams_stringtie.view()
-  // assembly_transcriptome_star_stringtie(concat_star_bams_stringtie) | collect
+  star_alignment
+  .out
+  .collect()
+  .flatten()
+  .set{ concat_star_bams_stringtie } // VALIDATED
+  assembly_transcriptome_star_stringtie(concat_star_bams_stringtie) | collect // VALIDATED
   // assembly_transcriptome_star_stringtie
   // .out
   // .collect()
@@ -122,7 +121,7 @@ workflow {
   //      transcriptome assembly with Stringtie on minimap2 alignments (long reads)
   // ----------------------------------------------------------------------------------------
 
-  // assembly_transcriptome_minimap2_stringtie(minimap2_alignment.out) | collect
+  assembly_transcriptome_minimap2_stringtie(minimap2_alignment.out) | collect
   // assembly_transcriptome_minimap2_stringtie
   // .out
   // .collect()
