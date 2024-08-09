@@ -7,6 +7,7 @@ include { star_genome_indices } from "./modules/star_genome_indices"
 include { star_alignment } from "./modules/star_alignment"
 include { assembly_transcriptome_star_psiclass } from "./modules/assembly_transcriptome_star_psiclass"
 include { conversion_gtf_gff3_star_psiclass } from "./modules/conversion_gtf_gff3_star_psiclass"
+include { assembly_transcriptome_star_stringtie } from "./modules/assembly_transcriptome_star_stringtie"
 include { EDTA } from "./modules/EDTA"
 include { liftoff_annotations } from "./modules/liftoff_annotations"
 include { braker3_prediction } from "./modules/braker3_prediction"
@@ -44,26 +45,37 @@ workflow {
   trimming_fastq(prepare_RNAseq_fastq_files.out) // VALIDATED
 
   // ----------------------------------------------------------------------------------------
-  //                           RNAseq reads alignment with STAR
+  //                           Illumina RNAseq reads alignment with STAR
   // ----------------------------------------------------------------------------------------
   star_genome_indices(file(params.new_assembly).getParent(),file(params.new_assembly).getName()) // VALIDATED
   star_alignment(star_genome_indices.out,trimming_fastq.out) | collect // VALIDATED
-  star_alignment
-  .out
-  .collect()
-  .map { it[0] }
-  .set{ concat_star_bams } // VALIDATED
+  // ----------------------------------------------------------------------------------------
+  //                           Long RNAseq reads alignment with Minimap2
+  // ----------------------------------------------------------------------------------------
 
   // ----------------------------------------------------------------------------------------
   //              transcriptome assembly with PsiCLASS on STAR alignments
   // ----------------------------------------------------------------------------------------
-  assembly_transcriptome_star_psiclass(concat_star_bams) // VALIDATED
+  // retrieve the first value to launch PsiClass assembly one time on all the bam files together
+  star_alignment
+  .out
+  .collect()
+  .map { it[0] }
+  .set{ concat_star_bams_PsiCLASS } // VALIDATED
+  assembly_transcriptome_star_psiclass(concat_star_bams_PsiCLASS) // VALIDATED
   conversion_gtf_gff3_star_psiclass(file(params.new_assembly).getParent(),file(params.new_assembly).getName(), assembly_transcriptome_star_psiclass.out) // VALIDATED
 
   // ----------------------------------------------------------------------------------------
   //              transcriptome assembly with Stringtie on STAR alignments
   // ----------------------------------------------------------------------------------------
-  // assembly_transcriptome_star_stringtie(concat_star_bams) | collect
+  // retrieve all the bam files to create a channel and launch StringTie one time per bam file
+  star_alignment
+  .out
+  .collect()
+  .flatten()
+  .set{ concat_star_bams_stringtie } // VALIDATED
+  concat_star_bams_stringtie.view()
+  assembly_transcriptome_star_stringtie(concat_star_bams_stringtie) | collect
   // assembly_transcriptome_star_stringtie
   // .out
   // .collect()

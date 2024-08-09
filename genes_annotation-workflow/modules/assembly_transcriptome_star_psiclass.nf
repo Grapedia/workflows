@@ -1,4 +1,4 @@
-// 4. Transcriptome assembly
+// 4. Transcriptome assembly with PsiCLASS
 process assembly_transcriptome_star_psiclass {
 
   tag "psiclass transcriptome assembly with STAR alignements"

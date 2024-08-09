@@ -10,8 +10,8 @@ usage() {
 
 		Arguments:
 			-i, --gtf_input GTF file from PSIclass (*_vote.gtf)
-			-o, --gff3_output GFF3 file formatted for EVM
-			-f, --fasta_output fasta from the gff3 output (transcript sequence to give to PASA)
+			-o, --gff3_output GFF3 file
+			-f, --fasta_output fasta from the gff3 output
 			-g, --genome genome assembly
 			-d, --directory scriptdir
 			-h, --help
@@ -68,9 +68,10 @@ do
 	esac
 done
 
-gffread -E ${INPUT_GFF3} -o ${INPUT_GFF3}.gff3
-${DIRECTORY}/add_IDs_to_exons.py -g ${INPUT_GFF3}.gff3 -o ${OUTPUT_GFF3}
-rm ${INPUT_GFF3}.gff3
+gff3=$( basename ${INPUT_GFF3} | sed "s/.gtf//" )
+gffread -E ${INPUT_GFF3} -o ${gff3}.gff3
+${DIRECTORY}/add_IDs_to_exons.py -g ${gff3}.gff3 -o ${OUTPUT_GFF3}
+rm ${gff3}.gff3
 gffread -E --keep-genes ${OUTPUT_GFF3} -o- > ${OUTPUT_GFF3}.tmp
 
 gffread -w ${OUTPUT_FASTA} -g $GENOME ${OUTPUT_GFF3}.tmp
