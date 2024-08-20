@@ -90,3 +90,7 @@ RUN git clone https://github.com/gpertea/cdbfasta.git && \
 cd cdbfasta/ && \
 make && \
 cp cdbfasta cdbyank /usr/local/bin/
+
+# install TSEBRA
+RUN git clone https://github.com/Gaius-Augustus/TSEBRA && \
+cp /TSEBRA/bin/*  /usr/local/bin/
