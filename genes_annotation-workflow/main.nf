@@ -86,10 +86,15 @@ workflow {
   //               Pacbio/Nanopore long RNAseq reads alignment with Minimap2
   // ----------------------------------------------------------------------------------------
 
-  minimap2_alignment(file(params.new_assembly).getParent(),file(params.new_assembly).getName(),prepare_RNAseq_fastq_files_long.out) // VALIDATED
+  minimap2_alignment(file(params.new_assembly).getParent(),file(params.new_assembly).getName(),prepare_RNAseq_fastq_files_long.out) | collect // VALIDATED
+  minimap2_alignment
+  .out
+  .collect()
+  .map { it[0] }
+  .set{ concat_minimap2_bams } // VALIDATED
 
   // ----------------------------------------------------------------------------------------
-  //              transcriptome assembly with PsiCLASS on STAR alignments
+  //              transcriptome assembly with PsiCLASS on STAR alignments (short reads)
   // ----------------------------------------------------------------------------------------
   // retrieve the first value to launch PsiClass assembly one time on all the bam files together
 
@@ -112,24 +117,24 @@ workflow {
   .flatten()
   .set{ concat_star_bams_stringtie } // VALIDATED
   assembly_transcriptome_star_stringtie(concat_star_bams_stringtie) | collect // VALIDATED
-  // assembly_transcriptome_star_stringtie
-  // .out
-  // .collect()
-  // .map { it[0] }
-  // .set{ concat_star_stringtie_annot }
-  // Stringtie_merging_short_reads(concat_star_stringtie_annot)
+  assembly_transcriptome_star_stringtie
+  .out
+  .collect()
+  .map { it[0] }
+  .set{ concat_star_stringtie_annot } // VALIDATED
+  Stringtie_merging_short_reads(concat_star_stringtie_annot) // VALIDATED
 
   // ----------------------------------------------------------------------------------------
   //      transcriptome assembly with Stringtie on minimap2 alignments (long reads)
   // ----------------------------------------------------------------------------------------
 
-  assembly_transcriptome_minimap2_stringtie(minimap2_alignment.out) | collect
-  // assembly_transcriptome_minimap2_stringtie
-  // .out
-  // .collect()
-  // .map { it[0] }
-  // .set{ concat_minimap2_stringtie_annot }
-  // Stringtie_merging_long_reads(concat_minimap2_stringtie_annot)
+  assembly_transcriptome_minimap2_stringtie(minimap2_alignment.out) | collect // VALIDATED
+  assembly_transcriptome_minimap2_stringtie
+  .out
+  .collect()
+  .map { it[0] }
+  .set{ concat_minimap2_stringtie_annot } // VALIDATED
+  Stringtie_merging_long_reads(concat_minimap2_stringtie_annot) // VALIDATED
 
   // ----------------------------------------------------------------------------------------
   // -------------------------- Genome masking with EDTA ------------------------------------
@@ -145,7 +150,7 @@ workflow {
   // ----------------------------------------------------------------------------------------
   //                                    BRAKER3 (AUGUSTUS/Genemark)
   // ----------------------------------------------------------------------------------------
-  // braker3_prediction(file(params.new_assembly).getParent(),file(params.new_assembly).getName(),file(params.protein_samplesheet).getParent(),file(params.protein_samplesheet).getName(),concat_star_bams)  // VALIDATED
+  braker3_prediction(file(params.new_assembly).getParent(),file(params.new_assembly).getName(),file(params.protein_samplesheet).getParent(),file(params.protein_samplesheet).getName(),concat_star_bams_PsiCLASS,concat_minimap2_bams)
   // rename_braker3_gff_to_gff3(braker3_prediction.out)
 
   // ----------------------------------------------------------------------------------------
