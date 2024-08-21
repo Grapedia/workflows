@@ -25,12 +25,17 @@ RUN wget https://github.com/gatech-genemark/ProtHint/releases/download/v2.6.0/Pr
 tar -xvf ProtHint-2.6.0.tar.gz
 
 # install GeneMark-ETP
+# there is an error with selectSupportedSubsets.py script, which is ModuleNotFoundError: No module named 'statistics.predictionAnalysis'; 'statistics' is not a package
+# the developer recommends downloading this script via git (https://github.com/Gaius-Augustus/BRAKER/tree/report/scripts), along with three other scripts, and replacing them.
+# Git issue : https://github.com/Gaius-Augustus/BRAKER/issues/358
 RUN git clone https://github.com/gatech-genemark/GeneMark-ETP && \
 cp /GeneMark-ETP/tools/* /usr/local/bin/ && \
 cp -R /GeneMark-ETP/bin/* /usr/local/bin/ && \
 cp -R /GeneMark-ETP/bin/gmes/* /usr/local/bin/ && \
 cp -R /GeneMark-ETP/bin/gmst/* /usr/local/bin/ && \
 cp -R /GeneMark-ETP/bin/GeneMarkSTFiltering/* /usr/local/bin/
+COPY predictionAnalysis_for_GeneMark-ETP predictionAnalysis/
+RUN cp /predictionAnalysis/* /usr/local/bin/
 
 # Install Augustus
 RUN git clone https://github.com/Gaius-Augustus/Augustus.git && \
