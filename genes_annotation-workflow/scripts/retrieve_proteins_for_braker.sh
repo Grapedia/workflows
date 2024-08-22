@@ -1,3 +1,3 @@
 #!/bin/bash
 
-cat $1 | awk -F, '$3 ~ "yes" {print $2}' | sed "s/^/\/protein_path\//" | tr '\n' ',' | sed 's/,$//'
+cat $1 | sed 1d | awk -F, '{print $2}' | sed "s/^/\/protein_path\//" | tr -d '\r' | tr '\n' ',' | sed 's/,$//'

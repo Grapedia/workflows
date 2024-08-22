@@ -61,9 +61,8 @@ Channel.fromPath( file(params.protein_samplesheet) )
                     .map { row ->
                           def organism = row.organism
                           def filename = row.filename
-                          def braker3 = row.braker3
 
-                          return [organism, filename, braker3]
+                          return [organism, filename]
                     }
                     .set{ protein_list }
 

@@ -17,6 +17,9 @@ process braker3_prediction {
 
   output:
     file("augustus.hints.gff3")
+    file("genemark.gtf")
+    file("genemark_supported.gtf")
+    file("braker.gff3")
 
   script:
     """
@@ -26,5 +29,8 @@ process braker3_prediction {
     --prot_seq=\${proteins} \
     --threads=${task.cpus} --workingdir=\${PWD} --softmasking --gff3 \
     --PROTHINT_PATH=/ProtHint-2.6.0/bin/ --GENEMARK_PATH=/GeneMark-ETP --AUGUSTUS_CONFIG_PATH=/Augustus/config --TSEBRA_PATH=/TSEBRA/bin
+    cp Augustus/augustus.hints.gff3 .
+    cp GeneMark-ETP/genemark.gtf .
+    cp GeneMark-ETP/genemark_supported.gtf .
     """
 }
