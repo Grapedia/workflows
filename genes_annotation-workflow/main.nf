@@ -13,6 +13,7 @@ include { minimap2_alignment } from "./modules/minimap2_alignment"
 include { assembly_transcriptome_star_psiclass } from "./modules/assembly_transcriptome_star_psiclass"
 include { assembly_transcriptome_star_stringtie } from "./modules/assembly_transcriptome_star_stringtie"
 include { assembly_transcriptome_hisat2_stringtie } from "./modules/assembly_transcriptome_hisat2_stringtie"
+include { gffcompare } from "./modules/gffcompare"
 include { assembly_transcriptome_minimap2_stringtie } from "./modules/assembly_transcriptome_minimap2_stringtie"
 include { Stringtie_merging_short_reads_STAR } from "./modules/Stringtie_merging_short_reads_STAR"
 include { Stringtie_merging_short_reads_hisat2 } from "./modules/Stringtie_merging_short_reads_hisat2"
@@ -152,6 +153,12 @@ workflow {
   .map { it[0] }
   .set{ concat_hisat2_stringtie_annot } // VALIDATED
   Stringtie_merging_short_reads_hisat2(concat_hisat2_stringtie_annot) // VALIDATED
+
+  // ----------------------------------------------------------------------------------------
+  //        gffcompare on HISAT2/Stringtie merged transcriptome assembly
+  // ----------------------------------------------------------------------------------------
+
+  gffcompare(Stringtie_merging_short_reads_hisat2.out)
 
   // ----------------------------------------------------------------------------------------
   //      transcriptome assembly with Stringtie on minimap2 alignments (long reads)
