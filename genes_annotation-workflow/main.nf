@@ -12,8 +12,10 @@ include { minimap2_genome_indices } from "./modules/minimap2_genome_indices"
 include { minimap2_alignment } from "./modules/minimap2_alignment"
 include { assembly_transcriptome_star_psiclass } from "./modules/assembly_transcriptome_star_psiclass"
 include { assembly_transcriptome_star_stringtie } from "./modules/assembly_transcriptome_star_stringtie"
+include { assembly_transcriptome_hisat2_stringtie } from "./modules/assembly_transcriptome_hisat2_stringtie"
 include { assembly_transcriptome_minimap2_stringtie } from "./modules/assembly_transcriptome_minimap2_stringtie"
-include { Stringtie_merging_short_reads } from "./modules/Stringtie_merging_short_reads"
+include { Stringtie_merging_short_reads_STAR } from "./modules/Stringtie_merging_short_reads_STAR"
+include { Stringtie_merging_short_reads_hisat2 } from "./modules/Stringtie_merging_short_reads_hisat2"
 include { Stringtie_merging_long_reads } from "./modules/Stringtie_merging_long_reads"
 include { EDTA } from "./modules/EDTA"
 include { liftoff_annotations } from "./modules/liftoff_annotations"
@@ -130,13 +132,32 @@ workflow {
   .collect()
   .map { it[0] }
   .set{ concat_star_stringtie_annot } // VALIDATED
-  Stringtie_merging_short_reads(concat_star_stringtie_annot) // VALIDATED
+  Stringtie_merging_short_reads_STAR(concat_star_stringtie_annot) // VALIDATED
+
+  // ----------------------------------------------------------------------------------------
+  //        transcriptome assembly with Stringtie on HISAT2 alignments (short reads)
+  // ----------------------------------------------------------------------------------------
+  // retrieve all the bam files to create a channel and launch StringTie one time per bam file
+  // and then merge the transcriptomes
+
+  hisat2_alignment
+  .out
+  .collect()
+  .flatten()
+  .set{ concat_hisat2_bams_stringtie } // VALIDATED
+  assembly_transcriptome_hisat2_stringtie(concat_hisat2_bams_stringtie) | collect // VALIDATED
+  assembly_transcriptome_hisat2_stringtie
+  .out
+  .collect()
+  .map { it[0] }
+  .set{ concat_hisat2_stringtie_annot } // VALIDATED
+  Stringtie_merging_short_reads_hisat2(concat_hisat2_stringtie_annot) // VALIDATED
 
   // ----------------------------------------------------------------------------------------
   //      transcriptome assembly with Stringtie on minimap2 alignments (long reads)
   // ----------------------------------------------------------------------------------------
 
-  assembly_transcriptome_minimap2_stringtie(minimap2_alignment.out) | collect // VALIDATED
+  assembly_transcriptome_minimap2_stringtie(concat_minimap2_bams) | collect // VALIDATED
   assembly_transcriptome_minimap2_stringtie
   .out
   .collect()

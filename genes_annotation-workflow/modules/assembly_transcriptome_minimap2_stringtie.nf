@@ -1,7 +1,7 @@
 // 4. Transcriptome assembly with StringTie
 process assembly_transcriptome_minimap2_stringtie {
 
-  tag "StringTie - long reads"
+  tag "Minimap2/StringTie - long reads"
   container 'avelt/stringtie:latest'
   containerOptions "--volume ${projectDir}/scripts/:/scripts --volume ${projectDir}/work:/work"
   publishDir "$params.outdir/evidence_data/transcriptomes/StringTie/long_reads"

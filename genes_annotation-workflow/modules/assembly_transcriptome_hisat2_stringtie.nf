@@ -1,10 +1,10 @@
 // 4. Transcriptome assembly with StringTie
-process assembly_transcriptome_star_stringtie {
+process assembly_transcriptome_hisat2_stringtie {
 
-  tag "STAR/StringTie - short reads"
+  tag "Hisat2/StringTie - short reads"
   container 'avelt/stringtie:latest'
   containerOptions "--volume ${projectDir}/scripts/:/scripts --volume ${projectDir}/work:/work"
-  publishDir "$params.outdir/evidence_data/transcriptomes/StringTie/short_reads/STAR"
+  publishDir "$params.outdir/evidence_data/transcriptomes/StringTie/short_reads/HISAT2"
   cpus 4
 
   input:
