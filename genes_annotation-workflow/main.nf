@@ -6,6 +6,9 @@ include { prepare_RNAseq_fastq_files_long } from "./modules/prepare_RNAseq_fastq
 include { trimming_fastq } from "./modules/trimming_fastq"
 include { star_genome_indices } from "./modules/star_genome_indices"
 include { star_alignment } from "./modules/star_alignment"
+include { hisat2_genome_indices } from "./modules/hisat2_genome_indices"
+include { hisat2_alignment } from "./modules/hisat2_alignment"
+include { minimap2_genome_indices } from "./modules/minimap2_genome_indices"
 include { minimap2_alignment } from "./modules/minimap2_alignment"
 include { assembly_transcriptome_star_psiclass } from "./modules/assembly_transcriptome_star_psiclass"
 include { assembly_transcriptome_star_stringtie } from "./modules/assembly_transcriptome_star_stringtie"
@@ -15,8 +18,6 @@ include { Stringtie_merging_long_reads } from "./modules/Stringtie_merging_long_
 include { EDTA } from "./modules/EDTA"
 include { liftoff_annotations } from "./modules/liftoff_annotations"
 include { braker3_prediction } from "./modules/braker3_prediction"
-include { rename_braker3_gff_to_gff3 } from "./modules/rename_braker3_gff_to_gff3"
-include { tRNAscan_SE } from "./modules/tRNAscan_SE"
 
 Channel.fromPath( file(params.RNAseq_samplesheet) )
                     .splitCsv(header: true, sep: ',')
@@ -81,11 +82,19 @@ workflow {
   // ----------------------------------------------------------------------------------------
   star_genome_indices(file(params.new_assembly).getParent(),file(params.new_assembly).getName()) // VALIDATED
   star_alignment(star_genome_indices.out,trimming_fastq.out) | collect // VALIDATED
+ 
+  // ----------------------------------------------------------------------------------------
+  //                    Illumina short RNAseq reads alignment with HISAT2
+  // ----------------------------------------------------------------------------------------
+  hisat2_genome_indices(file(params.new_assembly).getParent(),file(params.new_assembly).getName())
+  hisat2_alignment(hisat2_genome_indices.out,trimming_fastq.out,file(params.new_assembly).getName()) | collect
+
   // ----------------------------------------------------------------------------------------
   //               Pacbio/Nanopore long RNAseq reads alignment with Minimap2
   // ----------------------------------------------------------------------------------------
 
-  minimap2_alignment(file(params.new_assembly).getParent(),file(params.new_assembly).getName(),prepare_RNAseq_fastq_files_long.out) | collect // VALIDATED
+  minimap2_genome_indices(file(params.new_assembly).getParent(),file(params.new_assembly).getName())
+  minimap2_alignment(minimap2_genome_indices.out,prepare_RNAseq_fastq_files_long.out) | collect // VALIDATED
   minimap2_alignment
   .out
   .collect()
@@ -139,23 +148,16 @@ workflow {
   // -------------------------- Genome masking with EDTA ------------------------------------
   // ----------------------------------------------------------------------------------------
 
-  // EDTA(file(params.new_assembly).getParent(),file(params.new_assembly).getName()) // VALIDATED
+  EDTA(file(params.new_assembly).getParent(),file(params.new_assembly).getName()) // VALIDATED
 
   // ----------------------------------------------------------------------------------------
   //                                Liftoff previous annotations
   // ----------------------------------------------------------------------------------------
-  // liftoff_annotations(file(params.new_assembly).getParent(),file(params.new_assembly).getName(),file(params.previous_assembly).getParent(),file(params.previous_assembly).getName(),file(params.previous_annotations).getParent(),file(params.previous_annotations).getName()) // VALIDATED
+  liftoff_annotations(file(params.new_assembly).getParent(),file(params.new_assembly).getName(),file(params.previous_assembly).getParent(),file(params.previous_assembly).getName(),file(params.previous_annotations).getParent(),file(params.previous_annotations).getName()) // VALIDATED
 
   // ----------------------------------------------------------------------------------------
   //                                    BRAKER3 (AUGUSTUS/Genemark)
   // ----------------------------------------------------------------------------------------
   braker3_prediction(file(params.new_assembly).getParent(),file(params.new_assembly).getName(),file(params.protein_samplesheet).getParent(),file(params.protein_samplesheet).getName(),concat_star_bams_PsiCLASS,concat_minimap2_bams)
-  // rename_braker3_gff_to_gff3(braker3_prediction.out)
-
-  // ----------------------------------------------------------------------------------------
-  //                                  tRNAscan-SE annotation
-  // ----------------------------------------------------------------------------------------
-
-  // tRNAscan_SE(file(params.new_assembly).getParent(),file(params.new_assembly).getName()) // VALIDATED
 
 }
