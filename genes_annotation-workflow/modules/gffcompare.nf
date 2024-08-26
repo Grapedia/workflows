@@ -3,7 +3,7 @@ process gffcompare {
 
   tag "gffcompare on ${merged_gtf}"
   container 'avelt/gffcompare:latest'
-  containerOptions ""
+  containerOptions "--volume ${projectDir}/work:/work --volume ${projectDir}/scripts:/scripts"
   publishDir "$params.outdir/evidence_data/gffcompare_HISAT2/"
   cpus 4
 
@@ -15,6 +15,7 @@ process gffcompare {
 
   script:
     """
-    /gffcompare-0.12.6/gffcompare -i $merged_gtf
+    /scripts/retrieve_path_transcriptome_gffcompare.sh $merged_gtf
+    /gffcompare-0.12.6/gffcompare -i gtf_list.txt
     """
 }
