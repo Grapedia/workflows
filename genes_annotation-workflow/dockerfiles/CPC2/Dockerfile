@@ -4,7 +4,7 @@ FROM ubuntu:24.10
 # File Author / Maintainer
 MAINTAINER Amandine Velt <amandine.velt@inrae.fr>
 
-# install gffcompare
+# install CPC2
 RUN apt-get update --fix-missing && \
 apt-get install -y wget gcc g++ make python3 
 RUN ln -s /usr/bin/python3 /usr/bin/python
