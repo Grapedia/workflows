@@ -15,6 +15,6 @@ process gffcompare {
 
   script:
     """
-    gffcompare -i $merged_gtf
+    /gffcompare-0.12.6/gffcompare -i $merged_gtf
     """
 }
