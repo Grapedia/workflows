@@ -32,7 +32,7 @@ process prepare_RNAseq_fastq_files_short {
         gzip /RNAseq_data/${sample_ID}_1.fastq
         gzip /RNAseq_data/${sample_ID}_2.fastq
       fi
-    elif [[ $library_layout == "single" ||  ]]
+    elif [[ $library_layout == "single" ]]
     then
       if ls /RNAseq_data/${sample_ID}.fastq.gz 1> /dev/null 2>&1
       then
