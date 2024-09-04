@@ -8,3 +8,4 @@ genes_annotation-workflow/slurm-*
 genes_annotation-workflow/FINAL_OUTPUT/*
 genes_annotation-workflow/TMP_stranded/*
 genes_annotation-workflow/TMP_unstranded/*
+genes_annotation-workflow/data.zip
