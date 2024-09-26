@@ -21,6 +21,7 @@ include { Stringtie_merging_long_reads } from "./modules/Stringtie_merging_long_
 include { EDTA } from "./modules/EDTA"
 include { liftoff_annotations } from "./modules/liftoff_annotations"
 include { braker3_prediction } from "./modules/braker3_prediction"
+// include { diamond2go } from "./modules/diamond2go"
 
 Channel.fromPath( file(params.RNAseq_samplesheet) )
                     .splitCsv(header: true, sep: ',')
@@ -187,5 +188,10 @@ workflow {
   //                                    BRAKER3 (AUGUSTUS/Genemark)
   // ----------------------------------------------------------------------------------------
   braker3_prediction(file(params.new_assembly).getParent(),file(params.new_assembly).getName(),file(params.protein_samplesheet).getParent(),file(params.protein_samplesheet).getName(),concat_star_bams_PsiCLASS,concat_minimap2_bams)
+
+  // ----------------------------------------------------------------------------------------
+  //                                    Diamond2GO on proteins
+  // ----------------------------------------------------------------------------------------
+  // diamond2go(proteins_file)
 
 }
