@@ -11,15 +11,17 @@ process MERGE_RESULT {
 
     """
     #!/usr/bin/python3
+
+    import os
     
     d_start = {}
     d_end = {}
-    with open("$start_coords") as f:
+    with open(os.path.join(os.path.dirname("$coords_new"), "$start_coords")) as f:
       for l in f:
         s = l.strip().split('\t')
         d_start[s[3]] = s
 
-    with open("$end_coords") as f:
+    with open(os.path.join(os.path.dirname("$coords_new"), "$end_coords")) as f:
       for l in f:
         s = l.strip().split('\t')
         d_end[s[3]] = s
