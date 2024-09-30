@@ -75,8 +75,8 @@ workflow START_END {
         params.window_lenght,
         params.working_dir
       )
-      config_1 = SNPLIFT_START(config_start, "config_start.sh", "$split.start_coords" + "_LOG_START", params.working_dir)
-      config_2 = SNPLIFT_END(config_1, "config_end.sh", "$split.end_coords" + "_LOG_END", params.working_dir)
+      config_1 = SNPLIFT_START(config_start, "config_start.sh", split.start_coords + "_LOG", params.working_dir)
+      config_2 = SNPLIFT_END(config_1, "config_end.sh", split.end_coords + "_LOG", params.working_dir)
       MERGE_RESULT(config_2, "$params.coords_new" + "_START", "$params.coords_new" + "_END", "$params.coords_new")
 }
 
