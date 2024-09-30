@@ -29,7 +29,7 @@ process CREATE_CONFIG_START {
     export OUTPUT_FILE="${coords_new}"
 
     # Skipping genome indexing
-    export SKIP_INDEXING=1      # Use 0 if genome is not indexed. Use 1 to save time if genome already
+    export SKIP_INDEXING=0      # Use 0 if genome is not indexed. Use 1 to save time if genome already
                                 # indexed with 'bwa index' [0, 1].
 
     # Checking for collinearity between both genome versions
