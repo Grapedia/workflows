@@ -12,6 +12,7 @@ include { SNPLIFT as SNPLIFT_START } from "./modules/snplift"
 include { SNPLIFT as SNPLIFT_END } from "./modules/snplift"
 include { SPLIT_COORDS } from "./modules/split_coords" 
 include { CHECK_COORDS } from "./modules/check_coords" 
+include { CHECK_GENOME_INDEX } from "./modules/check_genome_index" 
 include { MERGE_RESULT } from "./modules/merge_result"
 include { CREATE_CONFIG_ONLY_START } from "./modules/only_start"
 include { CREATE_CONFIG_START; CREATE_CONFIG_END } from "./modules/start_end"
@@ -42,6 +43,7 @@ log.info """
 workflow ONLY_START {
     take:
       first_ch
+      genome_index
     main:
       config_file = CREATE_CONFIG_ONLY_START(first_ch,
         params.genome_old,
@@ -49,7 +51,8 @@ workflow ONLY_START {
         params.coords_old,
         params.coords_new,
         params.window_lenght,
-        params.working_dir
+        params.working_dir,
+        genome_index
       )
       SNPLIFT(config_file, "config_only_start.sh", "$params.coords_new" + "_LOG", params.working_dir)
 }
@@ -57,6 +60,7 @@ workflow ONLY_START {
 workflow START_END {
     take:
       second_ch
+      genome_index
     main:
       split = SPLIT_COORDS("$params.coords_old")
       config_start = CREATE_CONFIG_START(second_ch,
@@ -65,7 +69,8 @@ workflow START_END {
         split.start_coords,
         "$params.coords_new" + "_START",
         params.window_lenght,
-        params.working_dir
+        params.working_dir,
+        genome_index
       )
       config_end = CREATE_CONFIG_END(second_ch,
         params.genome_old,
@@ -82,12 +87,13 @@ workflow START_END {
 
 workflow{
     coords_type = CHECK_COORDS("$params.coords_old").toInteger()
-    
+    genome_index = CHECK_GENOME_INDEX("$params.genome_new")
+  
     coords_type.branch {
         only_start: it == 1
         start_end: it == 0
     }.set { result }
 
-    ONLY_START(result.only_start)
-    START_END(result.start_end)
+    ONLY_START(result.only_start, genome_index)
+    START_END(result.start_end, genome_index)
 }

@@ -11,6 +11,7 @@ process CREATE_CONFIG_START {
     val coords_new
     val window_lenght
     val working_dir
+    val genome_index
     
     output:
     path("config_start.sh"), emit: config_file
@@ -29,7 +30,7 @@ process CREATE_CONFIG_START {
     export OUTPUT_FILE="${coords_new}"
 
     # Skipping genome indexing
-    export SKIP_INDEXING=0      # Use 0 if genome is not indexed. Use 1 to save time if genome already
+    export SKIP_INDEXING=$genome_index      # Use 0 if genome is not indexed. Use 1 to save time if genome already
                                 # indexed with 'bwa index' [0, 1].
 
     # Checking for collinearity between both genome versions
@@ -41,7 +42,7 @@ process CREATE_CONFIG_START {
                                 #   for debugging [0, 1].
 
     # Number of CPUs
-    export NCPUS=10             # Number of cores to use (around 10 and maximum 20 is recommended)
+    export NCPUS=1              # Number of cores to use (around 10 and maximum 20 is recommended)
                                 #   For less than 100K SNPs, 1 to 4 cores is a good choice.
                                 #   For less than 1M SNPs, 10 cores is a good choice.
                                 #   Above this, 20 cores is going to be slightly faster.
@@ -113,7 +114,7 @@ process CREATE_CONFIG_END {
                                 #   for debugging [0, 1].
 
     # Number of CPUs
-    export NCPUS=10             # Number of cores to use (around 10 and maximum 20 is recommended)
+    export NCPUS=1              # Number of cores to use (around 10 and maximum 20 is recommended)
                                 #   For less than 100K SNPs, 1 to 4 cores is a good choice.
                                 #   For less than 1M SNPs, 10 cores is a good choice.
                                 #   Above this, 20 cores is going to be slightly faster.
