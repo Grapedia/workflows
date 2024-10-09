@@ -87,7 +87,7 @@ workflow START_END {
 
 workflow{
     coords_type = CHECK_COORDS("$params.coords_old").toInteger()
-    genome_index = CHECK_GENOME_INDEX("$params.genome_new")
+    genome_index = CHECK_GENOME_INDEX("$params.genome_new", "$params.working_dir")
   
     coords_type.branch {
         only_start: it == 1
