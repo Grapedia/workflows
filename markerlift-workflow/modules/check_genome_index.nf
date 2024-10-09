@@ -11,7 +11,7 @@ process CHECK_GENOME_INDEX {
     
     import os
 
-    print(int(os.path.isfile(os.path.join("$$working_dir", "$filename" + ".bwt"))))
+    print(int(os.path.isfile(os.path.join("$working_dir", "$filename" + ".bwt"))))
 
     """
 }
