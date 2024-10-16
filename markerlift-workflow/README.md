@@ -13,7 +13,7 @@ old genome  : <FASTA_FILE>
 new genome  : <FASTA_FILE>
 coords file : <TAB_DELIMITED_FILE>
 working directory: <PATH>
-window length: <NUMBER>
+window length: <NUMBER, default 300>
 ---- OUTPUT
 output file : <TAB_DELIMITED_FILE>
 ```
@@ -21,7 +21,7 @@ output file : <TAB_DELIMITED_FILE>
 ## Example:
 
 ```
-nextflow run main.nf --genome_old /path/to/Vitis12x.fa --genome_new /path/to/PN12Xv2_chloro_mito.fa --coords_old /path/to/SNPs_GrapeReseq.vcf --coords_new /path/to/coords_new.vcf --working_dir /path/to/
+nextflow run main.nf --genome_old /path/to/Vitis12x.fa --genome_new /path/to/PN12Xv2_chloro_mito.fa --coords_old /path/to/SNPs_GrapeReseq.vcf --coords_new /path/to/coords_new.vcf --window_length 300 --working_dir /path/to/ 
 ```
 
 Please note that:

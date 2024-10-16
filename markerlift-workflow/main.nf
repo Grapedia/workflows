@@ -5,7 +5,7 @@ params.genome_new = "genome_new.fasta"
 params.coords_old = "coords_old.vcf"
 params.coords_new = "coords_new.vcf"
 params.working_dir = "${projectDir}"
-params.window_lenght = 300
+params.window_length = params.window_length ?:300
 
 include { SNPLIFT } from "./modules/snplift"
 include { SNPLIFT as SNPLIFT_START } from "./modules/snplift"
@@ -34,7 +34,7 @@ log.info """
      new genome  : ${params.genome_new}
      coords file : ${params.coords_old}
      working directory: ${params.working_dir}
-     window length: ${params.window_lenght}
+     window length: ${params.window_length}
      ---- OUTPUT
      output file : ${params.coords_new}
      """
@@ -50,7 +50,7 @@ workflow ONLY_START {
         params.genome_new,
         params.coords_old,
         params.coords_new,
-        params.window_lenght,
+        params.window_length,
         params.working_dir,
         genome_index
       )
@@ -68,7 +68,7 @@ workflow START_END {
         params.genome_new,
         split.start_coords,
         "$params.coords_new" + "_START",
-        params.window_lenght,
+        params.window_length,
         params.working_dir,
         genome_index
       )
@@ -77,7 +77,7 @@ workflow START_END {
         params.genome_new,
         split.end_coords,
         "$params.coords_new" + "_END",
-        params.window_lenght,
+        params.window_length,
         params.working_dir
       )
       config_1 = SNPLIFT_START(config_start, "config_start.sh", split.start_coords + "_LOG", params.working_dir)
