@@ -13,6 +13,9 @@ process assembly_transcriptome_minimap2_stringtie {
   output:
     file("*_transcriptome.gtf")
 
+  when:
+  has_long_reads
+
   script:
     """
     /scripts/Stringtie.sh -t ${task.cpus} -o ${bam_file}_transcriptome.gtf -b $bam_file -r long

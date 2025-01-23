@@ -14,6 +14,9 @@ process minimap2_genome_indices {
   output:
     file("${genome}.mmi")
 
+  when:
+  has_long_reads
+
   script:
     """
     minimap2 -d ${genome}.mmi /genome_path/$genome

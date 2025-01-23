@@ -21,6 +21,7 @@ include { Stringtie_merging_long_reads } from "./modules/Stringtie_merging_long_
 include { EDTA } from "./modules/EDTA"
 include { liftoff_annotations } from "./modules/liftoff_annotations"
 include { braker3_prediction } from "./modules/braker3_prediction"
+include { braker3_prediction_with_long_reads } from "./modules/braker3_prediction_with_long_reads"
 // include { diamond2go } from "./modules/diamond2go"
 
 Channel.fromPath( file(params.RNAseq_samplesheet) )
@@ -34,6 +35,15 @@ Channel.fromPath( file(params.RNAseq_samplesheet) )
                           return [sample_ID, SRA_or_FASTQ, library_layout]
                     }
                     .set{ samples_list_long_reads }
+
+samples_list_long_reads
+    .count()
+    .map { count -> count > 0 }
+    .set { has_long_reads }
+
+has_long_reads.view { flag ->
+    println "Debug: has_long_reads is ${flag}"
+}
 
 Channel.fromPath( file(params.RNAseq_samplesheet) )
                     .splitCsv(header: true, sep: ',')
@@ -71,8 +81,6 @@ Channel.fromPath( file(params.protein_samplesheet) )
                     }
                     .set{ protein_list }
 
-Channel.empty().set { concat_minimap2_bams }
-
 workflow {
 
   // ----------------------------------------------------------------------------------------
@@ -81,14 +89,16 @@ workflow {
   prepare_RNAseq_fastq_files_short(samples_list_short_reads) // VALIDATED
 
   // Check that samples_list_long_reads is empty or not before running prepare_RNAseq_fastq_files_long
-  samples_list_long_reads?.collect().view { data ->
-    if (data?.size() > 0) {
-      println "Long reads samples detected, processing them with prepare_RNAseq_fastq_files_long."
-      prepare_RNAseq_fastq_files_long(data) // VALIDATED
-    } else {
-      println "No long reads samples detected, skipping long reads processing."
-    }
+  prepare_RNAseq_fastq_files_long(samples_list_long_reads)
+
+  has_long_reads.view { flag ->
+      if (!flag) {
+          println "No long reads samples detected, skipping long reads processing."
+      } else {
+          println "Long reads samples detected, processing them with prepare_RNAseq_fastq_files_long."
+      }
   }
+
   // trimming with fastp in only done on Illumina short reads
   trimming_fastq(prepare_RNAseq_fastq_files_short.out) // VALIDATED
 
@@ -109,20 +119,21 @@ workflow {
   // ----------------------------------------------------------------------------------------
 
   // Check that samples_list_long_reads is empty or not before running minimap2-related processes
-  samples_list_long_reads?.collect().view { data ->
-    if (data?.size() > 0) {
-      println "Long reads detected, running Minimap2 genome indexing and alignment."
-      minimap2_genome_indices(file(params.new_assembly).getParent(), file(params.new_assembly).getName())
-      minimap2_alignment(minimap2_genome_indices.out, prepare_RNAseq_fastq_files_long.out) | collect // VALIDATED
-      minimap2_alignment
-        .out
-        .collect()
-        .map { it[0] }
-        .set { concat_minimap2_bams } // VALIDATED
+  minimap2_genome_indices(file(params.new_assembly).getParent(), file(params.new_assembly).getName())
+  minimap2_alignment(minimap2_genome_indices.out, prepare_RNAseq_fastq_files_long.out) | collect
 
-    } else {
-      println "No long reads detected, skipping Minimap2 genome indexing and alignment."
-    }
+  minimap2_alignment
+    .out
+    .collect()
+    .map { it[0] }
+    .set { concat_minimap2_bams }
+
+  has_long_reads.view { flag ->
+      if (!flag) {
+          println "No long reads detected, skipping Minimap2 genome indexing and alignment."
+      } else {
+          println "Long reads detected, running Minimap2 genome indexing and alignment."
+      }
   }
 
   // ----------------------------------------------------------------------------------------
@@ -185,20 +196,20 @@ workflow {
   //      transcriptome assembly with Stringtie on minimap2 alignments (long reads) - OPTIONAL
   // ----------------------------------------------------------------------------------------
 
-  concat_minimap2_bams?.collect().view { data ->
-    if (data?.size() > 0) {
-      println "Long reads alignments detected, running transcriptome assembly and StringTie merging with long reads."
-      assembly_transcriptome_minimap2_stringtie(data) | collect // VALIDATED
-      assembly_transcriptome_minimap2_stringtie
-        .out
-        .collect()
-        .map { it[0] }
-        .set { concat_minimap2_stringtie_annot } // VALIDATED
-      Stringtie_merging_long_reads(concat_minimap2_stringtie_annot) // VALIDATED
+  assembly_transcriptome_minimap2_stringtie(concat_minimap2_bams) | collect // VALIDATED
+  assembly_transcriptome_minimap2_stringtie
+    .out
+    .collect()
+    .map { it[0] }
+    .set { concat_minimap2_stringtie_annot } // VALIDATED
+  Stringtie_merging_long_reads(concat_minimap2_stringtie_annot)
 
-    } else {
-      println "No long reads alignments detected, skipping transcriptome assembly and StringTie merging for long reads."
-    }
+  has_long_reads.view { flag ->
+      if (!flag) {
+          println "No long reads alignments detected, skipping transcriptome assembly and StringTie merging for long reads."
+      } else {
+          println "Long reads alignments detected, running transcriptome assembly and StringTie merging with long reads."
+      }
   }
 
   // ----------------------------------------------------------------------------------------
@@ -216,31 +227,22 @@ workflow {
   //                                    BRAKER3 (AUGUSTUS/Genemark)
   // ----------------------------------------------------------------------------------------
 
-  concat_minimap2_bams?.collect().view { data ->
-    if (data?.size() > 0) {
-      println "Long reads alignments detected, including them in BRAKER3 prediction."
-      braker3_prediction(
-        file(params.new_assembly).getParent(),
-        file(params.new_assembly).getName(),
-        file(params.protein_samplesheet).getParent(),
-        file(params.protein_samplesheet).getName(),
-        concat_star_bams_PsiCLASS,
-        data
-      )
-    } else {
-      println "No long reads alignments detected, running BRAKER3 prediction without them, just with short reads."
+  braker3_prediction(
+      file(params.new_assembly).getParent(),
+      file(params.new_assembly).getName(),
+      file(params.protein_samplesheet).getParent(),
+      file(params.protein_samplesheet).getName(),
+      concat_star_bams_PsiCLASS
+  )
 
-      // Exécuter BRAKER3 uniquement avec les alignements courts
-      braker3_prediction(
-        file(params.new_assembly).getParent(),
-        file(params.new_assembly).getName(),
-        file(params.protein_samplesheet).getParent(),
-        file(params.protein_samplesheet).getName(),
-        concat_star_bams_PsiCLASS,
-        null
-      )
-    }
-  }
+  braker3_prediction_with_long_reads(
+    file(params.new_assembly).getParent(),
+    file(params.new_assembly).getName(),
+    file(params.protein_samplesheet).getParent(),
+    file(params.protein_samplesheet).getName(),
+    concat_star_bams_PsiCLASS,
+    concat_minimap2_bams
+  )
 
   // ----------------------------------------------------------------------------------------
   //                                    Diamond2GO on proteins

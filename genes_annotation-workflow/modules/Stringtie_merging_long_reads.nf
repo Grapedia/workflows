@@ -13,6 +13,9 @@ process Stringtie_merging_long_reads {
   output:
     file("merged_transcriptomes.gtf")
 
+  when:
+  has_long_reads
+
   script:
     """
     gtf=\$(/scripts/retrieve_path_gtf.sh /StringTie_long_reads)

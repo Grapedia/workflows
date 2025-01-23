@@ -1,5 +1,5 @@
 // AUGUSTUS can be run directly using the pipeline BRAKER3
-process braker3_prediction {
+process braker3_prediction_with_long_reads {
 
   tag "Executing BRAKER3/AUGUSTUS-Genemark prediction"
   container 'avelt/braker3:latest'
@@ -13,6 +13,7 @@ process braker3_prediction {
     val(protein_samplesheet_path)
     val(protein_samplesheet_filename)
     val(bam_short)
+    val(bam_long)
 
   output:
     file("augustus.hints.gff3")
@@ -21,12 +22,14 @@ process braker3_prediction {
     file("braker.gff3")
 
   when:
-  !has_long_reads
+  has_long_reads
 
   script:
     """
     proteins=\$(/scripts/retrieve_proteins_for_braker.sh /protein_samplesheet_path/$protein_samplesheet_filename)
-    bam=\$(/scripts/retrieve_path_bam_braker3.sh /alignments/STAR)
+    bam_short_path=\$(/scripts/retrieve_path_bam_braker3.sh /alignments/STAR)
+    bam_long_path=\$(/scripts/retrieve_path_bam_braker3.sh /alignments/minimap2)
+    bam="\${bam_short_path},\${bam_long_path}"
     /BRAKER-3.0.8/scripts/braker.pl --genome=/genome_path/$genome --bam=\${bam} \
     --prot_seq=\${proteins} \
     --threads=${task.cpus} --workingdir=\${PWD} --softmasking --gff3 \

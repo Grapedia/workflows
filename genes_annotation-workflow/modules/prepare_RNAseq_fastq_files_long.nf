@@ -16,6 +16,9 @@ process prepare_RNAseq_fastq_files_long {
   output:
   tuple val(sample_ID), val(SRA_or_FASTQ), val(library_layout)
 
+  when:
+  has_long_reads
+
   script:
   """
   if [[ $SRA_or_FASTQ == "SRA" ]]

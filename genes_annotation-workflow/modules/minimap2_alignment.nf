@@ -14,6 +14,9 @@ process minimap2_alignment {
   output:
     file("${sample_ID}_Aligned.sorted.bam")
 
+  when:
+  has_long_reads
+
   script:
     // PacBio Iso-seq/traditional cDNA parameters
     """
