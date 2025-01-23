@@ -24,7 +24,16 @@ process braker3_prediction {
   script:
     """
     proteins=\$(/scripts/retrieve_proteins_for_braker.sh /protein_samplesheet_path/$protein_samplesheet_filename)
-    bam=\$(/scripts/retrieve_path_bam_braker3.sh /alignments)
+    bam_short=\$(/scripts/retrieve_path_bam_braker3.sh /alignments/STAR)
+    # Checking for the presence of bam_long
+    if [[ ! -z "$bam_long" ]]; then
+        println "Long reads alignments detected, running BRAKER3 prediction with them"
+        bam_long_path=\$(/scripts/retrieve_path_bam_braker3.sh /alignments/minimap2)
+        bam="\${bam_short},\${bam_long_path}"
+    else
+        println "No long reads alignments detected, running BRAKER3 prediction without them, just with short reads"
+        bam="\${bam_short}"
+    fi
     /BRAKER-3.0.8/scripts/braker.pl --genome=/genome_path/$genome --bam=\${bam} \
     --prot_seq=\${proteins} \
     --threads=${task.cpus} --workingdir=\${PWD} --softmasking --gff3 \
