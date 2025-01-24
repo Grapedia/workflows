@@ -1,7 +1,7 @@
 // 2. Aligning RNAseq data on reference genome with STAR
 process star_alignment {
 
-  tag "STAR on ${sample_ID} (${alignment_type})"
+  tag "STAR on ${sample_ID} (${strand_type})"
   container 'quay.io/biocontainers/star:2.7.11b--h43eeafb_2'
   containerOptions "--memory=50g --volume $params.outdir/evidence_data/star_databases/:/star_databases"
   publishDir { 

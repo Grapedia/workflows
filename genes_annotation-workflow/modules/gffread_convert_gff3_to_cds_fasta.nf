@@ -2,7 +2,7 @@ process gffread_convert_gff3_to_cds_fasta {
 
   tag "Executing gffread to convert liftoff gff3 to cds.fasta"
   container 'quay.io/biocontainers/gffread:0.12.7--h077b44d_6'
-  containerOptions "--volume $genome_path:/genome_path"
+  containerOptions "--volume $genome_path:/genome_path --volume ${projectDir}/scripts:/scripts"
   publishDir "$params.outdir/liftoff/gff3_to_cds_fasta"
   cpus 4
 

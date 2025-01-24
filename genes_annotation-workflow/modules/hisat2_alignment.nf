@@ -1,7 +1,7 @@
 // 2. Aligning RNAseq data on reference genome with HISAT2
 process hisat2_alignment {
 
-  tag "HISAT2 on ${sample_ID}"
+  tag "HISAT2 on ${sample_ID} (${strand_type})"
   container 'avelt/hisat2:latest'
   containerOptions "--volume $params.outdir/evidence_data/hisat2_databases/:/hisat2_databases"
 
