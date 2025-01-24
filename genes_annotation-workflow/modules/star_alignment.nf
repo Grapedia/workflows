@@ -1,15 +1,21 @@
 // 2. Aligning RNAseq data on reference genome with STAR
 process star_alignment {
 
-  tag "STAR on ${sample_ID}"
+  tag "STAR on ${sample_ID} (${alignment_type})"
   container 'quay.io/biocontainers/star:2.7.11b--h43eeafb_2'
   containerOptions "--memory=50g --volume $params.outdir/evidence_data/star_databases/:/star_databases"
-  publishDir "$params.outdir/evidence_data/RNAseq_alignments/STAR"
+  publishDir { 
+    if (strand_type == "unstranded") {
+      return "$params.outdir/evidence_data/RNAseq_alignments/STAR/unstranded"
+    } else if (strand_type in ["stranded_forward", "stranded_reverse"]) {
+      return "$params.outdir/evidence_data/RNAseq_alignments/STAR/stranded"
+    }
+  }
   cpus 4
 
   input:
     val(star_database)
-    tuple val(sample_ID), val(library_layout), path(reads)
+    tuple val(sample_ID), val(library_layout), path(reads), val(strand_type)
 
   output:
     file("${sample_ID}_Aligned.sortedByCoord.out.bam")

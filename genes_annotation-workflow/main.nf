@@ -4,6 +4,10 @@ params.outdir = "${projectDir}/intermediate_files"
 include { prepare_RNAseq_fastq_files_short } from "./modules/prepare_RNAseq_fastq_files_short"
 include { prepare_RNAseq_fastq_files_long } from "./modules/prepare_RNAseq_fastq_files_long"
 include { trimming_fastq } from "./modules/trimming_fastq"
+include { liftoff_annotations } from "./modules/liftoff_annotations"
+include { gffread_convert_gff3_to_cds_fasta } from "./modules/gffread_convert_gff3_to_cds_fasta"
+include { salmon_index } from "./modules/salmon_index"
+include { salmon_strand_inference } from "./modules/salmon_strand_inference"
 include { star_genome_indices } from "./modules/star_genome_indices"
 include { star_alignment } from "./modules/star_alignment"
 include { hisat2_genome_indices } from "./modules/hisat2_genome_indices"
@@ -19,7 +23,6 @@ include { Stringtie_merging_short_reads_STAR } from "./modules/Stringtie_merging
 include { Stringtie_merging_short_reads_hisat2 } from "./modules/Stringtie_merging_short_reads_hisat2"
 include { Stringtie_merging_long_reads } from "./modules/Stringtie_merging_long_reads"
 include { EDTA } from "./modules/EDTA"
-include { liftoff_annotations } from "./modules/liftoff_annotations"
 include { braker3_prediction } from "./modules/braker3_prediction"
 include { braker3_prediction_with_long_reads } from "./modules/braker3_prediction_with_long_reads"
 // include { diamond2go } from "./modules/diamond2go"
@@ -103,18 +106,69 @@ workflow {
   trimming_fastq(prepare_RNAseq_fastq_files_short.out) // VALIDATED
 
   // ----------------------------------------------------------------------------------------
+  //                                Liftoff previous annotations
+  // ----------------------------------------------------------------------------------------
+  liftoff_annotations(file(params.new_assembly).getParent(),file(params.new_assembly).getName(),file(params.previous_assembly).getParent(),file(params.previous_assembly).getName(),file(params.previous_annotations).getParent(),file(params.previous_annotations).getName()) // VALIDATED
+
+  // -----------------------------------------------------------------------------------------------------------------
+  //                                gffread to convert liftoff.gff3 to cds.fasta for Salmon strand inference
+  // -----------------------------------------------------------------------------------------------------------------
+  gffread_convert_gff3_to_cds_fasta(file(params.new_assembly).getParent(),file(params.new_assembly).getName(),liftoff_annotations.out.liftoff_previous_annotations) // VALIDATED
+
+  // -----------------------------------------------------------------------------------------------------------------------------------------------
+  //                                Run Salmon for strand inference and classify samples in two channels unstranded_samples and stranded_samples
+  // -----------------------------------------------------------------------------------------------------------------------------------------------
+  salmon_index(gffread_convert_gff3_to_cds_fasta.out)
+  salmon_strand_inference(trimming_fastq.out, salmon_index.out)
+    .collect()
+    .map { tuples ->
+        tuples.collect { tuple ->
+            def (sample_ID, library_layout, reads, strand_info_path) = tuple
+            def strand_info = strand_info_path.text.trim()
+            return [sample_ID, library_layout, reads, strand_info]
+        }
+    }
+    .flatten()
+    .set { classified_samples }
+
+  classified_samples
+    .map { tuple ->
+        def (sample_ID, library_layout, reads, strand_info) = tuple
+        if (strand_info == "U") {
+            return [sample_ID, library_layout, reads, "unstranded"]
+        } else if (strand_info in ["ISR", "FR"]) {
+            return [sample_ID, library_layout, reads, "stranded_forward"]
+        } else if (strand_info in ["ISF", "RF"]) {
+            return [sample_ID, library_layout, reads, "stranded_reverse"]
+        } else {
+            return [sample_ID, library_layout, reads, "unstranded"]
+        }
+    }
+    .branch {
+        unstranded: it[3] == "unstranded"
+        stranded_forward: it[3] == "stranded_forward"
+        stranded_reverse: it[3] == "stranded_reverse"
+    }
+    .set { classified_branches }
+
+  classified_branches.unstranded
+    .mix(classified_branches.stranded_forward)
+    .mix(classified_branches.stranded_reverse)
+    .set { combined_samples } // combine the three flows
+
+  // ----------------------------------------------------------------------------------------
   //                    Illumina short RNAseq reads alignment with STAR
   // ----------------------------------------------------------------------------------------
   star_genome_indices(file(params.new_assembly).getParent(),file(params.new_assembly).getName()) // VALIDATED
-  star_alignment(star_genome_indices.out,trimming_fastq.out) | collect // VALIDATED
+  star_alignment(star_genome_indices.out,combined_samples) | collect // VALIDATED
  
   // ----------------------------------------------------------------------------------------
   //                    Illumina short RNAseq reads alignment with HISAT2
   // ----------------------------------------------------------------------------------------
   hisat2_genome_indices(file(params.new_assembly).getParent(),file(params.new_assembly).getName())
-  hisat2_alignment(hisat2_genome_indices.out,trimming_fastq.out,file(params.new_assembly).getName()) | collect
+  hisat2_alignment(hisat2_genome_indices.out,combined_samples,file(params.new_assembly).getName()) | collect
 
-  // ----------------------------------------------------------------------------------------
+/*  // ----------------------------------------------------------------------------------------
   //               Pacbio/Nanopore long RNAseq reads alignment with Minimap2  - OPTIONAL
   // ----------------------------------------------------------------------------------------
 
@@ -219,11 +273,6 @@ workflow {
   EDTA(file(params.new_assembly).getParent(),file(params.new_assembly).getName()) // VALIDATED
 
   // ----------------------------------------------------------------------------------------
-  //                                Liftoff previous annotations
-  // ----------------------------------------------------------------------------------------
-  liftoff_annotations(file(params.new_assembly).getParent(),file(params.new_assembly).getName(),file(params.previous_assembly).getParent(),file(params.previous_assembly).getName(),file(params.previous_annotations).getParent(),file(params.previous_annotations).getName()) // VALIDATED
-
-  // ----------------------------------------------------------------------------------------
   //                                    BRAKER3 (AUGUSTUS/Genemark)
   // ----------------------------------------------------------------------------------------
 
@@ -242,7 +291,7 @@ workflow {
     file(params.protein_samplesheet).getName(),
     concat_star_bams_PsiCLASS,
     concat_minimap2_bams
-  )
+  )*/
 
   // ----------------------------------------------------------------------------------------
   //                                    Diamond2GO on proteins
