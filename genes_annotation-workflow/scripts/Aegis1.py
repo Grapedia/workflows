@@ -22,9 +22,9 @@ def main(args):
             ('liftoff', args.liftoff_path)
         ],
         'transcriptome': [
-            ('psiclass_stranded_T2T_STAR', args.psiclass_stranded_T2T_STAR_path),
-            ('stringtie_stranded_default_T2T_STAR', args.stringtie_stranded_default_T2T_STAR_path),
-            ('stringtie_stranded_AltCommands_T2T_STAR', args.stringtie_stranded_AltCommands_T2T_STAR_path)
+            ('psiclass_stranded_STAR', args.psiclass_stranded_STAR_path),
+            ('stringtie_stranded_default_STAR', args.stringtie_stranded_default_STAR_path),
+            ('stringtie_stranded_AltCommands_STAR', args.stringtie_stranded_AltCommands_STAR_path)
         ]
     }
 
@@ -36,17 +36,17 @@ def main(args):
     if args.stringtie_Isoseq_AltCommands_path:
         evidences['transcriptome'].append(('stringtie_Isoseq_AltCommands', args.stringtie_Isoseq_AltCommands_path))
 
-    # add psiclass_unstranded_T2T_STAR_path if given
-    if args.psiclass_unstranded_T2T_STAR_path:
-        evidences['transcriptome'].append(('psiclass_unstranded_T2T_STAR', args.psiclass_unstranded_T2T_STAR_path))
+    # add psiclass_unstranded_STAR_path if given
+    if args.psiclass_unstranded_STAR_path:
+        evidences['transcriptome'].append(('psiclass_unstranded_STAR', args.psiclass_unstranded_STAR_path))
 
-    # add stringtie_unstranded_default_T2T_STAR_path if given
-    if args.stringtie_unstranded_default_T2T_STAR_path:
-        evidences['transcriptome'].append(('stringtie_unstranded_default_T2T_STAR', args.stringtie_unstranded_default_T2T_STAR_path))
+    # add stringtie_unstranded_default_STAR_path if given
+    if args.stringtie_unstranded_default_STAR_path:
+        evidences['transcriptome'].append(('stringtie_unstranded_default_STAR', args.stringtie_unstranded_default_STAR_path))
 
-    # add stringtie_unstranded_AltCommands_T2T_STAR_path if given
-    if args.stringtie_unstranded_AltCommands_T2T_STAR_path:
-        evidences['transcriptome'].append(('stringtie_unstranded_AltCommands_T2T_STAR', args.stringtie_unstranded_AltCommands_T2T_STAR_path))
+    # add stringtie_unstranded_AltCommands_STAR_path if given
+    if args.stringtie_unstranded_AltCommands_STAR_path:
+        evidences['transcriptome'].append(('stringtie_unstranded_AltCommands_STAR', args.stringtie_unstranded_AltCommands_STAR_path))
 
     # Create annotation objects
     print("Creating ab initio annotations")
@@ -96,12 +96,12 @@ if __name__ == "__main__":
     parser.add_argument("--augustus_path", required=True, help="Path to Augustus GFF3 file - MANDATORY")
     parser.add_argument("--genemark_path", required=True, help="Path to GeneMark GFF3 file - MANDATORY")
     parser.add_argument("--liftoff_path", required=True, help="Path to Liftoff GFF3 file - MANDATORY")
-    parser.add_argument("--psiclass_stranded_T2T_STAR_path", required=True, help="Path to Psiclass stranded GFF3 file - MANDATORY")
-    parser.add_argument("--stringtie_stranded_default_T2T_STAR_path", required=True, help="Path to StringTie stranded default GFF3 file - MANDATORY")
-    parser.add_argument("--stringtie_stranded_AltCommands_T2T_STAR_path", required=True, help="Path to StringTie stranded AltCommands GFF3 file - MANDATORY")
-    parser.add_argument("--psiclass_unstranded_T2T_STAR_path", required=False, help="Path to Psiclass unstranded GFF3 file - OPTIONAL")
-    parser.add_argument("--stringtie_unstranded_default_T2T_STAR_path", required=False, help="Path to StringTie unstranded default GFF3 file - OPTIONAL")
-    parser.add_argument("--stringtie_unstranded_AltCommands_T2T_STAR_path", required=False, help="Path to StringTie unstranded AltCommands GFF3 file - OPTIONAL")
+    parser.add_argument("--psiclass_stranded_STAR_path", required=True, help="Path to Psiclass stranded GFF3 file - MANDATORY")
+    parser.add_argument("--stringtie_stranded_default_STAR_path", required=True, help="Path to StringTie stranded default GFF3 file - MANDATORY")
+    parser.add_argument("--stringtie_stranded_AltCommands_STAR_path", required=True, help="Path to StringTie stranded AltCommands GFF3 file - MANDATORY")
+    parser.add_argument("--psiclass_unstranded_STAR_path", required=False, help="Path to Psiclass unstranded GFF3 file - OPTIONAL")
+    parser.add_argument("--stringtie_unstranded_default_STAR_path", required=False, help="Path to StringTie unstranded default GFF3 file - OPTIONAL")
+    parser.add_argument("--stringtie_unstranded_AltCommands_STAR_path", required=False, help="Path to StringTie unstranded AltCommands GFF3 file - OPTIONAL")
     parser.add_argument("--stringtie_Isoseq_default_path", required=False, help="Path to StringTie Isoseq default GFF3 file - OPTIONAL")
     parser.add_argument("--stringtie_Isoseq_AltCommands_path", required=False, help="Path to StringTie Isoseq AltCommands GFF3 file - OPTIONAL")
     parser.add_argument("--annotation_pickle", required=False, help="Path to an existing annotation pickle file")
@@ -119,14 +119,14 @@ if __name__ == "__main__":
 #   --augustus_path /storage/tom/augustus_T2T/Augustus/augustus.hints.gff3 \
 #   --genemark_path /storage/tom/augustus_T2T/GeneMark-ETP/genemark.gff3 \
 #   --liftoff_path /storage/tom/inigo/annotation/T2T/liftoff/soft_masked/T2T_ref_soft_masked.gff3 \
-#   --psiclass_stranded_T2T_STAR_path /storage/tom/T2T_mapping_bam/merged_T2T_PN40024_stranded_psiclass.gff3 \
-#   --stringtie_stranded_default_T2T_STAR_path /storage/tom/T2T_mapping_bam/merged_T2T_PN40024_stranded_stringtie_default.gff3 \
-#   --stringtie_stranded_AltCommands_T2T_STAR_path /storage/tom/T2T_mapping_bam/merged_T2T_PN40024_stranded_stringtie_morus.gff3 \
-#   --psiclass_unstranded_T2T_STAR_path /storage/tom/T2T_mapping_bam/merged_T2T_PN40024_unstranded_psiclass.gff3 \
-#   --stringtie_unstranded_default_T2T_STAR_path /storage/tom/T2T_mapping_bam/merged_T2T_PN40024_unstranded_stringtie_default.gff3 \
-#   --stringtie_unstranded_AltCommands_T2T_STAR_path /storage/tom/T2T_mapping_bam/merged_T2T_PN40024_unstranded_stringtie_morus.gff3 \
-#   --stringtie_Isoseq_PN40024_default_path /storage/tom/T2T_mapping_bam/Isoseq/hq_transcripts.RI_rmv_on_T2T_sorted_stringtieDefaultCommands.gff3 \
-#   --stringtie_Isoseq_PN40024_AltCommands_path /storage/tom/T2T_mapping_bam/Isoseq/hq_transcripts.RI_rmv_on_T2T_sorted_stringtieAltCommands.gff3 \
+#   --psiclass_stranded_STAR_path /storage/tom/T2T_mapping_bam/merged_T2T_PN40024_stranded_psiclass.gff3 \
+#   --stringtie_stranded_default_STAR_path /storage/tom/T2T_mapping_bam/merged_T2T_PN40024_stranded_stringtie_default.gff3 \
+#   --stringtie_stranded_AltCommands_STAR_path /storage/tom/T2T_mapping_bam/merged_T2T_PN40024_stranded_stringtie_morus.gff3 \
+#   --psiclass_unstranded_STAR_path /storage/tom/T2T_mapping_bam/merged_T2T_PN40024_unstranded_psiclass.gff3 \
+#   --stringtie_unstranded_default_STAR_path /storage/tom/T2T_mapping_bam/merged_T2T_PN40024_unstranded_stringtie_default.gff3 \
+#   --stringtie_unstranded_AltCommands_STAR_path /storage/tom/T2T_mapping_bam/merged_T2T_PN40024_unstranded_stringtie_morus.gff3 \
+#   --stringtie_Isoseq_default_path /storage/tom/T2T_mapping_bam/Isoseq/hq_transcripts.RI_rmv_on_T2T_sorted_stringtieDefaultCommands.gff3 \
+#   --stringtie_Isoseq_AltCommands_path /storage/tom/T2T_mapping_bam/Isoseq/hq_transcripts.RI_rmv_on_T2T_sorted_stringtieAltCommands.gff3 \
 #   --output_dir /storage/tom/ \
 #   --output_gff merged_annotation.gff3 \
 #   --output_pickle /storage/tom/merged_annotation.pkl

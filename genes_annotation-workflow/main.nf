@@ -120,21 +120,26 @@ workflow {
   // -----------------------------------------------------------------------------------------------------------------------------------------------
   salmon_index(gffread_convert_gff3_to_cds_fasta.out)
   salmon_strand_inference(trimming_fastq.out, salmon_index.out)
-    .collect()
-    .map { tuples ->
-        tuples.collect { tuple ->
-            def (sample_ID, library_layout, reads, strand_info_path) = tuple
-            def strand_info = strand_info_path.text.trim()
-            return [sample_ID, library_layout, reads, strand_info]
-        }
-    }
-    .flatten()
-    .set { classified_samples }
+      .collect()
+      .map { tuples ->
+          tuples.collect { tuple ->
+              def (sample_ID, library_layout, reads, strand_info_path) = tuple
+              println "DEBUG: strand_info_path = ${strand_info_path}"
+              def strand_info = new File(strand_info_path).text.trim()
+              return [sample_ID, library_layout, reads, strand_info]
+          }
+      }
+      .flatten()
+      .view { println "DEBUG: classified_sample = ${it}" }
+      .set { classified_samples }
+
+/*  salmon_strand_inference(trimming_fastq.out, salmon_index.out)
+      .view { println "DEBUG: salmon_strand_info = ${it}" }*/
 
   classified_samples
     .map { tuple ->
         def (sample_ID, library_layout, reads, strand_info) = tuple
-        if (strand_info == "U") {
+        if (strand_info in ["IU", "U"]) {
             return [sample_ID, library_layout, reads, "unstranded"]
         } else if (strand_info in ["ISR", "FR"]) {
             return [sample_ID, library_layout, reads, "stranded_forward"]

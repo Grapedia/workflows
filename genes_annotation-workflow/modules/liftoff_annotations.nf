@@ -5,7 +5,8 @@
 // * the annotations to lift over the target assembly
 process liftoff_annotations {
 
-  tag "Executing liftoff on the new assembly"
+  cache 'deep'
+  tag "Executing liftoff on the new assembly $genome"
   container 'quay.io/biocontainers/liftoff:1.5.1--py_0'
   containerOptions "--volume $genome_path:/genome_path --volume $previous_assembly_path:/previous_assembly_path --volume $previous_annotations_path:/previous_annotations_path"
   publishDir "$params.outdir/liftoff/"
