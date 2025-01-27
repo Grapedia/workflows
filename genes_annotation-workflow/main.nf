@@ -119,22 +119,31 @@ workflow {
   //                                Run Salmon for strand inference and classify samples in two channels unstranded_samples and stranded_samples
   // -----------------------------------------------------------------------------------------------------------------------------------------------
   salmon_index(gffread_convert_gff3_to_cds_fasta.out)
-  salmon_strand_inference(trimming_fastq.out, salmon_index.out)
-      .collect()
-      .map { tuples ->
-          tuples.collect { tuple ->
-              def (sample_ID, library_layout, reads, strand_info_path) = tuple
-              println "DEBUG: strand_info_path = ${strand_info_path}"
-              def strand_info = new File(strand_info_path).text.trim()
-              return [sample_ID, library_layout, reads, strand_info]
-          }
-      }
-      .flatten()
-      .view { println "DEBUG: classified_sample = ${it}" }
-      .set { classified_samples }
 
-/*  salmon_strand_inference(trimming_fastq.out, salmon_index.out)
-      .view { println "DEBUG: salmon_strand_info = ${it}" }*/
+  // Step 1: Run salmon_strand_inference and collect the output
+  def salmon_output = salmon_strand_inference(trimming_fastq.out, salmon_index.out).collect()
+
+  // Step 2: Display the raw content of the output
+  println "DEBUG: salmon_strand_inference output = ${salmon_output}"
+
+  // Step 3: Group the data into blocks of 4
+  def grouped_tuples = salmon_output.collate(4)
+  println "DEBUG: grouped_tuples = ${grouped_tuples}"
+
+  // Step 4: Apply map to transform the data
+  def processed_output = grouped_tuples.map { tuple ->
+      println "DEBUG: tuple = ${tuple}"
+      def (sample_ID, library_layout, reads, strand_info_path) = tuple
+      println "DEBUG: strand_info_path = ${strand_info_path}" // Check the extracted path
+      def strand_info = new File(strand_info_path).text.trim() // Read the contents of the file
+      return [sample_ID, library_layout, reads, strand_info] // Return transformed data
+  }
+
+  // Step 5 : Display the transformed output
+  println "DEBUG: processed_output = ${processed_output}"
+
+  // Step 6 : Assign the transformed output to classified_samples
+  processed_output.view { println "DEBUG: classified_sample = ${it}" }.set { classified_samples }
 
   classified_samples
     .map { tuple ->
@@ -159,6 +168,7 @@ workflow {
   classified_branches.unstranded
     .mix(classified_branches.stranded_forward)
     .mix(classified_branches.stranded_reverse)
+    .view { println "DEBUG: combined_samples = ${it}" }
     .set { combined_samples } // combine the three flows
 
   // ----------------------------------------------------------------------------------------

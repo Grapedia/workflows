@@ -65,9 +65,9 @@ def main(args):
     for annotation in ab_initio_annotations:
         merged_annotation.merge(annotation)
 
-    if args.annotation_pickle:
-        print(f"Loading pickle file: {args.annotation_pickle}")
-        merged_annotation = pickle_load(args.annotation_pickle)
+    # if args.annotation_pickle:
+    #     print(f"Loading pickle file: {args.annotation_pickle}")
+    #     merged_annotation = pickle_load(args.annotation_pickle)
 
     print("Processing alternative transcripts into genes")
     merged_annotation.make_alternative_transcripts_into_genes()
@@ -104,7 +104,7 @@ if __name__ == "__main__":
     parser.add_argument("--stringtie_unstranded_AltCommands_STAR_path", required=False, help="Path to StringTie unstranded AltCommands GFF3 file - OPTIONAL")
     parser.add_argument("--stringtie_Isoseq_default_path", required=False, help="Path to StringTie Isoseq default GFF3 file - OPTIONAL")
     parser.add_argument("--stringtie_Isoseq_AltCommands_path", required=False, help="Path to StringTie Isoseq AltCommands GFF3 file - OPTIONAL")
-    parser.add_argument("--annotation_pickle", required=False, help="Path to an existing annotation pickle file")
+    # parser.add_argument("--annotation_pickle", required=False, help="Path to an existing annotation pickle file")
     parser.add_argument("--output_dir", required=True, help="Directory to save the outputs")
     parser.add_argument("--output_gff", required=True, help="Name of the merged GFF file")
     parser.add_argument("--output_pickle", required=True, help="Path to save the merged pickle file")
