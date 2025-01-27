@@ -1,21 +1,58 @@
 #!/bin/bash
 
-# Create diamond databases in case they are not created yet
+# This script launches DIAMOND to create databases and run BLASTp searches.
+# Usage : ./diamond_script.sh -q <query_file> -t <threads> -d <databases> -o <output_dir>
+
+# Valeurs par défaut
+QUERY=""
+THREADS=10
+DATABASES=""
+OUTDIR=""
+
+# Usage function
+print_usage() {
+    echo "Usage : $0 -q <query_file> -t <threads> -d <databases> -o <output_dir>"
+    echo "    -q    Path to the FASTA file of unique proteins for the assembly to annotate"
+    echo "    -t    Number of threads (default : 10)"
+    echo "    -o    Output directory"
+    echo "    -d    Absolute path to proteins fasta files to be used as databases, separated by commas (example: /path/to/arabidopsis.proteins.fasta,/path/to/viridiplantae.proteins.fasta,/path/to/eudicotyledons.proteins.fasta)"
+    exit 1
+}
+
+# Reading the arguments
+while getopts "q:t:d:o:h" option; do
+    case "$option" in
+        q) QUERY="$OPTARG" ;;
+        t) THREADS="$OPTARG" ;;
+        d) DATABASES="$OPTARG" ;;
+		o) OUTDIR="$OPTARG" ;;
+        h) print_usage ;;
+        *) print_usage ;;
+    esac
+done
+
+# Checking arguments
+if [ -z "$QUERY" ] || [ -z "$DATABASES" ] || [ -z "$OUTDIR" ]; then
+    echo "Error: the query file, output directory and databases must be specified with -q, -o and -d"
+    print_usage
+fi
+
+# Loading the DIAMOND module
 module load diamond
 
-diamond makedb --threads 20 --in /home/avelt/data2/2024_assembly_GW_RI_hifiasm/Riesling/2025_genes_annotation/workflows/genes_annotation-workflow/data/protein_data/arabidopsis_prot_2022_01.fasta \
--d /home/avelt/data2/2024_assembly_GW_RI_hifiasm/Riesling/2025_genes_annotation/workflows/genes_annotation-workflow/intermediate_files/BLAST_search_annotation_merge/arabidopsis_prot_2022_01.fasta
+# IFS=‘,’ database loop
+read -ra DB_ARRAY <<< "$DATABASES"
+for DB in "${DB_ARRAY[@]}"; do
+    DB_PATH="${DB}"
+    BASENAME=$( basename "$DB_PATH" )
+    OUTPUT_PATH="$OUTDIR/${BASENAME}_vs_assembly.diamond"
 
-diamond makedb --threads 20 --in /home/avelt/data2/2024_assembly_GW_RI_hifiasm/Riesling/2025_genes_annotation/workflows/genes_annotation-workflow/data/protein_data/Viridiplantae_swissprot.fasta \
--d /home/avelt/data2/2024_assembly_GW_RI_hifiasm/Riesling/2025_genes_annotation/workflows/genes_annotation-workflow/intermediate_files/BLAST_search_annotation_merge/Viridiplantae_swissprot.fasta
+    # Creating the DIAMOND database
+    diamond makedb --threads "$THREADS" --in "$DB_PATH" \
+    -d "$OUTDIR/${BASENAME}"
 
-diamond makedb --threads 20 --in /home/avelt/data2/2024_assembly_GW_RI_hifiasm/Riesling/2025_genes_annotation/workflows/genes_annotation-workflow/data/protein_data/eudicotyledons_uniprot.fasta \
--d /home/avelt/data2/2024_assembly_GW_RI_hifiasm/Riesling/2025_genes_annotation/workflows/genes_annotation-workflow/intermediate_files/BLAST_search_annotation_merge/eudicotyledons_uniprot.fasta
-
-
-# Run diamond on the exported unique proteins
-
-diamond blastp --threads 20 --db /home/avelt/data2/2024_assembly_GW_RI_hifiasm/Riesling/2025_genes_annotation/workflows/genes_annotation-workflow/intermediate_files/BLAST_search_annotation_merge/arabidopsis_prot_2022_01.fasta --ultra-sensitive --out "/home/avelt/data2/2024_assembly_GW_RI_hifiasm/Riesling/2025_genes_annotation/workflows/genes_annotation-workflow/intermediate_files/BLAST_search_annotation_merge/arabidopsis_prot_2022_01_vs_assembly.diamond" --outfmt 6 --query "/path/to/merge_annotation_on_PN40024_T2T_unique_proteins.fasta" --max-target-seqs 1 --evalue 1e-3
-diamond blastp --threads 20 --db /home/avelt/data2/2024_assembly_GW_RI_hifiasm/Riesling/2025_genes_annotation/workflows/genes_annotation-workflow/intermediate_files/BLAST_search_annotation_merge/Viridiplantae_swissprot.fasta --ultra-sensitive --out "/home/avelt/data2/2024_assembly_GW_RI_hifiasm/Riesling/2025_genes_annotation/workflows/genes_annotation-workflow/intermediate_files/BLAST_search_annotation_merge/Viridiplantae_swissprot_vs_assembly.diamond" --outfmt 6 --query "/path/to/merge_annotation_on_PN40024_T2T_unique_proteins.fasta" --max-target-seqs 1 --evalue 1e-3
-diamond blastp --threads 20 --db /home/avelt/data2/2024_assembly_GW_RI_hifiasm/Riesling/2025_genes_annotation/workflows/genes_annotation-workflow/intermediate_files/BLAST_search_annotation_merge/eudicotyledons_uniprot.fasta --ultra-sensitive --out "/home/avelt/data2/2024_assembly_GW_RI_hifiasm/Riesling/2025_genes_annotation/workflows/genes_annotation-workflow/intermediate_files/BLAST_search_annotation_merge/eudicotyledons_uniprot_vs_assembly.diamond" --outfmt 6 --query "/path/to/merge_annotation_on_PN40024_T2T_unique_proteins.fasta" --max-target-seqs 1 --evalue 1e-3
-
+    # Run DIAMOND BLASTp
+    diamond blastp --threads "$THREADS" --db "$OUTDIR/${BASENAME}" \
+    --ultra-sensitive --out "$OUTPUT_PATH" \
+    --outfmt 6 --query "$QUERY" --max-target-seqs 1 --evalue 1e-3
+done
