@@ -11,7 +11,7 @@ process salmon_strand_inference {
     path(salmon_index)
 
   output:
-    tuple val(sample_ID), val(library_layout), path(reads), path("${sample_ID}.strand_info")
+    tuple val(sample_ID), val(library_layout), path(reads), path("${sample_ID}.strand_info.classified")
 
   script:
     """
@@ -30,5 +30,19 @@ process salmon_strand_inference {
     else 
       echo 'U' > ${sample_ID}.strand_info
     fi
+
+    strand_type=\$(cat "${sample_ID}.strand_info")
+
+    if [[ "\$strand_type" == "IU" || "\$strand_type" == "U" ]]; then
+        strand_info="unstranded"
+    elif [[ "\$strand_type" == "ISR" || "\$strand_type" == "FR" ]]; then
+        strand_info="stranded_forward"
+    elif [[ "\$strand_type" == "ISF" || "\$strand_type" == "RF" ]]; then
+        strand_info="stranded_reverse"
+    else
+        strand_info="unstranded"
+    fi
+
+    echo "\$strand_info" > "${sample_ID}.strand_info.classified"
     """
 }

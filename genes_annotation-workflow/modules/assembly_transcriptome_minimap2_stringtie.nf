@@ -11,7 +11,8 @@ process assembly_transcriptome_minimap2_stringtie {
     val(bam_file)
 
   output:
-    file("*_transcriptome.gtf")
+    file("*_transcriptome.gtf"), emit: minimap2_stringtie_transcriptome_gtf
+    file("*_transcriptome.AltCommands.gtf"), emit: minimap2_stringtie_alt_commands_gtf
 
   when:
   has_long_reads
@@ -19,5 +20,6 @@ process assembly_transcriptome_minimap2_stringtie {
   script:
     """
     /scripts/Stringtie.sh -t ${task.cpus} -o ${bam_file}_transcriptome.gtf -b $bam_file -r long
+    /scripts/Stringtie_AltCommands.sh -o ${bam_file}_transcriptome.AltCommands.gtf -b $bam_file -r long
     """
 }

@@ -116,74 +116,86 @@ workflow {
   gffread_convert_gff3_to_cds_fasta(file(params.new_assembly).getParent(),file(params.new_assembly).getName(),liftoff_annotations.out.liftoff_previous_annotations) // VALIDATED
 
   // -----------------------------------------------------------------------------------------------------------------------------------------------
-  //                                Run Salmon for strand inference and classify samples in two channels unstranded_samples and stranded_samples
+  //         Run Salmon for strand inference and classify samples in three strand types : unstranded, stranded_forward and stranded_reverse
   // -----------------------------------------------------------------------------------------------------------------------------------------------
   salmon_index(gffread_convert_gff3_to_cds_fasta.out)
 
-  // Step 1: Run salmon_strand_inference and collect the output
-  def salmon_output = salmon_strand_inference(trimming_fastq.out, salmon_index.out).collect()
+  salmon_strand_inference(trimming_fastq.out, salmon_index.out)
 
-  // Step 2: Display the raw content of the output
-  println "DEBUG: salmon_strand_inference output = ${salmon_output}"
-
-  // Step 3: Group the data into blocks of 4
-  def grouped_tuples = salmon_output.collate(4)
-  println "DEBUG: grouped_tuples = ${grouped_tuples}"
-
-  // Step 4: Apply map to transform the data
-  def processed_output = grouped_tuples.map { tuple ->
-      println "DEBUG: tuple = ${tuple}"
-      def (sample_ID, library_layout, reads, strand_info_path) = tuple
-      println "DEBUG: strand_info_path = ${strand_info_path}" // Check the extracted path
-      def strand_info = new File(strand_info_path).text.trim() // Read the contents of the file
-      return [sample_ID, library_layout, reads, strand_info] // Return transformed data
+  def salmon_output_processed = salmon_strand_inference.out.map { sample_ID, library_layout, reads, strand_file ->
+      def strand_info = file(strand_file).text.trim()
+      return [sample_ID, library_layout, reads, strand_info]
   }
 
-  // Step 5 : Display the transformed output
-  println "DEBUG: processed_output = ${processed_output}"
+  salmon_output_processed.view { result ->
+      println "DEBUG: salmon_output_processed -> ${result}"
+      if (!result || result.isEmpty()) {
+          println "ERROR: salmon_output_processed is empty!"
+      } else {
+          result.eachWithIndex { it, i -> println "DEBUG: Row[${i}] = ${it}" }
+      }
+  }
 
-  // Step 6 : Assign the transformed output to classified_samples
-  processed_output.view { println "DEBUG: classified_sample = ${it}" }.set { classified_samples }
+  def star_unstranded_out = Channel.empty()
+  def hisat2_unstranded_out = Channel.empty()
 
-  classified_samples
-    .map { tuple ->
-        def (sample_ID, library_layout, reads, strand_info) = tuple
-        if (strand_info in ["IU", "U"]) {
-            return [sample_ID, library_layout, reads, "unstranded"]
-        } else if (strand_info in ["ISR", "FR"]) {
-            return [sample_ID, library_layout, reads, "stranded_forward"]
-        } else if (strand_info in ["ISF", "RF"]) {
-            return [sample_ID, library_layout, reads, "stranded_reverse"]
-        } else {
-            return [sample_ID, library_layout, reads, "unstranded"]
-        }
-    }
-    .branch {
-        unstranded: it[3] == "unstranded"
-        stranded_forward: it[3] == "stranded_forward"
-        stranded_reverse: it[3] == "stranded_reverse"
-    }
-    .set { classified_branches }
+  salmon_output_processed
+      .collect()
+      .view { list ->
+          println "DEBUG: Checking if there are unstranded samples..."
+          if (!list || list.isEmpty()) {
+              println "WARNING: No samples found in `salmon_output_processed`."
+          } else {
+              println "DEBUG: Full list -> ${list}"
+          }
+      }
+      .map { list -> list.any { it.size() > 3 && it[3] == "unstranded" } }
+      .set { has_unstranded_samples }
 
-  classified_branches.unstranded
-    .mix(classified_branches.stranded_forward)
-    .mix(classified_branches.stranded_reverse)
-    .view { println "DEBUG: combined_samples = ${it}" }
-    .set { combined_samples } // combine the three flows
+  println "DEBUG: has_unstranded_samples = ${has_unstranded_samples}"
 
   // ----------------------------------------------------------------------------------------
   //                    Illumina short RNAseq reads alignment with STAR
   // ----------------------------------------------------------------------------------------
   star_genome_indices(file(params.new_assembly).getParent(),file(params.new_assembly).getName()) // VALIDATED
-  star_alignment(star_genome_indices.out,combined_samples) | collect // VALIDATED
- 
+
+  // Always align stranded samples (stranded_forward and stranded_reverse)
+  // Align ‘unstranded’ samples only if exist
+  if (has_unstranded_samples) {
+      star_alignment(star_genome_indices.out, salmon_output_processed) | collect | set { star_out }
+  } else {
+      println " WARNING : Skipping STAR alignment for unstranded samples, none found."
+      star_alignment(star_genome_indices.out, salmon_output_processed
+          .filter { sample_ID, library_layout, reads, strand_type -> strand_type in ["stranded_forward", "stranded_reverse"] }
+      ) | collect | set { star_out }
+  }
+
+  star_out.view { result ->
+    println "DEBUG: star_out -> ${result}"
+  }
+
   // ----------------------------------------------------------------------------------------
   //                    Illumina short RNAseq reads alignment with HISAT2
   // ----------------------------------------------------------------------------------------
   hisat2_genome_indices(file(params.new_assembly).getParent(),file(params.new_assembly).getName())
-  hisat2_alignment(hisat2_genome_indices.out,combined_samples,file(params.new_assembly).getName()) | collect
 
-/*  // ----------------------------------------------------------------------------------------
+  // Always align stranded samples (stranded_forward and stranded_reverse)
+  // Align ‘unstranded’ samples only if exist
+  if (has_unstranded_samples) {
+      hisat2_alignment(hisat2_genome_indices.out, salmon_output_processed,
+          file(params.new_assembly).getName()) | collect | set { hisat2_out }
+  } else {
+      println " WARNING : Skipping STAR alignment for unstranded samples, none found."
+      hisat2_alignment(hisat2_genome_indices.out, salmon_output_processed
+          .filter { sample_ID, library_layout, reads, strand_type -> strand_type in ["stranded_forward", "stranded_reverse"] },
+          file(params.new_assembly).getName()) | collect | set { hisat2_out }
+  }
+
+  hisat2_out.view { result ->
+      println "DEBUG: hisat2_out -> ${result}"
+  }
+ 
+  // ----------------------------------------------------------------------------------------
   //               Pacbio/Nanopore long RNAseq reads alignment with Minimap2  - OPTIONAL
   // ----------------------------------------------------------------------------------------
 
@@ -208,16 +220,15 @@ workflow {
   // ----------------------------------------------------------------------------------------
   //              transcriptome assembly with PsiCLASS on STAR alignments (short reads)
   // ----------------------------------------------------------------------------------------
-  // retrieve the first value to launch PsiClass assembly one time on all the bam files together
+/*  assembly_transcriptome_star_psiclass(star_stranded_out) | collect | set { star_psiclass_stranded_out }
 
-  star_alignment
-  .out
-  .collect()
-  .map { it[0] }
-  .set{ concat_star_bams_PsiCLASS } // VALIDATED
-  assembly_transcriptome_star_psiclass(concat_star_bams_PsiCLASS) // VALIDATED
+  if (has_unstranded_samples) {
+      assembly_transcriptome_star_psiclass(star_unstranded_out) | collect | set { star_psiclass_unstranded_out }
+  } else {
+      println "WARNING: No unstranded samples detected, skipping STAR/PsiCLASS for unstranded transcriptome."
+  }*/
 
-  // ----------------------------------------------------------------------------------------
+/*  // ----------------------------------------------------------------------------------------
   //        transcriptome assembly with Stringtie on STAR alignments (short reads)
   // ----------------------------------------------------------------------------------------
   // retrieve all the bam files to create a channel and launch StringTie one time per bam file
@@ -306,11 +317,11 @@ workflow {
     file(params.protein_samplesheet).getName(),
     concat_star_bams_PsiCLASS,
     concat_minimap2_bams
-  )*/
+  )
 
   // ----------------------------------------------------------------------------------------
   //                                    Diamond2GO on proteins
   // ----------------------------------------------------------------------------------------
   // diamond2go(proteins_file)
-
+*/
 }
