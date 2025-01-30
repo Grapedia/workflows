@@ -108,19 +108,20 @@ workflow {
   // ----------------------------------------------------------------------------------------
   //                                Liftoff previous annotations
   // ----------------------------------------------------------------------------------------
-  liftoff_annotations(file(params.new_assembly).getParent(),file(params.new_assembly).getName(),file(params.previous_assembly).getParent(),file(params.previous_assembly).getName(),file(params.previous_annotations).getParent(),file(params.previous_annotations).getName()) // VALIDATED
+  // liftoff_annotations(file(params.new_assembly).getParent(),file(params.new_assembly).getName(),file(params.previous_assembly).getParent(),file(params.previous_assembly).getName(),file(params.previous_annotations).getParent(),file(params.previous_annotations).getName()) // VALIDATED
 
   // -----------------------------------------------------------------------------------------------------------------
   //                                gffread to convert liftoff.gff3 to cds.fasta for Salmon strand inference
   // -----------------------------------------------------------------------------------------------------------------
-  gffread_convert_gff3_to_cds_fasta(file(params.new_assembly).getParent(),file(params.new_assembly).getName(),liftoff_annotations.out.liftoff_previous_annotations) // VALIDATED
+  // gffread_convert_gff3_to_cds_fasta(file(params.new_assembly).getParent(),file(params.new_assembly).getName(),liftoff_annotations.out.liftoff_previous_annotations) // VALIDATED
 
   // -----------------------------------------------------------------------------------------------------------------------------------------------
   //         Run Salmon for strand inference and classify samples in three strand types : unstranded, stranded_forward and stranded_reverse
   // -----------------------------------------------------------------------------------------------------------------------------------------------
-  salmon_index(gffread_convert_gff3_to_cds_fasta.out)
+  // salmon_index(gffread_convert_gff3_to_cds_fasta.out)
 
-  salmon_strand_inference(trimming_fastq.out, salmon_index.out)
+  // salmon_strand_inference(trimming_fastq.out, salmon_index.out)
+  salmon_strand_inference(trimming_fastq.out)
 
   def salmon_output_processed = salmon_strand_inference.out.map { sample_ID, library_layout, reads, strand_file ->
       def strand_info = file(strand_file).text.trim()
@@ -149,10 +150,13 @@ workflow {
               println "DEBUG: Full list -> ${list}"
           }
       }
-      .map { list -> list.any { it.size() > 3 && it[3] == "unstranded" } }
+      .map { list -> list.flatten().contains("unstranded") }
+      .ifEmpty { emit false }
       .set { has_unstranded_samples }
 
-  println "DEBUG: has_unstranded_samples = ${has_unstranded_samples}"
+  has_unstranded_samples.view { value -> 
+      println "DEBUG: has_unstranded_samples -> ${value}"
+  }
 
   // ----------------------------------------------------------------------------------------
   //                    Illumina short RNAseq reads alignment with STAR
@@ -220,13 +224,7 @@ workflow {
   // ----------------------------------------------------------------------------------------
   //              transcriptome assembly with PsiCLASS on STAR alignments (short reads)
   // ----------------------------------------------------------------------------------------
-/*  assembly_transcriptome_star_psiclass(star_stranded_out) | collect | set { star_psiclass_stranded_out }
-
-  if (has_unstranded_samples) {
-      assembly_transcriptome_star_psiclass(star_unstranded_out) | collect | set { star_psiclass_unstranded_out }
-  } else {
-      println "WARNING: No unstranded samples detected, skipping STAR/PsiCLASS for unstranded transcriptome."
-  }*/
+  assembly_transcriptome_star_psiclass(star_out) | collect | set { star_psiclass }
 
 /*  // ----------------------------------------------------------------------------------------
   //        transcriptome assembly with Stringtie on STAR alignments (short reads)

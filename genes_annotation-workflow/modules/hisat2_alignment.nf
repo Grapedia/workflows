@@ -21,7 +21,7 @@ process hisat2_alignment {
     val(genome)
 
   output:
-    file("${sample_ID}_Aligned.sort.bam")
+    tuple val(sample_ID), path("${sample_ID}_Aligned.sort.bam"), val(strand_type)
 
   script:
     """

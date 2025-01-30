@@ -1,21 +1,25 @@
 // 4. Transcriptome assembly with PsiCLASS
 process assembly_transcriptome_star_psiclass {
 
-  tag "STAR/PsiCLASS - short reads"
+  tag "STAR/PsiCLASS - short reads - on ${sample_ID}"
   container 'avelt/psiclass_samtools:latest'
-  containerOptions "--volume ${projectDir}/scripts:/scripts --volume ${projectDir}/work:/work --volume $params.outdir/evidence_data/RNAseq_alignments/STAR:/alignments"
-  publishDir "$params.outdir/evidence_data/transcriptomes/PsiCLASS"
+  publishDir { 
+    if (strand_type == "unstranded") {
+      return "$params.outdir/evidence_data/transcriptomes/PsiCLASS/unstranded"
+    } else if (strand_type in ["stranded_forward", "stranded_reverse"]) {
+      return "$params.outdir/evidence_data/transcriptomes/PsiCLASS/stranded"
+    }
+  }
   cpus 4
 
   input:
-    val(sample_ID)
+    tuple val(sample_ID), path(bam_file), val(strand_type)
 
   output:
-    file("RNAseq_vote.gtf")
+    tuple val(sample_ID), file("${sample_ID}_vote.gtf"), val(strand_type)
 
   script:
     """
-    bam=\$(/scripts/retrieve_path_bam.sh /alignments)
-    /PsiCLASS-1.0.2/psiclass -p ${task.cpus} -b \${bam} -o RNAseq
+    /PsiCLASS-1.0.2/psiclass -p ${task.cpus} -b ${bam_file} -o ${sample_ID}
     """
 }

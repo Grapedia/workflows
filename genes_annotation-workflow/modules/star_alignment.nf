@@ -18,7 +18,7 @@ process star_alignment {
     tuple val(sample_ID), val(library_layout), path(reads), val(strand_type)
 
   output:
-    file("${sample_ID}_Aligned.sortedByCoord.out.bam")
+    tuple val(sample_ID), path("${sample_ID}_Aligned.sortedByCoord.out.bam"), val(strand_type)
 
   script:
     def basename_database = task.ext.prefix ?: "${star_database.getName()}"
