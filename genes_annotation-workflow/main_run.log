@@ -1,0 +1,97 @@
+[2025-01-30 15:29:48] LOG SYSTEM INITIALIZED SUCCESSFULLY
+[2025-01-30 15:29:49] Workflow started
+[2025-01-30 15:32:45] LOG SYSTEM INITIALIZED SUCCESSFULLY
+[2025-01-30 15:32:46] Workflow started
+[2025-01-30 15:34:39] LOG SYSTEM INITIALIZED SUCCESSFULLY
+[2025-01-30 15:34:40] Workflow started
+[2025-01-30 15:34:41] No long reads alignments detected, skipping transcriptome assembly and StringTie merging for long reads.
+[2025-01-30 15:34:41] No long reads samples detected, skipping long reads processing.
+[2025-01-30 15:34:41] For this run, has_long_reads is false
+[2025-01-30 15:34:41] No long reads detected, skipping Minimap2 genome indexing and alignment.
+[2025-01-30 15:34:41] --------------------------------------------------------
+[2025-01-30 15:34:41] salmon_output_processed result -> [KXXF9, paired, [/data2/avelt/2024_assembly_GW_RI_hifiasm/Riesling/2025_final_development_TITAN/workflows/genes_annotation-workflow/work/d0/511aec5f916403899f353522e3d5b8/KXXF9_1.trimmed.fastq.gz, /data2/avelt/2024_assembly_GW_RI_hifiasm/Riesling/2025_final_development_TITAN/workflows/genes_annotation-workflow/work/d0/511aec5f916403899f353522e3d5b8/KXXF9_2.trimmed.fastq.gz], stranded_forward]
+[2025-01-30 15:34:41] Row[0] = KXXF9
+[2025-01-30 15:34:41] Row[1] = paired
+[2025-01-30 15:34:41] Row[2] = [/data2/avelt/2024_assembly_GW_RI_hifiasm/Riesling/2025_final_development_TITAN/workflows/genes_annotation-workflow/work/d0/511aec5f916403899f353522e3d5b8/KXXF9_1.trimmed.fastq.gz, /data2/avelt/2024_assembly_GW_RI_hifiasm/Riesling/2025_final_development_TITAN/workflows/genes_annotation-workflow/work/d0/511aec5f916403899f353522e3d5b8/KXXF9_2.trimmed.fastq.gz]
+[2025-01-30 15:34:41] Row[3] = stranded_forward
+[2025-01-30 15:34:41] --------------------------------------------------------
+[2025-01-30 15:34:41] --------------------------------------------------------
+[2025-01-30 15:34:41] salmon_output_processed result -> [RI_MIM, paired, [/data2/avelt/2024_assembly_GW_RI_hifiasm/Riesling/2025_final_development_TITAN/workflows/genes_annotation-workflow/work/a1/f8b3c00cee81ea65a2de7f2a95f9ad/RI_MIM_1.trimmed.fastq.gz, /data2/avelt/2024_assembly_GW_RI_hifiasm/Riesling/2025_final_development_TITAN/workflows/genes_annotation-workflow/work/a1/f8b3c00cee81ea65a2de7f2a95f9ad/RI_MIM_2.trimmed.fastq.gz], unstranded]
+[2025-01-30 15:34:41] Row[0] = RI_MIM
+[2025-01-30 15:34:41] Row[1] = paired
+[2025-01-30 15:34:41] Row[2] = [/data2/avelt/2024_assembly_GW_RI_hifiasm/Riesling/2025_final_development_TITAN/workflows/genes_annotation-workflow/work/a1/f8b3c00cee81ea65a2de7f2a95f9ad/RI_MIM_1.trimmed.fastq.gz, /data2/avelt/2024_assembly_GW_RI_hifiasm/Riesling/2025_final_development_TITAN/workflows/genes_annotation-workflow/work/a1/f8b3c00cee81ea65a2de7f2a95f9ad/RI_MIM_2.trimmed.fastq.gz]
+[2025-01-30 15:34:41] Row[3] = unstranded
+[2025-01-30 15:34:41] --------------------------------------------------------
+[2025-01-30 15:34:41] --------------------------------------------------------
+[2025-01-30 15:34:41] salmon_output_processed result -> [RCDN20_S1, paired, [/data2/avelt/2024_assembly_GW_RI_hifiasm/Riesling/2025_final_development_TITAN/workflows/genes_annotation-workflow/work/f6/22aca494740c0e061d5110578ea314/RCDN20_S1_1.trimmed.fastq.gz, /data2/avelt/2024_assembly_GW_RI_hifiasm/Riesling/2025_final_development_TITAN/workflows/genes_annotation-workflow/work/f6/22aca494740c0e061d5110578ea314/RCDN20_S1_2.trimmed.fastq.gz], stranded_forward]
+[2025-01-30 15:34:41] Row[0] = RCDN20_S1
+[2025-01-30 15:34:41] Row[1] = paired
+[2025-01-30 15:34:41] Row[2] = [/data2/avelt/2024_assembly_GW_RI_hifiasm/Riesling/2025_final_development_TITAN/workflows/genes_annotation-workflow/work/f6/22aca494740c0e061d5110578ea314/RCDN20_S1_1.trimmed.fastq.gz, /data2/avelt/2024_assembly_GW_RI_hifiasm/Riesling/2025_final_development_TITAN/workflows/genes_annotation-workflow/work/f6/22aca494740c0e061d5110578ea314/RCDN20_S1_2.trimmed.fastq.gz]
+[2025-01-30 15:34:41] Row[3] = stranded_forward
+[2025-01-30 15:34:41] --------------------------------------------------------
+[2025-01-30 15:34:41] hisat2_alignment process result -> [RCDN20_S1, /data2/avelt/2024_assembly_GW_RI_hifiasm/Riesling/2025_final_development_TITAN/workflows/genes_annotation-workflow/work/d8/38c1f4ef32641afa12bbe2ab7a1e6f/RCDN20_S1_Aligned.sort.bam, stranded_forward]
+[2025-01-30 15:34:41] star_alignment process result -> [KXXF9, /data2/avelt/2024_assembly_GW_RI_hifiasm/Riesling/2025_final_development_TITAN/workflows/genes_annotation-workflow/work/cb/e45910042c96a0e0dddb5a5eb59b19/KXXF9_Aligned.sortedByCoord.out.bam, stranded_forward]
+[2025-01-30 15:34:41] hisat2_alignment process result -> [RI_MIM, /data2/avelt/2024_assembly_GW_RI_hifiasm/Riesling/2025_final_development_TITAN/workflows/genes_annotation-workflow/work/01/63aff114ab016504c1558e7599dcbc/RI_MIM_Aligned.sort.bam, unstranded]
+[2025-01-30 15:34:41] hisat2_alignment process result -> [KXXF9, /data2/avelt/2024_assembly_GW_RI_hifiasm/Riesling/2025_final_development_TITAN/workflows/genes_annotation-workflow/work/90/d1595fd7d156342782fcacbae9529a/KXXF9_Aligned.sort.bam, stranded_forward]
+[2025-01-30 15:34:41] star_alignment process result -> [RI_MIM, /data2/avelt/2024_assembly_GW_RI_hifiasm/Riesling/2025_final_development_TITAN/workflows/genes_annotation-workflow/work/cd/efd5d5324dcb64fb068028f232c307/RI_MIM_Aligned.sortedByCoord.out.bam, unstranded]
+[2025-01-30 15:34:41] star_alignment process result -> [RCDN20_S1, /data2/avelt/2024_assembly_GW_RI_hifiasm/Riesling/2025_final_development_TITAN/workflows/genes_annotation-workflow/work/34/0473f14efd6cb2a3772737b9b7abb6/RCDN20_S1_Aligned.sortedByCoord.out.bam, stranded_forward]
+[2025-01-30 15:34:41] assembly_transcriptome_star_psiclass process result -> [RI_MIM, /data2/avelt/2024_assembly_GW_RI_hifiasm/Riesling/2025_final_development_TITAN/workflows/genes_annotation-workflow/work/5f/7bfe722e2ed1fa5f50d8a3cd416709/RI_MIM_vote.gtf, unstranded]
+[2025-01-30 15:34:41] star_stringtie_alt_commands_gtf process result -> [KXXF9, /data2/avelt/2024_assembly_GW_RI_hifiasm/Riesling/2025_final_development_TITAN/workflows/genes_annotation-workflow/work/b5/9a8436652bed3791732204e91dab9a/KXXF9_transcriptome.AltCommands.gtf, stranded_forward]
+[2025-01-30 15:34:41] star_stringtie_transcriptome_gtf process result -> [KXXF9, /data2/avelt/2024_assembly_GW_RI_hifiasm/Riesling/2025_final_development_TITAN/workflows/genes_annotation-workflow/work/b5/9a8436652bed3791732204e91dab9a/KXXF9_transcriptome.gtf, stranded_forward]
+[2025-01-30 15:34:41] assembly_transcriptome_star_psiclass process result -> [RCDN20_S1, /data2/avelt/2024_assembly_GW_RI_hifiasm/Riesling/2025_final_development_TITAN/workflows/genes_annotation-workflow/work/02/0623130ac1d7b31d4d2eac0ae56611/RCDN20_S1_vote.gtf, stranded_forward]
+[2025-01-30 15:34:41] assembly_transcriptome_star_psiclass process result -> [KXXF9, /data2/avelt/2024_assembly_GW_RI_hifiasm/Riesling/2025_final_development_TITAN/workflows/genes_annotation-workflow/work/6e/99b85a1a563dfb22138519d2b99f9a/KXXF9_vote.gtf, stranded_forward]
+[2025-01-30 15:34:41] hisat2_stringtie_alt_commands_gtf process result -> [RCDN20_S1, /data2/avelt/2024_assembly_GW_RI_hifiasm/Riesling/2025_final_development_TITAN/workflows/genes_annotation-workflow/work/6a/73123324cdbbf517853b6175e74ac5/RCDN20_S1_transcriptome.AltCommands.gtf, stranded_forward]
+[2025-01-30 15:34:41] hisat2_stringtie_transcriptome_gtf process result -> [RCDN20_S1, /data2/avelt/2024_assembly_GW_RI_hifiasm/Riesling/2025_final_development_TITAN/workflows/genes_annotation-workflow/work/6a/73123324cdbbf517853b6175e74ac5/RCDN20_S1_transcriptome.gtf, stranded_forward]
+[2025-01-30 15:34:41] star_stringtie_alt_commands_gtf process result -> [RCDN20_S1, /data2/avelt/2024_assembly_GW_RI_hifiasm/Riesling/2025_final_development_TITAN/workflows/genes_annotation-workflow/work/c2/771028c7f0088352fe91d22c5862f4/RCDN20_S1_transcriptome.AltCommands.gtf, stranded_forward]
+[2025-01-30 15:34:41] star_stringtie_transcriptome_gtf process result -> [RCDN20_S1, /data2/avelt/2024_assembly_GW_RI_hifiasm/Riesling/2025_final_development_TITAN/workflows/genes_annotation-workflow/work/c2/771028c7f0088352fe91d22c5862f4/RCDN20_S1_transcriptome.gtf, stranded_forward]
+[2025-01-30 15:34:41] hisat2_stringtie_transcriptome_gtf process result -> [KXXF9, /data2/avelt/2024_assembly_GW_RI_hifiasm/Riesling/2025_final_development_TITAN/workflows/genes_annotation-workflow/work/33/358c99d8fa40238cb3feb7749193de/KXXF9_transcriptome.gtf, stranded_forward]
+[2025-01-30 15:34:41] hisat2_stringtie_alt_commands_gtf process result -> [KXXF9, /data2/avelt/2024_assembly_GW_RI_hifiasm/Riesling/2025_final_development_TITAN/workflows/genes_annotation-workflow/work/33/358c99d8fa40238cb3feb7749193de/KXXF9_transcriptome.AltCommands.gtf, stranded_forward]
+[2025-01-30 15:34:41] hisat2_stringtie_transcriptome_gtf process result -> [RI_MIM, /data2/avelt/2024_assembly_GW_RI_hifiasm/Riesling/2025_final_development_TITAN/workflows/genes_annotation-workflow/work/40/e19b4f487653015d0e64e38d620fad/RI_MIM_transcriptome.gtf, unstranded]
+[2025-01-30 15:34:41] hisat2_stringtie_alt_commands_gtf process result -> [RI_MIM, /data2/avelt/2024_assembly_GW_RI_hifiasm/Riesling/2025_final_development_TITAN/workflows/genes_annotation-workflow/work/40/e19b4f487653015d0e64e38d620fad/RI_MIM_transcriptome.AltCommands.gtf, unstranded]
+[2025-01-30 15:34:41] star_stringtie_transcriptome_gtf process result -> [RI_MIM, /data2/avelt/2024_assembly_GW_RI_hifiasm/Riesling/2025_final_development_TITAN/workflows/genes_annotation-workflow/work/63/4dd485ae34e0fd5e9aa0686eef8ca3/RI_MIM_transcriptome.gtf, unstranded]
+[2025-01-30 15:34:41] star_stringtie_alt_commands_gtf process result -> [RI_MIM, /data2/avelt/2024_assembly_GW_RI_hifiasm/Riesling/2025_final_development_TITAN/workflows/genes_annotation-workflow/work/63/4dd485ae34e0fd5e9aa0686eef8ca3/RI_MIM_transcriptome.AltCommands.gtf, unstranded]
+[2025-01-30 15:34:41] assembly_transcriptome_hisat2_stringtie - finished for all samples ... merging
+[2025-01-30 15:34:41] assembly_transcriptome_star_stringtie - finished for all samples ... merging
+[2025-01-30 15:47:47] LOG SYSTEM INITIALIZED SUCCESSFULLY
+[2025-01-30 15:47:48] Workflow started
+[2025-01-30 15:47:48] For this run, has_long_reads is false
+[2025-01-30 15:47:48] No long reads detected, skipping Minimap2 genome indexing and alignment.
+[2025-01-30 15:47:48] No long reads samples detected, skipping long reads processing.
+[2025-01-30 15:47:48] No long reads alignments detected, skipping transcriptome assembly and StringTie merging for long reads.
+[2025-01-30 15:47:48] --------------------------------------------------------
+[2025-01-30 15:47:48] salmon_output_processed result -> [RCDN20_S1, paired, [/data2/avelt/2024_assembly_GW_RI_hifiasm/Riesling/2025_final_development_TITAN/workflows/genes_annotation-workflow/work/f6/22aca494740c0e061d5110578ea314/RCDN20_S1_1.trimmed.fastq.gz, /data2/avelt/2024_assembly_GW_RI_hifiasm/Riesling/2025_final_development_TITAN/workflows/genes_annotation-workflow/work/f6/22aca494740c0e061d5110578ea314/RCDN20_S1_2.trimmed.fastq.gz], stranded_forward]
+[2025-01-30 15:47:48] Row[0] = RCDN20_S1
+[2025-01-30 15:47:48] Row[1] = paired
+[2025-01-30 15:47:48] Row[2] = [/data2/avelt/2024_assembly_GW_RI_hifiasm/Riesling/2025_final_development_TITAN/workflows/genes_annotation-workflow/work/f6/22aca494740c0e061d5110578ea314/RCDN20_S1_1.trimmed.fastq.gz, /data2/avelt/2024_assembly_GW_RI_hifiasm/Riesling/2025_final_development_TITAN/workflows/genes_annotation-workflow/work/f6/22aca494740c0e061d5110578ea314/RCDN20_S1_2.trimmed.fastq.gz]
+[2025-01-30 15:47:48] Row[3] = stranded_forward
+[2025-01-30 15:47:48] --------------------------------------------------------
+[2025-01-30 15:47:48] --------------------------------------------------------
+[2025-01-30 15:47:48] salmon_output_processed result -> [KXXF9, paired, [/data2/avelt/2024_assembly_GW_RI_hifiasm/Riesling/2025_final_development_TITAN/workflows/genes_annotation-workflow/work/d0/511aec5f916403899f353522e3d5b8/KXXF9_1.trimmed.fastq.gz, /data2/avelt/2024_assembly_GW_RI_hifiasm/Riesling/2025_final_development_TITAN/workflows/genes_annotation-workflow/work/d0/511aec5f916403899f353522e3d5b8/KXXF9_2.trimmed.fastq.gz], stranded_forward]
+[2025-01-30 15:47:48] Row[0] = KXXF9
+[2025-01-30 15:47:48] Row[1] = paired
+[2025-01-30 15:47:48] Row[2] = [/data2/avelt/2024_assembly_GW_RI_hifiasm/Riesling/2025_final_development_TITAN/workflows/genes_annotation-workflow/work/d0/511aec5f916403899f353522e3d5b8/KXXF9_1.trimmed.fastq.gz, /data2/avelt/2024_assembly_GW_RI_hifiasm/Riesling/2025_final_development_TITAN/workflows/genes_annotation-workflow/work/d0/511aec5f916403899f353522e3d5b8/KXXF9_2.trimmed.fastq.gz]
+[2025-01-30 15:47:48] Row[3] = stranded_forward
+[2025-01-30 15:47:48] --------------------------------------------------------
+[2025-01-30 15:47:48] --------------------------------------------------------
+[2025-01-30 15:47:48] salmon_output_processed result -> [RI_MIM, paired, [/data2/avelt/2024_assembly_GW_RI_hifiasm/Riesling/2025_final_development_TITAN/workflows/genes_annotation-workflow/work/a1/f8b3c00cee81ea65a2de7f2a95f9ad/RI_MIM_1.trimmed.fastq.gz, /data2/avelt/2024_assembly_GW_RI_hifiasm/Riesling/2025_final_development_TITAN/workflows/genes_annotation-workflow/work/a1/f8b3c00cee81ea65a2de7f2a95f9ad/RI_MIM_2.trimmed.fastq.gz], unstranded]
+[2025-01-30 15:47:48] Row[0] = RI_MIM
+[2025-01-30 15:47:48] Row[1] = paired
+[2025-01-30 15:47:48] Row[2] = [/data2/avelt/2024_assembly_GW_RI_hifiasm/Riesling/2025_final_development_TITAN/workflows/genes_annotation-workflow/work/a1/f8b3c00cee81ea65a2de7f2a95f9ad/RI_MIM_1.trimmed.fastq.gz, /data2/avelt/2024_assembly_GW_RI_hifiasm/Riesling/2025_final_development_TITAN/workflows/genes_annotation-workflow/work/a1/f8b3c00cee81ea65a2de7f2a95f9ad/RI_MIM_2.trimmed.fastq.gz]
+[2025-01-30 15:47:48] Row[3] = unstranded
+[2025-01-30 15:47:48] --------------------------------------------------------
+[2025-01-30 15:47:48] hisat2_alignment process result -> [RCDN20_S1, /data2/avelt/2024_assembly_GW_RI_hifiasm/Riesling/2025_final_development_TITAN/workflows/genes_annotation-workflow/work/d8/38c1f4ef32641afa12bbe2ab7a1e6f/RCDN20_S1_Aligned.sort.bam, stranded_forward]
+[2025-01-30 15:47:48] hisat2_alignment process result -> [RI_MIM, /data2/avelt/2024_assembly_GW_RI_hifiasm/Riesling/2025_final_development_TITAN/workflows/genes_annotation-workflow/work/01/63aff114ab016504c1558e7599dcbc/RI_MIM_Aligned.sort.bam, unstranded]
+[2025-01-30 15:47:48] star_alignment process result -> [KXXF9, /data2/avelt/2024_assembly_GW_RI_hifiasm/Riesling/2025_final_development_TITAN/workflows/genes_annotation-workflow/work/cb/e45910042c96a0e0dddb5a5eb59b19/KXXF9_Aligned.sortedByCoord.out.bam, stranded_forward]
+[2025-01-30 15:47:48] star_alignment process result -> [RI_MIM, /data2/avelt/2024_assembly_GW_RI_hifiasm/Riesling/2025_final_development_TITAN/workflows/genes_annotation-workflow/work/cd/efd5d5324dcb64fb068028f232c307/RI_MIM_Aligned.sortedByCoord.out.bam, unstranded]
+[2025-01-30 15:47:48] hisat2_alignment process result -> [KXXF9, /data2/avelt/2024_assembly_GW_RI_hifiasm/Riesling/2025_final_development_TITAN/workflows/genes_annotation-workflow/work/90/d1595fd7d156342782fcacbae9529a/KXXF9_Aligned.sort.bam, stranded_forward]
+[2025-01-30 15:47:48] star_alignment process result -> [RCDN20_S1, /data2/avelt/2024_assembly_GW_RI_hifiasm/Riesling/2025_final_development_TITAN/workflows/genes_annotation-workflow/work/34/0473f14efd6cb2a3772737b9b7abb6/RCDN20_S1_Aligned.sortedByCoord.out.bam, stranded_forward]
+[2025-01-30 15:47:48] assembly_transcriptome_star_psiclass process result -> [KXXF9, /data2/avelt/2024_assembly_GW_RI_hifiasm/Riesling/2025_final_development_TITAN/workflows/genes_annotation-workflow/work/6e/99b85a1a563dfb22138519d2b99f9a/KXXF9_vote.gtf, stranded_forward]
+[2025-01-30 15:47:48] assembly_transcriptome_star_psiclass process result -> [RI_MIM, /data2/avelt/2024_assembly_GW_RI_hifiasm/Riesling/2025_final_development_TITAN/workflows/genes_annotation-workflow/work/5f/7bfe722e2ed1fa5f50d8a3cd416709/RI_MIM_vote.gtf, unstranded]
+[2025-01-30 15:47:48] assembly_transcriptome_star_psiclass process result -> [RCDN20_S1, /data2/avelt/2024_assembly_GW_RI_hifiasm/Riesling/2025_final_development_TITAN/workflows/genes_annotation-workflow/work/02/0623130ac1d7b31d4d2eac0ae56611/RCDN20_S1_vote.gtf, stranded_forward]
+[2025-01-30 16:06:10] LOG SYSTEM INITIALIZED SUCCESSFULLY
+[2025-01-30 16:06:11] Workflow started
+[2025-01-30 16:06:12] Skipping EDTA process (params.EDTA = 'no'). To launch EDTA, put EDTA = 'yes' in nextflow.config file.
+[2025-01-30 16:06:12] No long reads samples detected, skipping long reads processing.
+[2025-01-30 16:06:12] For this run, has_long_reads is false
+[2025-01-30 16:06:12] No long reads detected, skipping Minimap2 genome indexing and alignment.
+[2025-01-30 16:06:12] No long reads alignments detected, skipping transcriptome assembly and StringTie merging for long reads.

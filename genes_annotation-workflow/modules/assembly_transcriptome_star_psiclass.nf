@@ -5,9 +5,9 @@ process assembly_transcriptome_star_psiclass {
   container 'avelt/psiclass_samtools:latest'
   publishDir { 
     if (strand_type == "unstranded") {
-      return "$params.outdir/evidence_data/transcriptomes/PsiCLASS/unstranded"
+      return "$projectDir/FINAL_OUTPUT/transcriptomes/STAR_PsiCLASS/unstranded"
     } else if (strand_type in ["stranded_forward", "stranded_reverse"]) {
-      return "$params.outdir/evidence_data/transcriptomes/PsiCLASS/stranded"
+      return "$projectDir/FINAL_OUTPUT/transcriptomes/STAR_PsiCLASS/stranded"
     }
   }
   cpus 4

@@ -12,7 +12,7 @@ process minimap2_alignment {
     tuple val(sample_ID), val(SRA_or_FASTQ), val(library_layout)
 
   output:
-    file("${sample_ID}_Aligned.sorted.bam")
+    tuple val(sample_ID), path("${sample_ID}_Aligned.sorted.bam")
 
   when:
   has_long_reads

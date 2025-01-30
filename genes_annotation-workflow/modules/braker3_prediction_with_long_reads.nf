@@ -4,7 +4,7 @@ process braker3_prediction_with_long_reads {
   tag "Executing BRAKER3/AUGUSTUS-Genemark prediction"
   container 'avelt/braker3:latest'
   containerOptions "--volume ${protein_samplesheet_path}:/protein_samplesheet_path --volume ${projectDir}/scripts:/scripts --volume ${projectDir}/work:/work --volume ${projectDir}/data/protein_data:/protein_path --volume ${genome_path}:/genome_path --volume $params.outdir/evidence_data/RNAseq_alignments/:/alignments --volume ${projectDir}:/outdir:z"
-  publishDir "$params.outdir/BRAKER3/"
+  publishDir "$projectDir/FINAL_OUTPUT/BRAKER3/"
   cpus 4
 
   input:
@@ -27,7 +27,7 @@ process braker3_prediction_with_long_reads {
   script:
     """
     proteins=\$(/scripts/retrieve_proteins_for_braker.sh /protein_samplesheet_path/$protein_samplesheet_filename)
-    bam_short_path=\$(/scripts/retrieve_path_bam_braker3.sh /alignments/STAR)
+    bam_short_path=\$(/scripts/retrieve_path_bam_braker3.sh /alignments/STAR/{stranded,unstranded})
     bam_long_path=\$(/scripts/retrieve_path_bam_braker3.sh /alignments/minimap2)
     bam="\${bam_short_path},\${bam_long_path}"
     /BRAKER-3.0.8/scripts/braker.pl --genome=/genome_path/$genome --bam=\${bam} \

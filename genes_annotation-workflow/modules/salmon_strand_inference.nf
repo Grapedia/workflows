@@ -8,13 +8,14 @@ process salmon_strand_inference {
 
   input:
     tuple val(sample_ID), val(library_layout), path(reads)
+    path(salmon_index)
 
   output:
     tuple val(sample_ID), val(library_layout), path(reads), path("${sample_ID}.strand_info.classified")
 
   script:
     """
-    index_path=\$(/scripts/retrieve_path.sh /data2/avelt/2024_assembly_GW_RI_hifiasm/Riesling/2025_final_development_TITAN/workflows/genes_annotation-workflow/work/e6/08d148b47716abc04350b3e89af0cc/salmon_index)
+    index_path=\$(/scripts/retrieve_path.sh $salmon_index)
 
     if [[ $library_layout == "paired" ]]
     then

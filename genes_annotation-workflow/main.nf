@@ -1,14 +1,13 @@
 // Path to outdir
 params.outdir = "${projectDir}/intermediate_files"
-params.debug_log_path = "${params.outdir ?: '.'}/main_run.log"
+params.debug_log_path = "${projectDir ?: '.'}/main_run.log"
 
 def logDebug(message) {
     def logFile = new File(params.debug_log_path)
     def timestamp = new Date().format("yyyy-MM-dd HH:mm:ss")
-    logFile.append("[${timestamp}] DEBUG: ${message}\n")
+    logFile.append("[${timestamp}] ${message}\n")
 }
 
-// 🔹 Vérification que le système de log fonctionne
 logDebug("LOG SYSTEM INITIALIZED SUCCESSFULLY")
 
 include { prepare_RNAseq_fastq_files_short } from "./modules/prepare_RNAseq_fastq_files_short"
@@ -122,20 +121,19 @@ workflow {
   // ----------------------------------------------------------------------------------------
   //                                Liftoff previous annotations
   // ----------------------------------------------------------------------------------------
-  // liftoff_annotations(file(params.new_assembly).getParent(),file(params.new_assembly).getName(),file(params.previous_assembly).getParent(),file(params.previous_assembly).getName(),file(params.previous_annotations).getParent(),file(params.previous_annotations).getName()) // VALIDATED
+  liftoff_annotations(file(params.new_assembly).getParent(),file(params.new_assembly).getName(),file(params.previous_assembly).getParent(),file(params.previous_assembly).getName(),file(params.previous_annotations).getParent(),file(params.previous_annotations).getName()) // VALIDATED
 
   // -----------------------------------------------------------------------------------------------------------------
   //                                gffread to convert liftoff.gff3 to cds.fasta for Salmon strand inference
   // -----------------------------------------------------------------------------------------------------------------
-  // gffread_convert_gff3_to_cds_fasta(file(params.new_assembly).getParent(),file(params.new_assembly).getName(),liftoff_annotations.out.liftoff_previous_annotations) // VALIDATED
+  gffread_convert_gff3_to_cds_fasta(file(params.new_assembly).getParent(),file(params.new_assembly).getName(),liftoff_annotations.out.liftoff_previous_annotations) // VALIDATED
 
   // -----------------------------------------------------------------------------------------------------------------------------------------------
   //         Run Salmon for strand inference and classify samples in three strand types : unstranded, stranded_forward and stranded_reverse
   // -----------------------------------------------------------------------------------------------------------------------------------------------
-  // salmon_index(gffread_convert_gff3_to_cds_fasta.out)
+  salmon_index(gffread_convert_gff3_to_cds_fasta.out)
 
-  // salmon_strand_inference(trimming_fastq.out, salmon_index.out)
-  salmon_strand_inference(trimming_fastq.out)
+  salmon_strand_inference(trimming_fastq.out, salmon_index.out)
 
   def salmon_output_processed = salmon_strand_inference.out.map { sample_ID, library_layout, reads, strand_file ->
       def strand_info = file(strand_file).text.trim()
@@ -160,6 +158,12 @@ workflow {
 
   star_alignment(star_genome_indices.out, salmon_output_processed)
 
+  star_alignment
+    .out
+    .collect()
+    .map { it[0] }
+    .set{ concat_star_bams_BRAKER3 }
+
   star_alignment.out.view { result ->
     logDebug("star_alignment process result -> ${result}")
   }
@@ -183,7 +187,9 @@ workflow {
 
   // Check that samples_list_long_reads is empty or not before running minimap2-related processes
   minimap2_genome_indices(file(params.new_assembly).getParent(), file(params.new_assembly).getName())
-  minimap2_alignment(minimap2_genome_indices.out, prepare_RNAseq_fastq_files_long.out) | collect
+  minimap2_alignment(minimap2_genome_indices.out, prepare_RNAseq_fastq_files_long.out).view { result ->
+    logDebug("minimap2_alignment process result -> ${result}")
+  }
 
   minimap2_alignment
     .out
@@ -216,35 +222,13 @@ workflow {
 
   assembly_transcriptome_star_stringtie(star_alignment.out)
 
-  assembly_transcriptome_star_stringtie.out.star_stringtie_transcriptome_gtf.view { result ->
-      logDebug("star_stringtie_transcriptome_gtf process result -> ${result}")
-  }
-
-  assembly_transcriptome_star_stringtie.out.star_stringtie_alt_commands_gtf.view { result ->
-      logDebug("star_stringtie_alt_commands_gtf process result -> ${result}")
-  }
-
   assembly_transcriptome_star_stringtie.out.star_stringtie_transcriptome_gtf
   .groupTuple()
   .collect()
   .map { it[0] }
   .set { concat_star_stringtie_for_merging } // VALIDATED
 
-  assembly_transcriptome_star_stringtie.out.star_stringtie_alt_commands_gtf
-  .groupTuple()
-  .collect()
-  .map { it[0] }
-  .set { concat_star_stringtie_for_merging_alt } // VALIDATED
-
-  concat_star_stringtie_for_merging.view { result ->
-    logDebug("concat_star_stringtie_for_merging result -> ${result}")
-  }
-
-  concat_star_stringtie_for_merging_alt.view { result ->
-    logDebug("concat_star_stringtie_for_merging_alt result -> ${result}")
-  }
-
-  // Stringtie_merging_short_reads_STAR(concat_star_stringtie_for_merging) // VALIDATED
+  Stringtie_merging_short_reads_STAR(concat_star_stringtie_for_merging) // VALIDATED
 
   // ----------------------------------------------------------------------------------------
   //        transcriptome assembly with Stringtie on HISAT2 alignments (short reads)
@@ -254,78 +238,33 @@ workflow {
 
   assembly_transcriptome_hisat2_stringtie(hisat2_alignment.out)
 
-  assembly_transcriptome_hisat2_stringtie.out.hisat2_stringtie_transcriptome_gtf.view { result ->
-      logDebug("hisat2_stringtie_transcriptome_gtf process result -> ${result}")
-  }
-
-  assembly_transcriptome_hisat2_stringtie.out.hisat2_stringtie_alt_commands_gtf.view { result ->
-      logDebug("hisat2_stringtie_alt_commands_gtf process result -> ${result}")
-  }
-
   assembly_transcriptome_hisat2_stringtie.out.hisat2_stringtie_transcriptome_gtf
   .groupTuple()
   .collect()
   .map { it[0] }
   .set { concat_hisat2_stringtie_for_merging } // VALIDATED
 
-  assembly_transcriptome_hisat2_stringtie.out.hisat2_stringtie_alt_commands_gtf
-  .groupTuple()
-  .collect()
-  .map { it[0] }
-  .set { concat_hisat2_stringtie_for_merging_alt } // VALIDATED
+  Stringtie_merging_short_reads_hisat2(concat_hisat2_stringtie_for_merging) // VALIDATED
 
-  concat_hisat2_stringtie_for_merging.view { result ->
-    logDebug("concat_hisat2_stringtie_for_merging -> ${result}")
-  }
-
-  concat_hisat2_stringtie_for_merging_alt.view { result ->
-    logDebug("concat_hisat2_stringtie_for_merging_alt -> ${result}")
-  }
-
-  //Stringtie_merging_short_reads_hisat2(concat_hisat2_stringtie_for_merging) // VALIDATED
-
-/*  // ----------------------------------------------------------------------------------------
-  //        gffcompare on HISAT2/Stringtie merged transcriptome assembly
+  // ----------------------------------------------------------------------------------------
+  //        gffcompare on HISAT2/Stringtie merged transcriptome assembly - maybe not essential
   // ----------------------------------------------------------------------------------------
 
-  gffcompare(Stringtie_merging_short_reads_hisat2.out)
+  // gffcompare(Stringtie_merging_short_reads_hisat2.out)
 
   // ----------------------------------------------------------------------------------------
   //      transcriptome assembly with Stringtie on minimap2 alignments (long reads) - OPTIONAL
   // ----------------------------------------------------------------------------------------
-*/
 
-  concat_minimap2_bams.view { logDebug("DEBUG: concat_minimap2_bams -> ${it}") }
-
-  // assembly_transcriptome_minimap2_stringtie(concat_minimap2_bams) | collect // VALIDATED
-
-/*  assembly_transcriptome_minimap2_stringtie.out.minimap2_stringtie_transcriptome_gtf.view { result ->
-      logDebug("minimap2_stringtie_transcriptome_gtf process result -> ${result}")
-  }
-
-  assembly_transcriptome_minimap2_stringtie.out.minimap2_stringtie_alt_commands_gtf.view { result ->
-      logDebug("minimap2_stringtie_alt_commands_gtf process result -> ${result}")
-  }
+  assembly_transcriptome_minimap2_stringtie(minimap2_alignment.out)
 
   assembly_transcriptome_minimap2_stringtie.out.minimap2_stringtie_transcriptome_gtf
-    .collect()
-    .map { it[0] }
-    .set { concat_minimap2_stringtie_annot } // VALIDATED
+  .groupTuple()
+  .collect()
+  .map { it[0] }
+  .set { concat_minimap2_stringtie_for_merging } // VALIDATED
 
-  assembly_transcriptome_minimap2_stringtie.out.minimap2_stringtie_alt_commands_gtf
-    .collect()
-    .map { it[0] }
-    .set { concat_minimap2_stringtie_annot_alt } // VALIDATED
-
-  concat_minimap2_stringtie_annot.view { result ->
-    logDebug("concat_minimap2_stringtie_annot -> ${result}")
-  }
-
-  concat_minimap2_stringtie_annot_alt.view { result ->
-    logDebug("concat_minimap2_stringtie_annot_alt -> ${result}")
-  }*/
-
-  /*Stringtie_merging_long_reads(concat_minimap2_stringtie_annot)*/
+  Stringtie_merging_long_reads(concat_minimap2_stringtie_for_merging)
 
   has_long_reads.view { flag ->
     if (!flag) {
@@ -335,11 +274,16 @@ workflow {
     }
   }
 
-/*  // ----------------------------------------------------------------------------------------
+  // ----------------------------------------------------------------------------------------
   // -------------------------- Genome masking with EDTA ------------------------------------
   // ----------------------------------------------------------------------------------------
 
-  EDTA(file(params.new_assembly).getParent(),file(params.new_assembly).getName()) // VALIDATED
+  if (params.EDTA == 'yes') {
+    logDebug("Running EDTA process")
+    EDTA(file(params.new_assembly).getParent(), file(params.new_assembly).getName()) // VALIDATED
+  } else {
+    logDebug("Skipping EDTA process (params.EDTA = '${params.EDTA}'). To launch EDTA, put EDTA = 'yes' in nextflow.config file.")
+  }
 
   // ----------------------------------------------------------------------------------------
   //                                    BRAKER3 (AUGUSTUS/Genemark)
@@ -350,7 +294,7 @@ workflow {
       file(params.new_assembly).getName(),
       file(params.protein_samplesheet).getParent(),
       file(params.protein_samplesheet).getName(),
-      concat_star_bams_PsiCLASS
+      concat_star_bams_BRAKER3
   )
 
   braker3_prediction_with_long_reads(
@@ -358,13 +302,18 @@ workflow {
     file(params.new_assembly).getName(),
     file(params.protein_samplesheet).getParent(),
     file(params.protein_samplesheet).getName(),
-    concat_star_bams_PsiCLASS,
+    concat_star_bams_BRAKER3,
     concat_minimap2_bams
   )
+
+  // ----------------------------------------------------------------------------------------
+  //     Aegis scripts (1, 2, 3) to create the final GFF3 file from all the evidences
+  // ----------------------------------------------------------------------------------------
+
+    // TO DO
 
   // ----------------------------------------------------------------------------------------
   //                                    Diamond2GO on proteins
   // ----------------------------------------------------------------------------------------
   // diamond2go(proteins_file)
-*/
 }

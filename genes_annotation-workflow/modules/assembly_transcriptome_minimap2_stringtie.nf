@@ -8,18 +8,18 @@ process assembly_transcriptome_minimap2_stringtie {
   cpus 4
 
   input:
-    val(bam_file)
+    tuple val(sample_ID), path(bam_file)
 
   output:
-    path("*_transcriptome.gtf", emit: minimap2_stringtie_transcriptome_gtf)
-    path("*_transcriptome.AltCommands.gtf", emit: minimap2_stringtie_alt_commands_gtf)
+    tuple val(sample_ID), path("*_transcriptome.gtf"), emit: minimap2_stringtie_transcriptome_gtf
+    tuple val(sample_ID), path("*_transcriptome.AltCommands.gtf"), emit: minimap2_stringtie_alt_commands_gtf
 
   when:
   has_long_reads
 
   script:
     """
-    /scripts/Stringtie.sh -t ${task.cpus} -o ${bam_file}_transcriptome.gtf -b $bam_file -r long
-    /scripts/Stringtie_AltCommands.sh -o ${bam_file}_transcriptome.AltCommands.gtf -b $bam_file -r long
+    /scripts/Stringtie.sh -t ${task.cpus} -o ${sample_ID}_transcriptome.gtf -b ${bam_file} -r long
+    /scripts/Stringtie_AltCommands.sh -o ${sample_ID}_transcriptome.AltCommands.gtf -b ${bam_file} -r long
     """
 }
