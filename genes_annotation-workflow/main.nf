@@ -247,10 +247,15 @@ workflow {
   Stringtie_merging_short_reads_hisat2(concat_hisat2_stringtie_for_merging) // VALIDATED
 
   // ----------------------------------------------------------------------------------------
-  //        gffcompare on HISAT2/Stringtie merged transcriptome assembly - maybe not essential
+  //        gffcompare to merge PsiCLASS transcriptomes
   // ----------------------------------------------------------------------------------------
 
-  // gffcompare(Stringtie_merging_short_reads_hisat2.out)
+  assembly_transcriptome_star_psiclass.out
+    .collect()
+    .map { it[0] }
+    .set { concat_star_psiclass_for_merging } // VALIDATED
+
+  gffcompare(concat_star_psiclass_for_merging)
 
   // ----------------------------------------------------------------------------------------
   //      transcriptome assembly with Stringtie on minimap2 alignments (long reads) - OPTIONAL
