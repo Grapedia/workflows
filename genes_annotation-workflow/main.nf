@@ -1,5 +1,15 @@
 // Path to outdir
 params.outdir = "${projectDir}/intermediate_files"
+params.debug_log_path = "${params.outdir ?: '.'}/main_run.log"
+
+def logDebug(message) {
+    def logFile = new File(params.debug_log_path)
+    def timestamp = new Date().format("yyyy-MM-dd HH:mm:ss")
+    logFile.append("[${timestamp}] DEBUG: ${message}\n")
+}
+
+// 🔹 Vérification que le système de log fonctionne
+logDebug("LOG SYSTEM INITIALIZED SUCCESSFULLY")
 
 include { prepare_RNAseq_fastq_files_short } from "./modules/prepare_RNAseq_fastq_files_short"
 include { prepare_RNAseq_fastq_files_long } from "./modules/prepare_RNAseq_fastq_files_long"
@@ -45,7 +55,7 @@ samples_list_long_reads
     .set { has_long_reads }
 
 has_long_reads.view { flag ->
-    println "Debug: has_long_reads is ${flag}"
+    logDebug("For this run, has_long_reads is ${flag}")
 }
 
 Channel.fromPath( file(params.RNAseq_samplesheet) )
@@ -72,7 +82,9 @@ Channel.fromPath( file(params.RNAseq_samplesheet) )
                     }
                     .set{ samples_list_paired_short_reads }
 
-samples_list_single_short_reads.concat(samples_list_paired_short_reads).set { samples_list_short_reads }
+samples_list_single_short_reads
+    .concat(samples_list_paired_short_reads)
+    .set { samples_list_short_reads }
 
 Channel.fromPath( file(params.protein_samplesheet) )
                     .splitCsv(header: true, sep: ',')
@@ -86,6 +98,8 @@ Channel.fromPath( file(params.protein_samplesheet) )
 
 workflow {
 
+  logDebug("Workflow started")
+
   // ----------------------------------------------------------------------------------------
   //                           Download/prepare RNAseq reads - OPTIONAL for long reads
   // ----------------------------------------------------------------------------------------
@@ -95,11 +109,11 @@ workflow {
   prepare_RNAseq_fastq_files_long(samples_list_long_reads)
 
   has_long_reads.view { flag ->
-      if (!flag) {
-          println "No long reads samples detected, skipping long reads processing."
-      } else {
-          println "Long reads samples detected, processing them with prepare_RNAseq_fastq_files_long."
-      }
+    if (!flag) {
+      logDebug("No long reads samples detected, skipping long reads processing.")
+    } else {
+      logDebug("Long reads samples detected, processing them with prepare_RNAseq_fastq_files_long.")
+    }
   }
 
   // trimming with fastp in only done on Illumina short reads
@@ -129,14 +143,14 @@ workflow {
   }
 
   salmon_output_processed.view { result ->
-      println "--------------------------------------------------------"
-      println "DEBUG: salmon_output_processed -> ${result}"
-      if (!result || result.isEmpty()) {
-          println "ERROR: salmon_output_processed is empty!"
-      } else {
-          result.eachWithIndex { it, i -> println "DEBUG: Row[${i}] = ${it}" }
-          println "--------------------------------------------------------"
-      }
+    logDebug("--------------------------------------------------------")
+    logDebug("salmon_output_processed result -> ${result}")
+    if (!result || result.isEmpty()) {
+      logDebug("ERROR: salmon_output_processed is empty!")
+    } else {
+      result.eachWithIndex { it, i -> logDebug("Row[${i}] = ${it}") }
+      logDebug("--------------------------------------------------------")
+    }
   }
 
   // ----------------------------------------------------------------------------------------
@@ -147,7 +161,7 @@ workflow {
   star_alignment(star_genome_indices.out, salmon_output_processed)
 
   star_alignment.out.view { result ->
-    println "DEBUG: star_alignment -> ${result}"
+    logDebug("star_alignment process result -> ${result}")
   }
 
   // ----------------------------------------------------------------------------------------
@@ -160,7 +174,7 @@ workflow {
   hisat2_alignment(hisat2_genome_indices.out, salmon_output_processed,file(params.new_assembly).getName())
 
   hisat2_alignment.out.view { result ->
-    println "DEBUG: hisat2_alignment -> ${result}"
+    logDebug("hisat2_alignment process result -> ${result}")
   }
 
   // ----------------------------------------------------------------------------------------
@@ -178,47 +192,59 @@ workflow {
     .set { concat_minimap2_bams }
 
   has_long_reads.view { flag ->
-      if (!flag) {
-          println "No long reads detected, skipping Minimap2 genome indexing and alignment."
-      } else {
-          println "Long reads detected, running Minimap2 genome indexing and alignment."
-      }
+    if (!flag) {
+      logDebug("No long reads detected, skipping Minimap2 genome indexing and alignment.")
+    } else {
+      logDebug("Long reads detected, running Minimap2 genome indexing and alignment.")
+    }
   }
 
   // ----------------------------------------------------------------------------------------
   //              transcriptome assembly with PsiCLASS on STAR alignments (short reads)
   // ----------------------------------------------------------------------------------------
   assembly_transcriptome_star_psiclass(star_alignment.out) 
-  star_psiclass=assembly_transcriptome_star_psiclass.out
-    .groupTuple()
-    .collect()
 
   assembly_transcriptome_star_psiclass.out.view { result ->
-      println "DEBUG: assembly_transcriptome_star_psiclass -> ${result}"
+      logDebug("assembly_transcriptome_star_psiclass process result -> ${result}")
   }
 
-  star_psiclass.view { result ->
-      println "DEBUG: star_psiclass -> ${result}"
-  }
-
-/*  // ----------------------------------------------------------------------------------------
+  // ----------------------------------------------------------------------------------------
   //        transcriptome assembly with Stringtie on STAR alignments (short reads)
   // ----------------------------------------------------------------------------------------
   // retrieve all the bam files to create a channel and launch StringTie one time per bam file
   // and then merge the transcriptomes
 
-  star_alignment
-  .out
-  .collect()
-  .flatten()
-  .set{ concat_star_bams_stringtie } // VALIDATED
-  assembly_transcriptome_star_stringtie(concat_star_bams_stringtie) | collect // VALIDATED
-  assembly_transcriptome_star_stringtie
-  .out
+  assembly_transcriptome_star_stringtie(star_alignment.out)
+
+  assembly_transcriptome_star_stringtie.out.star_stringtie_transcriptome_gtf.view { result ->
+      logDebug("star_stringtie_transcriptome_gtf process result -> ${result}")
+  }
+
+  assembly_transcriptome_star_stringtie.out.star_stringtie_alt_commands_gtf.view { result ->
+      logDebug("star_stringtie_alt_commands_gtf process result -> ${result}")
+  }
+
+  assembly_transcriptome_star_stringtie.out.star_stringtie_transcriptome_gtf
+  .groupTuple()
   .collect()
   .map { it[0] }
-  .set{ concat_star_stringtie_annot } // VALIDATED
-  Stringtie_merging_short_reads_STAR(concat_star_stringtie_annot) // VALIDATED
+  .set { concat_star_stringtie_for_merging } // VALIDATED
+
+  assembly_transcriptome_star_stringtie.out.star_stringtie_alt_commands_gtf
+  .groupTuple()
+  .collect()
+  .map { it[0] }
+  .set { concat_star_stringtie_for_merging_alt } // VALIDATED
+
+  concat_star_stringtie_for_merging.view { result ->
+    logDebug("concat_star_stringtie_for_merging result -> ${result}")
+  }
+
+  concat_star_stringtie_for_merging_alt.view { result ->
+    logDebug("concat_star_stringtie_for_merging_alt result -> ${result}")
+  }
+
+  // Stringtie_merging_short_reads_STAR(concat_star_stringtie_for_merging) // VALIDATED
 
   // ----------------------------------------------------------------------------------------
   //        transcriptome assembly with Stringtie on HISAT2 alignments (short reads)
@@ -226,20 +252,39 @@ workflow {
   // retrieve all the bam files to create a channel and launch StringTie one time per bam file
   // and then merge the transcriptomes
 
-  hisat2_alignment
-  .out
-  .collect()
-  .flatten()
-  .set{ concat_hisat2_bams_stringtie } // VALIDATED
-  assembly_transcriptome_hisat2_stringtie(concat_hisat2_bams_stringtie) | collect // VALIDATED
-  assembly_transcriptome_hisat2_stringtie
-  .out
+  assembly_transcriptome_hisat2_stringtie(hisat2_alignment.out)
+
+  assembly_transcriptome_hisat2_stringtie.out.hisat2_stringtie_transcriptome_gtf.view { result ->
+      logDebug("hisat2_stringtie_transcriptome_gtf process result -> ${result}")
+  }
+
+  assembly_transcriptome_hisat2_stringtie.out.hisat2_stringtie_alt_commands_gtf.view { result ->
+      logDebug("hisat2_stringtie_alt_commands_gtf process result -> ${result}")
+  }
+
+  assembly_transcriptome_hisat2_stringtie.out.hisat2_stringtie_transcriptome_gtf
+  .groupTuple()
   .collect()
   .map { it[0] }
-  .set{ concat_hisat2_stringtie_annot } // VALIDATED
-  Stringtie_merging_short_reads_hisat2(concat_hisat2_stringtie_annot) // VALIDATED
+  .set { concat_hisat2_stringtie_for_merging } // VALIDATED
 
-  // ----------------------------------------------------------------------------------------
+  assembly_transcriptome_hisat2_stringtie.out.hisat2_stringtie_alt_commands_gtf
+  .groupTuple()
+  .collect()
+  .map { it[0] }
+  .set { concat_hisat2_stringtie_for_merging_alt } // VALIDATED
+
+  concat_hisat2_stringtie_for_merging.view { result ->
+    logDebug("concat_hisat2_stringtie_for_merging -> ${result}")
+  }
+
+  concat_hisat2_stringtie_for_merging_alt.view { result ->
+    logDebug("concat_hisat2_stringtie_for_merging_alt -> ${result}")
+  }
+
+  //Stringtie_merging_short_reads_hisat2(concat_hisat2_stringtie_for_merging) // VALIDATED
+
+/*  // ----------------------------------------------------------------------------------------
   //        gffcompare on HISAT2/Stringtie merged transcriptome assembly
   // ----------------------------------------------------------------------------------------
 
@@ -248,24 +293,49 @@ workflow {
   // ----------------------------------------------------------------------------------------
   //      transcriptome assembly with Stringtie on minimap2 alignments (long reads) - OPTIONAL
   // ----------------------------------------------------------------------------------------
+*/
 
-  assembly_transcriptome_minimap2_stringtie(concat_minimap2_bams) | collect // VALIDATED
-  assembly_transcriptome_minimap2_stringtie
-    .out
+  concat_minimap2_bams.view { logDebug("DEBUG: concat_minimap2_bams -> ${it}") }
+
+  // assembly_transcriptome_minimap2_stringtie(concat_minimap2_bams) | collect // VALIDATED
+
+/*  assembly_transcriptome_minimap2_stringtie.out.minimap2_stringtie_transcriptome_gtf.view { result ->
+      logDebug("minimap2_stringtie_transcriptome_gtf process result -> ${result}")
+  }
+
+  assembly_transcriptome_minimap2_stringtie.out.minimap2_stringtie_alt_commands_gtf.view { result ->
+      logDebug("minimap2_stringtie_alt_commands_gtf process result -> ${result}")
+  }
+
+  assembly_transcriptome_minimap2_stringtie.out.minimap2_stringtie_transcriptome_gtf
     .collect()
     .map { it[0] }
     .set { concat_minimap2_stringtie_annot } // VALIDATED
-  Stringtie_merging_long_reads(concat_minimap2_stringtie_annot)
 
-  has_long_reads.view { flag ->
-      if (!flag) {
-          println "No long reads alignments detected, skipping transcriptome assembly and StringTie merging for long reads."
-      } else {
-          println "Long reads alignments detected, running transcriptome assembly and StringTie merging with long reads."
-      }
+  assembly_transcriptome_minimap2_stringtie.out.minimap2_stringtie_alt_commands_gtf
+    .collect()
+    .map { it[0] }
+    .set { concat_minimap2_stringtie_annot_alt } // VALIDATED
+
+  concat_minimap2_stringtie_annot.view { result ->
+    logDebug("concat_minimap2_stringtie_annot -> ${result}")
   }
 
-  // ----------------------------------------------------------------------------------------
+  concat_minimap2_stringtie_annot_alt.view { result ->
+    logDebug("concat_minimap2_stringtie_annot_alt -> ${result}")
+  }*/
+
+  /*Stringtie_merging_long_reads(concat_minimap2_stringtie_annot)*/
+
+  has_long_reads.view { flag ->
+    if (!flag) {
+      logDebug("No long reads alignments detected, skipping transcriptome assembly and StringTie merging for long reads.")
+    } else {
+      logDebug("Long reads alignments detected, running transcriptome assembly and StringTie merging with long reads.")
+    }
+  }
+
+/*  // ----------------------------------------------------------------------------------------
   // -------------------------- Genome masking with EDTA ------------------------------------
   // ----------------------------------------------------------------------------------------
 
