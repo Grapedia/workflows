@@ -129,33 +129,14 @@ workflow {
   }
 
   salmon_output_processed.view { result ->
+      println "--------------------------------------------------------"
       println "DEBUG: salmon_output_processed -> ${result}"
       if (!result || result.isEmpty()) {
           println "ERROR: salmon_output_processed is empty!"
       } else {
           result.eachWithIndex { it, i -> println "DEBUG: Row[${i}] = ${it}" }
+          println "--------------------------------------------------------"
       }
-  }
-
-  def star_unstranded_out = Channel.empty()
-  def hisat2_unstranded_out = Channel.empty()
-
-  salmon_output_processed
-      .collect()
-      .view { list ->
-          println "DEBUG: Checking if there are unstranded samples..."
-          if (!list || list.isEmpty()) {
-              println "WARNING: No samples found in `salmon_output_processed`."
-          } else {
-              println "DEBUG: Full list -> ${list}"
-          }
-      }
-      .map { list -> list.flatten().contains("unstranded") }
-      .ifEmpty { emit false }
-      .set { has_unstranded_samples }
-
-  has_unstranded_samples.view { value -> 
-      println "DEBUG: has_unstranded_samples -> ${value}"
   }
 
   // ----------------------------------------------------------------------------------------
@@ -163,19 +144,10 @@ workflow {
   // ----------------------------------------------------------------------------------------
   star_genome_indices(file(params.new_assembly).getParent(),file(params.new_assembly).getName()) // VALIDATED
 
-  // Always align stranded samples (stranded_forward and stranded_reverse)
-  // Align ‘unstranded’ samples only if exist
-  if (has_unstranded_samples) {
-      star_alignment(star_genome_indices.out, salmon_output_processed) | collect | set { star_out }
-  } else {
-      println " WARNING : Skipping STAR alignment for unstranded samples, none found."
-      star_alignment(star_genome_indices.out, salmon_output_processed
-          .filter { sample_ID, library_layout, reads, strand_type -> strand_type in ["stranded_forward", "stranded_reverse"] }
-      ) | collect | set { star_out }
-  }
+  star_alignment(star_genome_indices.out, salmon_output_processed)
 
-  star_out.view { result ->
-    println "DEBUG: star_out -> ${result}"
+  star_alignment.out.view { result ->
+    println "DEBUG: star_alignment -> ${result}"
   }
 
   // ----------------------------------------------------------------------------------------
@@ -185,20 +157,12 @@ workflow {
 
   // Always align stranded samples (stranded_forward and stranded_reverse)
   // Align ‘unstranded’ samples only if exist
-  if (has_unstranded_samples) {
-      hisat2_alignment(hisat2_genome_indices.out, salmon_output_processed,
-          file(params.new_assembly).getName()) | collect | set { hisat2_out }
-  } else {
-      println " WARNING : Skipping STAR alignment for unstranded samples, none found."
-      hisat2_alignment(hisat2_genome_indices.out, salmon_output_processed
-          .filter { sample_ID, library_layout, reads, strand_type -> strand_type in ["stranded_forward", "stranded_reverse"] },
-          file(params.new_assembly).getName()) | collect | set { hisat2_out }
+  hisat2_alignment(hisat2_genome_indices.out, salmon_output_processed,file(params.new_assembly).getName())
+
+  hisat2_alignment.out.view { result ->
+    println "DEBUG: hisat2_alignment -> ${result}"
   }
 
-  hisat2_out.view { result ->
-      println "DEBUG: hisat2_out -> ${result}"
-  }
- 
   // ----------------------------------------------------------------------------------------
   //               Pacbio/Nanopore long RNAseq reads alignment with Minimap2  - OPTIONAL
   // ----------------------------------------------------------------------------------------
@@ -224,7 +188,18 @@ workflow {
   // ----------------------------------------------------------------------------------------
   //              transcriptome assembly with PsiCLASS on STAR alignments (short reads)
   // ----------------------------------------------------------------------------------------
-  assembly_transcriptome_star_psiclass(star_out) | collect | set { star_psiclass }
+  assembly_transcriptome_star_psiclass(star_alignment.out) 
+  star_psiclass=assembly_transcriptome_star_psiclass.out
+    .groupTuple()
+    .collect()
+
+  assembly_transcriptome_star_psiclass.out.view { result ->
+      println "DEBUG: assembly_transcriptome_star_psiclass -> ${result}"
+  }
+
+  star_psiclass.view { result ->
+      println "DEBUG: star_psiclass -> ${result}"
+  }
 
 /*  // ----------------------------------------------------------------------------------------
   //        transcriptome assembly with Stringtie on STAR alignments (short reads)
