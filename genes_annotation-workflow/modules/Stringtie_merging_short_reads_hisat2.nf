@@ -15,15 +15,27 @@ process Stringtie_merging_short_reads_hisat2 {
 
   script:
     """
+    DATE=\$(date "+%Y-%m-%d %H:%M:%S")
+    echo "[\$DATE] Running StringTie merging on HISAT2/StringTie transcriptomes - separating stranded and unstranded samples." >> ${params.logfile} 2>&1
+
     gtf_stranded_default=\$(/scripts/retrieve_path_gtf.sh /StringTie_short_reads_HISAT2_stranded default)
     gtf_stranded_alt=\$(/scripts/retrieve_path_gtf.sh /StringTie_short_reads_HISAT2_stranded alt)
+    CMD="/scripts/Stringtie_merging.sh -o merged_transcriptomes.hisat2.short_reads.default_args.stranded.gtf -g \${gtf_stranded_default}"
+    echo "[\$DATE] Executing: \$CMD" >> ${params.logfile} 2>&1
     /scripts/Stringtie_merging.sh -o merged_transcriptomes.hisat2.short_reads.default_args.stranded.gtf -g \${gtf_stranded_default}
+    CMD="/scripts/Stringtie_merging.sh -o merged_transcriptomes.hisat2.short_reads.alt_args.stranded.gtf -g \${gtf_stranded_alt}"
+    echo "[\$DATE] Executing: \$CMD" >> ${params.logfile} 2>&1
     /scripts/Stringtie_merging.sh -o merged_transcriptomes.hisat2.short_reads.alt_args.stranded.gtf -g \${gtf_stranded_alt}
 
     if [ -d "/StringTie_short_reads_HISAT2_unstranded" ] && [ "\$(ls -A /StringTie_short_reads_HISAT2_unstranded 2>/dev/null)" ]; then
+        echo "[\$DATE] Running StringTie merging on HISAT2/StringTie transcriptomes - unstranded samples detected." >> ${params.logfile} 2>&1
         gtf_unstranded_default=\$(/scripts/retrieve_path_gtf.sh /StringTie_short_reads_HISAT2_unstranded default)
         gtf_unstranded_alt=\$(/scripts/retrieve_path_gtf.sh /StringTie_short_reads_HISAT2_unstranded alt)
+        CMD="/scripts/Stringtie_merging.sh -o merged_transcriptomes.hisat2.short_reads.default_args.unstranded.gtf -g \${gtf_unstranded_default}"
+        echo "[\$DATE] Executing: \$CMD" >> ${params.logfile} 2>&1
         /scripts/Stringtie_merging.sh -o merged_transcriptomes.hisat2.short_reads.default_args.unstranded.gtf -g \${gtf_unstranded_default}
+        CMD="/scripts/Stringtie_merging.sh -o merged_transcriptomes.hisat2.short_reads.alt_args.unstranded.gtf -g \${gtf_unstranded_alt}"
+        echo "[\$DATE] Executing: \$CMD" >> ${params.logfile} 2>&1
         /scripts/Stringtie_merging.sh -o merged_transcriptomes.hisat2.short_reads.alt_args.unstranded.gtf -g \${gtf_unstranded_alt}
     fi
     """

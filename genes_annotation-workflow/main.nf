@@ -1,15 +1,14 @@
-// Path to outdir
+// Define the output directory for intermediate files
+// final results are stored in ${projectDir}/FINAL_OUTPUT
 params.outdir = "${projectDir}/intermediate_files"
-params.debug_log_path = "${projectDir ?: '.'}/main_run.log"
 
-def logDebug(message) {
-    def logFile = new File(params.debug_log_path)
-    def timestamp = new Date().format("yyyy-MM-dd HH:mm:ss")
-    logFile.append("[${timestamp}] ${message}\n")
-}
+// Define a default log file if not set by the user in nextflow.config
+params.logfile = params.logfile ?: "${projectDir}/pipeline_execution.log"
 
-logDebug("LOG SYSTEM INITIALIZED SUCCESSFULLY")
+// Print the logfile location at the start of the pipeline
+log.info "Logging pipeline execution to: ${params.logfile}"
 
+// Include various processing modules
 include { prepare_RNAseq_fastq_files_short } from "./modules/prepare_RNAseq_fastq_files_short"
 include { prepare_RNAseq_fastq_files_long } from "./modules/prepare_RNAseq_fastq_files_long"
 include { trimming_fastq } from "./modules/trimming_fastq"
@@ -36,6 +35,7 @@ include { braker3_prediction } from "./modules/braker3_prediction"
 include { braker3_prediction_with_long_reads } from "./modules/braker3_prediction_with_long_reads"
 // include { diamond2go } from "./modules/diamond2go"
 
+// Parse RNAseq samplesheet for different types of reads (long, single and paired)
 Channel.fromPath( file(params.RNAseq_samplesheet) )
                     .splitCsv(header: true, sep: ',')
                     .filter( ~/.*long.*/ )
@@ -72,10 +72,12 @@ Channel.fromPath( file(params.RNAseq_samplesheet) )
                     }
                     .set{ samples_list_paired_short_reads }
 
+// Combine single and paired short reads into one channel
 samples_list_single_short_reads
     .concat(samples_list_paired_short_reads)
     .set { samples_list_short_reads }
 
+// Parse protein samplesheet for BRAKER3
 Channel.fromPath( file(params.protein_samplesheet) )
                     .splitCsv(header: true, sep: ',')
                     .map { row ->
@@ -86,36 +88,42 @@ Channel.fromPath( file(params.protein_samplesheet) )
                     }
                     .set{ protein_list }
 
+// Workflow definition
 workflow {
-
-  logDebug("Workflow started")
 
   // ----------------------------------------------------------------------------------------
   //                           Download/prepare RNAseq reads - OPTIONAL for long reads
   // ----------------------------------------------------------------------------------------
-  prepare_RNAseq_fastq_files_short(samples_list_short_reads) // VALIDATED
 
-  // Check that samples_list_long_reads is empty or not before running prepare_RNAseq_fastq_files_long
+  // Prepare RNAseq short reads for processing
+  prepare_RNAseq_fastq_files_short(samples_list_short_reads)
+
+  // Prepare long reads (if any) for processing
   prepare_RNAseq_fastq_files_long(samples_list_long_reads)
 
-  // trimming with fastp in only done on Illumina short reads
-  trimming_fastq(prepare_RNAseq_fastq_files_short.out) // VALIDATED
+  // Trim Illumina short reads
+  trimming_fastq(prepare_RNAseq_fastq_files_short.out)
 
   // ----------------------------------------------------------------------------------------
   //                                Liftoff previous annotations
   // ----------------------------------------------------------------------------------------
-  liftoff_annotations(file(params.new_assembly).getParent(),file(params.new_assembly).getName(),file(params.previous_assembly).getParent(),file(params.previous_assembly).getName(),file(params.previous_annotations).getParent(),file(params.previous_annotations).getName()) // VALIDATED
+
+  // Lift over previous annotations to new assembly
+  liftoff_annotations(file(params.new_assembly).getParent(),file(params.new_assembly).getName(),file(params.previous_assembly).getParent(),file(params.previous_assembly).getName(),file(params.previous_annotations).getParent(),file(params.previous_annotations).getName())
 
   // -----------------------------------------------------------------------------------------------------------------
   //                                gffread to convert liftoff.gff3 to cds.fasta for Salmon strand inference
   // -----------------------------------------------------------------------------------------------------------------
-  gffread_convert_gff3_to_cds_fasta(file(params.new_assembly).getParent(),file(params.new_assembly).getName(),liftoff_annotations.out.liftoff_previous_annotations) // VALIDATED
+
+  // Convert GFF3 to CDS FASTA for Salmon strand inference
+  gffread_convert_gff3_to_cds_fasta(file(params.new_assembly).getParent(),file(params.new_assembly).getName(),liftoff_annotations.out.liftoff_previous_annotations)
 
   // -----------------------------------------------------------------------------------------------------------------------------------------------
   //         Run Salmon for strand inference and classify samples in three strand types : unstranded, stranded_forward and stranded_reverse
   // -----------------------------------------------------------------------------------------------------------------------------------------------
+  
+  // Salmon index creation and strand inference
   salmon_index(gffread_convert_gff3_to_cds_fasta.out)
-
   salmon_strand_inference(trimming_fastq.out, salmon_index.out)
 
   def salmon_output_processed = salmon_strand_inference.out.map { sample_ID, library_layout, reads, strand_file ->
@@ -123,21 +131,12 @@ workflow {
       return [sample_ID, library_layout, reads, strand_info]
   }
 
-  salmon_output_processed.view { result ->
-    logDebug("--------------------------------------------------------")
-    logDebug("salmon_output_processed result -> ${result}")
-    if (!result || result.isEmpty()) {
-      logDebug("ERROR: salmon_output_processed is empty!")
-    } else {
-      result.eachWithIndex { it, i -> logDebug("Row[${i}] = ${it}") }
-      logDebug("--------------------------------------------------------")
-    }
-  }
-
   // ----------------------------------------------------------------------------------------
   //                    Illumina short RNAseq reads alignment with STAR
   // ----------------------------------------------------------------------------------------
-  star_genome_indices(file(params.new_assembly).getParent(),file(params.new_assembly).getName()) // VALIDATED
+
+  // Align short RNAseq reads using STAR and strand information + PE/SE information
+  star_genome_indices(file(params.new_assembly).getParent(),file(params.new_assembly).getName())
 
   star_alignment(star_genome_indices.out, salmon_output_processed)
 
@@ -147,32 +146,22 @@ workflow {
     .map { it[0] }
     .set{ concat_star_bams_BRAKER3 }
 
-  star_alignment.out.view { result ->
-    logDebug("star_alignment process result -> ${result}")
-  }
-
   // ----------------------------------------------------------------------------------------
   //                    Illumina short RNAseq reads alignment with HISAT2
   // ----------------------------------------------------------------------------------------
+
+  // Align short RNAseq reads using HISAT2 and strand information + PE/SE information
   hisat2_genome_indices(file(params.new_assembly).getParent(),file(params.new_assembly).getName())
 
-  // Always align stranded samples (stranded_forward and stranded_reverse)
-  // Align ‘unstranded’ samples only if exist
   hisat2_alignment(hisat2_genome_indices.out, salmon_output_processed,file(params.new_assembly).getName())
-
-  hisat2_alignment.out.view { result ->
-    logDebug("hisat2_alignment process result -> ${result}")
-  }
 
   // ----------------------------------------------------------------------------------------
   //               Pacbio/Nanopore long RNAseq reads alignment with Minimap2  - OPTIONAL
   // ----------------------------------------------------------------------------------------
 
-  // Check that samples_list_long_reads is empty or not before running minimap2-related processes
+  // Align long RNAseq reads with Minimap2 (if available)
   minimap2_genome_indices(file(params.new_assembly).getParent(), file(params.new_assembly).getName())
-  minimap2_alignment(minimap2_genome_indices.out, prepare_RNAseq_fastq_files_long.out).view { result ->
-    logDebug("minimap2_alignment process result -> ${result}")
-  }
+  minimap2_alignment(minimap2_genome_indices.out, prepare_RNAseq_fastq_files_long.out)
 
   minimap2_alignment
     .out
@@ -183,17 +172,14 @@ workflow {
   // ----------------------------------------------------------------------------------------
   //              transcriptome assembly with PsiCLASS on STAR alignments (short reads)
   // ----------------------------------------------------------------------------------------
-  assembly_transcriptome_star_psiclass(star_alignment.out) 
 
-  assembly_transcriptome_star_psiclass.out.view { result ->
-      logDebug("assembly_transcriptome_star_psiclass process result -> ${result}")
-  }
+  // Transcriptome assembly with PsiCLASS
+  assembly_transcriptome_star_psiclass(star_alignment.out) 
 
   // ----------------------------------------------------------------------------------------
   //        transcriptome assembly with Stringtie on STAR alignments (short reads)
   // ----------------------------------------------------------------------------------------
-  // retrieve all the bam files to create a channel and launch StringTie one time per bam file
-  // and then merge the transcriptomes
+  // Transcriptome assembly with Stringtie
 
   assembly_transcriptome_star_stringtie(star_alignment.out)
 
@@ -201,25 +187,26 @@ workflow {
   .groupTuple()
   .collect()
   .map { it[0] }
-  .set { concat_star_stringtie_for_merging } // VALIDATED
+  .set { concat_star_stringtie_for_merging }
 
-  Stringtie_merging_short_reads_STAR(concat_star_stringtie_for_merging) // VALIDATED
+  // Stringtie merging of all short reads transcriptomes (STAR/Stringtie)
+  Stringtie_merging_short_reads_STAR(concat_star_stringtie_for_merging)
 
   // ----------------------------------------------------------------------------------------
   //        transcriptome assembly with Stringtie on HISAT2 alignments (short reads)
   // ----------------------------------------------------------------------------------------
-  // retrieve all the bam files to create a channel and launch StringTie one time per bam file
-  // and then merge the transcriptomes
-
+  // Transcriptome assembly with Stringtie
+  
   assembly_transcriptome_hisat2_stringtie(hisat2_alignment.out)
 
   assembly_transcriptome_hisat2_stringtie.out.hisat2_stringtie_transcriptome_gtf
   .groupTuple()
   .collect()
   .map { it[0] }
-  .set { concat_hisat2_stringtie_for_merging } // VALIDATED
+  .set { concat_hisat2_stringtie_for_merging }
 
-  Stringtie_merging_short_reads_hisat2(concat_hisat2_stringtie_for_merging) // VALIDATED
+  // Stringtie merging of all short reads transcriptomes (HISAT2/Stringtie)
+  Stringtie_merging_short_reads_hisat2(concat_hisat2_stringtie_for_merging)
 
   // ----------------------------------------------------------------------------------------
   //        gffcompare to merge PsiCLASS transcriptomes
@@ -228,21 +215,23 @@ workflow {
   assembly_transcriptome_star_psiclass.out
     .collect()
     .map { it[0] }
-    .set { concat_star_psiclass_for_merging } // VALIDATED
+    .set { concat_star_psiclass_for_merging }
 
+  // GFFcompare to merge PsiCLASS transcriptomes
   gffcompare(concat_star_psiclass_for_merging)
 
   // ----------------------------------------------------------------------------------------
   //      transcriptome assembly with Stringtie on minimap2 alignments (long reads) - OPTIONAL
   // ----------------------------------------------------------------------------------------
 
+  // Transcriptome assembly with StringTie on Minimap2 alignments (if long reads)
   assembly_transcriptome_minimap2_stringtie(minimap2_alignment.out)
 
   assembly_transcriptome_minimap2_stringtie.out.minimap2_stringtie_transcriptome_gtf
   .groupTuple()
   .collect()
   .map { it[0] }
-  .set { concat_minimap2_stringtie_for_merging } // VALIDATED
+  .set { concat_minimap2_stringtie_for_merging }
 
   Stringtie_merging_long_reads(concat_minimap2_stringtie_for_merging)
 
@@ -250,16 +239,19 @@ workflow {
   // -------------------------- Genome masking with EDTA ------------------------------------
   // ----------------------------------------------------------------------------------------
 
+  // Optionally run EDTA for genome masking
   if (params.EDTA == 'yes') {
-    logDebug("Running EDTA process")
-    EDTA(file(params.new_assembly).getParent(), file(params.new_assembly).getName()) // VALIDATED
+    println "Running EDTA process"
+    EDTA(file(params.new_assembly).getParent(), file(params.new_assembly).getName())
   } else {
-    logDebug("Skipping EDTA process (params.EDTA = '${params.EDTA}'). To launch EDTA, put EDTA = 'yes' in nextflow.config file.")
+    println "Skipping EDTA process (params.EDTA = '${params.EDTA}'). To launch EDTA, put EDTA = 'yes' in nextflow.config file."
   }
 
   // ----------------------------------------------------------------------------------------
   //                                    BRAKER3 (AUGUSTUS/Genemark)
   // ----------------------------------------------------------------------------------------
+
+  // Gene prediction using BRAKER3 with or without long reads
 
   braker3_prediction(
       file(params.new_assembly).getParent(),
@@ -282,10 +274,11 @@ workflow {
   //     Aegis scripts (1, 2, 3) to create the final GFF3 file from all the evidences
   // ----------------------------------------------------------------------------------------
 
+    // Placeholder for Aegis scripts to create the final GFF3 file
     // TO DO
 
   // ----------------------------------------------------------------------------------------
-  //                                    Diamond2GO on proteins
+  //               Diamond2GO on proteins predicted with TITAN
   // ----------------------------------------------------------------------------------------
   // diamond2go(proteins_file)
 }

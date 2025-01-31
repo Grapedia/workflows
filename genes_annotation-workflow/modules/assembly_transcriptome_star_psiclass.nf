@@ -20,6 +20,10 @@ process assembly_transcriptome_star_psiclass {
 
   script:
     """
+    DATE=\$(date "+%Y-%m-%d %H:%M:%S")
+    echo "[\$DATE] Running PsiCLASS transcriptome assembly on $sample_ID" >> ${params.logfile} 2>&1
+    CMD="/PsiCLASS-1.0.2/psiclass -p ${task.cpus} -b ${bam_file} -o ${sample_ID}"
+    echo "[\$DATE] Executing: \$CMD" >> ${params.logfile} 2>&1
     /PsiCLASS-1.0.2/psiclass -p ${task.cpus} -b ${bam_file} -o ${sample_ID}
     """
 }

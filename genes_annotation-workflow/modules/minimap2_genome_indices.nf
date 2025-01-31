@@ -19,6 +19,10 @@ process minimap2_genome_indices {
 
   script:
     """
+    DATE=\$(date "+%Y-%m-%d %H:%M:%S")
+    echo "[\$DATE] Running minimap2 index creation on $genome" >> ${params.logfile} 2>&1
+    CMD="minimap2 -d ${genome}.mmi /genome_path/$genome"
+    echo "[\$DATE] Executing: \$CMD" >> ${params.logfile} 2>&1
     minimap2 -d ${genome}.mmi /genome_path/$genome
     """
 }

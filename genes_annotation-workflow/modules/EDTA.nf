@@ -17,6 +17,10 @@ process EDTA {
 
   script:
     """
+    DATE=\$(date "+%Y-%m-%d %H:%M:%S")
+    echo "[\$DATE] Running EDTA on $genome" >> ${params.logfile} 2>&1
+    CMD="/scripts/edta.sh -g /genome_path/$genome -n ${task.cpus}"
+    echo "[\$DATE] Executing: \$CMD" >> ${params.logfile} 2>&1
     /scripts/edta.sh -g /genome_path/$genome -n ${task.cpus}
     """
 }

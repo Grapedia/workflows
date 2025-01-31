@@ -16,6 +16,10 @@ process hisat2_genome_indices {
 
   script:
     """
+    DATE=\$(date "+%Y-%m-%d %H:%M:%S")
+    echo "[\$DATE] Running HISAT2 index creation on $genome" >> ${params.logfile} 2>&1
+    CMD="/hisat2-2.2.1/hisat2-build -p ${task.cpus} /genome_path/$genome $genome"
+    echo "[\$DATE] Executing: \$CMD" >> ${params.logfile} 2>&1
     /hisat2-2.2.1/hisat2-build -p ${task.cpus} /genome_path/$genome $genome
     chmod -R 755 ${genome}*
     """

@@ -19,7 +19,13 @@ process assembly_transcriptome_minimap2_stringtie {
 
   script:
     """
+    DATE=\$(date "+%Y-%m-%d %H:%M:%S")
+    echo "[\$DATE] Running Minimap2/StringTie - long reads transcriptome assembly on $sample_ID" >> ${params.logfile} 2>&1
+    CMD="/scripts/Stringtie.sh -t ${task.cpus} -o ${sample_ID}_transcriptome.gtf -b ${bam_file} -r long"
+    echo "[\$DATE] Executing: \$CMD" >> ${params.logfile} 2>&1
     /scripts/Stringtie.sh -t ${task.cpus} -o ${sample_ID}_transcriptome.gtf -b ${bam_file} -r long
+    CMD="/scripts/Stringtie_AltCommands.sh -o ${sample_ID}_transcriptome.AltCommands.gtf -b ${bam_file} -r long"
+    echo "[\$DATE] Executing: \$CMD" >> ${params.logfile} 2>&1
     /scripts/Stringtie_AltCommands.sh -o ${sample_ID}_transcriptome.AltCommands.gtf -b ${bam_file} -r long
     """
 }
