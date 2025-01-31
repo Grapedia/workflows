@@ -21,9 +21,12 @@ process gffcompare {
     CMD="/gffcompare-0.12.6/gffcompare -o stranded_merged_output \${gtf_files}"
     echo "[\$DATE] Executing: \$CMD" >> ${params.logfile} 2>&1
     /gffcompare-0.12.6/gffcompare -o stranded_merged_output \${gtf_files}
-    gtf_files=\$(/scripts/retrieve_path_gffcompare.sh /STAR_PsiCLASS_unstranded/)
-    CMD="/gffcompare-0.12.6/gffcompare -o unstranded_merged_output \${gtf_files}"
-    echo "[\$DATE] Executing: \$CMD" >> ${params.logfile} 2>&1
-    /gffcompare-0.12.6/gffcompare -o unstranded_merged_output \${gtf_files}
+
+    if [ -d "/STAR_PsiCLASS_unstranded/" ] && [ "\$(ls -A /STAR_PsiCLASS_unstranded/ 2>/dev/null)" ]; then    
+      gtf_files=\$(/scripts/retrieve_path_gffcompare.sh /STAR_PsiCLASS_unstranded/)
+      CMD="/gffcompare-0.12.6/gffcompare -o unstranded_merged_output \${gtf_files}"
+      echo "[\$DATE] Executing: \$CMD" >> ${params.logfile} 2>&1
+      /gffcompare-0.12.6/gffcompare -o unstranded_merged_output \${gtf_files}
+    fi
     """
 }
