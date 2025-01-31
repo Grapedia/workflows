@@ -1,7 +1,1 @@
-[2025-01-30 16:38:28] LOG SYSTEM INITIALIZED SUCCESSFULLY
-[2025-01-30 16:38:30] Workflow started
-[2025-01-30 16:38:30] Skipping EDTA process (params.EDTA = 'no'). To launch EDTA, put EDTA = 'yes' in nextflow.config file.
-[2025-01-30 16:38:30] No long reads alignments detected, skipping transcriptome assembly and StringTie merging for long reads.
-[2025-01-30 16:38:30] For this run, has_long_reads is false
-[2025-01-30 16:38:30] No long reads detected, skipping Minimap2 genome indexing and alignment.
-[2025-01-30 16:38:30] No long reads samples detected, skipping long reads processing.
+[2025-01-31 10:34:02] LOG SYSTEM INITIALIZED SUCCESSFULLY

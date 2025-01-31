@@ -51,11 +51,12 @@ Channel.fromPath( file(params.RNAseq_samplesheet) )
 samples_list_long_reads
     .count()
     .map { count -> count > 0 }
+    .val()
     .set { has_long_reads }
 
-has_long_reads.view { flag ->
-    logDebug("For this run, has_long_reads is ${flag}")
-}
+println "DEBUG: has_long_reads assigned as ${has_long_reads}"
+
+println "Type of has_long_reads: ${has_long_reads.getClass()}"
 
 Channel.fromPath( file(params.RNAseq_samplesheet) )
                     .splitCsv(header: true, sep: ',')
