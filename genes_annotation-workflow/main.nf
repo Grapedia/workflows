@@ -48,16 +48,6 @@ Channel.fromPath( file(params.RNAseq_samplesheet) )
                     }
                     .set{ samples_list_long_reads }
 
-samples_list_long_reads
-    .count()
-    .map { count -> count > 0 }
-    .val()
-    .set { has_long_reads }
-
-println "DEBUG: has_long_reads assigned as ${has_long_reads}"
-
-println "Type of has_long_reads: ${has_long_reads.getClass()}"
-
 Channel.fromPath( file(params.RNAseq_samplesheet) )
                     .splitCsv(header: true, sep: ',')
                     .filter( ~/.*single.*/ )
@@ -107,14 +97,6 @@ workflow {
 
   // Check that samples_list_long_reads is empty or not before running prepare_RNAseq_fastq_files_long
   prepare_RNAseq_fastq_files_long(samples_list_long_reads)
-
-  has_long_reads.view { flag ->
-    if (!flag) {
-      logDebug("No long reads samples detected, skipping long reads processing.")
-    } else {
-      logDebug("Long reads samples detected, processing them with prepare_RNAseq_fastq_files_long.")
-    }
-  }
 
   // trimming with fastp in only done on Illumina short reads
   trimming_fastq(prepare_RNAseq_fastq_files_short.out) // VALIDATED
@@ -198,14 +180,6 @@ workflow {
     .map { it[0] }
     .set { concat_minimap2_bams }
 
-  has_long_reads.view { flag ->
-    if (!flag) {
-      logDebug("No long reads detected, skipping Minimap2 genome indexing and alignment.")
-    } else {
-      logDebug("Long reads detected, running Minimap2 genome indexing and alignment.")
-    }
-  }
-
   // ----------------------------------------------------------------------------------------
   //              transcriptome assembly with PsiCLASS on STAR alignments (short reads)
   // ----------------------------------------------------------------------------------------
@@ -271,14 +245,6 @@ workflow {
   .set { concat_minimap2_stringtie_for_merging } // VALIDATED
 
   Stringtie_merging_long_reads(concat_minimap2_stringtie_for_merging)
-
-  has_long_reads.view { flag ->
-    if (!flag) {
-      logDebug("No long reads alignments detected, skipping transcriptome assembly and StringTie merging for long reads.")
-    } else {
-      logDebug("Long reads alignments detected, running transcriptome assembly and StringTie merging with long reads.")
-    }
-  }
 
   // ----------------------------------------------------------------------------------------
   // -------------------------- Genome masking with EDTA ------------------------------------

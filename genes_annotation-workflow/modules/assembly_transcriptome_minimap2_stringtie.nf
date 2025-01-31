@@ -15,7 +15,7 @@ process assembly_transcriptome_minimap2_stringtie {
     tuple val(sample_ID), path("*_transcriptome.AltCommands.gtf"), emit: minimap2_stringtie_alt_commands_gtf
 
   when:
-  has_long_reads
+  params.use_long_reads
 
   script:
     """

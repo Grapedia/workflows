@@ -15,7 +15,7 @@ process minimap2_genome_indices {
     file("${genome}.mmi")
 
   when:
-  has_long_reads
+  params.use_long_reads
 
   script:
     """

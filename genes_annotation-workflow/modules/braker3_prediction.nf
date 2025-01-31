@@ -21,12 +21,27 @@ process braker3_prediction {
     file("braker.gff3")
 
   when:
-  !has_long_reads
+  !params.use_long_reads
 
   script:
     """
     proteins=\$(/scripts/retrieve_proteins_for_braker.sh /protein_samplesheet_path/$protein_samplesheet_filename)
-    bam=\$(/scripts/retrieve_path_bam_braker3.sh /alignments/STAR/{stranded,unstranded})
+    bam_stranded_path=\$(/scripts/retrieve_path_bam_braker3.sh /alignments/STAR/stranded)
+    bam_unstranded_path=\$(/scripts/retrieve_path_bam_braker3.sh /alignments/STAR/unstranded)
+
+    if [ -z "\${bam_unstranded_path}" ]; then
+        bam="\${bam_stranded_path}"
+    else
+        bam="\${bam_stranded_path},\${bam_unstranded_path}"
+    fi
+
+    echo "Running last step, BRAKER3 with the following command:"
+    echo "/BRAKER-3.0.8/scripts/braker.pl --genome=/genome_path/$genome --bam=\${bam} \\
+    --prot_seq=\${proteins} \\
+    --threads=${task.cpus} --workingdir=\${PWD} --softmasking --gff3 \\
+    --PROTHINT_PATH=/ProtHint-2.6.0/bin/ --GENEMARK_PATH=/GeneMark-ETP \\
+    --AUGUSTUS_CONFIG_PATH=/Augustus/config --TSEBRA_PATH=/TSEBRA/bin"
+
     /BRAKER-3.0.8/scripts/braker.pl --genome=/genome_path/$genome --bam=\${bam} \
     --prot_seq=\${proteins} \
     --threads=${task.cpus} --workingdir=\${PWD} --softmasking --gff3 \

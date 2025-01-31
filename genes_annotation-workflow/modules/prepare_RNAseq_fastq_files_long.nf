@@ -17,10 +17,11 @@ process prepare_RNAseq_fastq_files_long {
   tuple val(sample_ID), val(SRA_or_FASTQ), val(library_layout)
 
   when:
-  has_long_reads
+  params.use_long_reads
 
   script:
   """
+  echo "Running prepare_RNAseq_fastq_files_long on $sample_ID"
   if [[ $SRA_or_FASTQ == "SRA" ]]
   then
     if ls /RNAseq_data/${sample_ID}*.fastq.gz 1> /dev/null 2>&1

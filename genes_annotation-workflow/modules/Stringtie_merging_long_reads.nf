@@ -14,7 +14,7 @@ process Stringtie_merging_long_reads {
     file("*.gtf")
 
   when:
-  has_long_reads
+  params.use_long_reads
 
   script:
     """
