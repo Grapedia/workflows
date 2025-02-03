@@ -10,3 +10,4 @@ genes_annotation-workflow/TMP_stranded/*
 genes_annotation-workflow/TMP_unstranded/*
 genes_annotation-workflow/data.zip
 genes_annotation-workflow_hap2/
+genes_annotation-workflow/dag.png
