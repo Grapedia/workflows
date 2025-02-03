@@ -33,6 +33,7 @@ include { Stringtie_merging_long_reads } from "./modules/Stringtie_merging_long_
 include { EDTA } from "./modules/EDTA"
 include { braker3_prediction } from "./modules/braker3_prediction"
 include { braker3_prediction_with_long_reads } from "./modules/braker3_prediction_with_long_reads"
+// include { aegis } from "./modules/aegis"
 // include { diamond2go } from "./modules/diamond2go"
 
 // Parse RNAseq samplesheet for different types of reads (long, single and paired)

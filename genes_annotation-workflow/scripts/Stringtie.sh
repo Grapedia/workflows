@@ -65,20 +65,12 @@ done
 
 if [[ $READ == "short" ]]
 then
-
-	OUTPUT_FINAL=$( basename $OUTPUT | sed "s/_Aligned.sortedByCoord.out.bam//" )
-
 	BAM_FINAL=$( echo $BAM | sed "s/.*\/work\//\/work\//" )
 
-	stringtie -p $THREADS -o $OUTPUT_FINAL $BAM_FINAL
-
+	stringtie -p $THREADS -o $OUTPUT $BAM_FINAL
 elif [[ $READ == "long" ]]
 then
-
-	OUTPUT_FINAL=$( basename $OUTPUT | sed "s/_Aligned.sorted.bam//" )
-
 	BAM_FINAL=$( echo $BAM | sed "s/.*\/work\//\/work\//" )
 
-	stringtie -L -p $THREADS -o $OUTPUT_FINAL $BAM_FINAL
-
+	stringtie -L -p $THREADS -o $OUTPUT $BAM_FINAL
 fi

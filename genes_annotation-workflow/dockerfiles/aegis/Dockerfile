@@ -14,6 +14,14 @@ RUN apt-get update && apt-get install -y \
     liblapack-dev \
     libatlas-base-dev \
     gfortran \
+    wget \
+    sudo \
+    curl \
+    git \
+    zlib1g-dev \
+    libbz2-dev \
+    liblzma-dev \
+    libcurl4-openssl-dev \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
 
@@ -33,6 +41,16 @@ RUN pip3 install --no-cache-dir \
     colorlover==0.3.0 \
     tqdm==4.62.3 \
     networkx==3.0b1
+
+# install gffread
+RUN git clone https://github.com/gpertea/gffread.git /gffread \
+    && cd /gffread \
+    && make \
+    && mv gffread /usr/local/bin/ \
+    && chmod +x /usr/local/bin/gffread
+
+# install Diamond
+RUN wget https://github.com/bbuchfink/diamond/releases/download/v2.1.11/diamond-linux64.tar.gz && tar xzf diamond-linux64.tar.gz && sudo mv diamond /usr/local/bin/
 
 # Copy the aegis directory into the image
 COPY aegis /aegis

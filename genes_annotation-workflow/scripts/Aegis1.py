@@ -10,11 +10,20 @@ from modules.genome import Genome
 
 # Main function
 def main(args):
+    
+    print("-------------------- Starting script execution")
+
+    # Verify if outdir exists or create it
+    if not os.path.exists(args.output_dir):
+        print(f"Output directory {args.output_dir} does not exist. Creating it.")
+        os.makedirs(args.output_dir)
+
     # Upload the genome assembly
-    print(f"Loading genome: {args.genome_name}")
+    print(f"-------------------- Loading genome: {args.genome_name} from {args.genome_path}")
     genome = Genome(args.genome_name, args.genome_path)
 
     # define evidences
+    print("-------------------- Defining evidences")
     evidences = {
         'ab_initio': [
             ('augustus', args.augustus_path),
@@ -28,64 +37,62 @@ def main(args):
         ]
     }
 
-    # add stringtie_Isoseq_default_path if given
-    if args.stringtie_Isoseq_default_path:
-        evidences['transcriptome'].append(('stringtie_Isoseq_default', args.stringtie_Isoseq_default_path))
+    # Add optional evidences
+    optional_evidences = {
+        "stringtie_Isoseq_default": args.stringtie_Isoseq_default_path,
+        "stringtie_Isoseq_AltCommands": args.stringtie_Isoseq_AltCommands_path,
+        "psiclass_unstranded_STAR": args.psiclass_unstranded_STAR_path,
+        "stringtie_unstranded_default_STAR": args.stringtie_unstranded_default_STAR_path,
+        "stringtie_unstranded_AltCommands_STAR": args.stringtie_unstranded_AltCommands_STAR_path,
+    }
 
-    # add stringtie_Isoseq_AltCommands_path if given
-    if args.stringtie_Isoseq_AltCommands_path:
-        evidences['transcriptome'].append(('stringtie_Isoseq_AltCommands', args.stringtie_Isoseq_AltCommands_path))
+    for key, path in optional_evidences.items():
+        if path:
+            evidences['transcriptome'].append((key, path))
 
-    # add psiclass_unstranded_STAR_path if given
-    if args.psiclass_unstranded_STAR_path:
-        evidences['transcriptome'].append(('psiclass_unstranded_STAR', args.psiclass_unstranded_STAR_path))
-
-    # add stringtie_unstranded_default_STAR_path if given
-    if args.stringtie_unstranded_default_STAR_path:
-        evidences['transcriptome'].append(('stringtie_unstranded_default_STAR', args.stringtie_unstranded_default_STAR_path))
-
-    # add stringtie_unstranded_AltCommands_STAR_path if given
-    if args.stringtie_unstranded_AltCommands_STAR_path:
-        evidences['transcriptome'].append(('stringtie_unstranded_AltCommands_STAR', args.stringtie_unstranded_AltCommands_STAR_path))
+    # Print full evidences dictionary
+    print("-------------------- Complete evidences used:")
+    for category, items in evidences.items():
+        print(f"  {category}:")
+        for name, path in items:
+            print(f"    {name}: {path}")
 
     # Create annotation objects
-    print("Creating ab initio annotations")
+    print("-------------------- Creating ab initio annotations")
     ab_initio_annotations = [Annotation(name, path, genome) for name, path in evidences['ab_initio']]
 
     # Create annotation objects
-    print("Creating transcriptome annotations")
+    print("-------------------- Creating transcriptome annotations")
     transcriptome_annotations = [Annotation(name, path, genome) for name, path in evidences['transcriptome']]
 
     # Merge evidences
-    print("Merging annotations")
+    print("-------------------- Merging annotations")
     merged_annotation = transcriptome_annotations[0].copy()
     for annotation in transcriptome_annotations[1:]:
+        print(f"Merging transcriptome annotation: {annotation.name}")
         merged_annotation.merge(annotation)
 
     for annotation in ab_initio_annotations:
+        print(f"Merging ab initio annotation: {annotation.name}")
         merged_annotation.merge(annotation)
 
-    # if args.annotation_pickle:
-    #     print(f"Loading pickle file: {args.annotation_pickle}")
-    #     merged_annotation = pickle_load(args.annotation_pickle)
-
-    print("Processing alternative transcripts into genes")
+    print("-------------------- Processing alternative transcripts into genes")
     merged_annotation.make_alternative_transcripts_into_genes()
 
     merged_annotation.id = 'merge_annotation'
     merged_annotation.name = 'merge_annotation_transcripts'
 
-    print(f"Exporting merged GFF to {args.output_dir}")
+    print(f"-------------------- Exporting merged GFF to {args.output_dir}")
     merged_annotation.export_gff(args.output_dir, args.output_gff)
 
-    print("Exporting merged unique proteins")
+    print("-------------------- Exporting merged unique proteins")
     merged_annotation.export_unique_proteins(custom_path=args.output_dir, genome=genome)
 
-    print("Updating stats and exporting")
+    print("-------------------- Updating stats and exporting")
     merged_annotation.update_stats(export=True, genome=genome)
 
     # Save pickle (to load the merged object with all annotations in case anything fails in the following steps)
-    print(f"Saving merged annotation to {args.output_pickle}")
+    print(f"-------------------- Saving merged annotation to {args.output_pickle}")
     pickle_save(args.output_pickle, merged_annotation)
 
 # Parse arguments
@@ -104,10 +111,9 @@ if __name__ == "__main__":
     parser.add_argument("--stringtie_unstranded_AltCommands_STAR_path", required=False, help="Path to StringTie unstranded AltCommands GFF3 file - OPTIONAL")
     parser.add_argument("--stringtie_Isoseq_default_path", required=False, help="Path to StringTie Isoseq default GFF3 file - OPTIONAL")
     parser.add_argument("--stringtie_Isoseq_AltCommands_path", required=False, help="Path to StringTie Isoseq AltCommands GFF3 file - OPTIONAL")
-    # parser.add_argument("--annotation_pickle", required=False, help="Path to an existing annotation pickle file")
-    parser.add_argument("--output_dir", required=True, help="Directory to save the outputs")
-    parser.add_argument("--output_gff", required=True, help="Name of the merged GFF file")
-    parser.add_argument("--output_pickle", required=True, help="Path to save the merged pickle file")
+    parser.add_argument("--output_dir", required=True, help="Directory to save the outputs - MANDATORY")
+    parser.add_argument("--output_gff", required=True, help="Name of the merged GFF file - MANDATORY")
+    parser.add_argument("--output_pickle", required=True, help="Path to save the merged pickle file - MANDATORY")
     args = parser.parse_args()
 
     main(args)

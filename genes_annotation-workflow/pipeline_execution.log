@@ -1,6 +1,2 @@
-[2025-01-31 16:08:41] Running PsiCLASS transcriptome assembly on RI_MIM
-[2025-01-31 16:08:41] Executing: /PsiCLASS-1.0.2/psiclass -p 4 -b RI_MIM_Aligned.sortedByCoord.out.bam -o RI_MIM
-[2025-01-31 16:19:43] Running PsiCLASS transcriptome assembly on RCDN20_S1
-[2025-01-31 16:19:43] Executing: /PsiCLASS-1.0.2/psiclass -p 4 -b RCDN20_S1_Aligned.sortedByCoord.out.bam -o RCDN20_S1
-[2025-01-31 16:57:23] Running PsiCLASS transcriptome assembly on KXXF9
-[2025-01-31 16:57:23] Executing: /PsiCLASS-1.0.2/psiclass -p 4 -b KXXF9_Aligned.sortedByCoord.out.bam -o KXXF9
+[2025-02-03 16:03:21] Running PsiCLASS transcriptome assembly on RI_MIM
+[2025-02-03 16:03:21] Executing: /PsiCLASS-1.0.2/psiclass -p 4 -b RI_MIM_Aligned.sortedByCoord.out.bam -o RI_MIM

@@ -63,21 +63,19 @@ do
 	esac
 done
 
+touch $OUTPUT
+echo "---------------"
+echo $OUTPUT
+
 if [[ $READ == "short" ]]
 then
-
-	OUTPUT_FINAL=$( basename $OUTPUT | sed "s/_Aligned.sortedByCoord.out.bam//" )
-
 	BAM_FINAL=$( echo $BAM | sed "s/.*\/work\//\/work\//" )
 
-	stringtie -f 0.99 -m 120 -a 15 -j 3 -c 3 -s 4.75 -g 50 -t -L -p $THREADS -o $OUTPUT_FINAL $BAM_FINAL
-
+	stringtie -f 0.99 -m 120 -a 15 -j 3 -c 3 -s 4.75 -g 50 -t -L -p $THREADS -o $OUTPUT $BAM_FINAL
 elif [[ $READ == "long" ]]
 then
-
-	OUTPUT_FINAL=$( basename $OUTPUT | sed "s/_Aligned.sorted.bam//" )
-
 	BAM_FINAL=$( echo $BAM | sed "s/.*\/work\//\/work\//" )
-
-	stringtie -f 0.99 -m 120 -a 15 -j 3 -c 3 -s 4.75 -g 50 -t -L -p $THREADS -o $OUTPUT_FINAL $BAM_FINAL
+	echo "------------------"
+    echo "stringtie -f 0.99 -m 120 -a 15 -j 3 -c 3 -s 4.75 -g 50 -t -L -p $THREADS -o $OUTPUT $BAM_FINAL"
+	stringtie -f 0.99 -m 120 -a 15 -j 3 -c 3 -s 4.75 -g 50 -t -L -p $THREADS -o $OUTPUT $BAM_FINAL
 fi

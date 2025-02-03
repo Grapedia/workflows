@@ -12,7 +12,7 @@ process minimap2_alignment {
     tuple val(sample_ID), val(SRA_or_FASTQ), val(library_layout)
 
   output:
-    tuple val(sample_ID), path("${task.cwd}/${sample_ID}_Aligned.sorted.bam")
+    tuple val(sample_ID), path("${sample_ID}_Aligned.sorted.bam")
 
   when:
   params.use_long_reads
@@ -22,9 +22,9 @@ process minimap2_alignment {
     """
     DATE=\$(date "+%Y-%m-%d %H:%M:%S")
     echo "[\$DATE] Running minimap2 alignment of $sample_ID" >> ${params.logfile} 2>&1
+    minimap2_index=\$(/scripts/retrieve_path_minimap2_index.sh ${minimap2_genome_indices})
     CMD="minimap2 -t ${task.cpus} -ax splice:hq -uf \${minimap2_index} /RNAseq_data/${sample_ID}.fastq.gz > ${sample_ID}_Aligned.sam"
     echo "[\$DATE] Executing: \$CMD" >> ${params.logfile} 2>&1
-    minimap2_index=\$(/scripts/retrieve_path_minimap2_index.sh ${minimap2_genome_indices})
     minimap2 -t ${task.cpus} -ax splice:hq -uf \${minimap2_index} /RNAseq_data/${sample_ID}.fastq.gz > ${sample_ID}_Aligned.sam
     samtools view -b ${sample_ID}_Aligned.sam | samtools sort - > ${sample_ID}_Aligned.sorted.bam
     rm ${sample_ID}_Aligned.sam
