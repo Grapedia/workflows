@@ -11,7 +11,8 @@ process Stringtie_merging_long_reads {
     val(concat_minimap2_stringtie_annot)
 
   output:
-    file("*.gtf")
+    path("merged_transcriptomes.minimap2.long_reads.default_args.gtf") emit: default_args_gff
+    path("merged_transcriptomes.minimap2.long_reads.alt_args.gtf") emit: alt_args_gff
 
   when:
   params.use_long_reads

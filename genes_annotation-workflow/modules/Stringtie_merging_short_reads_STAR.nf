@@ -11,7 +11,10 @@ process Stringtie_merging_short_reads_STAR {
     val(concat_star_stringtie_annot)
 
   output:
-    file("*.gtf")
+    path("merged_transcriptomes.STAR.short_reads.default_args.stranded.gtf") emit: default_args_stranded
+    path("merged_transcriptomes.STAR.short_reads.alt_args.stranded.gtf") emit: alt_args_stranded
+    path("merged_transcriptomes.STAR.short_reads.default_args.unstranded.gtf", optional: true) emit: default_args_unstranded
+    path("merged_transcriptomes.STAR.short_reads.alt_args.unstranded.gtf", optional: true) emit: alt_args_unstranded
 
   script:
     """

@@ -33,7 +33,8 @@ include { Stringtie_merging_long_reads } from "./modules/Stringtie_merging_long_
 include { EDTA } from "./modules/EDTA"
 include { braker3_prediction } from "./modules/braker3_prediction"
 include { braker3_prediction_with_long_reads } from "./modules/braker3_prediction_with_long_reads"
-// include { aegis } from "./modules/aegis"
+include { aegis } from "./modules/aegis"
+include { aegis_long_reads } from "./modules/aegis_long_reads"
 // include { diamond2go } from "./modules/diamond2go"
 
 // Parse RNAseq samplesheet for different types of reads (long, single and paired)
@@ -275,11 +276,44 @@ workflow {
   //     Aegis scripts (1, 2, 3) to create the final GFF3 file from all the evidences
   // ----------------------------------------------------------------------------------------
 
-    // Placeholder for Aegis scripts to create the final GFF3 file
-    // TO DO
+    if (params.use_long_reads) {
+      aegis_long_reads(
+      file(params.new_assembly).getParent(),
+      file(params.new_assembly).getName(),
+      braker3_prediction_with_long_reads.out.augustus_gff,
+      braker3_prediction_with_long_reads.out.genemark_gtf,
+      liftoff_annotations.out.liftoff_previous_annotations,
+      Stringtie_merging_long_reads.out.default_args_gff,
+      Stringtie_merging_long_reads.out.alt_args_gff,
+      Stringtie_merging_short_reads_STAR.out.default_args_stranded,
+      Stringtie_merging_short_reads_STAR.out.alt_args_stranded,
+      gffcompare.out.star_psiclass_stranded,
+      gffcompare.out.star_psiclass_unstranded,
+      Stringtie_merging_short_reads_STAR.out.default_args_unstranded,
+      Stringtie_merging_short_reads_STAR.out.alt_args_unstranded
+      )
+    } else {
+      aegis(
+      file(params.new_assembly).getParent(),
+      file(params.new_assembly).getName(),
+      braker3_prediction.out.augustus_gff,
+      braker3_prediction.out.genemark_gtf,
+      liftoff_annotations.out.liftoff_previous_annotations,
+      Stringtie_merging_short_reads_STAR.out.default_args_stranded,
+      Stringtie_merging_short_reads_STAR.out.alt_args_stranded,
+      gffcompare.out.star_psiclass_stranded,
+      gffcompare.out.star_psiclass_unstranded,
+      Stringtie_merging_short_reads_STAR.out.default_args_unstranded,
+      Stringtie_merging_short_reads_STAR.out.alt_args_unstranded
+      )
+    }
 
   // ----------------------------------------------------------------------------------------
   //               Diamond2GO on proteins predicted with TITAN
   // ----------------------------------------------------------------------------------------
-  // diamond2go(proteins_file)
+  // if (params.use_long_reads) {
+  //   diamond2go(aegis_long_reads.out.aegis_proteins)
+  // } else {
+  //   diamond2go(aegis.out.aegis_proteins)
+  // }
 }

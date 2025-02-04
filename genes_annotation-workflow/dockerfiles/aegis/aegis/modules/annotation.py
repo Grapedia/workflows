@@ -882,6 +882,10 @@ class Annotation():
             for g in genes.values():
                 for t in g.transcripts.values():
                     for c in t.CDSs.values():
+                        if not t.exons:
+                            print(f"Warning: Transcript {t.id} has no exons. Skipping...")
+                            print(f"Transcript {t.id} has {len(t.exons)} exons.")
+                            continue
                         if c.start < t.exons[0].start:
                             print(f"Warning: {c.id} start should not be earlier than for first {t.id} exon, proceeding to fix {self.id}")
                             t.exons[0].start = c.start
