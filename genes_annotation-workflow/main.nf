@@ -280,6 +280,9 @@ workflow {
       aegis_long_reads(
       file(params.new_assembly).getParent(),
       file(params.new_assembly).getName(),
+      file(params.protein_samplesheet).getParent(),
+      file(params.protein_samplesheet).getName(),
+      EDTA.out.masked_genome,
       braker3_prediction_with_long_reads.out.augustus_gff,
       braker3_prediction_with_long_reads.out.genemark_gtf,
       liftoff_annotations.out.liftoff_previous_annotations,
@@ -296,6 +299,9 @@ workflow {
       aegis(
       file(params.new_assembly).getParent(),
       file(params.new_assembly).getName(),
+      file(params.protein_samplesheet).getParent(),
+      file(params.protein_samplesheet).getName(),
+      EDTA.out.masked_genome,
       braker3_prediction.out.augustus_gff,
       braker3_prediction.out.genemark_gtf,
       liftoff_annotations.out.liftoff_previous_annotations,
