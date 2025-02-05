@@ -40,6 +40,12 @@ Generates a **GTF file**, which is used by **Aegis** in the final step.
 - For each **short-read RNA-seq dataset**, a transcriptome is assembled using **STAR/PsiCLASS**.  
 - Transcriptomes are **merged separately** for **stranded** and **unstranded** samples using **GFFCompare** (unstranded is optional).
 
+### **EDTA** (Not shown in the DAG but integrated into TITAN)
+Generates a **FASTA file** of the **hard-masked genome assembly**, which is used by **Aegis** in the final step.  
+
+- **Input**: The **FASTA file** of the genome assembly to be annotated.  
+- **Output**: A **hard-masked version** of the genome assembly.  
+
 ---
 
 ## **Final Integration by Aegis**
