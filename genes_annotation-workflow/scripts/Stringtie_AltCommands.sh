@@ -71,7 +71,7 @@ if [[ $READ == "short" ]]
 then
 	BAM_FINAL=$( echo $BAM | sed "s/.*\/work\//\/work\//" )
 
-	stringtie -f 0.99 -m 120 -a 15 -j 3 -c 3 -s 4.75 -g 50 -t -L -p $THREADS -o $OUTPUT $BAM_FINAL
+	stringtie -f 0.99 -m 120 -a 15 -j 3 -c 3 -s 4.75 -g 50 -t -p $THREADS -o $OUTPUT $BAM_FINAL
 elif [[ $READ == "long" ]]
 then
 	BAM_FINAL=$( echo $BAM | sed "s/.*\/work\//\/work\//" )
