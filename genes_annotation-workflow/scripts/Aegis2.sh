@@ -3,6 +3,9 @@
 # This script launches DIAMOND to create databases and run BLASTp searches.
 # Usage : ./diamond_script.sh -q <proteins_fasta_query_file> -t <threads> -d <proteins_fasta_list_reference> -o <output_dir>
 
+# default value
+THREADS=5
+
 # Usage function
 print_usage() {
     echo "Usage : $0 -q <query_file> -t <threads> -d <databases> -o <output_dir>"
