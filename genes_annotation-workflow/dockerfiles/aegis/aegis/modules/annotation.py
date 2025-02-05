@@ -2624,6 +2624,10 @@ class Annotation():
 
     def export_gff(self, custom_path:str="", tag:str=".gff3", skip_atypical_fts:bool=True, main_only:bool=False, UTRs:bool=False, exclude_non_coding:bool=False):
 
+        print("Args passed to export_gff():")
+        for arg, value in kwargs.items():
+            print(f"  {arg}: {value}")
+
         # Check if stdout or stderr are redirected to files
         stdout_redirected = not sys.stdout.isatty()
         stderr_redirected = not sys.stderr.isatty()

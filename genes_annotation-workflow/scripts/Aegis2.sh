@@ -1,13 +1,7 @@
 #!/bin/bash
 
 # This script launches DIAMOND to create databases and run BLASTp searches.
-# Usage : ./diamond_script.sh -q <query_file> -t <threads> -d <databases> -o <output_dir>
-
-# Valeurs par défaut
-QUERY=""
-THREADS=10
-DATABASES=""
-OUTDIR=""
+# Usage : ./diamond_script.sh -q <proteins_fasta_query_file> -t <threads> -d <proteins_fasta_list_reference> -o <output_dir>
 
 # Usage function
 print_usage() {
@@ -37,15 +31,14 @@ if [ -z "$QUERY" ] || [ -z "$DATABASES" ] || [ -z "$OUTDIR" ]; then
     print_usage
 fi
 
-# Loading the DIAMOND module
-module load diamond
-
 # IFS=‘,’ database loop
-read -ra DB_ARRAY <<< "$DATABASES"
+IFS=',' read -ra DB_ARRAY <<< "$DATABASES"
 for DB in "${DB_ARRAY[@]}"; do
     DB_PATH="${DB}"
     BASENAME=$( basename "$DB_PATH" )
     OUTPUT_PATH="$OUTDIR/${BASENAME}_vs_assembly.diamond"
+
+    echo "Processing database: $DB_PATH"
 
     # Creating the DIAMOND database
     diamond makedb --threads "$THREADS" --in "$DB_PATH" \

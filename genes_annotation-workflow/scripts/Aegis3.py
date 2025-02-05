@@ -23,8 +23,14 @@ def main(args):
     print('Overlaps...')
     merge.detect_gene_overlaps()
 
-    print('Adding BLAST results...')
-    for name, path in args.blast_hits:
+    print('Adding DIAMOND results...')
+    diamond_hits_dict = {}
+    for item in args.diamond_hits:
+        name, path = item.split("=")
+        diamond_hits_dict[name] = path
+
+    for name, path in diamond_hits_dict.items():
+        print(f"Adding of {name} results from {path}")
         merge.add_blast_hits(name, path)
 
     # Save pickle
@@ -56,7 +62,7 @@ if __name__ == "__main__":
 
     parser.add_argument('--merged_annotation', type=str, required=True, help="Path to the merged_annotation.pkl file.")
     parser.add_argument('--hard_masked_genome', type=str, required=True, help="Path to the hard-masked genome file.")
-    parser.add_argument('--blast_hits', nargs='+', metavar=('name', 'path'), required=True, help="List of BLAST results as name/path pairs.")
+    parser.add_argument('--diamond_hits', nargs='+', required=True, help="List of DIAMOND results in the format 'name=path'. Example : --diamond_hits Viridiplantae=/path/to/viridiplantae_vs_proteins_assembly.diamond Eudicots=/path/to/eudicots_vs_proteins_assembly.diamond Araport=/path/to/araport_vs_proteins_assembly.diamond")
     parser.add_argument('--intermediate_annotation', type=str, required=True, help="Path to save the intermediate annotation pickle file.")
     parser.add_argument('--final_annotation', type=str, required=True, help="Path to save the final annotation pickle file.")
     parser.add_argument('--export_dir', type=str, required=True, help="Directory to export intermediate GFF files.")

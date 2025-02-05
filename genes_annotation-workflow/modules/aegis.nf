@@ -33,18 +33,70 @@ process aegis {
     """
     DATE=\$(date "+%Y-%m-%d %H:%M:%S")
     echo "[\$DATE] Running Aegis to create final GFF3 file" >> ${params.logfile} 2>&1
-    proteins=\$(/scripts/retrieve_proteins_for_braker.sh /protein_samplesheet_path/$protein_samplesheet_filename)
-    # convert all GTF file in GFF3 format with gffread -E {gtf_file} -o- > {gff3_file}
-    CMD_aegis_1="/scripts/Aegis1.py --genome_name New_assembly --genome_path /genome_path/$genome --augustus_path ${augustus_gff} --genemark_path ${genemark_gtf} --liftoff_path ${liftoff_annotations} --psiclass_stranded_STAR_path ${gffcompare_stranded} --stringtie_stranded_default_STAR_path ${stranded_default_args} --stringtie_stranded_AltCommands_STAR_path ${stranded_alt_args} --output_dir \$PWD --output_gff aegis_final_merged_annotations.gff3 --output_pickle aegis_final_merged_annotations.pkl
-    if [ -s "${unstranded_default_args}" ]; then
-        CMD_aegis_1="\$CMD_aegis_1 --stringtie_unstranded_default_STAR_path ${unstranded_default_args}"
-    fi
 
+    proteins=\$(/scripts/retrieve_proteins_for_aegis.sh /protein_samplesheet_path/$protein_samplesheet_filename)
+
+    # create a bash array with the name of the samplesheet organism as the first value and the path to the corresponding fasta file as the second value
+    declare -A PROTEIN_MAP
+    while IFS=' ' read -r name path; do
+        PROTEIN_MAP["\$name"]="\$path"
+    done <<< "\$proteins"
+    
+    # here we create the protein_paths parameters for Aegis2.sh of type : /path/to/arabidopsis.proteins.fasta,/path/to/viridiplantae.proteins.fasta
+    protein_paths=""
+    for key in "\${!PROTEIN_MAP[@]}"; do
+        if [[ -z "\$protein_paths" ]]; then
+            protein_paths="\${PROTEIN_MAP[\$key]}"
+        else
+            protein_paths+=",\${PROTEIN_MAP[\$key]}"
+        fi
+    done
+
+    # here we create the source_priority parameters for Aegis3.py of type : ['Araport', 'Viridiplantae', 'Eudicots']
+    protein_names="["
+
+    for key in "${!PROTEIN_MAP[@]}"; do
+        if [[ "$protein_names" == "[" ]]; then
+            protein_names+="'\$key'"
+        else
+            protein_names+=", '\$key'"
+        fi
+    done
+    protein_names+="]"
+
+    # here we create the path to Diamond results, of type : 
+    # Viridiplantae=/path/to/viridiplantae_vs_proteins_assembly.diamond Eudicots=/path/to/eudicots_vs_proteins_assembly.diamond
+    diamond_paths=""
+
+    for key in "\${!PROTEIN_MAP[@]}"; do
+        file_path="\${PROTEIN_MAP[\$key]}_vs_assembly.diamond"
+
+        if [[ -z "\$diamond_paths" ]]; then
+            diamond_paths="\$key=\$file_path"
+        else
+            diamond_paths+=" \$key=\$file_path"
+        fi
+    done
+    # gtf to gff3 conversion
+    gffread -E ${genemark_gtf} -o- > BRAKER3_genemark.gff3
+    gffread -E ${stranded_default_args} -o- > stringtie_stranded_default_STAR.gff3
+    gffread -E ${stranded_alt_args} -o- > stringtie_stranded_AltCommands_STAR.gff3
+    gffread -E ${gffcompare_stranded} -o- > psiclass_stranded_STAR.gff3
+    if [ -s "${unstranded_default_args}" ]; then
+        gffread -E ${unstranded_default_args} -o- > stringtie_unstranded_default_STAR.gff3
+    fi
     if [ -s "${unstranded_alt_args}" ]; then
-        CMD_aegis_1="\$CMD_aegis_1 --stringtie_unstranded_AltCommands_STAR_path ${unstranded_alt_args}"
+        gffread -E ${unstranded_alt_args} -o- > stringtie_unstranded_AltCommands_STAR.gff3
+    fi
+    CMD_aegis_1="/scripts/Aegis1.py --genome_name New_assembly --genome_path /genome_path/$genome --augustus_path ${augustus_gff} --genemark_path BRAKER3_genemark.gff3 --liftoff_path ${liftoff_annotations} --psiclass_stranded_STAR_path psiclass_stranded_STAR.gff3 --stringtie_stranded_default_STAR_path stringtie_stranded_default_STAR.gff3 --stringtie_stranded_AltCommands_STAR_path stringtie_stranded_AltCommands_STAR.gff3 --output_dir \$PWD --output_gff aegis_final_merged_annotations.gff3 --output_pickle aegis_final_merged_annotations.pkl
+    if [ -s "${unstranded_default_args}" ]; then
+        CMD_aegis_1="\$CMD_aegis_1 --stringtie_unstranded_default_STAR_path stringtie_unstranded_default_STAR.gff3"
+    fi
+    if [ -s "${unstranded_alt_args}" ]; then
+        CMD_aegis_1="\$CMD_aegis_1 --stringtie_unstranded_AltCommands_STAR_path stringtie_unstranded_AltCommands_STAR.gff3"
     fi
      echo "[\$DATE] Executing: \$CMD_aegis_1" >> ${params.logfile} 2>&1
-     # /scripts/Aegis2.sh -q aegis_proteins.fasta -t ${task.cpus} -d \${proteins} -o \$PWD
-     # /scripts/Aegis3.py --merged_annotation aegis_final_merged_annotations.pkl --hard_masked_genome ${edta_masked_genome} --blast_hits to_do --intermediate_annotation intermediate_annotation.pkl --final_annotation final_annotation.pkl --export_dir \$PWD --final_export_dir \$PWD --update --source_priority to_do
+     # /scripts/Aegis2.sh -q aegis_proteins.fasta -t ${task.cpus} -d \$protein_paths -o \$PWD
+     # /scripts/Aegis3.py --merged_annotation aegis_final_merged_annotations.pkl --hard_masked_genome ${edta_masked_genome} --diamond_hits \${diamond_paths} --intermediate_annotation intermediate_annotation.pkl --final_annotation final_annotation.pkl --export_dir \$PWD --final_export_dir \$PWD --update --source_priority \$protein_names
     """
 }
