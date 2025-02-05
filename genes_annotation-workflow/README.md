@@ -50,11 +50,13 @@ Generates a **FASTA file** of the **hard-masked genome assembly**, which is used
 
 ## **Final Integration by Aegis**
 At the final step, **Aegis** integrates multiple annotation sources:  
+✔ **Hard-masked genome assembly**
 ✔ **Liftoff annotations**  
 ✔ **GeneMark annotations**  
 ✔ **AUGUSTUS annotations**  
 ✔ **Stranded (and unstranded, if available) annotations from STAR/StringTie**  
 ✔ **IsoSeq annotations (if available)**  
 ✔ **Stranded (and unstranded, if available) annotations from STAR/PsiCLASS**  
+✔ **protein FASTA files**
 
 This results in the final **GFF3 annotation file**.
