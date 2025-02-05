@@ -1,6 +1,8 @@
 # Use Ubuntu 20.04 LTS as the base image
 FROM ubuntu:20.04
 
+ENV DEBIAN_FRONTEND=noninteractive
+
 # Set environment variables to prevent Python from writing .pyc files to disk
 ENV PYTHONUNBUFFERED=1
 
@@ -22,6 +24,14 @@ RUN apt-get update && apt-get install -y \
     libbz2-dev \
     liblzma-dev \
     libcurl4-openssl-dev \
+    openjdk-11-jdk \
+    unzip \
+    bash \
+    gawk \
+    grep \
+    psmisc \
+    sed \
+    coreutils \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
 

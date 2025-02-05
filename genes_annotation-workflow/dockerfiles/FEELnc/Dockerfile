@@ -6,7 +6,7 @@ MAINTAINER Amandine Velt <amandine.velt@inrae.fr>
 
 # Install base utilities
 RUN dnf -y upgrade && \
-dnf install -y wget gcc gcc-c++ make git-all zlib-devel python3 zlib-devel ncurses-devel bzip2 bzip2-devel xz-devel glib2-devel python which perl cpanminus expat-devel procps dnf-plugins-core && \
+dnf install -y wget java-11-openjdk unzip git bash gawk grep psmisc sed gcc gcc-c++ make git-all python3 zlib-devel ncurses-devel bzip2 xz-devel glib2-devel python which perl cpanminus expat-devel procps dnf-plugins-core && \
 cpanm --force Parallel::ForkManager Bio::DB::Fasta Bio::DB::SeqFeature::Store && \
 dnf -y config-manager --set-enabled crb && \
 dnf -y install epel-release && \

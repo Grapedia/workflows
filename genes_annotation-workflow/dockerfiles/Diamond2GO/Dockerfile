@@ -6,7 +6,7 @@ MAINTAINER Amandine Velt <amandine.velt@inrae.fr>
 
 # Install base utilities
 RUN dnf -y upgrade && \
-dnf install -y wget gcc gcc-c++ make git-all zlib-devel python3 zlib-devel ncurses-devel bzip2 bzip2-devel xz-devel glib2-devel python which
+dnf install -y --nobest wget unzip sed psmisc grep gawk java-11-openjdk gcc bash gcc-c++ make git git-all zlib-devel python3 zlib-devel ncurses-devel bzip2 xz-devel glib2-devel python which
 
 # Install miniconda
 ENV CONDA_DIR /opt/conda

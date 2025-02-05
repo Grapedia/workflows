@@ -6,7 +6,7 @@ MAINTAINER Amandine Velt <amandine.velt@inrae.fr>
 
 # install gffcompare
 RUN apt-get update --fix-missing && \
-apt-get install -y wget gcc g++ make && \
+apt-get install -y wget gcc g++ make curl git bash gawk grep psmisc sed coreutils unzip openjdk-11-jdk && \
 wget http://ccb.jhu.edu/software/stringtie/dl/gffcompare-0.12.6.tar.gz && \
 tar -xvf gffcompare-0.12.6.tar.gz && \
 cd gffcompare-0.12.6/ && \

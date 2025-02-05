@@ -5,7 +5,7 @@ FROM ubuntu:24.10
 MAINTAINER Amandine Velt <amandine.velt@inrae.fr>
 
 RUN apt-get update --fix-missing && \
-apt-get install -y wget gcc g++ make libboost-all-dev libmysql++-dev libsqlite3-dev libgsl-dev liblpsolve55-dev python3 cmake ncbi-blast+ libbz2-dev libclang-dev liblzma-dev bzip2 libncurses5-dev libncursesw5-dev libglib2.0-dev sudo
+apt-get install -y curl gawk grep psmisc sed coreutils unzip openjdk-11-jdk git wget gcc g++ make libboost-all-dev libmysql++-dev libsqlite3-dev libgsl-dev liblpsolve55-dev python3 cmake ncbi-blast+ libbz2-dev libclang-dev liblzma-dev bzip2 libncurses5-dev libncursesw5-dev libglib2.0-dev sudo
 
 # install stringtie
 RUN wget http://ccb.jhu.edu/software/stringtie/dl/stringtie-2.2.3.Linux_x86_64.tar.gz && \
