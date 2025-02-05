@@ -2,6 +2,34 @@
 
 📖 **Full documentation**: [Read the Docs](https://grapedia.readthedocs.io/en/latest/workflows.html#titan-the-intensive-transcript-annotation-pipeline)
 
+## **Inputs**
+
+The following parameters are defined in `nextflow.config` and are required for the pipeline execution.
+
+### **Genome Assemblies**
+- **`previous_assembly`**: Path to the **reference genome assembly** (FASTA).  
+  _Example_: `data/assemblies/T2T_ref.fasta`
+- **`new_assembly`**: Path to the **new genome assembly** to be annotated (FASTA).  
+  _Example_: `data/assemblies/riesling.hap1.chromosomes.phased.fa`
+
+### **Annotations & Data evidences**
+- **`previous_annotations`**: Path to the **GFF3 file** containing annotations for the previous assembly.  
+  _Example_: `data/annotations/PN40024_5.1_on_T2T_ref_with_names.gff3`
+- **`RNAseq_samplesheet`**: Path to the **RNA-seq samplesheet** (CSV file) listing RNA-seq datasets to be used.  
+  _Example_: `data/RNAseq_data/RNAseq_samplesheet.csv`
+- **`protein_samplesheet`**: Path to the **protein data samplesheet** (CSV file) listing protein datasets to be used.  
+  _Example_: `data/protein_data/samplesheet.csv`
+
+### **Optional Parameters**
+- **`EDTA`**: Whether to run **EDTA (transposable element annotation tool)**.  
+  _Options_: `"yes"` or `"no"` (default: `"no"`)
+- **`use_long_reads`**: Flag to indicate whether **long-read sequencing data** should be used.  
+  _Options_: `true` or `false` (default: `true`)
+
+### **Logging**
+- **`logfile`**: Path to the log file where pipeline execution logs will be saved.  
+  _Example_: `pipeline_execution.log`
+
 ## Workflow DAG
 
 ![Workflow Diagram](data_example/workflow.dag.jpg)
