@@ -22,7 +22,7 @@ process aegis_long_reads {
     path(stranded_default_args)
     path(stranded_alt_args)
     path(gffcompare_stranded)
-    path(gffcompare_unstranded)
+    path(gffcompare_unstranded, optional: true)
     path(unstranded_default_args, optional: true)
     path(unstranded_alt_args, optional: true)
 
@@ -86,6 +86,9 @@ process aegis_long_reads {
     gffread -E ${gffcompare_stranded} -o- > psiclass_stranded_STAR.gff3
     gffread -E ${long_reads_default_args} -o- > stringtie_Isoseq_default.gff3
     gffread -E ${long_reads_alt_args} -o- > stringtie_Isoseq_AltCommands.gff3
+    if [ -s "${gffcompare_unstranded}" ]; then
+        gffread -E ${gffcompare_unstranded} -o- > psiclass_unstranded_STAR.gff3
+    fi
     if [ -s "${unstranded_default_args}" ]; then
         gffread -E ${unstranded_default_args} -o- > stringtie_unstranded_default_STAR.gff3
     fi
@@ -93,6 +96,9 @@ process aegis_long_reads {
         gffread -E ${unstranded_alt_args} -o- > stringtie_unstranded_AltCommands_STAR.gff3
     fi
     CMD_aegis_1="/scripts/Aegis1.py --genome_name New_assembly --genome_path /genome_path/$genome --augustus_path ${augustus_gff} --genemark_path BRAKER3_genemark.gff3 --liftoff_path ${liftoff_annotations} --psiclass_stranded_STAR_path psiclass_stranded_STAR.gff3 --stringtie_stranded_default_STAR_path stringtie_stranded_default_STAR.gff3 --stringtie_stranded_AltCommands_STAR_path stringtie_stranded_AltCommands_STAR.gff3 --stringtie_Isoseq_default_path stringtie_Isoseq_default.gff3 --stringtie_Isoseq_AltCommands_path stringtie_Isoseq_AltCommands.gff3 --output_dir \$PWD --output_gff aegis_final_merged_annotations.gff3 --output_pickle aegis_final_merged_annotations.pkl
+    if [ -s "${gffcompare_unstranded}" ]; then
+        CMD_aegis_1="\$CMD_aegis_1 --psiclass_unstranded_STAR_path psiclass_unstranded_STAR.gff3"
+    fi
     if [ -s "${unstranded_default_args}" ]; then
         CMD_aegis_1="\$CMD_aegis_1 --stringtie_unstranded_default_STAR_path stringtie_unstranded_default_STAR.gff3"
     fi
