@@ -83,7 +83,8 @@ def main(args):
     merged_annotation.name = 'merge_annotation_transcripts'
 
     print(f"-------------------- Exporting merged GFF to {args.output_dir}")
-    merged_annotation.export_gff(args.output_dir, args.output_gff)
+    # merged_annotation.export_gff(args.output_dir, args.output_gff)
+    merged_annotation.export_gff(args.output_dir)
 
     print("-------------------- Exporting merged unique proteins")
     merged_annotation.export_unique_proteins(custom_path=args.output_dir, genome=genome)
