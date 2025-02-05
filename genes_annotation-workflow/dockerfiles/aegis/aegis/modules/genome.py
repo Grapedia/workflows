@@ -1,9 +1,6 @@
 import time
-import textwrap
-import pandas as pd
 from os import system
 from Bio import SeqIO
-from pathlib import Path
 
 class Genome():
     def __init__(self, name:str, genome_file_path:str, chromosome_dict:dict={}):
@@ -170,26 +167,5 @@ class Genome():
         f_out.write(out)
         f_out.close()
         
-    def extract_peak_sequences(self, output_file_name, DAPseq_output_file, output_folder:str="", top=600):
 
-        export_folder = Path(output_folder or self.path + "out_peak_seqs/")
-        export_folder.mkdir(parents=True, exist_ok=True)
 
-        df = pd.read_csv(DAPseq_output_file, delimiter='\t', dtype=str)
-        df.dropna(how='all', inplace=True)
-
-        if top != 'all':
-            top_df = df
-        else:
-            top_df = df.nlargest(top, 'peak signal value')
-
-        peaks = {
-            f"{row['seqnames']}_{row['feature']}_{int(row['peak'].split('.')[1])-100}:{int(row['peak'].split('.')[1])+100}":
-            self.chseqs[row['seqnames']][int(row['peak'].split('.')[1])-100:int(row['peak'].split('.')[1])+100]
-            for _, row in top_df.iterrows()
-        }
-
-        with open(export_folder / output_file_name, "w", encoding="utf-8") as f_out:
-            for header, seq in peaks.items():
-                f_out.write(f'>{header}\n')
-                f_out.write(f'{textwrap.fill(seq, width=60)}\n')

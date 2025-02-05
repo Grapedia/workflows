@@ -99,6 +99,8 @@ class Annotation():
         self.self_overlapping = []
         self.overlapped_annotations = []
 
+        
+
         self.featurecounts = False
         if "_fcounts" in annot_file_path:
             self.featurecounts = True
@@ -154,7 +156,9 @@ class Annotation():
                          "missing_subfeature_parent": [],
                          "missing_subfeature_parent_liftoff": [],
                          "multiple_CDSs_per_transcript": [],
-                         "possible_policistronic_transcript": []}
+                         "possible_policistronic_transcript": [],
+                         "transcript_with_no_exons": [],
+                         "gene_with_no_transcripts": []}
         
         parsed_lines = {key: [] for key in Annotation.features}
         parsed_lines["atypical"] = []
@@ -791,12 +795,14 @@ class Annotation():
 
         now = time.time()
         lapse = now - start
+
         print(f"\nCreating {self.id} annotation object took {round(lapse/60, 1)} minutes\n")
         
         if self.features == ["nucleotide_to_protein_match"]:
             self.update(original_annotation=original_annotation, genome=genome, sort_processes=sort_processes, define_synteny=define_synteny)
         else:
             self.update(original_annotation=original_annotation, genome=genome, sort_processes=sort_processes, define_synteny=define_synteny)
+            
     
         if "CDS" not in self.features and rework_CDSs:
             self.rework_CDSs(genome)
@@ -882,10 +888,6 @@ class Annotation():
             for g in genes.values():
                 for t in g.transcripts.values():
                     for c in t.CDSs.values():
-                        if not t.exons:
-                            print(f"Warning: Transcript {t.id} has no exons. Skipping...")
-                            print(f"Transcript {t.id} has {len(t.exons)} exons.")
-                            continue
                         if c.start < t.exons[0].start:
                             print(f"Warning: {c.id} start should not be earlier than for first {t.id} exon, proceeding to fix {self.id}")
                             t.exons[0].start = c.start
@@ -1903,6 +1905,12 @@ class Annotation():
             else:
                 out_file = f"{self.id}_basic_stats.csv"
 
+            warnings_df = pd.DataFrame(dict([(k, pd.Series(v)) for k, v in self.warnings.items()])).fillna('')
+            error_df = pd.DataFrame(dict([(k, pd.Series(v)) for k, v in self.errors.items()])).fillna('')
+
+            warnings_df.to_csv(f"{export_folder}{self.id}_warnings.csv", sep="\t", index=False)
+            error_df.to_csv(f"{export_folder}{self.id}_errors.csv", sep="\t", index=False)
+
             f_out = open(f"{export_folder}{out_file}", "w", encoding="utf-8")
             f_out.write("")
             f_out.close()
@@ -2624,10 +2632,6 @@ class Annotation():
 
     def export_gff(self, custom_path:str="", tag:str=".gff3", skip_atypical_fts:bool=True, main_only:bool=False, UTRs:bool=False, exclude_non_coding:bool=False):
 
-        print("Args passed to export_gff():")
-        for arg, value in kwargs.items():
-            print(f"  {arg}: {value}")
-
         # Check if stdout or stderr are redirected to files
         stdout_redirected = not sys.stdout.isatty()
         stderr_redirected = not sys.stderr.isatty()
@@ -2718,8 +2722,8 @@ class Annotation():
                 for ft in self.atypical_features:
                     out += ft.print_gff()
 
+        added= ""
         if tag == ".gff3":
-            added = ""
             if self.aegis:
                 added += "_aegis"
             if self.featurecounts:
@@ -2734,9 +2738,7 @@ class Annotation():
                 added += "_combined"
             if self.small_cds_removed:
                 added += "_minus_small_CDSs"
-
-
-        tag = f"{self.id}{added}{tag}"
+            tag = f"{self.id}{added}{tag}"
 
         print(f"Exporting {self.id} gff with tag='{tag}' which is dapfit={self.dapfit} and dapmod={self.dapmod} and combined={self.combined}.")         
 
@@ -2869,8 +2871,35 @@ class Annotation():
                             new_e.append(e)
                     t.exons = new_e.copy()
 
+        self.remove_transcripts_with_no_exons()
+        self.remove_genes_with_no_transcripts()
+
+    def remove_transcripts_with_no_exons(self):
+        transcripts_to_remove = []
+        for chrom, genes in self.chrs.items():
+            for g in genes.values():
+                for t in g.transcripts.values():
+                    if t.exons == []:
+                        transcripts_to_remove.append((chrom, g.id, t.id))
+        for chrom, g_id, t_id in transcripts_to_remove:
+            del self.chrs[chrom][g_id].transcripts[t_id]
+            print(f"{t_id} Warning: transcript with no exons whichcould have been removed because of strand inconsistencies")
+            self.warnings["transcript_with_no_exons"].append(t_id)
+
+    def remove_genes_with_no_transcripts(self):
+        genes_to_remove = []
+        for chrom, genes in self.chrs.items():
+            for g in genes.values():
+                if g.transcripts == {}:
+                    genes_to_remove.append((chrom, g.id))
+        for chrom, g_id in genes_to_remove:
+            del self.chrs[chrom][g_id]
+            print(f"{g_id} Warning: gene with no transcripts which could have been removed because of strand inconsistencies of its exons")
+            self.warnings["gene_with_no_transcripts"].append(g_id)
+
     def remove_missing_transcript_parent_references(self, extra_attributes=False):
         self.remove_wrongly_assigned_exons()
+
         for genes in self.chrs.values():
             for g in genes.values():
                 for t in g.transcripts.values():
@@ -3419,6 +3448,7 @@ class Annotation():
         self.update_attributes(extra_attributes=extra_attributes)
         self.update_keys()
         self.update_gene_and_transcript_list()
+
 
         if not minimal:
             self.renamed_ids = True
