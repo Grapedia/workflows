@@ -6,6 +6,10 @@
 
 The following parameters are defined in `nextflow.config` and are required for the pipeline execution.
 
+### **containerOptions**
+- **`containerOptions`**: Path to the **workdir pathway** (the directory where there is the main.nf script).  
+  _Example_: `containerOptions = "-v /path/to/workflows/genes_annotation-workflow:/path/to/workflows/genes_annotation-workflow"`
+
 ### **Genome Assemblies**
 - **`previous_assembly`**: Path to the **reference genome assembly** (FASTA).  
   _Example_: `data/assemblies/T2T_ref.fasta`
