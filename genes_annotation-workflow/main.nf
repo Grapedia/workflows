@@ -246,7 +246,7 @@ workflow {
     println "Running EDTA process"
     EDTA(file(params.new_assembly).getParent(), file(params.new_assembly).getName())
   } else {
-    println "Skipping EDTA process (params.EDTA = '${params.EDTA}'). To launch EDTA, put EDTA = 'yes' in nextflow.config file."
+    println "Skipping the EDTA and AEGIS processes because EDTA was not run (params.EDTA = '${params.EDTA}'). To enable EDTA, and consequently AEGIS, set EDTA = 'yes' in the nextflow.config file."
   }
 
   // ----------------------------------------------------------------------------------------
@@ -276,6 +276,7 @@ workflow {
   //     Aegis scripts (1, 2, 3) to create the final GFF3 file from all the evidences
   // ----------------------------------------------------------------------------------------
 
+  if (params.EDTA == 'yes') {
     if (params.use_long_reads) {
       aegis_long_reads(
       file(params.new_assembly).getParent(),
@@ -313,6 +314,9 @@ workflow {
       Stringtie_merging_short_reads_STAR.out.alt_args_unstranded
       )
     }
+  } else {
+    println "Skipping the AEGIS process because EDTA was not run (params.EDTA = '${params.EDTA}'). To enable EDTA, and consequently AEGIS, set EDTA = 'yes' in the nextflow.config file."
+  }
 
   // ----------------------------------------------------------------------------------------
   //               Diamond2GO on proteins predicted with TITAN
