@@ -17,11 +17,11 @@ process gffread_convert_gff3_to_cds_fasta {
   script:
     """
     DATE=\$(date "+%Y-%m-%d %H:%M:%S")
-    echo "[\$DATE] Running gffread_convert_gff3_to_cds_fasta on $genome" >> ${params.logfile} 2>&1
+    echo "[\$DATE] Running gffread_convert_gff3_to_cds_fasta on $genome"
 
     liftoff_gff3_path=\$(/scripts/retrieve_path.sh ${liftoff_gff3})
     CMD="gffread -x ${genome}.CDS.fasta -g /genome_path/${genome} \${liftoff_gff3_path}"
-    echo "[\$DATE] Executing: \$CMD" >> ${params.logfile} 2>&1
+    echo "[\$DATE] Executing: \$CMD"
     gffread -x ${genome}.CDS.fasta -g /genome_path/${genome} \${liftoff_gff3_path}
     gzip ${genome}.CDS.fasta
     """

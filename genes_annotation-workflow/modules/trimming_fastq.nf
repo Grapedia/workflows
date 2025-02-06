@@ -16,13 +16,13 @@ process trimming_fastq {
     script:
     """
     DATE=\$(date "+%Y-%m-%d %H:%M:%S")
-    echo "[\$DATE] Running fastp on $sample_ID" >> ${params.logfile} 2>&1
+    echo "[\$DATE] Running fastp on $sample_ID"
     if [[ $library_layout == "paired" ]]
     then
       CMD="fastp --thread ${task.cpus} -i /RNAseq_data/${sample_ID}_1.fastq.gz -I /RNAseq_data/${sample_ID}_2.fastq.gz \
       -o ${sample_ID}_1.trimmed.fastq.gz -O ${sample_ID}_2.trimmed.fastq.gz"
 
-      echo "[\$DATE] Executing: \$CMD" >> ${params.logfile} 2>&1
+      echo "[\$DATE] Executing: \$CMD"
       fastp --thread ${task.cpus} -i /RNAseq_data/${sample_ID}_1.fastq.gz -I /RNAseq_data/${sample_ID}_2.fastq.gz \
       -o ${sample_ID}_1.trimmed.fastq.gz -O ${sample_ID}_2.trimmed.fastq.gz
 
@@ -32,12 +32,12 @@ process trimming_fastq {
       CMD="fastp --thread ${task.cpus} -i /RNAseq_data/${sample_ID}.fastq.gz \
       -o ${sample_ID}.trimmed.fastq.gz"
 
-      echo "[\$DATE] Executing: \$CMD" >> ${params.logfile} 2>&1
+      echo "[\$DATE] Executing: \$CMD"
       fastp --thread ${task.cpus} -i /RNAseq_data/${sample_ID}.fastq.gz \
       -o ${sample_ID}.trimmed.fastq.gz
 
     else
-      echo "[\$DATE] WARNING: \$library_layout is not equal to paired or single!" >> ${params.logfile} 2>&1
+      echo "[\$DATE] WARNING: \$library_layout is not equal to paired or single!"
     fi
     """
 }

@@ -27,14 +27,14 @@ process aegis_long_reads {
     path(unstranded_alt_args, optional: true)
 
   output:
-    path("aegis_final_merged_annotations.gff3") emit: aegis_gff
+    path("merge_annotation_aegis_dapfit.gff3") emit: aegis_gff
     path("aegis_final_merged_annotations.pkl") emit: aegis_pkl
     path("*_unique_proteins.fasta") emit: aegis_proteins
 
   script:
     """
     DATE=\$(date "+%Y-%m-%d %H:%M:%S")
-    echo "[\$DATE] Running Aegis to create final GFF3 file" >> ${params.logfile} 2>&1
+    echo "[\$DATE] Running Aegis to create final GFF3 file"
 
     proteins=\$(/scripts/retrieve_proteins_for_aegis.sh /protein_samplesheet_path/$protein_samplesheet_filename)
 
@@ -106,8 +106,11 @@ process aegis_long_reads {
     if [ -s "${unstranded_alt_args}" ]; then
         CMD_aegis_1="\$CMD_aegis_1 --stringtie_unstranded_AltCommands_STAR_path stringtie_unstranded_AltCommands_STAR.gff3"
     fi
-     echo "[\$DATE] Executing: \$CMD_aegis_1" >> ${params.logfile} 2>&1
-     # /scripts/Aegis2.sh -q aegis_proteins.fasta -t ${task.cpus} -d \$protein_paths -o \$PWD
-     # /scripts/Aegis3.py --merged_annotation aegis_final_merged_annotations.pkl --hard_masked_genome ${edta_masked_genome} --diamond_hits \${diamond_paths} --intermediate_annotation intermediate_annotation.pkl --final_annotation final_annotation.pkl --export_dir \$PWD --final_export_dir \$PWD --update --source_priority \$protein_names
+     echo "[\$DATE] Executing: \$CMD_aegis_1"
+     eval "\$CMD_aegis_1"
+     echo "[\$DATE] Executing: /scripts/Aegis2.sh -q merge_annotation_unique_proteins.fasta -t ${task.cpus} -d \$protein_paths -o \$PWD"
+     /scripts/Aegis2.sh -q merge_annotation_unique_proteins.fasta -t ${task.cpus} -d \$protein_paths -o \$PWD
+     echo "[\$DATE] Executing: /scripts/Aegis3.py --merged_annotation aegis_final_merged_annotations.pkl --hard_masked_genome ${edta_masked_genome} --diamond_hits \${diamond_paths} --intermediate_annotation intermediate_annotation.pkl --final_annotation final_annotation.pkl --export_dir \$PWD --final_export_dir \$PWD --update --source_priority \$protein_names"
+     /scripts/Aegis3.py --merged_annotation aegis_final_merged_annotations.pkl --hard_masked_genome ${edta_masked_genome} --diamond_hits \${diamond_paths} --intermediate_annotation intermediate_annotation.pkl --final_annotation final_annotation.pkl --export_dir \$PWD --final_export_dir \$PWD --update --source_priority \$protein_names
     """
 }

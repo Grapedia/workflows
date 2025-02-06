@@ -24,12 +24,12 @@ process assembly_transcriptome_star_stringtie {
   script:
     """
     DATE=\$(date "+%Y-%m-%d %H:%M:%S")
-    echo "[\$DATE] Running STAR/StringTie transcriptome assembly on $sample_ID" >> ${params.logfile} 2>&1
+    echo "[\$DATE] Running STAR/StringTie transcriptome assembly on $sample_ID"
     CMD="/scripts/Stringtie.sh -t ${task.cpus} -o ${sample_ID}_transcriptome.gtf -b ${bam_file} -r short"
-    echo "[\$DATE] Executing: \$CMD" >> ${params.logfile} 2>&1
+    echo "[\$DATE] Executing: \$CMD"
     /scripts/Stringtie.sh -t ${task.cpus} -o ${sample_ID}_transcriptome.gtf -b ${bam_file} -r short
     CMD="/scripts/Stringtie_AltCommands.sh -t ${task.cpus} -o ${sample_ID}_transcriptome.AltCommands.gtf -b ${bam_file} -r short"
-    echo "[\$DATE] Executing: \$CMD" >> ${params.logfile} 2>&1
+    echo "[\$DATE] Executing: \$CMD"
     /scripts/Stringtie_AltCommands.sh -t ${task.cpus} -o ${sample_ID}_transcriptome.AltCommands.gtf -b ${bam_file} -r short
     """
 }

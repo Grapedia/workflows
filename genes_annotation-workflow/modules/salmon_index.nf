@@ -15,10 +15,10 @@ process salmon_index {
   script:
     """
     DATE=\$(date "+%Y-%m-%d %H:%M:%S")
-    echo "[\$DATE] Running salmon indexing on ${cds_fasta}" >> ${params.logfile} 2>&1
+    echo "[\$DATE] Running salmon indexing on ${cds_fasta}"
     index_path=\$(/scripts/retrieve_path.sh ${cds_fasta})
     CMD="salmon index -t \${index_path} -i salmon_index"
-    echo "[\$DATE] Executing: \$CMD" >> ${params.logfile} 2>&1
+    echo "[\$DATE] Executing: \$CMD"
     salmon index -t \${index_path} -i salmon_index
     """
 }

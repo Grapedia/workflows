@@ -17,16 +17,16 @@ process gffcompare {
   script:
     """
     DATE=\$(date "+%Y-%m-%d %H:%M:%S")
-    echo "[\$DATE] Running gffcompare on STAR/PsiCLASS GTF to merge them" >> ${params.logfile} 2>&1
+    echo "[\$DATE] Running gffcompare on STAR/PsiCLASS GTF to merge them"
     gtf_files=\$(/scripts/retrieve_path_gffcompare.sh /STAR_PsiCLASS_stranded/)
     CMD="/gffcompare-0.12.6/gffcompare -o stranded_merged_output \${gtf_files}"
-    echo "[\$DATE] Executing: \$CMD" >> ${params.logfile} 2>&1
+    echo "[\$DATE] Executing: \$CMD"
     /gffcompare-0.12.6/gffcompare -o stranded_merged_output \${gtf_files}
 
     if [ -d "/STAR_PsiCLASS_unstranded/" ] && [ "\$(ls -A /STAR_PsiCLASS_unstranded/ 2>/dev/null)" ]; then    
       gtf_files=\$(/scripts/retrieve_path_gffcompare.sh /STAR_PsiCLASS_unstranded/)
       CMD="/gffcompare-0.12.6/gffcompare -o unstranded_merged_output \${gtf_files}"
-      echo "[\$DATE] Executing: \$CMD" >> ${params.logfile} 2>&1
+      echo "[\$DATE] Executing: \$CMD"
       /gffcompare-0.12.6/gffcompare -o unstranded_merged_output \${gtf_files}
     fi
     """

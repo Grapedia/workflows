@@ -21,10 +21,10 @@ process minimap2_alignment {
     // PacBio Iso-seq/traditional cDNA parameters
     """
     DATE=\$(date "+%Y-%m-%d %H:%M:%S")
-    echo "[\$DATE] Running minimap2 alignment of $sample_ID" >> ${params.logfile} 2>&1
+    echo "[\$DATE] Running minimap2 alignment of $sample_ID"
     minimap2_index=\$(/scripts/retrieve_path_minimap2_index.sh ${minimap2_genome_indices})
     CMD="minimap2 -t ${task.cpus} -ax splice:hq -uf \${minimap2_index} /RNAseq_data/${sample_ID}.fastq.gz > ${sample_ID}_Aligned.sam"
-    echo "[\$DATE] Executing: \$CMD" >> ${params.logfile} 2>&1
+    echo "[\$DATE] Executing: \$CMD"
     minimap2 -t ${task.cpus} -ax splice:hq -uf \${minimap2_index} /RNAseq_data/${sample_ID}.fastq.gz > ${sample_ID}_Aligned.sam
     samtools view -b ${sample_ID}_Aligned.sam | samtools sort - > ${sample_ID}_Aligned.sorted.bam
     rm ${sample_ID}_Aligned.sam

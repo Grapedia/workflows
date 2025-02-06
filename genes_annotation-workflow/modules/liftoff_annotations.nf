@@ -27,11 +27,11 @@ process liftoff_annotations {
   script:
     """
     DATE=\$(date "+%Y-%m-%d %H:%M:%S")
-    echo "[\$DATE] Running liftoff on $genome" >> ${params.logfile} 2>&1
+    echo "[\$DATE] Running liftoff on $genome"
 
     CMD="liftoff -g /previous_annotations_path/$previous_annotations -o liftoff_previous_annotations.gff3 -u unmapped_features.txt /genome_path/$genome /previous_assembly_path/$previous_assembly"
 
-    echo "[\$DATE] Executing: \$CMD" >> ${params.logfile} 2>&1
+    echo "[\$DATE] Executing: \$CMD"
     liftoff -g /previous_annotations_path/$previous_annotations -o liftoff_previous_annotations.gff3 -u unmapped_features.txt /genome_path/$genome /previous_assembly_path/$previous_assembly
 
     """

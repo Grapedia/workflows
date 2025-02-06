@@ -6,7 +6,7 @@ process diamond2go {
   cpus 5
 
   input:
-    val(proteins_file)
+    path(proteins_file)
 
   output:
     path("*-diamond*")
@@ -14,9 +14,9 @@ process diamond2go {
   script:
     """
     DATE=\$(date "+%Y-%m-%d %H:%M:%S")
-    echo "[\$DATE] Running diamond2go on $proteins_file" >> ${params.logfile} 2>&1
+    echo "[\$DATE] Running diamond2go on $proteins_file"
     CMD="perl /Diamond2GO/Diamond2go.pl -d /Diamond2GO/resources/nr_clean_d2go.dmnd -q $proteins_file -t protein"
-    echo "[\$DATE] Executing: \$CMD" >> ${params.logfile} 2>&1
+    echo "[\$DATE] Executing: \$CMD"
     perl /Diamond2GO/Diamond2go.pl -d /Diamond2GO/resources/nr_clean_d2go.dmnd -q $proteins_file -t protein
     """
 }

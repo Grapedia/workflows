@@ -2,12 +2,6 @@
 // final results are stored in ${projectDir}/FINAL_OUTPUT
 params.outdir = "${projectDir}/intermediate_files"
 
-// Define a default log file if not set by the user in nextflow.config
-params.logfile = params.logfile ?: "${projectDir}/pipeline_execution.log"
-
-// Print the logfile location at the start of the pipeline
-log.info "Logging pipeline execution to: ${params.logfile}"
-
 // Include various processing modules
 include { prepare_RNAseq_fastq_files_short } from "./modules/prepare_RNAseq_fastq_files_short"
 include { prepare_RNAseq_fastq_files_long } from "./modules/prepare_RNAseq_fastq_files_long"
@@ -35,7 +29,7 @@ include { braker3_prediction } from "./modules/braker3_prediction"
 include { braker3_prediction_with_long_reads } from "./modules/braker3_prediction_with_long_reads"
 include { aegis } from "./modules/aegis"
 include { aegis_long_reads } from "./modules/aegis_long_reads"
-// include { diamond2go } from "./modules/diamond2go"
+include { diamond2go } from "./modules/diamond2go"
 
 // Parse RNAseq samplesheet for different types of reads (long, single and paired)
 Channel.fromPath( file(params.RNAseq_samplesheet) )
@@ -319,11 +313,12 @@ workflow {
   }
 
   // ----------------------------------------------------------------------------------------
-  //               Diamond2GO on proteins predicted with TITAN
+  //               Diamond2GO on proteins predicted with TITAN/Aegis
   // ----------------------------------------------------------------------------------------
-  // if (params.use_long_reads) {
-  //   diamond2go(aegis_long_reads.out.aegis_proteins)
-  // } else {
-  //   diamond2go(aegis.out.aegis_proteins)
-  // }
+  
+  if (params.use_long_reads) {
+     diamond2go(aegis_long_reads.out.aegis_proteins)
+  } else {
+     diamond2go(aegis.out.aegis_proteins)
+  }
 }

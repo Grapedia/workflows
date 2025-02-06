@@ -27,7 +27,7 @@ process braker3_prediction_with_long_reads {
   script:
     """
     DATE=\$(date "+%Y-%m-%d %H:%M:%S")
-    echo "[\$DATE] Running BRAKER3/AUGUSTUS-Genemark prediction" >> ${params.logfile} 2>&1
+    echo "[\$DATE] Running BRAKER3/AUGUSTUS-Genemark prediction"
 
     proteins=\$(/scripts/retrieve_proteins_for_braker.sh /protein_samplesheet_path/$protein_samplesheet_filename)
     bam_stranded_path=\$(/scripts/retrieve_path_bam_braker3.sh /alignments/STAR/stranded)
@@ -46,7 +46,7 @@ process braker3_prediction_with_long_reads {
     --prot_seq=\${proteins} \
     --threads=${task.cpus} --workingdir=\${PWD} --softmasking --gff3 \
     --PROTHINT_PATH=/ProtHint-2.6.0/bin/ --GENEMARK_PATH=/GeneMark-ETP --AUGUSTUS_CONFIG_PATH=/Augustus/config --TSEBRA_PATH=/TSEBRA/bin"
-    echo "[\$DATE] Executing: \$CMD" >> ${params.logfile} 2>&1
+    echo "[\$DATE] Executing: \$CMD"
 
     /BRAKER-3.0.8/scripts/braker.pl --genome=/genome_path/$genome --bam=\${bam} \
     --prot_seq=\${proteins} \

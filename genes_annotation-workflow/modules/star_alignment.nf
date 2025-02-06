@@ -24,20 +24,20 @@ process star_alignment {
     def basename_database = task.ext.prefix ?: "${star_database.getName()}"
     """
     DATE=\$(date "+%Y-%m-%d %H:%M:%S")
-    echo "[\$DATE] Running STAR alignment on $sample_ID" >> ${params.logfile} 2>&1
+    echo "[\$DATE] Running STAR alignment on $sample_ID"
 
     if [[ $library_layout == "paired" ]]
     then
 
       CMD="STAR --readFilesCommand zcat --genomeDir /star_databases/${basename_database} --runThreadN ${task.cpus} --readFilesIn ${reads[0]} ${reads[1]} --outFileNamePrefix ${sample_ID}_ --outSAMtype BAM SortedByCoordinate --outSAMunmapped Within --outSAMattributes Standard --outSAMstrandField intronMotif"
-      echo "[\$DATE] Executing: \$CMD" >> ${params.logfile} 2>&1
+      echo "[\$DATE] Executing: \$CMD"
 
       STAR --readFilesCommand zcat --genomeDir /star_databases/${basename_database} --runThreadN ${task.cpus} --readFilesIn ${reads[0]} ${reads[1]} --outFileNamePrefix ${sample_ID}_ --outSAMtype BAM SortedByCoordinate --outSAMunmapped Within --outSAMattributes Standard --outSAMstrandField intronMotif
     elif [[ $library_layout == "single" ]]
     then
 
       CMD="STAR --readFilesCommand zcat --genomeDir /star_databases/${basename_database} --runThreadN ${task.cpus} --readFilesIn ${reads} --outFileNamePrefix ${sample_ID}_ --outSAMtype BAM SortedByCoordinate --outSAMunmapped Within --outSAMattributes Standard --outSAMstrandField intronMotif"
-      echo "[\$DATE] Executing: \$CMD" >> ${params.logfile} 2>&1
+      echo "[\$DATE] Executing: \$CMD"
 
       STAR --readFilesCommand zcat --genomeDir /star_databases/${basename_database} --runThreadN ${task.cpus} --readFilesIn ${reads} --outFileNamePrefix ${sample_ID}_ --outSAMtype BAM SortedByCoordinate --outSAMunmapped Within --outSAMattributes Standard --outSAMstrandField intronMotif
     fi
