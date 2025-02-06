@@ -109,6 +109,7 @@ Diamond2GO performs **functional gene annotation** based on the **final Aegis pr
 
 ### Aegis
 - **Version**: v1.0.0
+- **Docker image**: avelt/aegis:latest (dockerhub)
 
 ### BRAKER3
 - **Version**: v3.0.8  
@@ -121,51 +122,65 @@ Diamond2GO performs **functional gene annotation** based on the **final Aegis pr
   - **samtools**: 1.9  
   - **diamond**: v2.1.9  
   - **cdbfasta**: Last version from [GitHub](https://github.com/gpertea/cdbfasta.git) (commit: `da8f5ba`)  
-  - **TSEBRA**: Last version from [GitHub](https://github.com/Gaius-Augustus/TSEBRA) (commit: `c87ba3a`)  
+  - **TSEBRA**: Last version from [GitHub](https://github.com/Gaius-Augustus/TSEBRA) (commit: `c87ba3a`)
+- **Docker image**: avelt/braker3:latest (dockerhub)
 
 ### Diamond2GO
 - **Version**: Last version from [GitHub](https://github.com/rhysf/Diamond2GO.git) (commit: `57bb4cc`)
+- **Docker image**: avelt/diamond2go:latest (dockerhub)
 
 ### EDTA
 - **Version**: Last version from [GitHub](https://github.com/oushujun/EDTA.git)  
 - **Dependencies**:
   - **bedtools**: v2.30.0  
-  - **samtools**: 1.9  
+  - **samtools**: 1.9
+- **Docker image**: avelt/edta:latest (dockerhub)
 
 ### fastp
-- **Version**: 0.23.2  
+- **Version**: 0.23.2
+- **Docker image**: quay.io/biocontainers/fastp:0.23.2--hb7a2d85_2
 
 ### GFFCompare
-- **Version**: 0.12.6  
+- **Version**: 0.12.6
+- **Docker image**: avelt/gffcompare:latest (dockerhub)
 
 ### GffRead
-- **Version**: 0.12.7  
+- **Version**: 0.12.7
+- **Docker image**: quay.io/biocontainers/gffread:0.12.7--h077b44d_6
 
 ### HISAT2
-- **Version**: 2.2.1  
+- **Version**: 2.2.1
+- **Docker image**: avelt/hisat2:latest (dockerhub)
 
 ### Liftoff
 - **Version**: 1.5.1  
+- **Docker image**: quay.io/biocontainers/liftoff:1.5.1--py_0
 
 ### Minimap2
 - **Version**: 2.28  
 - **Dependencies**:
-  - **samtools**: 1.9  
+  - **samtools**: 1.9 
+- **Docker image**: avelt/minimap2_samtools:latest (dockerhub)
 
 ### PsiCLASS
 - **Version**: 1.0.2  
+- **Docker image**: avelt/psiclass_samtools:latest (dockerhub)
 
 ### sra-tools
 - **Version**: 3.1.1  
+- **Docker image**: quay.io/biocontainers/sra-tools:3.1.1--h4304569_0
 
 ### STAR
-- **Version**: 2.7.11b  
+- **Version**: 2.7.11b
+- **Docker image**: quay.io/biocontainers/star:2.7.11b--h43eeafb_2
 
 ### Salmon
-- **Version**: 1.10.3  
+- **Version**: 1.10.3
+- **Docker image**: quay.io/biocontainers/salmon:1.10.3--haf24da9_3
 
 ### StringTie
 - **Version**: 2.2.3  
+- **Docker image**: avelt/stringtie:latest (dockerhub)
 
 ## **📖 Reference**  
 
