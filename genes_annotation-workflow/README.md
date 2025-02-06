@@ -43,22 +43,50 @@ The following parameters are defined in `nextflow.config` and are required for t
 ### **Liftoff Annotations**
 Generates a **GFF3 file**, which is used by **Aegis** in the final step.
 
+#### **📖 Reference**  
+Shumate et al. *Liftoff: accurate mapping of gene annotations*  
+📄 [Bioinformatics, 2021](https://academic.oup.com/bioinformatics/article/37/12/1639/6035128?login=false)
+
 ### **StringTie Merging (Short Reads - HISAT2)**
 Generates **GTF file(s)**.  
 - For each **short-read RNA-seq dataset**, a transcriptome is assembled using **HISAT2/StringTie**.  
 - Transcriptomes are then **merged separately** for **stranded** and **unstranded** samples (unstranded is optional).  
 - ⚠️ **This output is not used yet**—it is intended for **lncRNA detection**, which is not yet implemented.
 
+#### **📖 Reference**
+
+**HISAT2** : Kim et al. *Graph-based genome alignment and genotyping with HISAT2 and HISAT-genotype*  
+📄 [Nature biotechnology, 2019](https://www.nature.com/articles/s41587-019-0201-4)
+
+**StringTie** :Shumate et al. *Improved transcriptome assembly using a hybrid of long and short reads with StringTie*  
+📄 [PLOS Computational Biology, 2022](https://journals.plos.org/ploscompbiol/article?id=10.1371/journal.pcbi.1009730)
+
 ### **StringTie Merging (Short Reads - STAR)**
 Generates **GTF file(s)**, which are used by **Aegis** in the final step.  
 - For each **short-read RNA-seq dataset**, a transcriptome is assembled using **STAR/StringTie** with **default** and **alternative (alt) parameters**.  
 - Transcriptomes are **merged separately** for **stranded** and **unstranded** samples (unstranded is optional) and for **default and alt parameters** separately.
+
+#### **📖 Reference**  
+
+**STAR** : Dobin et al. *STAR: ultrafast universal RNA-seq aligner*  
+📄 [Bioinformatics, 2013](https://academic.oup.com/bioinformatics/article/29/1/15/272537)
+
+**StringTie** : Shumate et al. *Improved transcriptome assembly using a hybrid of long and short reads with StringTie*  
+📄 [PLOS Computational Biology, 2022](https://journals.plos.org/ploscompbiol/article?id=10.1371/journal.pcbi.1009730)
 
 ### **StringTie Merging (Long Reads)**
 Generates a **single GTF file**, which is used by **Aegis** in the final step.  
 - For each **IsoSeq RNA-seq dataset**, a transcriptome is assembled using **Minimap2/StringTie** with **default** and **alt parameters**.  
 - These transcriptomes are then **merged into a single GTF file**, for **default and alt parameters** separately.
 - ⚠️ **Long-read integration is optional**.
+
+#### **📖 Reference**  
+
+**Minimap2** : Li et al. *Minimap2: pairwise alignment for nucleotide sequences*  
+📄 [Bioinformatics, 2018](https://academic.oup.com/bioinformatics/article/34/18/3094/4994778)
+
+**StringTie** : Shumate et al. *Improved transcriptome assembly using a hybrid of long and short reads with StringTie*  
+📄 [PLOS Computational Biology, 2022](https://journals.plos.org/ploscompbiol/article?id=10.1371/journal.pcbi.1009730)
 
 ### **BRAKER3 Gene Prediction**
 #### **braker3_prediction OR braker3_prediction_with_long_reads**
@@ -67,16 +95,29 @@ Generates a **single GTF file**, which is used by **Aegis** in the final step.
   - A **GeneMark GTF file**.
   - An **AUGUSTUS GFF3 file**, both of which are used by **Aegis** in the final step.
 
+#### **📖 Reference**  
+Gabriel et al. *BRAKER3: Fully automated genome annotation using RNA-seq and protein evidence with GeneMark-ETP, AUGUSTUS, and TSEBRA*  
+📄 [Genome Res, 2024](https://pubmed.ncbi.nlm.nih.gov/38866550/)
+
 ### **GFFCompare**
 Generates a **GTF file**, which is used by **Aegis** in the final step.  
 - For each **short-read RNA-seq dataset**, a transcriptome is assembled using **STAR/PsiCLASS**.  
 - Transcriptomes are **merged separately** for **stranded** and **unstranded** samples using **GFFCompare** (unstranded is optional).
 
-### **EDTA** (Not shown in the DAG but integrated into TITAN)
+#### **📖 Reference**  
+Pertea et al. *GFF Utilities: GffRead and GffCompare.*  
+📄 [F1000Research., 2020](https://pubmed.ncbi.nlm.nih.gov/32489650/)
+
+### **EDTA**
+*(Integrated into TITAN, though not explicitly shown in the DAG)*  
 Generates a **FASTA file** of the **hard-masked genome assembly**, which is used by **Aegis** in the final step.  
 
 - **Input**: The **FASTA file** of the genome assembly to be annotated.  
 - **Output**: A **hard-masked version** of the genome assembly.  
+
+#### **📖 Reference**  
+Ou et al. *Benchmarking Transposable Element Annotation Methods for Creation of a Streamlined, Comprehensive Pipeline.*  
+📄 [Genome Biol., 2019](https://genomebiology.biomedcentral.com/articles/10.1186/s13059-019-1905-y)
 
 ---
 
@@ -91,4 +132,22 @@ At the final step, **Aegis** integrates multiple annotation sources:
 ✔ **Stranded (and unstranded, if available) annotations from STAR/PsiCLASS**  
 ✔ **protein FASTA files**
 
+### **📖 Reference**  
+Soon available ...
+
 This results in the final **GFF3 annotation file**.
+
+## **Diamond2GO**  
+*(Integrated into TITAN, though not explicitly shown in the DAG)*  
+
+Diamond2GO performs **functional gene annotation** based on the **final Aegis protein FASTA files** (both "main" and "all" sets).  
+
+### **🔹 Input**  
+- FASTA files containing the **"main"** and **"all"** protein sequences generated by Aegis.  
+
+### **🔹 Output**  
+- Functional annotations assigned by **Diamond2GO**.  
+
+### **📖 Reference**  
+Golden et al. *DIAMOND2GO: A rapid Gene Ontology assignment and enrichment tool for functional genomics.*  
+📄 [bioRxiv, 2024](https://www.biorxiv.org/content/10.1101/2024.08.19.608700v1)

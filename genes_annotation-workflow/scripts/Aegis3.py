@@ -13,7 +13,7 @@ def main(args):
     print('Loading merged annotation pickle file ...')
     merge = pickle_load(args.merged_annotation)
 
-    print('Masking...')
+    print('Load hard-masked genome...')
     assembly_hard_masked = Genome('assembly_hard_masked', args.hard_masked_genome)
     merge.calculate_transcript_masking(hard_masked_genome=assembly_hard_masked)
 
