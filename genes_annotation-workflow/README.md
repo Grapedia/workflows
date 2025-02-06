@@ -105,6 +105,68 @@ Diamond2GO performs **functional gene annotation** based on the **final Aegis pr
 ### **🔹 Output**  
 - Functional annotations assigned by **Diamond2GO**.  
 
+## **📖 Tools version used**  
+
+### Aegis
+- **Version**: v1.0.0
+
+### BRAKER3
+- **Version**: v3.0.8  
+- **Dependencies**:
+  - **spaln**: Ver.2.3.3  
+  - **ProtHint**: 2.6.0  
+  - **GeneMark-ETP**: Last version from [GitHub](https://github.com/gatech-genemark/GeneMark-ETP) (commit: `81ac83e`)  
+  - **Augustus**: Last version from [GitHub](https://github.com/Gaius-Augustus/Augustus) (commit: `487b12b`)  
+  - **bamtools**: v2.5.2  
+  - **samtools**: 1.9  
+  - **diamond**: v2.1.9  
+  - **cdbfasta**: Last version from [GitHub](https://github.com/gpertea/cdbfasta.git) (commit: `da8f5ba`)  
+  - **TSEBRA**: Last version from [GitHub](https://github.com/Gaius-Augustus/TSEBRA) (commit: `c87ba3a`)  
+
+### Diamond2GO
+- **Version**: Last version from [GitHub](https://github.com/rhysf/Diamond2GO.git) (commit: `57bb4cc`)
+
+### EDTA
+- **Version**: Last version from [GitHub](https://github.com/oushujun/EDTA.git)  
+- **Dependencies**:
+  - **bedtools**: v2.30.0  
+  - **samtools**: 1.9  
+
+### fastp
+- **Version**: 0.23.2  
+
+### GFFCompare
+- **Version**: 0.12.6  
+
+### GffRead
+- **Version**: 0.12.7  
+
+### HISAT2
+- **Version**: 2.2.1  
+
+### Liftoff
+- **Version**: 1.5.1  
+
+### Minimap2
+- **Version**: 2.28  
+- **Dependencies**:
+  - **samtools**: 1.9  
+
+### PsiCLASS
+- **Version**: 1.0.2  
+
+### sra-tools
+- **Version**: 3.1.1  
+
+### STAR
+- **Version**: 2.7.11b  
+
+### Salmon
+- **Version**: 1.10.3  
+
+### StringTie
+- **Version**: 2.2.3  
+
 ## **📖 Reference**  
 
 **Aegis** : TO DO
