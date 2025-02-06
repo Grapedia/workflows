@@ -318,9 +318,9 @@ workflow {
   
   if (params.EDTA == 'yes') {
     if (params.use_long_reads) {
-       diamond2go(aegis_long_reads.out.aegis_proteins)
+       diamond2go(aegis_long_reads.out.aegis_proteins_main, aegis_long_reads.out.aegis_proteins_all)
     } else {
-       diamond2go(aegis.out.aegis_proteins)
+       diamond2go(aegis.out.aegis_proteins_main, aegis.out.aegis_proteins_all)
     }
   } else {
     println "Skipping the Diamond2GO process because EDTA was not run (params.EDTA = '${params.EDTA}'). To enable EDTA, and consequently AEGIS and Diamond2GO, set EDTA = 'yes' in the nextflow.config file."

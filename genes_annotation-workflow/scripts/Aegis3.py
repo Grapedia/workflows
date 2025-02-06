@@ -10,6 +10,7 @@ from modules.genome import Genome
 
 def main(args):
     # Load the merged annotation pickle
+    print('Loading merged annotation pickle file ...')
     merge = pickle_load(args.merged_annotation)
 
     print('Masking...')

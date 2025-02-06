@@ -25,9 +25,10 @@ process aegis {
     path(unstranded_alt_args, optional: true)
 
   output:
-    path("merge_annotation_aegis_dapfit.gff3") emit: aegis_gff
-    path("aegis_final_merged_annotations.pkl") emit: aegis_pkl
-    path("*_unique_proteins.fasta") emit: aegis_proteins
+    path("final_annotation.gff3") emit: aegis_gff
+    path("final_annotation.pkl") emit: aegis_pkl
+    path("*_main_proteins.fasta") emit: aegis_proteins_main
+    path("*_all_proteins.fasta") emit: aegis_proteins_all
 
   script:
     """
