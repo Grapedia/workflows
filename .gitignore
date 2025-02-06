@@ -12,3 +12,4 @@ genes_annotation-workflow/data.zip
 genes_annotation-workflow_hap2/
 genes_annotation-workflow/dag.png
 genes_annotation-workflow/logfile_aegis.txt
+genes_annotation-workflow/aegis_final_merged_annotations.pkl

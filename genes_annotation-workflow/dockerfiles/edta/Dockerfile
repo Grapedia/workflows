@@ -6,7 +6,8 @@ MAINTAINER Amandine Velt <amandine.velt@inrae.fr>
 
 # Install base utilities
 RUN dnf -y upgrade && \
-dnf install -y wget gcc gcc-c++ make git-all zlib-devel python3 zlib-devel ncurses-devel bzip2 bzip2-devel xz-devel glib2-devel python which
+dnf install -y wget gcc gcc-c++ make git-all zlib-devel python3 zlib-devel ncurses-devel bzip2 bzip2-devel xz-devel glib2-devel python which && \
+dnf install -y procps-ng coreutils findutils which --allowerasing
 
 # install samtools
 RUN wget https://github.com/samtools/samtools/releases/download/1.9/samtools-1.9.tar.bz2 && \

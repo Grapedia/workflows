@@ -1,8 +1,10 @@
 # base image: Ubuntu
-FROM ubuntu:16.04
+FROM ubuntu:20.04
 
 # File Author / Maintainer
 MAINTAINER Amandine Velt <amandine.velt@inrae.fr>
+
+ENV DEBIAN_FRONTEND=noninteractive
 
 # install PsiCLASS-1.0.2
 RUN apt-get update --fix-missing && \

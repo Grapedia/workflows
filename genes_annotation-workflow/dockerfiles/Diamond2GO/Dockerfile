@@ -6,7 +6,8 @@ MAINTAINER Amandine Velt <amandine.velt@inrae.fr>
 
 # Install base utilities
 RUN dnf -y upgrade && \
-dnf install -y --nobest wget unzip sed psmisc grep gawk java-11-openjdk gcc bash gcc-c++ make git git-all zlib-devel python3 zlib-devel ncurses-devel bzip2 xz-devel glib2-devel python which
+dnf install -y --nobest wget unzip sed psmisc grep gawk java-11-openjdk gcc bash gcc-c++ make git git-all zlib-devel python3 zlib-devel ncurses-devel bzip2 xz-devel glib2-devel python which  && \
+dnf install -y procps-ng coreutils findutils which --allowerasing
 
 # Install miniconda
 ENV CONDA_DIR /opt/conda
@@ -33,7 +34,8 @@ cpanm install LWP && \
 cpanm install LWP::Protocol::https && \
 cpanm install Mozilla::CA && \
 cpanm install Time::HiRes && \
-cpanm install XML::Simple
+cpanm install XML::Simple && \
+cpanm install FindBin
 
 # download of Diamond2GO
 RUN git-lfs clone https://github.com/rhysf/Diamond2GO.git && \
