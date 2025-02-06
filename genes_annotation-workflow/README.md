@@ -27,12 +27,9 @@ The following parameters are defined in `nextflow.config` and are required for t
 ### **Optional Parameters**
 - **`EDTA`**: Whether to run **EDTA (transposable element annotation tool)**.  
   _Options_: `"yes"` or `"no"` (default: `"no"`)
+  ⚠️ If EDTA is not set to "yes", the Aegis and Diamond2Go steps will not be executed, as Aegis requires a hard-masked genome. TITAN will only generate the evidence data.
 - **`use_long_reads`**: Flag to indicate whether **long-read sequencing data** should be used.  
   _Options_: `true` or `false` (default: `true`)
-
-### **Logging**
-- **`logfile`**: Path to the log file where pipeline execution logs will be saved.  
-  _Example_: `pipeline_execution.log`
 
 ## Workflow DAG
 
