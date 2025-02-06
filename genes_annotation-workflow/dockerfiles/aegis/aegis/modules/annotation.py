@@ -2249,7 +2249,7 @@ class Annotation():
                             if target_exons and query_exons:
                                 exons_in_both = True
                                 if gene_orientation != exon_orientation:
-                                    print(f"Warning: {self.id} query and {other.id} target have discrepancies in the orientation of gene and exons. Genes: {g1.id} and {g2.id}")
+                                    print(f"Warning: {self.id} query and target have discrepancies in the orientation of gene and exons. Genes: {g1.id} and {g2.id}")
                                 if overlapping:
                                     exon_query_percent = ((best_exon_overlap
                                                             /exon_query_size)*100)
@@ -2297,8 +2297,7 @@ class Annotation():
                             if target_CDS and query_CDS:
                                 CDSs_in_both = True
                                 if gene_orientation != CDS_orientation:
-                                    print(f"Error: {self.id} query and "
-                                            f"{other.id} target have discrepancies"
+                                    print(f"Error: {self.id} query and target have discrepancies"
                                             " in the orientation of gene and CDS."
                                             f"genes: {g1.id} and {g2.id}" 
                                             "DO NOT CONTINUE! -> fix the problem!")
