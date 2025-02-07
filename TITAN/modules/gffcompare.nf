@@ -11,8 +11,8 @@ process gffcompare {
     val(merged_gtf)
 
   output:
-    path("stranded_merged_output.combined.gtf") emit: star_psiclass_stranded
-    path("unstranded_merged_output.combined.gtf", optional: true) emit: star_psiclass_unstranded
+    path "stranded_merged_output.combined.gtf", emit: star_psiclass_stranded
+    path "unstranded_merged_output.combined.gtf", optional: true, emit: star_psiclass_unstranded
 
   script:
     """

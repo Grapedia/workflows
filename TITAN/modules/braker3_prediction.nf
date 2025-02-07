@@ -15,10 +15,10 @@ process braker3_prediction {
     val(bam_short)
 
   output:
-    path("augustus.hints.gff3") emit: augustus_gff
-    path("genemark.gtf") emit: genemark_gtf
-    path("genemark_supported.gtf") emit: genemark_supported_gtf
-    path("braker.gff3") emit: braker_gff
+    path "augustus.hints.gff3", emit: augustus_gff
+    path "genemark.gtf", emit: genemark_gtf
+    path "genemark_supported.gtf", emit: genemark_supported_gtf
+    path "braker.gff3", emit: braker_gff
 
   when:
   !params.use_long_reads

@@ -27,10 +27,10 @@ process aegis_long_reads {
     path(unstranded_alt_args)
 
   output:
-    path("final_annotation.gff3"), emit: aegis_gff
-    path("final_annotation.pkl"), emit: aegis_pkl
-    path("*_main_proteins.fasta"), emit: aegis_proteins_main
-    path("*_all_proteins.fasta"), emit: aegis_proteins_all
+    path "final_annotation.gff3", emit: aegis_gff
+    path "final_annotation.pkl", emit: aegis_pkl
+    path "*_main_proteins.fasta", emit: aegis_proteins_main
+    path "*_all_proteins.fasta", emit: aegis_proteins_all
 
   script:
     """
