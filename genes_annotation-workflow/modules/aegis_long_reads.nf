@@ -22,29 +22,39 @@ process aegis_long_reads {
     path(stranded_default_args)
     path(stranded_alt_args)
     path(gffcompare_stranded)
-    path(gffcompare_unstranded, optional: true)
-    path(unstranded_default_args, optional: true)
-    path(unstranded_alt_args, optional: true)
+    path(gffcompare_unstranded)
+    path(unstranded_default_args)
+    path(unstranded_alt_args)
 
   output:
-    path("final_annotation.gff3") emit: aegis_gff
-    path("final_annotation.pkl") emit: aegis_pkl
-    path("*_main_proteins.fasta") emit: aegis_proteins_main
-    path("*_all_proteins.fasta") emit: aegis_proteins_all
+    path("final_annotation.gff3"), emit: aegis_gff
+    path("final_annotation.pkl"), emit: aegis_pkl
+    path("*_main_proteins.fasta"), emit: aegis_proteins_main
+    path("*_all_proteins.fasta"), emit: aegis_proteins_all
 
   script:
     """
     DATE=\$(date "+%Y-%m-%d %H:%M:%S")
     echo "[\$DATE] Running Aegis to create final GFF3 file"
 
-    proteins=\$(/scripts/retrieve_proteins_for_aegis.sh /protein_samplesheet_path/$protein_samplesheet_filename)
+    mkdir -p ${projectDir}/tmp
+    export TMPDIR=${projectDir}/tmp
+
+    mapfile -t proteins < <(/scripts/retrieve_proteins_for_aegis.sh /protein_samplesheet_path/$protein_samplesheet_filename)
 
     # create a bash array with the name of the samplesheet organism as the first value and the path to the corresponding fasta file as the second value
     declare -A PROTEIN_MAP
-    while IFS=' ' read -r name path; do
+    declare -a PROTEIN_KEYS
+
+    for line in "\${proteins[@]}"; do
+        clean_line=\$(echo "\$line" | tr -d '\r' | awk '{\$1=\$1; print}')
+
+        IFS=' ' read -r name path <<< "\$clean_line"
+            
         PROTEIN_MAP["\$name"]="\$path"
-    done <<< "\$proteins"
-    
+        PROTEIN_KEYS+=("\$name")
+    done
+
     # here we create the protein_paths parameters for Aegis2.sh of type : /path/to/arabidopsis.proteins.fasta,/path/to/viridiplantae.proteins.fasta
     protein_paths=""
     for key in "\${!PROTEIN_MAP[@]}"; do
@@ -57,10 +67,11 @@ process aegis_long_reads {
 
     # here we create the source_priority parameters for Aegis3.py of type : ['Araport', 'Viridiplantae', 'Eudicots']
     protein_names="["
-
-    for key in "${!PROTEIN_MAP[@]}"; do
-        if [[ "$protein_names" == "[" ]]; then
+    first_entry=true
+    for key in "\${PROTEIN_KEYS[@]}"; do
+        if \$first_entry; then
             protein_names+="'\$key'"
+            first_entry=false
         else
             protein_names+=", '\$key'"
         fi

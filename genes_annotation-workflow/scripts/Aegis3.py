@@ -22,7 +22,9 @@ def main(args):
         merge.update()
 
     print('Overlaps...')
-    merge.detect_gene_overlaps()
+    # merge.detect_gene_overlaps()
+    merge.detect_gene_overlaps(sort_processes=1)
+
 
     print('Adding DIAMOND results...')
     diamond_hits_dict = {}

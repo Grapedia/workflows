@@ -270,6 +270,10 @@ workflow {
   //     Aegis scripts (1, 2, 3) to create the final GFF3 file from all the evidences
   // ----------------------------------------------------------------------------------------
 
+  default_args_unstranded_final = Stringtie_merging_short_reads_STAR.out.default_args_unstranded // equal to Channel.empty() if no unstranded samples and aegis ignore these files
+  alt_args_unstranded_final = Stringtie_merging_short_reads_STAR.out.alt_args_unstranded // equal to Channel.empty() if no unstranded samples and aegis ignore these files
+  star_psiclass_unstranded_final = gffcompare.out.star_psiclass_unstranded // equal to Channel.empty() if no unstranded samples and aegis ignore these files
+
   if (params.EDTA == 'yes') {
     if (params.use_long_reads) {
       aegis_long_reads(
@@ -286,9 +290,9 @@ workflow {
       Stringtie_merging_short_reads_STAR.out.default_args_stranded,
       Stringtie_merging_short_reads_STAR.out.alt_args_stranded,
       gffcompare.out.star_psiclass_stranded,
-      gffcompare.out.star_psiclass_unstranded,
-      Stringtie_merging_short_reads_STAR.out.default_args_unstranded,
-      Stringtie_merging_short_reads_STAR.out.alt_args_unstranded
+      star_psiclass_unstranded_final,
+      default_args_unstranded_final,
+      alt_args_unstranded_final
       )
     } else {
       aegis(
@@ -303,9 +307,9 @@ workflow {
       Stringtie_merging_short_reads_STAR.out.default_args_stranded,
       Stringtie_merging_short_reads_STAR.out.alt_args_stranded,
       gffcompare.out.star_psiclass_stranded,
-      gffcompare.out.star_psiclass_unstranded,
-      Stringtie_merging_short_reads_STAR.out.default_args_unstranded,
-      Stringtie_merging_short_reads_STAR.out.alt_args_unstranded
+      star_psiclass_unstranded_final,
+      default_args_unstranded_final,
+      alt_args_unstranded_final
       )
     }
   } else {
