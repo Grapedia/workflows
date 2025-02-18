@@ -1694,16 +1694,16 @@ class Annotation():
             f'\033[38;2;210;180;140m{{bar}}\033[0m| '
             '{n}/{total} [{elapsed}<{remaining}]'))
 
-        if processes > 1:
-            with Pool(processes=processes) as pool:
-                for chrom, sorted_genes in pool.starmap(sort_and_update_genes, [(chrom, genes) for chrom, genes in self.chrs.items()]):
-                    self.chrs[chrom] = sorted_genes
-                    progress_bar.update(len(sorted_genes))
-        else:
-            for chrom, genes in self.chrs.items():
-                sorted_genes = sorted(genes.values())
-                self.chrs[chrom] = {g.id: g.copy() for g in sorted_genes}
-                progress_bar.update(len(sorted_genes))
+        # if processes > 1:
+        #     with Pool(processes=processes) as pool:
+        #         for chrom, sorted_genes in pool.starmap(sort_and_update_genes, [(chrom, genes) for chrom, genes in self.chrs.items()]):
+        #             self.chrs[chrom] = sorted_genes
+        #             progress_bar.update(len(sorted_genes))
+        # else:
+        for chrom, genes in self.chrs.items():
+            sorted_genes = sorted(genes.values())
+            self.chrs[chrom] = {g.id: g.copy() for g in sorted_genes}
+            progress_bar.update(len(sorted_genes))
 
         progress_bar.close()
         self.sorted = True
