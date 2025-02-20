@@ -10,7 +10,7 @@ process salmon_index {
     val(cds_fasta)
 
   output:
-    path("salmon_index")
+    path("salmon_index"), emit : index
 
   script:
     """

@@ -4,7 +4,7 @@ process Stringtie_merging_short_reads_hisat2 {
   tag "Hisat2/StringTie merging - short reads"
   container 'avelt/stringtie:latest'
   containerOptions "--volume ${projectDir}/scripts/:/scripts --volume ${projectDir}/work:/work --volume $params.outdir/evidence_data/transcriptomes/StringTie/short_reads/HISAT2/stranded/:/StringTie_short_reads_HISAT2_stranded --volume $params.outdir/evidence_data/transcriptomes/StringTie/short_reads/HISAT2/unstranded/:/StringTie_short_reads_HISAT2_unstranded"
-  publishDir "$projectDir/FINAL_OUTPUT/transcriptomes/StringTie/short_reads/HISAT2/"
+  publishDir "${params.output_dir}", mode: 'copy'
   cpus 4
 
   input:

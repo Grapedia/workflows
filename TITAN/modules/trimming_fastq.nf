@@ -11,7 +11,7 @@ process trimming_fastq {
       tuple val(sample_ID), val(SRA_or_FASTQ), val(library_layout)
 
     output:
-      tuple val(sample_ID), val(library_layout), file("*.trimmed.fastq.gz")
+      tuple val(sample_ID), val(library_layout), file("*.trimmed.fastq.gz"), emit : trimmed_reads
 
     script:
     """
