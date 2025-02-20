@@ -4,8 +4,9 @@ process Stringtie_merging_short_reads_STAR {
   tag "STAR/StringTie merging - short reads"
   container 'avelt/stringtie:latest'
   containerOptions "--volume ${projectDir}/scripts/:/scripts --volume ${projectDir}/work:/work --volume $params.outdir/evidence_data/transcriptomes/StringTie/short_reads/STAR/stranded/:/StringTie_short_reads_STAR_stranded --volume $params.outdir/evidence_data/transcriptomes/StringTie/short_reads/STAR/unstranded/:/StringTie_short_reads_STAR_unstranded"
-  publishDir "$projectDir/FINAL_OUTPUT/transcriptomes/StringTie/short_reads/STAR/"
   cpus 4
+
+  publishDir "${params.output_dir}/tmp", mode: 'copy'
 
   input:
     val(concat_star_stringtie_annot)
@@ -29,6 +30,8 @@ process Stringtie_merging_short_reads_STAR {
     CMD="/scripts/Stringtie_merging.sh -o merged_transcriptomes.STAR.short_reads.alt_args.stranded.gtf -g \${gtf_stranded_alt}"
     echo "[\$DATE] Executing: \$CMD"
     /scripts/Stringtie_merging.sh -o merged_transcriptomes.STAR.short_reads.alt_args.stranded.gtf -g \${gtf_stranded_alt}
+    cp merged_transcriptomes.STAR.short_reads.default_args.stranded.gtf ${params.output_dir}/merged_star_stringtie_stranded_default.gtf
+    cp merged_transcriptomes.STAR.short_reads.alt_args.stranded.gtf ${params.output_dir}/merged_star_stringtie_stranded_alt.gtf
 
     if [ -d "/StringTie_short_reads_STAR_unstranded" ] && [ "\$(ls -A /StringTie_short_reads_STAR_unstranded 2>/dev/null)" ]; then
       echo "[\$DATE] Running StringTie merging on STAR/StringTie transcriptomes - unstranded samples detected."
@@ -40,6 +43,8 @@ process Stringtie_merging_short_reads_STAR {
       CMD="/scripts/Stringtie_merging.sh -o merged_transcriptomes.STAR.short_reads.alt_args.unstranded.gtf -g \${gtf_unstranded_alt}"
       echo "[\$DATE] Executing: \$CMD"
       /scripts/Stringtie_merging.sh -o merged_transcriptomes.STAR.short_reads.alt_args.unstranded.gtf -g \${gtf_unstranded_alt}
+      cp merged_transcriptomes.STAR.short_reads.default_args.unstranded.gtf ${params.output_dir}/merged_star_stringtie_unstranded_default.gtf
+      cp merged_transcriptomes.STAR.short_reads.alt_args.unstranded.gtf ${params.output_dir}/merged_star_stringtie_unstranded_alt.gtf
     fi
     """
 }

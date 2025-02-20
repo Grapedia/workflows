@@ -12,7 +12,7 @@ process gffread_convert_gff3_to_cds_fasta {
     val(liftoff_gff3)
 
   output:
-    file("${genome}.CDS.fasta.gz")
+    path("${genome}.CDS.fasta.gz"), emit: gffread_cds
 
   script:
     """

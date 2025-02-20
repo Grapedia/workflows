@@ -5,7 +5,7 @@ process aegis_long_reads {
   // this image contains Aegis, Diamond and gffread
   container 'avelt/aegis:latest'
   containerOptions "--volume ${projectDir}/scripts/:/scripts --volume ${projectDir}/work:/work --volume $genome_path:/genome_path --volume ${projectDir}/data/protein_data:/protein_path --volume ${protein_samplesheet_path}:/protein_samplesheet_path"
-  publishDir "$projectDir/FINAL_OUTPUT/aegis_final_GFF3_file/"
+  publishDir "${params.output_dir}/aegis_outputs", mode: 'copy'
   cpus 4
 
   input:

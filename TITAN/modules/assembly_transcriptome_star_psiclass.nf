@@ -16,7 +16,7 @@ process assembly_transcriptome_star_psiclass {
     tuple val(sample_ID), path(bam_file), val(strand_type)
 
   output:
-    tuple val(sample_ID), file("${sample_ID}_vote.gtf"), val(strand_type)
+    tuple val(sample_ID), file("${sample_ID}_vote.gtf"), val(strand_type), emit: psiclass_assemblies
 
   script:
     """

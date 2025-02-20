@@ -11,7 +11,7 @@ process salmon_strand_inference {
     path(salmon_index)
 
   output:
-    tuple val(sample_ID), val(library_layout), path(reads), path("${sample_ID}.strand_info.classified")
+    tuple val(sample_ID), val(library_layout), path(reads), path("${sample_ID}.strand_info.classified"), emit: strand_inference_result
 
   script:
     """

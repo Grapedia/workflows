@@ -4,8 +4,9 @@ process braker3_prediction {
   tag "Executing BRAKER3/AUGUSTUS-Genemark prediction"
   container 'avelt/braker3:latest'
   containerOptions "--volume ${protein_samplesheet_path}:/protein_samplesheet_path --volume ${projectDir}/scripts:/scripts --volume ${projectDir}/work:/work --volume ${projectDir}/data/protein_data:/protein_path --volume ${genome_path}:/genome_path --volume $params.outdir/evidence_data/RNAseq_alignments/:/alignments --volume ${projectDir}:/outdir:z"
-  publishDir "$projectDir/FINAL_OUTPUT/BRAKER3/"
   cpus 4
+
+  publishDir "${params.output_dir}", mode: 'copy'
 
   input:
     val(genome_path)

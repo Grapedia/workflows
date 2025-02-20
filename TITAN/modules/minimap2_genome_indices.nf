@@ -12,7 +12,7 @@ process minimap2_genome_indices {
     val(genome)
 
   output:
-    file("${genome}.mmi")
+    path("${genome}.mmi"), emit : index
 
   when:
   params.use_long_reads

@@ -4,8 +4,9 @@ process braker3_prediction_with_long_reads {
   tag "Executing BRAKER3/AUGUSTUS-Genemark prediction"
   container 'avelt/braker3:latest'
   containerOptions "--volume ${protein_samplesheet_path}:/protein_samplesheet_path --volume ${projectDir}/scripts:/scripts --volume ${projectDir}/work:/work --volume ${projectDir}/data/protein_data:/protein_path --volume ${genome_path}:/genome_path --volume $params.outdir/evidence_data/RNAseq_alignments/:/alignments --volume ${projectDir}:/outdir:z"
-  publishDir "$projectDir/FINAL_OUTPUT/BRAKER3/"
   cpus 4
+
+  publishDir "${params.output_dir}", mode: 'copy'
 
   input:
     val(genome_path)
@@ -16,10 +17,10 @@ process braker3_prediction_with_long_reads {
     val(bam_long)
 
   output:
-    path "augustus.hints.gff3", emit: augustus_gff
-    path "genemark.gtf", emit: genemark_gtf
-    path "genemark_supported.gtf", emit: genemark_supported_gtf
-    path "braker.gff3", emit: braker_gff
+    path "augustus.hints.gff3", emit: augustus_gff, publishDir: params.output_dir
+    path "genemark.gtf", emit: genemark_gtf, publishDir: params.output_dir
+    path "genemark_supported.gtf", emit: genemark_supported_gtf, publishDir: params.output_dir
+    path "braker.gff3", emit: braker_gff, publishDir: params.output_dir
 
   when:
   params.use_long_reads

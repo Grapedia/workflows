@@ -14,7 +14,7 @@ process prepare_RNAseq_fastq_files_short {
   tuple val(sample_ID), val(SRA_or_FASTQ), val(library_layout)
 
   output:
-  tuple val(sample_ID), val(SRA_or_FASTQ), val(library_layout)
+  tuple val(sample_ID), val(SRA_or_FASTQ), val(library_layout), emit: prepared_fastqs
 
   script:
   """
