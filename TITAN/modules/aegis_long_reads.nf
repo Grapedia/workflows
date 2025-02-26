@@ -6,7 +6,7 @@ process aegis_long_reads {
   container 'avelt/aegis:latest'
   containerOptions "--volume ${projectDir}/scripts/:/scripts --volume ${projectDir}/work:/work --volume $genome_path:/genome_path --volume ${projectDir}/data/protein_data:/protein_path --volume ${protein_samplesheet_path}:/protein_samplesheet_path"
   publishDir "${params.output_dir}/aegis_outputs", mode: 'copy'
-  cpus 4
+  cpus 1
 
   input:
     val(genome_path)
@@ -29,8 +29,8 @@ process aegis_long_reads {
   output:
     path "final_annotation.gff3", emit: aegis_gff
     path "final_annotation.pkl", emit: aegis_pkl
-    path "*_main_proteins.fasta", emit: aegis_proteins_main
-    path "*_all_proteins.fasta", emit: aegis_proteins_all
+    path "final_annotation_main_proteins.fasta", emit: aegis_proteins_main
+    path "final_annotation_all_proteins.fasta", emit: aegis_proteins_all
 
   script:
     """

@@ -14,5 +14,7 @@ TITAN/dag.png
 TITAN/logfile_aegis.txt
 TITAN/aegis_final_merged_annotations.pkl
 TITAN/intermediate_annotation.pkl
-TITAN/aegis_run.log
+TITAN/aegis.log
 TITAN/main_old.nf
+TITAN/null/
+
