@@ -7,7 +7,7 @@ include { prepare_RNAseq_fastq_files_short } from "./modules/prepare_RNAseq_fast
 include { prepare_RNAseq_fastq_files_long } from "./modules/prepare_RNAseq_fastq_files_long"
 include { trimming_fastq } from "./modules/trimming_fastq"
 include { liftoff_annotations } from "./modules/liftoff_annotations"
-include { gffread_convert_gff3_to_cds_fasta } from "./modules/gffread_convert_gff3_to_cds_fasta"
+include { agat_convert_gff3_to_cds_fasta } from "./modules/agat_convert_gff3_to_cds_fasta"
 include { salmon_index } from "./modules/salmon_index"
 include { salmon_strand_inference } from "./modules/salmon_strand_inference"
 include { star_genome_indices } from "./modules/star_genome_indices"
@@ -112,14 +112,14 @@ workflow {
   // -----------------------------------------------------------------------------------------------------------------
 
   // Convert GFF3 to CDS FASTA for Salmon strand inference
-  gffread_convert_gff3_to_cds_fasta(file(params.new_assembly).getParent(),file(params.new_assembly).getName(),liftoff_annotations.out.liftoff_previous_annotations)
+  agat_convert_gff3_to_cds_fasta(file(params.new_assembly).getParent(),file(params.new_assembly).getName(),liftoff_annotations.out.liftoff_previous_annotations)
 
   // -----------------------------------------------------------------------------------------------------------------------------------------------
   //         Run Salmon for strand inference and classify samples in three strand types : unstranded, stranded_forward and stranded_reverse
   // -----------------------------------------------------------------------------------------------------------------------------------------------
   
   // Salmon index creation and strand inference
-  salmon_index(gffread_convert_gff3_to_cds_fasta.out)
+  salmon_index(agat_convert_gff3_to_cds_fasta.out)
   salmon_strand_inference(trimming_fastq.out, salmon_index.out)
 
   def salmon_output_processed = salmon_strand_inference.out.map { sample_ID, library_layout, reads, strand_file ->
