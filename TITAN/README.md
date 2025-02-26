@@ -127,6 +127,10 @@ Diamond2GO performs **functional gene annotation** based on the **final Aegis pr
 - **Version**: v1.0.0
 - **Docker image**: avelt/aegis:latest (dockerhub)
 
+### Agat
+- **Version**: 1.2.0
+- **Docker image**: quay.io/biocontainers/agat:1.2.0--pl5321hdfd78af_0
+
 ### BRAKER3
 - **Version**: v3.0.8  
 - **Dependencies**:
@@ -159,10 +163,6 @@ Diamond2GO performs **functional gene annotation** based on the **final Aegis pr
 ### GFFCompare
 - **Version**: 0.12.6
 - **Docker image**: avelt/gffcompare:latest (dockerhub)
-
-### Agat
-- **Version**: 1.2.0
-- **Docker image**: quay.io/biocontainers/agat:1.2.0--pl5321hdfd78af_0
 
 ### HISAT2
 - **Version**: 2.2.1
