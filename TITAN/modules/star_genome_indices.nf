@@ -4,7 +4,7 @@ process star_genome_indices {
   tag "STAR genomeGenerate on $genome"
   container 'quay.io/biocontainers/star:2.7.11b--h43eeafb_2'
   containerOptions "--volume $genome_path:/genome_path"
-  publishDir "$params.outdir/evidence_data/star_databases/"
+  publishDir "${params.output_dir}/intermediate_files/evidence_data/star_databases/"
   cpus 4
 
   input:
@@ -12,7 +12,7 @@ process star_genome_indices {
     val(genome)
 
   output:
-    path("${genome}_index")
+    path("${genome}_index"), emit: index
 
   script:
     """

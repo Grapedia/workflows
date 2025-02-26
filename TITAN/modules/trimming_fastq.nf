@@ -4,7 +4,7 @@ process trimming_fastq {
     tag "FASTP on $sample_ID"
     container 'quay.io/biocontainers/fastp:0.23.2--hb7a2d85_2'
     containerOptions "--volume ${projectDir}/data/RNAseq_data:/RNAseq_data"
-    publishDir "$params.outdir/evidence_data/RNAseq_data/trimmed_data"
+    publishDir "${params.output_dir}/intermediate_files/evidence_data/RNAseq_data/trimmed_data"
     cpus 4
 
     input:

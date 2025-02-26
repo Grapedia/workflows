@@ -3,7 +3,7 @@ process braker3_prediction_with_long_reads {
 
   tag "Executing BRAKER3/AUGUSTUS-Genemark prediction"
   container 'avelt/braker3:latest'
-  containerOptions "--volume ${protein_samplesheet_path}:/protein_samplesheet_path --volume ${projectDir}/scripts:/scripts --volume ${projectDir}/work:/work --volume ${projectDir}/data/protein_data:/protein_path --volume ${genome_path}:/genome_path --volume $params.outdir/evidence_data/RNAseq_alignments/:/alignments --volume ${projectDir}:/outdir:z"
+  containerOptions "--volume ${protein_samplesheet_path}:/protein_samplesheet_path --volume ${projectDir}/scripts:/scripts --volume ${projectDir}/work:/work --volume ${projectDir}/data/protein_data:/protein_path --volume ${genome_path}:/genome_path --volume ${params.output_dir}/intermediate_files/evidence_data/RNAseq_alignments/:/alignments --volume ${projectDir}:/outdir:z"
   cpus 4
 
   publishDir "${params.output_dir}", mode: 'copy'

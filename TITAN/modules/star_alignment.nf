@@ -3,12 +3,12 @@ process star_alignment {
 
   tag "STAR on ${sample_ID} (${strand_type})"
   container 'quay.io/biocontainers/star:2.7.11b--h43eeafb_2'
-  containerOptions "--memory=50g --volume $params.outdir/evidence_data/star_databases/:/star_databases"
+  containerOptions "--memory=50g --volume ${params.output_dir}/intermediate_files/evidence_data/star_databases/:/star_databases"
   publishDir { 
     if (strand_type == "unstranded") {
-      return "$params.outdir/evidence_data/RNAseq_alignments/STAR/unstranded"
+      return "${params.output_dir}/intermediate_files/evidence_data/RNAseq_alignments/STAR/unstranded"
     } else if (strand_type in ["stranded_forward", "stranded_reverse"]) {
-      return "$params.outdir/evidence_data/RNAseq_alignments/STAR/stranded"
+      return "${params.output_dir}/intermediate_files/evidence_data/RNAseq_alignments/STAR/stranded"
     }
   }
   cpus 4

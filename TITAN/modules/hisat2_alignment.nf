@@ -3,13 +3,13 @@ process hisat2_alignment {
 
   tag "HISAT2 on ${sample_ID} (${strand_type})"
   container 'avelt/hisat2:latest'
-  containerOptions "--volume $params.outdir/evidence_data/hisat2_databases/:/hisat2_databases"
+  containerOptions "--volume ${params.output_dir}/intermediate_files/evidence_data/hisat2_databases/:/hisat2_databases"
 
   publishDir { 
     if (strand_type == "unstranded") {
-      return "$params.outdir/evidence_data/RNAseq_alignments/HISAT2/unstranded"
+      return "${params.output_dir}/intermediate_files/evidence_data/RNAseq_alignments/HISAT2/unstranded"
     } else if (strand_type in ["stranded_forward", "stranded_reverse"]) {
-      return "$params.outdir/evidence_data/RNAseq_alignments/HISAT2/stranded"
+      return "${params.output_dir}/intermediate_files/evidence_data/RNAseq_alignments/HISAT2/stranded"
     }
   }
 
