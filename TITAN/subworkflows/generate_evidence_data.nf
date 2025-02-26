@@ -7,7 +7,7 @@ include { prepare_RNAseq_fastq_files_short } from "../modules/prepare_RNAseq_fas
 include { prepare_RNAseq_fastq_files_long } from "../modules/prepare_RNAseq_fastq_files_long"
 include { trimming_fastq } from "../modules/trimming_fastq"
 include { liftoff_annotations } from "../modules/liftoff_annotations"
-include { gffread_convert_gff3_to_cds_fasta } from "../modules/gffread_convert_gff3_to_cds_fasta"
+include { agat_convert_gff3_to_cds_fasta } from "../modules/agat_convert_gff3_to_cds_fasta"
 include { salmon_index } from "../modules/salmon_index"
 include { salmon_strand_inference } from "../modules/salmon_strand_inference"
 include { star_genome_indices } from "../modules/star_genome_indices"
@@ -36,6 +36,10 @@ workflow generate_evidence_data {
     protein_list
 
   main:
+
+    // Define a dictionnary (Map) to store outputs for aegis workflow
+    def outputs_map = [:]
+    
     // ----------------------------------------------------------------------------------------
     //                           Download/prepare RNAseq reads - OPTIONAL for long reads
     // ----------------------------------------------------------------------------------------
@@ -55,13 +59,14 @@ workflow generate_evidence_data {
 
     // Lift over previous annotations to new assembly
     previous_annotations = liftoff_annotations(file(params.new_assembly).getParent(),file(params.new_assembly).getName(),file(params.previous_assembly).getParent(),file(params.previous_assembly).getName(),file(params.previous_annotations).getParent(),file(params.previous_annotations).getName()).collect()
+    println "Value of previous_annotations : ${previous_annotations}"
 
     // -----------------------------------------------------------------------------------------------------------------
     //                                gffread to convert liftoff.gff3 to cds.fasta for Salmon strand inference
     // -----------------------------------------------------------------------------------------------------------------
 
     // Convert GFF3 to CDS FASTA for Salmon strand inference
-    gff_cds = gffread_convert_gff3_to_cds_fasta(file(params.new_assembly).getParent(),file(params.new_assembly).getName(),previous_annotations.liftoff_previous_annotations)
+    gff_cds = agat_convert_gff3_to_cds_fasta(file(params.new_assembly).getParent(),file(params.new_assembly).getName(),previous_annotations.liftoff_previous_annotations)
 
     // -----------------------------------------------------------------------------------------------------------------------------------------------
     //         Run Salmon for strand inference and classify samples in three strand types : unstranded, stranded_forward and stranded_reverse
@@ -133,6 +138,7 @@ workflow generate_evidence_data {
 
     // Stringtie merging of all short reads transcriptomes (STAR/Stringtie)
     Stringtie_merging_short_reads_STAR_out = Stringtie_merging_short_reads_STAR(concat_star_stringtie_for_merging).collect()
+    println "Value of Stringtie_merging_short_reads_STAR_out : ${Stringtie_merging_short_reads_STAR_out}"
 
     // ----------------------------------------------------------------------------------------
     //        transcriptome assembly with Stringtie on HISAT2 alignments (short reads)
@@ -159,6 +165,7 @@ workflow generate_evidence_data {
 
     // GFFcompare to merge PsiCLASS transcriptomes
     gffcompare_out = gffcompare(concat_star_psiclass_for_merging).collect()
+    println "Value of gffcompare_out : ${gffcompare_out}"
 
     // ----------------------------------------------------------------------------------------
     //      transcriptome assembly with Stringtie on minimap2 alignments (long reads) - OPTIONAL
@@ -173,6 +180,7 @@ workflow generate_evidence_data {
     .map { it[0] }
 
     Stringtie_merging_long_reads_out = Stringtie_merging_long_reads(concat_minimap2_stringtie_for_merging).collect()
+    println "Value of Stringtie_merging_long_reads_out : ${Stringtie_merging_long_reads_out}"
 
     // ----------------------------------------------------------------------------------------
     // -------------------------- Genome masking with EDTA ------------------------------------
@@ -182,6 +190,7 @@ workflow generate_evidence_data {
     if (params.EDTA == 'yes') {
       println "Running EDTA process"
       masked_genome = EDTA(file(params.new_assembly).getParent(), file(params.new_assembly).getName()).collect()
+      println "Value of masked_genome : ${masked_genome}"
     } else {
       println "Skipping the EDTA and AEGIS processes because EDTA was not run (params.EDTA = '${params.EDTA}'). To enable EDTA, and consequently AEGIS, set EDTA = 'yes' in the nextflow.config file."
     }
@@ -202,6 +211,7 @@ workflow generate_evidence_data {
         concat_star_bams_BRAKER3,
         concat_minimap2_bams
       ).collect()
+      println "Value of braker3_results : ${braker3_results}"
 
     } else {
 
@@ -212,11 +222,9 @@ workflow generate_evidence_data {
           file(params.protein_samplesheet).getName(),
           concat_star_bams_BRAKER3
       ).collect()
+      println "Value of braker3_results : ${braker3_results}"
 
     }
-
-    // Define a dictionnary (Map) to store outputs for aegis workflow
-    def outputs_map = [:]
 
     // masked genome
     if (params.EDTA == 'yes') {
@@ -249,8 +257,6 @@ workflow generate_evidence_data {
     println "Debug - outputs_map content:"
     println outputs_map
 
-    outputs_channel = Channel.of(outputs_map.collect { key, value -> tuple(val(key), value) })
-
-  emit: outputs_channel
-
+  emit:
+    outputs_map
 }
