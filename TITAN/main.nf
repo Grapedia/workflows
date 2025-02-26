@@ -5,9 +5,10 @@ params.protein_samplesheet = false
 params.new_assembly = false
 params.previous_assembly = false
 params.previous_annotations = false
+params.output_dir = false
 
-if (!params.RNAseq_samplesheet || !params.protein_samplesheet || !params.new_assembly || !params.previous_assembly || !params.previous_annotations) {
-    error "Missing required parameters. Please provide values for: RNAseq_samplesheet, protein_samplesheet, new_assembly, previous_assembly, previous_annotations"
+if (!params.output_dir || !params.RNAseq_samplesheet || !params.protein_samplesheet || !params.new_assembly || !params.previous_assembly || !params.previous_annotations) {
+    error "Missing required parameters. Please provide values for: output_dir, RNAseq_samplesheet, protein_samplesheet, new_assembly, previous_assembly, previous_annotations"
 }
 
 // Include subworkflows
@@ -15,7 +16,6 @@ include { generate_evidence_data } from './subworkflows/generate_evidence_data'
 include { aegis } from './subworkflows/aegis'
 
 // Define the output directory for intermediate files
-params.outdir = "${projectDir}/intermediate_files"
 params.workflow = params.workflow ?: "all"  // default = "all"
 
 // Define Channels

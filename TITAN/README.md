@@ -10,6 +10,22 @@ The following parameters are defined in `nextflow.config` and are required for t
 - **`containerOptions`**: Path to the **workdir pathway** (the directory where there is the main.nf script).  
   _Example_: `containerOptions = "-v /path/to/workflows/genes_annotation-workflow:/path/to/workflows/genes_annotation-workflow"`
 
+  ⚠️ aegis_short_reads and aegis_long_reads processes need more RAM than other processes, so you have to define the maximum RAM you have on your server for this step : 
+
+_Example_:
+
+  withName: 'aegis_short_reads' {
+    memory = '300GB'
+    cpus = 1
+    containerOptions = "-v /data2/avelt/2024_assembly_GW_RI_hifiasm/Riesling/2025_genes_annotation/workflows/TITAN:/data2/avelt/2024_assembly_GW_RI_hifiasm/Riesling/2025_genes_annotation/workflows/TITAN"
+  }
+
+### **Workflow's general parameters**
+- **`workflow`**: **Which workflow's part to launch**.  
+  _Options_: `"generate_evidence_data"`, `"aegis"` or `"all"` (default: `"all"`)
+  ⚠️ You can simply generate the evidence data with ‘generate_evidence_data’, run all the steps with ‘all’ or launch aegis only with ‘aegis’, but you need to have generated the evidence data first.
+- **`output_dir`**: Path to output directory, where the final files will be write.
+
 ### **Genome Assemblies**
 - **`previous_assembly`**: Path to the **reference genome assembly** (FASTA).  
   _Example_: `data/assemblies/T2T_ref.fasta`

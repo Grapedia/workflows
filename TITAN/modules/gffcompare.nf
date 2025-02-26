@@ -3,7 +3,7 @@ process gffcompare {
 
   tag "gffcompare on STAR/PsiCLASS GTF to merge them"
   container 'avelt/gffcompare:latest'
-  containerOptions "--volume ${projectDir}/work:/work --volume ${projectDir}/scripts:/scripts --volume $projectDir/FINAL_OUTPUT/transcriptomes/STAR_PsiCLASS/stranded/:/STAR_PsiCLASS_stranded --volume $projectDir/FINAL_OUTPUT/transcriptomes/STAR_PsiCLASS/unstranded/:/STAR_PsiCLASS_unstranded"
+  containerOptions "--volume ${projectDir}/work:/work --volume ${projectDir}/scripts:/scripts --volume ${params.output_dir}/intermediate_files/transcriptomes/STAR_PsiCLASS/stranded/:/STAR_PsiCLASS_stranded --volume ${params.output_dir}/intermediate_files/transcriptomes/STAR_PsiCLASS/unstranded/:/STAR_PsiCLASS_unstranded"
   cpus 4
 
   publishDir "${params.output_dir}/tmp", mode: 'copy'

@@ -3,7 +3,7 @@ process Stringtie_merging_long_reads {
 
   tag "StringTie merging - long reads"
   container 'avelt/stringtie:latest'
-  containerOptions "--volume ${projectDir}/scripts/:/scripts --volume ${projectDir}/work:/work --volume $params.outdir/evidence_data/transcriptomes/StringTie/long_reads/:/StringTie_long_reads"
+  containerOptions "--volume ${projectDir}/scripts/:/scripts --volume ${projectDir}/work:/work --volume ${params.output_dir}/intermediate_files/evidence_data/transcriptomes/StringTie/long_reads/:/StringTie_long_reads"
   cpus 4
 
   publishDir "${params.output_dir}/tmp", mode: 'copy'

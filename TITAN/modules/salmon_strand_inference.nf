@@ -3,7 +3,7 @@ process salmon_strand_inference {
   tag "Executing salmon strand inference on $sample_ID"
   container 'quay.io/biocontainers/salmon:1.10.3--haf24da9_3'
   containerOptions "--volume ${projectDir}/work:/work --volume ${projectDir}/scripts:/scripts"
-  publishDir "$params.outdir/salmon_strand/"
+  publishDir "${params.output_dir}/intermediate_files/salmon_strand/"
   cpus 4
 
   input:

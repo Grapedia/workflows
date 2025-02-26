@@ -4,7 +4,7 @@ process minimap2_genome_indices {
   tag "Minimap2 genome indices on ${genome}"
   container 'avelt/minimap2_samtools:latest'
   containerOptions "--volume $genome_path:/genome_path"
-  publishDir "$params.outdir/evidence_data/minimap2_databases/"
+  publishDir "${params.output_dir}/intermediate_files/evidence_data/minimap2_databases/"
   cpus 4
 
   input:
