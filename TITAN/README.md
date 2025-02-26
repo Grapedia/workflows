@@ -160,9 +160,9 @@ Diamond2GO performs **functional gene annotation** based on the **final Aegis pr
 - **Version**: 0.12.6
 - **Docker image**: avelt/gffcompare:latest (dockerhub)
 
-### GffRead
-- **Version**: 0.12.7
-- **Docker image**: quay.io/biocontainers/gffread:0.12.7--h077b44d_6
+### Agat
+- **Version**: 1.2.0
+- **Docker image**: quay.io/biocontainers/agat:1.2.0--pl5321hdfd78af_0
 
 ### HISAT2
 - **Version**: 2.2.1
@@ -201,6 +201,9 @@ Diamond2GO performs **functional gene annotation** based on the **final Aegis pr
 ## **📖 Reference**  
 
 **Aegis** : TO DO
+
+**Agat** : Dainat J. *Another Gtf/Gff Analysis Toolkit (AGAT): Resolve interoperability issues and accomplish more with your annotations.*  
+📄 [Plant and Animal Genome XXIX Conference, 2022](https://github.com/NBISweden/AGAT)
 
 **BRAKER3** : Gabriel et al. *BRAKER3: Fully automated genome annotation using RNA-seq and protein evidence with GeneMark-ETP, AUGUSTUS, and TSEBRA*  
 📄 [Genome Res, 2024](https://pubmed.ncbi.nlm.nih.gov/38866550/)
