@@ -75,7 +75,7 @@ workflow generate_evidence_data {
             file(params.new_assembly).getParent(),
             file(params.new_assembly).getName()
         )
-        star_aligned = star_alignment(trimmed_reads.trimmed_reads, star_indices.index)
+        star_aligned = star_alignment(star_indices.index, salmon_output_processed)
         
         // Process HISAT2 alignments
         hisat2_indices = hisat2_genome_indices(
