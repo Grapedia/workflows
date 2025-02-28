@@ -23,7 +23,6 @@ Channel.fromPath(file(params.RNAseq_samplesheet))
        .splitCsv(header: true, sep: ',')
        .filter( ~/.*long.*/ )
        .map { row -> [ row.sampleID, row.SRA_or_FASTQ, row.library_layout ] }
-       .view { "Long reads: $it" }
        .set{ samples_list_long_reads }
 
 
@@ -31,7 +30,6 @@ Channel.fromPath(file(params.RNAseq_samplesheet))
        .splitCsv(header: true, sep: ',')
        .filter( ~/.*single.*/ )
        .map { row -> [ row.sampleID, row.SRA_or_FASTQ, row.library_layout ] }
-       .view { "Single reads: $it" }
        .set{ samples_list_single_short_reads }
 
 
@@ -39,19 +37,16 @@ Channel.fromPath(file(params.RNAseq_samplesheet))
        .splitCsv(header: true, sep: ',')
        .filter( ~/.*paired.*/ )
        .map { row -> [ row.sampleID, row.SRA_or_FASTQ, row.library_layout ] }
-       .view { "Paired reads: $it" }
        .set{ samples_list_paired_short_reads }
 
 // Combined single and paired-end reads
 samples_list_single_short_reads
     .concat(samples_list_paired_short_reads)
-    .view { "Combined short reads: $it" }
     .set { samples_list_short_reads }
 
 Channel.fromPath(file(params.protein_samplesheet))
        .splitCsv(header: true, sep: ',')
        .map { row -> [ row.organism, row.filename ] }
-       .view { "Proteins: $it" }
        .set{ protein_list }
 
 workflow {
