@@ -76,6 +76,11 @@ workflow generate_evidence_data {
             file(params.new_assembly).getName()
         )
         star_aligned = star_alignment(star_indices.index, salmon_output_processed)
+
+        star_aligned.samples_aligned
+          .collect()
+          .map { it[0] }
+          .set{ concat_star_bams_BRAKER3 }
         
         // Process HISAT2 alignments
         hisat2_indices = hisat2_genome_indices(
@@ -101,7 +106,12 @@ workflow generate_evidence_data {
                 file(params.new_assembly).getName()
             )
             minimap2_aligned = minimap2_alignment(long_reads_prepared.prepared_fastqs, minimap2_indices.index)
-            
+
+            minimap2_aligned.samples_aligned
+              .collect()
+              .map { it[0] }
+              .set { concat_minimap2_bams_BRAKER3 }
+
             // Process long read assemblies
             long_reads_assemblies = assembly_transcriptome_minimap2_stringtie(minimap2_aligned.samples_aligned)
 
@@ -147,8 +157,8 @@ workflow generate_evidence_data {
                 file(params.new_assembly).getName(),
                 file(params.protein_samplesheet).getParent(),
                 file(params.protein_samplesheet).getName(),
-                star_aligned.samples_aligned,
-                minimap2_aligned.samples_aligned
+                concat_star_bams_BRAKER3,
+                concat_minimap2_bams_BRAKER3
             )
         } else {
             braker3_results = braker3_prediction(
@@ -156,7 +166,7 @@ workflow generate_evidence_data {
                 file(params.new_assembly).getName(),
                 file(params.protein_samplesheet).getParent(),
                 file(params.protein_samplesheet).getName(),
-                star_aligned.samples_aligned
+                concat_star_bams_BRAKER3
             )
         }
 
