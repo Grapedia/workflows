@@ -2,7 +2,7 @@ process aegis_short_reads {
     tag "Generation of final GFF3 file with Aegis"
 
     container 'avelt/aegis:latest'
-    containerOptions "--volume ${projectDir}/scripts/:/scripts --volume ${projectDir}/work:/work --volume $genome_path:/genome_path --volume ${projectDir}/data/protein_data:/protein_path --volume ${protein_samplesheet_path}:/protein_samplesheet_path"
+    containerOptions "--volume ${projectDir}:/projectDir --volume ${projectDir}/scripts/:/scripts --volume ${projectDir}/work:/work --volume $genome_path:/genome_path --volume ${projectDir}/data/protein_data:/protein_path --volume ${protein_samplesheet_path}:/protein_samplesheet_path"
     publishDir "${params.output_dir}/aegis_outputs", mode: 'copy'
     cpus 1
 
@@ -33,8 +33,8 @@ process aegis_short_reads {
         DATE=\$(date "+%Y-%m-%d %H:%M:%S")
         echo "[\$DATE] Running Aegis to create final GFF3 file"
 
-        mkdir -p ${projectDir}/tmp
-        export TMPDIR=${projectDir}/tmp
+        mkdir -p /projectDir/tmp
+        export TMPDIR=/projectDir/tmp
 
         mapfile -t proteins < <(/scripts/retrieve_proteins_for_aegis.sh /protein_samplesheet_path/$protein_samplesheet_filename)
 

@@ -2,7 +2,7 @@ process EDTA {
 
   tag "Executing EDTA TE annotation on the following genome: $genome"
   container 'avelt/edta:latest'
-  containerOptions "--memory=50g --volume ${genome_path}:/genome_path --volume ${projectDir}/scripts/:/scripts"
+  containerOptions "--memory=50g --volume ${genome_path}:/genome_path --volume ${projectDir}/scripts/:/scripts --volume ${params.output_dir}:/outputdir"
   cpus 5
   publishDir "${params.output_dir}/tmp", mode: 'copy'
 
@@ -22,6 +22,6 @@ process EDTA {
     CMD="/scripts/edta.sh -g /genome_path/$genome -n ${task.cpus}"
     echo "[\$DATE] Executing: \$CMD"
     /scripts/edta.sh -g /genome_path/$genome -n ${task.cpus}
-    cp *MAKER.masked ${params.output_dir}/assembly_masked.EDTA.fasta
+    cp *MAKER.masked /outputdir/assembly_masked.EDTA.fasta
     """
 }
