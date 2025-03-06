@@ -53,6 +53,7 @@ process braker3_prediction_with_long_reads {
     --prot_seq=\${proteins} \
     --threads=${task.cpus} --workingdir=\${PWD} --softmasking --gff3 \
     --PROTHINT_PATH=/ProtHint-2.6.0/bin/ --GENEMARK_PATH=/GeneMark-ETP --AUGUSTUS_CONFIG_PATH=/Augustus/config --TSEBRA_PATH=/TSEBRA/bin
+    # --augustus_args="--min_intron_len=50 --intronweight=2"
     cp Augustus/augustus.hints.gff3 .
     cp GeneMark-ETP/genemark.gtf .
     cp GeneMark-ETP/genemark_supported.gtf .
