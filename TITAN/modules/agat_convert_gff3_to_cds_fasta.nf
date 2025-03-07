@@ -26,8 +26,4 @@ process agat_convert_gff3_to_cds_fasta {
     agat_sp_extract_sequences.pl -g \${liftoff_gff3_path} -f reformatted.fa -o ${genome}.CDS.fasta
     gzip ${genome}.CDS.fasta
     """
-<<<<<<< HEAD
 }
-=======
-}
->>>>>>> b841794 (change workflows in subworkflows and change gffread to agat to avoid some errors)
