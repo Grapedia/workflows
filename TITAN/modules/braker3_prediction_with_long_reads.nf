@@ -52,8 +52,10 @@ process braker3_prediction_with_long_reads {
     /BRAKER-3.0.8/scripts/braker.pl --genome=/genome_path/$genome --bam=\${bam} \
     --prot_seq=\${proteins} \
     --threads=${task.cpus} --workingdir=\${PWD} --softmasking --gff3 \
-    --PROTHINT_PATH=/ProtHint-2.6.0/bin/ --GENEMARK_PATH=/GeneMark-ETP --AUGUSTUS_CONFIG_PATH=/Augustus/config --TSEBRA_PATH=/TSEBRA/bin \
-    --augustus_args="--min_intron_len=50 --intronweight=2" --threads ${task.cpus}
+    --PROTHINT_PATH=/ProtHint-2.6.0/bin/ --GENEMARK_PATH=/GeneMark-ETP --AUGUSTUS_CONFIG_PATH=/Augustus/config --TSEBRA_PATH=/TSEBRA/bin"
+    # to test to decrease monoexon genes : --augustus_args="--singlestrand=true --alternatives-from-evidence=0"
+    # --singlestrand=true: If enabled, only keeps predictions consistent with a single strand.
+    # --alternatives-from-evidence=0: Disables alternative predictions based on hints, which can help filter out monoexons.
     cp Augustus/augustus.hints.gff3 .
     cp GeneMark-ETP/genemark.gtf .
     cp GeneMark-ETP/genemark_supported.gtf .

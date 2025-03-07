@@ -22,8 +22,8 @@ process assembly_transcriptome_star_psiclass {
     """
     DATE=\$(date "+%Y-%m-%d %H:%M:%S")
     echo "[\$DATE] Running PsiCLASS transcriptome assembly on $sample_ID"
-    CMD="/PsiCLASS-1.0.2/psiclass -p ${task.cpus} -b ${bam_file} -o ${sample_ID}"
+    CMD="/PsiCLASS-1.0.2/psiclass -p ${task.cpus} -b ${bam_file} -o ${sample_ID} --vd ${params.PSICLASS_vd_option} -c ${params.PSICLASS_c_option} --primaryParalog"
     echo "[\$DATE] Executing: \$CMD"
-    /PsiCLASS-1.0.2/psiclass -p ${task.cpus} -b ${bam_file} -o ${sample_ID} --vd 5.0 -c 0.03 --primaryParalog
+    /PsiCLASS-1.0.2/psiclass -p ${task.cpus} -b ${bam_file} -o ${sample_ID} --vd ${params.PSICLASS_vd_option} -c ${params.PSICLASS_c_option} --primaryParalog
     """
 }
