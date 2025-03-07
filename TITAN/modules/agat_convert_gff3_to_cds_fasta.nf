@@ -21,8 +21,8 @@ process agat_convert_gff3_to_cds_fasta {
 
     liftoff_gff3_path=\$(/scripts/retrieve_path.sh ${liftoff_gff3})
     # formatting gff3 for AGAT (mandatory for PN40024 V4.3 gff3 version from grapedia)
-    grep "obsolete=true" \${liftoff_gff3_path} | grep "Deleted" | awk -F'\t' '{print $9}' | sed 's/.*ID=\([^;]*\);.*/\1/' > to_remove.txt
-    grep -F -f to_remove.txt \${liftoff_gff3_path} | grep "mRNA" | awk -F'\t' '{print $9}' | sed 's/.*Parent=\([^;]*\);.*/\1/' >> to_remove.txt
+    grep "obsolete=true" \${liftoff_gff3_path} | grep "Deleted" | awk -F'\t' '{print \$9}' | sed 's/.*ID=\\([^;]*\\);.*/\\1/' > to_remove.txt
+    grep -F -f to_remove.txt \${liftoff_gff3_path} | grep "mRNA" | awk -F'\t' '{print \$9}' | sed 's/.*Parent=\\([^;]*\\);.*/\\1/' >> to_remove.txt
     grep -v -F -f to_remove.txt \${liftoff_gff3_path} > cleaned.gff3
     awk 'BEGIN{FS=OFS="\t"} /^#/ || NF==9' cleaned.gff3 > cleaned.OK.gff3
     fold -w 80 /genome_path/${genome} > reformatted.fa
