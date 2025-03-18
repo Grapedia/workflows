@@ -71,21 +71,19 @@ workflow {
 
       def input_files = file("${outdir_1}").listFiles()
 
-      if (!input_files || input_files.size() == 0) {
-          println "ERREUR : Aucun fichier trouvé dans ${outdir_1} !"
-          exit(1)
-      } else {
-          input_files.each { file ->
-              println "Fichier trouvé : ${file}"
-          }
-      }
+      // if (!input_files || input_files.size() == 0) {
+      //     println "ERROR : No file found in ${outdir_1} !"
+      //     exit(1)
+      // } else {
+      //     input_files.each { file ->
+      //         println "Files found : ${file}"
+      //     }
+      // }
 
-      // def workflow_inputs = Channel.empty()
       def workflow_inputs = []
 
       // Load manually the outputs of generate_evidence_data workflow
       if (params.EDTA == 'yes') {
-        println "Vérification : fichier existe ? " + file("${outdir_1}/assembly_masked.EDTA.fasta").exists()
         if (file("${outdir_1}/assembly_masked.EDTA.fasta").exists()) {
           workflow_inputs << tuple("masked_genome.masked_genome", file("${outdir_1}/assembly_masked.EDTA.fasta"))
         } else {
@@ -155,11 +153,10 @@ workflow {
         println "ERROR : ${outdir_1}/merged_star_psiclass_unstranded.gtf doesn't exists !"
       }
 
-      def workflow_inputs_list = workflow_inputs // Garde la liste telle quelle
+      def workflow_inputs_list = workflow_inputs // Keep the list as it is
 
-      println "📂 Fichiers envoyés à Aegis : ${workflow_inputs_list}"
+      println "Files sent to Aegis : ${workflow_inputs_list}"
 
-      aegis(workflow_inputs_list) // On envoie directement la liste, pas un Channel
-
+      aegis(workflow_inputs_list) // We send the list directly, not a Channel
   }
 }

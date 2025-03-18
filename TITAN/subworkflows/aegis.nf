@@ -12,8 +12,8 @@ workflow aegis {
 
   main:
 
-    def workflow_inputs = input_data // ✅ On crée une nouvelle variable
-    println "📂 Fichiers envoyés à Aegis process : ${workflow_inputs}"
+    def workflow_inputs = input_data // Create a new variable
+    // println "Files sent to Aegis process : ${workflow_inputs}"
 
     def masked_genome = []
     def braker3_prediction_augustus = []
