@@ -5,7 +5,7 @@ include { aegis_short_reads } from "../modules/aegis_short_reads"
 include { aegis_long_reads } from "../modules/aegis_long_reads"
 include { diamond2go } from "../modules/diamond2go"
 
-workflow aegis {
+workflow aegis_solo {
 
   take:
     input_data
