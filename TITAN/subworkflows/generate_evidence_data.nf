@@ -202,4 +202,5 @@ workflow generate_evidence_data {
 
     emit:
         results = outputs_ch
+        done = Channel.value(true)
 }
