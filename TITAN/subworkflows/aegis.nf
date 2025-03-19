@@ -104,9 +104,9 @@ workflow aegis {
         Stringtie_merging_short_reads_STAR_default_args_stranded[0],
         Stringtie_merging_short_reads_STAR_alt_args_stranded[0],
         gffcompare_star_psiclass_stranded[0],
-        gffcompare_star_psiclass_unstranded ? gffcompare_star_psiclass_unstranded[0] : null,
-        Stringtie_merging_short_reads_STAR_default_args_unstranded ? Stringtie_merging_short_reads_STAR_default_args_unstranded[0] : null,
-        Stringtie_merging_short_reads_STAR_alt_args_unstranded ? Stringtie_merging_short_reads_STAR_alt_args_unstranded[0] : null
+        gffcompare_star_psiclass_unstranded[0],
+        Stringtie_merging_short_reads_STAR_default_args_unstranded[0],
+        Stringtie_merging_short_reads_STAR_alt_args_unstranded[0]
         )
       } else {
         aegis_short_reads(
@@ -121,9 +121,9 @@ workflow aegis {
         Stringtie_merging_short_reads_STAR_default_args_stranded[0],
         Stringtie_merging_short_reads_STAR_alt_args_stranded[0],
         gffcompare_star_psiclass_stranded[0],
-        gffcompare_star_psiclass_unstranded ? gffcompare_star_psiclass_unstranded[0] : null,
-        Stringtie_merging_short_reads_STAR_default_args_unstranded ? Stringtie_merging_short_reads_STAR_default_args_unstranded[0] : null,
-        Stringtie_merging_short_reads_STAR_alt_args_unstranded ? Stringtie_merging_short_reads_STAR_alt_args_unstranded[0] : null
+        gffcompare_star_psiclass_unstranded[0],
+        Stringtie_merging_short_reads_STAR_default_args_unstranded[0],
+        Stringtie_merging_short_reads_STAR_alt_args_unstranded[0]
         )
       }
     } else {
