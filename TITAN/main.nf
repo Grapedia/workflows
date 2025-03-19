@@ -159,9 +159,11 @@ workflow {
             protein_list
         )
 
-        println "Aegis in progress ..."
-        aegis_all(evidence_data.results)
-
-        println "TITAN finished."
+        evidence_data.results
+            .collect()
+            .subscribe { results ->
+                println "Evidence data generation complete. Now running Aegis..."
+                aegis_all(results)
+            }
     }
 }
