@@ -6,18 +6,13 @@
 
 The following parameters are defined in `nextflow.config` and are required for the pipeline execution.
 
-### **containerOptions**
-- **`containerOptions`**: Path to the **workdir pathway** (the directory where there is the main.nf script).  
-  _Example_: `containerOptions = "-v /path/to/workflows/genes_annotation-workflow:/path/to/workflows/genes_annotation-workflow"`
-
-  ⚠️ aegis_short_reads and aegis_long_reads processes need more RAM than other processes, so you have to define the maximum RAM you have on your server for this step : 
+⚠️ aegis_short_reads and aegis_long_reads processes need more RAM than other processes, so you have to define the maximum RAM you have on your server for this step : 
 
 _Example_:
 
   withName: 'aegis_short_reads' {
     memory = '300GB'
     cpus = 1
-    containerOptions = "-v /data2/avelt/2024_assembly_GW_RI_hifiasm/Riesling/2025_genes_annotation/workflows/TITAN:/data2/avelt/2024_assembly_GW_RI_hifiasm/Riesling/2025_genes_annotation/workflows/TITAN"
   }
 
 ### **Workflow's general parameters**
@@ -40,12 +35,18 @@ _Example_:
 - **`protein_samplesheet`**: Path to the **protein data samplesheet** (CSV file) listing protein datasets to be used.  
   _Example_: `data/protein_data/samplesheet.csv`
 
-### **Optional Parameters**
+### **Other Parameters**
 - **`EDTA`**: Whether to run **EDTA (transposable element annotation tool)**.  
   _Options_: `"yes"` or `"no"` (default: `"no"`)
   ⚠️ If EDTA is not set to "yes", the Aegis and Diamond2Go steps will not be executed, as Aegis requires a hard-masked genome. TITAN will only generate the evidence data.
 - **`use_long_reads`**: Flag to indicate whether **long-read sequencing data** should be used.  
   _Options_: `true` or `false` (default: `true`)
+- **`PSICLASS_vd_option`**: For PSICLASS process, the minimum average coverage depth of a transcript to be reported (FLOAT). This option is used to reduce the number of false monoexon genes.
+  default: `"5.0"`
+- **`PSICLASS_c_option`**: For PSICLASS process, only use the subexons with classifier score <= than the given number (FLOAT). This option is used to reduce the number of false monoexon genes.
+  default: `"0.03"`
+- **`STAR_memory_per_job`**: For STAR alignment process. If the depth of your RNAseq samples is high, TITAN may crash with an out of memory error, during the STAR alignment step. You can increase the memory here, it's in bytes, for example 60000000000 is about 55Gb per sample/job.
+  default: `"60000000000"`
 
 ## Workflow DAG
 
