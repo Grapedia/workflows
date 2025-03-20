@@ -79,18 +79,20 @@ process aegis_long_reads {
     protein_names+="]"
 
     # here we create the path to Diamond results, of type : 
-    # Viridiplantae=/path/to/viridiplantae_vs_proteins_assembly.diamond Eudicots=/path/to/eudicots_vs_proteins_assembly.diamond
+    # Viridiplantae=viridiplantae_vs_proteins_assembly.diamond Eudicots=eudicots_vs_proteins_assembly.diamond
     diamond_paths=""
 
-    for key in "\${!PROTEIN_MAP[@]}"; do
-        file_path="\${PROTEIN_MAP[\$key]}_vs_assembly.diamond"
+    for key in "${!PROTEIN_MAP[@]}"; do
+        file_name=$(basename "${PROTEIN_MAP[$key]}")
+        file_path="${file_name}_vs_assembly.diamond"
 
-        if [[ -z "\$diamond_paths" ]]; then
-            diamond_paths="\$key=\$file_path"
+        if [[ -z "$diamond_paths" ]]; then
+            diamond_paths="$key=$file_path"
         else
-            diamond_paths+=" \$key=\$file_path"
+            diamond_paths+=" $key=$file_path"
         fi
     done
+
     # gtf to gff3 conversion
     gffread -E ${genemark_gtf} -o- > BRAKER3_genemark.gff3
     gffread -E ${stranded_default_args} -o- > stringtie_stranded_default_STAR.gff3
