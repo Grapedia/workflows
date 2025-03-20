@@ -81,15 +81,13 @@ process aegis_long_reads {
     # here we create the path to Diamond results, of type : 
     # Viridiplantae=viridiplantae_vs_proteins_assembly.diamond Eudicots=eudicots_vs_proteins_assembly.diamond
     diamond_paths=""
-
-    for key in "${!PROTEIN_MAP[@]}"; do
-        file_name=$(basename "${PROTEIN_MAP[$key]}")
-        file_path="${file_name}_vs_assembly.diamond"
-
-        if [[ -z "$diamond_paths" ]]; then
-            diamond_paths="$key=$file_path"
+    for key in "\${!PROTEIN_MAP[@]}"; do
+        file_name=\$(basename "\${PROTEIN_MAP[\$key]}")
+        file_path="\${file_name}_vs_assembly.diamond"
+        if [[ -z "\$diamond_paths" ]]; then
+            diamond_paths="\$key=\$file_path"
         else
-            diamond_paths+=" $key=$file_path"
+            diamond_paths+=" \$key=\$file_path"
         fi
     done
 
