@@ -50,15 +50,23 @@ _Example_:
 
 ## **Example command-line to run**
 
-_commands.sh_:
-
-  #!/usr/bin/env bash
-  # kill script if generate_evidence_data fail, to avoid launching aegis
-  set -e
-  cd /path/to/projectDir/workflows/TITAN
-  module load nextflow/24.04.3
-  nextflow run main.nf -with-dag dag_evidence_data.png --workflow generate_evidence_data
-  nextflow run main.nf -with-dag dag_aegis.png --workflow aegis
+```bash
+#!/usr/bin/env bash
+# Exit immediately if a command exits with a non-zero status
+# Ensures AEGIS doesn't run if generate_evidence_data fails
+set -e
+# Navigate to the project workflow directory
+cd /path/to/projectDir/workflows/TITAN
+# Load required Nextflow module
+module load nextflow/24.04.3
+# Run the 'generate_evidence_data' workflow and generate its DAG
+nextflow run main.nf \
+  -with-dag dag_evidence_data.png \
+  --workflow generate_evidence_data
+# Run the 'aegis' workflow and generate its DAG
+nextflow run main.nf \
+  -with-dag dag_aegis.png \
+  --workflow aegis
 
 ## Workflow DAG
 
