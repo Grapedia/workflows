@@ -67,6 +67,7 @@ nextflow run main.nf \
 nextflow run main.nf \
   -with-dag dag_aegis.png \
   --workflow aegis
+```
 
 ## Workflow DAG
 
