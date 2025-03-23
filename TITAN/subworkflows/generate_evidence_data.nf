@@ -105,7 +105,7 @@ workflow generate_evidence_data {
                 file(params.new_assembly).getParent(),
                 file(params.new_assembly).getName()
             )
-            minimap2_aligned = minimap2_alignment(long_reads_prepared.prepared_fastqs, minimap2_indices.index)
+            minimap2_aligned = minimap2_alignment(minimap2_indices.index, long_reads_prepared.prepared_fastqs)
 
             minimap2_aligned.samples_aligned
               .collect()
