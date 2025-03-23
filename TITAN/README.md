@@ -17,8 +17,8 @@ _Example_:
 
 ### **Workflow's general parameters**
 - **`workflow`**: **Which workflow's part to launch**.  
-  _Options_: `"generate_evidence_data"`, `"aegis"` or `"all"` (default: `"all"`)
-  ⚠️ You can simply generate the evidence data with ‘generate_evidence_data’, run all the steps with ‘all’ or launch aegis only with ‘aegis’, but you need to have generated the evidence data first.
+  _Options_: `"generate_evidence_data"` or `"aegis"` (default: `"generate_evidence_data"`)
+  ⚠️ You can simply generate the evidence data with ‘generate_evidence_data’ or launch aegis only with ‘aegis’, but you need to have generated the evidence data first.
 - **`output_dir`**: Path to output directory, where the final files will be write.
 
 ### **Genome Assemblies**
@@ -47,6 +47,18 @@ _Example_:
   default: `"0.03"`
 - **`STAR_memory_per_job`**: For STAR alignment process. If the depth of your RNAseq samples is high, TITAN may crash with an out of memory error, during the STAR alignment step. You can increase the memory here, it's in bytes, for example 60000000000 is about 55Gb per sample/job.
   default: `"60000000000"`
+
+## **Example command-line to run**
+
+_commands.sh_:
+
+  #!/usr/bin/env bash
+  # kill script if generate_evidence_data fail, to avoid launching aegis
+  set -e
+  cd /path/to/projectDir/workflows/TITAN
+  module load nextflow/24.04.3
+  nextflow run main.nf -with-dag dag_evidence_data.png --workflow generate_evidence_data
+  nextflow run main.nf -with-dag dag_aegis.png --workflow aegis
 
 ## Workflow DAG
 
