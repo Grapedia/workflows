@@ -6,12 +6,11 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import re
 import numpy as np
-from sklearn.cluster import KMeans
 from tqdm import tqdm
 from sklearn.mixture import GaussianMixture
-from skimage.filters import threshold_otsu
 
 # === ARGUMENT PARSING ===
+# example : python3 scripts/filter_monoexons_from_GFF3.py --gff3 OUTDIR/augustus.hints.gff3 --output OUTDIR/augustus.filtered.gff3 --outdir OUTDIR/figures/
 parser = argparse.ArgumentParser(description="Filter short mono-exonic transcripts from a GFF3 file.")
 parser.add_argument("--gff3", required=True, help="Path to input GFF3 file")
 parser.add_argument("--output", required=True, help="Path to output filtered GFF3 file")
@@ -68,8 +67,8 @@ print(df.head(10))
 mrnas = df[df["feature"] == "mRNA"].copy()
 print("mRNAs dataframe created :")
 print(mrnas.head(10))
-print("exons dataframe created :")
 exons = df[df["feature"] == "exon"].copy()
+print("exons dataframe created :")
 print(exons.head(10))
 
 # Count how many exons each mRNA has
@@ -119,23 +118,10 @@ else:
     lengths_sorted = np.sort(lengths)
     x = np.arange(len(lengths_sorted))
 
-    # Method 21: KMeans (bimodal clustering)
-    kmeans = KMeans(n_clusters=2, random_state=0).fit(lengths.reshape(-1, 1))
-    cluster_labels = kmeans.labels_
-    cluster_0_max = lengths[cluster_labels == 0].max()
-    cluster_1_max = lengths[cluster_labels == 1].max()
-    kmeans_threshold = min(cluster_0_max, cluster_1_max)
-
-    # Method 2: Quantile (e.g. 10th percentile)
+    # Method 1: Quantile (e.g. 10th percentile)
     quantile_threshold = np.percentile(lengths, args.quantile)
 
-    # Method 3: Otsu's method
-    try:
-        otsu_threshold = threshold_otsu(lengths)
-    except:
-        otsu_threshold = np.inf
-
-    # Method 4: GMM
+    # Method 2: GMM
     try:
         gmm = GaussianMixture(n_components=2, random_state=0).fit(lengths.reshape(-1, 1))
         means = gmm.means_.flatten()
@@ -144,13 +130,11 @@ else:
         gmm_threshold = np.inf
 
     # Final threshold = minimum of all methods (most conservative)
-    final_threshold = int(min(kmeans_threshold, quantile_threshold, otsu_threshold, gmm_threshold))
+    final_threshold = int(min(quantile_threshold, gmm_threshold))
 
 
-print(f"Method 1 : KMeans (bimodal clustering), threshold found : {kmeans_threshold} bp")
-print(f"Method 2 : Quantile (10th percentile), threshold found : {quantile_threshold} bp")
-print(f"Method 3 : Otsu's method, threshold found : {otsu_threshold} bp")
-print(f"Method 4 : GMM method, threshold found : {gmm_threshold} bp")
+print(f"Method 1 : Quantile (10th percentile), threshold found : {quantile_threshold} bp")
+print(f"Method 2 : GMM method, threshold found : {gmm_threshold} bp")
 
 print(f"Chosen threshold (minimum of all methods, most conservative): {final_threshold} bp")
 
@@ -158,9 +142,7 @@ print(f"Chosen threshold (minimum of all methods, most conservative): {final_thr
 plt.figure(figsize=(10, 6))
 plt.hist(monoexonic_mrnas["length"], bins=50, color='skyblue', edgecolor='black')
 plt.axvline(final_threshold, color='red', linestyle='dashed', label=f"Final threshold = {final_threshold} bp")
-plt.axvline(kmeans_threshold, color='purple', linestyle='--', label='KMeans')
 plt.axvline(quantile_threshold, color='green', linestyle='--', label=f"{args.quantile}th percentile")
-plt.axvline(otsu_threshold, color='blue', linestyle='--', label='Otsu')
 plt.axvline(gmm_threshold, color='brown', linestyle='--', label='GMM')
 plt.title("Length distribution of unique mono-exonic transcripts")
 plt.xlabel("Transcript length (bp)")
@@ -176,17 +158,23 @@ to_remove_gene_ids = monoexonic_mrnas[monoexonic_mrnas["length"] < final_thresho
 
 def keep_line(line):
     if line.startswith("#"):
-        return True  # Keep comment lines
+        return True
     fields = line.strip().split('\t')
     if len(fields) != 9:
-        return True  # Keep malformed lines just in case
+        return True
     attr_field = fields[8]
     attr_dict = dict(re.findall(r'(\w+)=([^;]+)', attr_field))
     feature_id = attr_dict.get("ID", "")
     parent_id = attr_dict.get("Parent", "")
-    # Discard lines with IDs matching those to remove
+    
+    # Remove lines if the feature is a transcript or exon from a removed transcript
     if feature_id in to_remove_ids or parent_id in to_remove_ids:
         return False
+    
+    # Remove gene feature if its ID is in the list of removed gene IDs
+    if fields[2] == "gene" and feature_id in to_remove_gene_ids:
+        return False
+
     return True
 
 # Apply filtering to original GFF3 content
@@ -207,10 +195,17 @@ removed_exons = df[
 ]
 
 # Summary printout
+print("\n=== Overview ===")
+print(f"Total genes in GFF3                        : {df[df['feature'] == 'gene']['ID'].nunique()}")
+print(f"Total transcripts (mRNAs)                 : {len(mrnas)}")
+print(f"Total of transcripts that are mono-exonic and from single-transcript genes : {len(monoexonic_mrnas)}")
+
 print(f"Summary of elements removed below {final_threshold} bp:")
 print(f"- Genes removed     : {len(removed_gene_ids)}")
 print(f"- Transcripts removed: {len(removed_transcript_ids)}")
 print(f"- Exons removed     : {len(removed_exons)}")
+
+print(f"Conclusion : of the {len(monoexonic_mrnas)} monoexonic transcripts, {len(removed_transcript_ids)} are deleted from gff3 because they are too short")
 
 print(f"Filtered GFF3 saved to: {output_filtered_gff}")
 print(f"Plot saved to: {output_plot}")
