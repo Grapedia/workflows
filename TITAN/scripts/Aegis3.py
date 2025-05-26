@@ -9,6 +9,13 @@ from modules.annotation import Annotation
 from modules.genome import Genome
 
 def main(args):
+
+    chosen_chromosomes = [args.chromosome] if args.chromosome else None
+    if chosen_chromosomes:
+        print(f"-------------------- Chosen chromosome is : {chosen_chromosomes}")
+    else:
+        print("-------------------- Aegis launched on all chromosomes.")
+
     # Load the merged annotation pickle
     print('Loading merged annotation pickle file ...')
     merge = pickle_load(args.merged_annotation)
@@ -42,7 +49,12 @@ def main(args):
 
     print('Exporting GFF...')
     merge.update()
-    merge.export_gff(args.export_dir, 'merged_annotation_blast.gff3')
+
+    if chosen_chromosomes:
+        merged_annotation_blast_filename = f"merged_annotation_blast_{'_'.join(chosen_chromosomes)}"
+        merge.export_gff(args.export_dir, merged_annotation_blast_filename)
+    else:
+        merge.export_gff(args.export_dir, 'merged_annotation_blast.gff3')
 
     print('Reducing redundancy...')
     merge.remove_redundancy(source_priority=args.source_priority, hard_masked_genome=assembly_hard_masked)
@@ -50,15 +62,24 @@ def main(args):
     # Save final pickle
     print('Saving final annotation...')
     pickle_save(args.final_annotation, merge)
-    merge.id = 'final_annotation'
-    merge.name = 'final_annotation'
+    if chosen_chromosomes:
+        merge.id = f"final_annotation_{'_'.join(chosen_chromosomes)}"
+        merge.name = f"final_annotation_{'_'.join(chosen_chromosomes)}"
+    else:
+        merge.id = 'final_annotation'
+        merge.name = 'final_annotation'
 
     print('Final exports...')
-    merge.export_gff(args.final_export_dir, 'final_annotation.gff3')
-    merge.export_equivalences(stringent=False, return_df=False, export_csv=True, export_self=True, NAs=False)
-    merge.generate_sequences(genome=assembly_hard_masked, just_CDSs=True)
-    merge.export_proteins(only_main=True, verbose=False, custom_path=args.final_export_dir)
-    merge.export_proteins(only_main=False, verbose=False, custom_path=args.final_export_dir)
+    if chosen_chromosomes:
+        final_annotation_filename = f"final_annotation_{'_'.join(chosen_chromosomes)}.gff3"
+        merge.export_gff(args.final_export_dir, final_annotation_filename)
+
+    else:
+        merge.export_gff(args.final_export_dir, 'final_annotation.gff3')
+        merge.export_equivalences(stringent=False, return_df=False, export_csv=True, export_self=True, NAs=False)
+        merge.generate_sequences(genome=assembly_hard_masked, just_CDSs=True)
+        merge.export_proteins(only_main=True, verbose=False, custom_path=args.final_export_dir)
+        merge.export_proteins(only_main=False, verbose=False, custom_path=args.final_export_dir)
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Automate genome annotation pipeline.")
@@ -71,6 +92,7 @@ if __name__ == "__main__":
     parser.add_argument('--export_dir', type=str, required=True, help="Directory to export intermediate GFF files.")
     parser.add_argument('--final_export_dir', type=str, required=True, help="Directory to export final GFF and other outputs.")
     parser.add_argument('--update', action='store_true', help="Update the object during the pipeline.")
+    parser.add_argument("--chromosome", required=False, help="Chromosome ID to run Aegis per chromosome - OPTIONAL - if not given, all the chromosome are treated together.")
     parser.add_argument('--source_priority', nargs='+', default=['Araport', 'Viridiplantae', 'Eudicots'], help="Source priority list for redundancy reduction.")
 
     args = parser.parse_args()

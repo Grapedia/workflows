@@ -38,15 +38,37 @@ process braker3_prediction {
     else
         bam="\${bam_stranded_path},\${bam_unstranded_path}"
     fi
+
+    # Cleaned the protein fasta files for BRAKER3 -> simpler header and replace . and * by X
+    IFS=',' read -r -a protein_files <<< "\$proteins"
+
+    # Variable to store path to cleaned protein files
+    cleaned_proteins=""
+
+    # For loop on each protein file
+    for file in "\${protein_files[@]}"; do
+        # Define the filename for the cleaned protein fasta file.
+        cleaned="\${file%.fasta}.cleaned.fasta"
+
+        # Launch the "clean" script
+        python3 /scripts/clean_protein_fasta_for_BRAKER3.py "\$file" "\$cleaned"
+
+        # Add the cleaned filename to the cleaned variable
+        if [[ -z "\$cleaned_proteins" ]]; then
+            cleaned_proteins="\$cleaned"
+        else
+            cleaned_proteins="\$cleaned_proteins,\$cleaned"
+        fi
+    done
     
     CMD="/BRAKER-3.0.8/scripts/braker.pl --genome=/genome_path/$genome --bam=\${bam} \
-    --prot_seq=\${proteins} \
+    --prot_seq=\${cleaned_proteins} \
     --threads=${task.cpus} --workingdir=\${PWD} --softmasking --gff3 \
     --PROTHINT_PATH=/ProtHint-2.6.0/bin/ --GENEMARK_PATH=/GeneMark-ETP --AUGUSTUS_CONFIG_PATH=/Augustus/config --TSEBRA_PATH=/TSEBRA/bin"
     echo "[\$DATE] Executing: \$CMD"
 
     /BRAKER-3.0.8/scripts/braker.pl --genome=/genome_path/$genome --bam=\${bam} \
-    --prot_seq=\${proteins} \
+    --prot_seq=\${cleaned_proteins} \
     --threads=${task.cpus} --workingdir=\${PWD} --softmasking --gff3 \
     --PROTHINT_PATH=/ProtHint-2.6.0/bin/ --GENEMARK_PATH=/GeneMark-ETP --AUGUSTUS_CONFIG_PATH=/Augustus/config --TSEBRA_PATH=/TSEBRA/bin
     # to test to decrease monoexon genes : --augustus_args="--singlestrand=true --alternatives-from-evidence=0"

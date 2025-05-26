@@ -136,9 +136,9 @@ workflow aegis {
     
     if (params.EDTA == 'yes') {
       if (params.use_long_reads) {
-         diamond2go(aegis_long_reads.out.aegis_proteins_main, aegis_long_reads.out.aegis_proteins_all)
+         diamond2go(aegis_long_reads.out.aegis_proteins_unique)
       } else {
-         diamond2go(aegis_short_reads.out.aegis_proteins_main, aegis_short_reads.out.aegis_proteins_all)
+         diamond2go(aegis_short_reads.out.aegis_proteins_unique)
       }
     } else {
       println "Skipping the Diamond2GO process because EDTA was not run (params.EDTA = '${params.EDTA}'). To enable EDTA, and consequently AEGIS and Diamond2GO, set EDTA = 'yes' in the nextflow.config file."
@@ -147,8 +147,6 @@ workflow aegis {
   // Outputs
   emit:
     aegis_gff            = params.use_long_reads ? aegis_long_reads.out.aegis_gff : aegis_short_reads.out.aegis_gff
-    aegis_pkl            = params.use_long_reads ? aegis_long_reads.out.aegis_pkl : aegis_short_reads.out.aegis_pkl
-    aegis_proteins_main  = params.use_long_reads ? aegis_long_reads.out.aegis_proteins_main : aegis_short_reads.out.aegis_proteins_main
-    aegis_proteins_all   = params.use_long_reads ? aegis_long_reads.out.aegis_proteins_all : aegis_short_reads.out.aegis_proteins_all
+    aegis_proteins_unique  = params.use_long_reads ? aegis_long_reads.out.aegis_proteins_unique : aegis_short_reads.out.aegis_proteins_unique
     diamond2go_output    = diamond2go.out
 }

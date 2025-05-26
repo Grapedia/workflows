@@ -3,7 +3,7 @@ process aegis_long_reads {
 
   tag "Generation of final GFF3 file with Aegis"
   // this image contains Aegis, Diamond and gffread
-  container 'avelt/aegis:latest'
+  container 'avelt/aegis:v2025_05_20'
   containerOptions "--volume ${projectDir}:/projectDir --volume ${projectDir}/work:/work --volume $genome_path:/genome_path --volume ${projectDir}/data/protein_data:/protein_path --volume ${protein_samplesheet_path}:/protein_samplesheet_path"
   publishDir "${params.output_dir}/aegis_outputs", mode: 'copy'
   cpus 1
@@ -28,9 +28,7 @@ process aegis_long_reads {
 
   output:
     path "final_annotation.gff3", emit: aegis_gff
-    path "final_annotation.pkl", emit: aegis_pkl
-    path "final_annotation_main_proteins.fasta", emit: aegis_proteins_main
-    path "final_annotation_all_proteins.fasta", emit: aegis_proteins_all
+    path "final_merged_annotation_unique_proteins.fasta", emit: aegis_proteins_unique
 
   script:
     """
@@ -78,19 +76,6 @@ process aegis_long_reads {
     done
     protein_names+="]"
 
-    # here we create the path to Diamond results, of type : 
-    # Viridiplantae=viridiplantae_vs_proteins_assembly.diamond Eudicots=eudicots_vs_proteins_assembly.diamond
-    diamond_paths=""
-    for key in "\${!PROTEIN_MAP[@]}"; do
-        file_name=\$(basename "\${PROTEIN_MAP[\$key]}")
-        file_path="\${file_name}_vs_assembly.diamond"
-        if [[ -z "\$diamond_paths" ]]; then
-            diamond_paths="\$key=\$file_path"
-        else
-            diamond_paths+=" \$key=\$file_path"
-        fi
-    done
-
     # gtf to gff3 conversion
     gffread -E ${genemark_gtf} -o- > BRAKER3_genemark.gff3
     gffread -E ${stranded_default_args} -o- > stringtie_stranded_default_STAR.gff3
@@ -107,22 +92,64 @@ process aegis_long_reads {
     if [ -s "${unstranded_alt_args}" ]; then
         gffread -E ${unstranded_alt_args} -o- > stringtie_unstranded_AltCommands_STAR.gff3
     fi
-    CMD_aegis_1="/scripts/Aegis1.py --genome_name New_assembly --genome_path /genome_path/$genome --augustus_path ${augustus_gff} --genemark_path BRAKER3_genemark.gff3 --liftoff_path ${liftoff_annotations} --psiclass_stranded_STAR_path psiclass_stranded_STAR.gff3 --stringtie_stranded_default_STAR_path stringtie_stranded_default_STAR.gff3 --stringtie_stranded_AltCommands_STAR_path stringtie_stranded_AltCommands_STAR.gff3 --stringtie_Isoseq_default_path stringtie_Isoseq_default.gff3 --stringtie_Isoseq_AltCommands_path stringtie_Isoseq_AltCommands.gff3 --output_dir \$PWD --output_gff aegis_final_merged_annotations.gff3 --output_pickle aegis_final_merged_annotations.pkl
-    if [ -s "${gffcompare_unstranded}" ]; then
-        CMD_aegis_1="\$CMD_aegis_1 --psiclass_unstranded_STAR_path psiclass_unstranded_STAR.gff3"
-    fi
-    if [ -s "${unstranded_default_args}" ]; then
-        CMD_aegis_1="\$CMD_aegis_1 --stringtie_unstranded_default_STAR_path stringtie_unstranded_default_STAR.gff3"
-    fi
 
-    if [ -s "${unstranded_alt_args}" ]; then
-        CMD_aegis_1="\$CMD_aegis_1 --stringtie_unstranded_AltCommands_STAR_path stringtie_unstranded_AltCommands_STAR.gff3"
-    fi
-     echo "[\$DATE] Executing: \$CMD_aegis_1"
-     eval "\$CMD_aegis_1"
-     echo "[\$DATE] Executing: /scripts/Aegis2.sh -q merge_annotation_unique_proteins.fasta -t ${task.cpus} -d \$protein_paths -o \$PWD"
-     /scripts/Aegis2.sh -q merge_annotation_unique_proteins.fasta -t ${task.cpus} -d \$protein_paths -o \$PWD
-     echo "[\$DATE] Executing: /scripts/Aegis3.py --merged_annotation aegis_final_merged_annotations.pkl --hard_masked_genome ${edta_masked_genome} --diamond_hits \${diamond_paths} --intermediate_annotation intermediate_annotation.pkl --final_annotation final_annotation.pkl --export_dir \$PWD --final_export_dir \$PWD --update --source_priority \$protein_names"
-     /scripts/Aegis3.py --merged_annotation aegis_final_merged_annotations.pkl --hard_masked_genome ${edta_masked_genome} --diamond_hits \${diamond_paths} --intermediate_annotation intermediate_annotation.pkl --final_annotation final_annotation.pkl --export_dir \$PWD --final_export_dir \$PWD --update --source_priority \$protein_names
+    # Extract chromosomes names from fasta file
+    chromosomes=\$(grep '^>' /genome_path/$genome | cut -d' ' -f1 | sed 's/>//' | uniq)
+
+    for chrom in \$chromosomes
+    do
+        # here we create the path to Diamond results, of type : 
+        # Viridiplantae=viridiplantae_vs_proteins_assembly.diamond Eudicots=eudicots_vs_proteins_assembly.diamond
+        diamond_paths=""
+        for key in "\${!PROTEIN_MAP[@]}"; do
+            file_name=\$(basename "\${PROTEIN_MAP[\$key]}")
+            file_path="\${chrom}/\${file_name}_vs_assembly.diamond"
+            if [[ -z "\$diamond_paths" ]]; then
+                diamond_paths="\$key=\$file_path"
+            else
+                diamond_paths+=" \$key=\$file_path"
+            fi
+        done
+
+        echo "[\$(date '+%Y-%m-%d %H:%M:%S')] Aegis on chromosome : \$chrom"
+
+        CMD_aegis_1="/scripts/Aegis1.py --genome_name New_assembly --genome_path /genome_path/$genome --augustus_path ${augustus_gff} --genemark_path BRAKER3_genemark.gff3 --liftoff_path ${liftoff_annotations} --psiclass_stranded_STAR_path psiclass_stranded_STAR.gff3 --stringtie_stranded_default_STAR_path stringtie_stranded_default_STAR.gff3 --stringtie_stranded_AltCommands_STAR_path stringtie_stranded_AltCommands_STAR.gff3 --stringtie_Isoseq_default_path stringtie_Isoseq_default.gff3 --stringtie_Isoseq_AltCommands_path stringtie_Isoseq_AltCommands.gff3 --output_dir \$PWD/\${chrom} --output_gff aegis_final_merged_annotations_\${chrom}.gff3 --output_pickle aegis_final_merged_annotations_\${chrom}.pkl --chromosome \$chrom"
+        if [ -s "${gffcompare_unstranded}" ]; then
+            CMD_aegis_1="\$CMD_aegis_1 --psiclass_unstranded_STAR_path psiclass_unstranded_STAR.gff3"
+        fi
+        if [ -s "${unstranded_default_args}" ]; then
+            CMD_aegis_1="\$CMD_aegis_1 --stringtie_unstranded_default_STAR_path stringtie_unstranded_default_STAR.gff3"
+        fi
+
+        if [ -s "${unstranded_alt_args}" ]; then
+            CMD_aegis_1="\$CMD_aegis_1 --stringtie_unstranded_AltCommands_STAR_path stringtie_unstranded_AltCommands_STAR.gff3"
+        fi
+         echo "[\$DATE] Executing: \$CMD_aegis_1"
+         eval "\$CMD_aegis_1"
+         echo "[\$DATE] Executing: /scripts/Aegis2.sh -q \$PWD/\${chrom}/merged_annotation_\${chrom}_unique_proteins.fasta -t ${task.cpus} -d \$protein_paths -o \$PWD/\${chrom}"
+         /scripts/Aegis2.sh -q \$PWD/\${chrom}/merged_annotation_\${chrom}_unique_proteins.fasta -t ${task.cpus} -d \$protein_paths -o \$PWD/\${chrom}
+         echo "[\$DATE] Executing: /scripts/Aegis3.py --merged_annotation \$PWD/\${chrom}/aegis_final_merged_annotations_\${chrom}.pkl --hard_masked_genome ${edta_masked_genome} --diamond_hits \${diamond_paths} --intermediate_annotation intermediate_annotation_\${chrom}.pkl --final_annotation final_annotation_\${chrom}.pkl --export_dir \$PWD/\${chrom} --final_export_dir \$PWD/\${chrom} --update --chromosome \$chrom --source_priority \$protein_names"
+         /scripts/Aegis3.py --merged_annotation \$PWD/\${chrom}/aegis_final_merged_annotations_\${chrom}.pkl --hard_masked_genome ${edta_masked_genome} --diamond_hits \${diamond_paths} --intermediate_annotation intermediate_annotation_\${chrom}.pkl --final_annotation final_annotation_\${chrom}.pkl --export_dir \$PWD/\${chrom} --final_export_dir \$PWD/\${chrom} --update --chromosome \$chrom --source_priority \$protein_names
+    done
+
+    # final concatenate of all final GFF3 files
+    gff3_final="\$PWD/final_annotation.gff3"
+
+    echo "##gff-version 3" > \$gff3_final
+
+    for gff3_chrom in `ls \$PWD/*/final_annotation_*.gff3`
+    do
+        tail -n +4 \$gff3_chrom >> \$gff3_final
+    done
+
+    # final concatenate of all final protein files
+    proteins_final="\$PWD/final_merged_annotation_unique_proteins.fasta"
+
+    > "\$proteins_final"
+        
+    for proteins_chrom in `ls \$PWD/*/merged_annotation_*_unique_proteins.fasta`
+    do
+        cat \$proteins_chrom >> \$proteins_final
+    done
     """
 }

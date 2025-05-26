@@ -34,6 +34,9 @@ if [ -z "$QUERY" ] || [ -z "$DATABASES" ] || [ -z "$OUTDIR" ]; then
     print_usage
 fi
 
+echo "------------------------------ QUERY FILE LOADED :"
+echo "QUERY: $QUERY"
+
 # IFS=‘,’ database loop
 IFS=',' read -ra DB_ARRAY <<< "$DATABASES"
 for DB in "${DB_ARRAY[@]}"; do

@@ -11,6 +11,12 @@ from modules.genome import Genome
 # Main function
 def main(args):
     
+    chosen_chromosomes = [args.chromosome] if args.chromosome else None
+    if chosen_chromosomes:
+        print(f"-------------------- Chosen chromosome is : {chosen_chromosomes}")
+    else:
+        print("-------------------- Aegis launched on all chromosomes.")
+
     print("-------------------- Starting script execution")
 
     # Verify if outdir exists or create it
@@ -57,13 +63,22 @@ def main(args):
         for name, path in items:
             print(f"    {name}: {path}")
 
-    # Create annotation objects
-    print("-------------------- Creating ab initio annotations")
-    ab_initio_annotations = [Annotation(name, path, genome) for name, path in evidences['ab_initio']]
+    if chosen_chromosomes:
+        # Create annotation objects
+        print("-------------------- Creating ab initio annotations")
+        ab_initio_annotations = [Annotation(name, path, genome, chosen_chromosomes=chosen_chromosomes) for name, path in evidences['ab_initio']]
 
-    # Create annotation objects
-    print("-------------------- Creating transcriptome annotations")
-    transcriptome_annotations = [Annotation(name, path, genome) for name, path in evidences['transcriptome']]
+        # Create annotation objects
+        print("-------------------- Creating transcriptome annotations")
+        transcriptome_annotations = [Annotation(name, path, genome, chosen_chromosomes=chosen_chromosomes) for name, path in evidences['transcriptome']]
+    else:
+        # Create annotation objects
+        print("-------------------- Creating ab initio annotations")
+        ab_initio_annotations = [Annotation(name, path, genome) for name, path in evidences['ab_initio']]
+
+        # Create annotation objects
+        print("-------------------- Creating transcriptome annotations")
+        transcriptome_annotations = [Annotation(name, path, genome) for name, path in evidences['transcriptome']]
 
     # Merge evidences
     print("-------------------- Merging annotations")
@@ -79,8 +94,12 @@ def main(args):
     print("-------------------- Processing alternative transcripts into genes")
     merged_annotation.make_alternative_transcripts_into_genes()
 
-    merged_annotation.id = 'merge_annotation'
-    merged_annotation.name = 'merge_annotation_transcripts'
+    if chosen_chromosomes:
+        merged_annotation.id = f"merged_annotation_{'_'.join(chosen_chromosomes)}"
+        merged_annotation.name = f"merged_annotation_transcripts_{'_'.join(chosen_chromosomes)}"
+    else:
+        merged_annotation.id = "merged_annotation"
+        merged_annotation.name = 'merge_annotation_transcripts'
 
     print(f"-------------------- Exporting merged GFF to {args.output_dir}")
     # merged_annotation.export_gff(args.output_dir, args.output_gff)
@@ -101,6 +120,7 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Genome annotation merging.")
     parser.add_argument("--genome_name", required=True, help="Name of the genome - MANDATORY")
     parser.add_argument("--genome_path", required=True, help="Path to the genome FASTA file - MANDATORY")
+    parser.add_argument("--chromosome", required=False, help="Chromosome ID to run Aegis per chromosome - OPTIONAL - if not given, all the chromosome are treated together.")
     parser.add_argument("--augustus_path", required=True, help="Path to Augustus GFF3 file - MANDATORY")
     parser.add_argument("--genemark_path", required=True, help="Path to GeneMark GFF3 file - MANDATORY")
     parser.add_argument("--liftoff_path", required=True, help="Path to Liftoff GFF3 file - MANDATORY")
@@ -123,6 +143,7 @@ if __name__ == "__main__":
 # python3 script.py \
 #   --genome_name PN40024_T2T \
 #   --genome_path /storage/tom/PN40024_T2T.fasta \
+#   --chromosome chr01 \
 #   --augustus_path /storage/tom/augustus_T2T/Augustus/augustus.hints.gff3 \
 #   --genemark_path /storage/tom/augustus_T2T/GeneMark-ETP/genemark.gff3 \
 #   --liftoff_path /storage/tom/inigo/annotation/T2T/liftoff/soft_masked/T2T_ref_soft_masked.gff3 \
@@ -134,6 +155,6 @@ if __name__ == "__main__":
 #   --stringtie_unstranded_AltCommands_STAR_path /storage/tom/T2T_mapping_bam/merged_T2T_PN40024_unstranded_stringtie_morus.gff3 \
 #   --stringtie_Isoseq_default_path /storage/tom/T2T_mapping_bam/Isoseq/hq_transcripts.RI_rmv_on_T2T_sorted_stringtieDefaultCommands.gff3 \
 #   --stringtie_Isoseq_AltCommands_path /storage/tom/T2T_mapping_bam/Isoseq/hq_transcripts.RI_rmv_on_T2T_sorted_stringtieAltCommands.gff3 \
-#   --output_dir /storage/tom/ \
-#   --output_gff merged_annotation.gff3 \
-#   --output_pickle /storage/tom/merged_annotation.pkl
+#   --output_dir /storage/tom/chr01 \
+#   --output_gff merged_annotation_chr01.gff3 \
+#   --output_pickle /storage/tom/merged_annotation_chr01.pkl
