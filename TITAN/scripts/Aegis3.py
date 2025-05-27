@@ -73,7 +73,10 @@ def main(args):
     if chosen_chromosomes:
         final_annotation_filename = f"final_annotation_{'_'.join(chosen_chromosomes)}.gff3"
         merge.export_gff(args.final_export_dir, final_annotation_filename)
-
+        merge.export_equivalences(stringent=False, return_df=False, export_csv=True, export_self=True, NAs=False)
+        merge.generate_sequences(genome=assembly_hard_masked, just_CDSs=True)
+        merge.export_proteins(only_main=True, verbose=False, custom_path=args.final_export_dir)
+        merge.export_proteins(only_main=False, verbose=False, custom_path=args.final_export_dir)
     else:
         merge.export_gff(args.final_export_dir, 'final_annotation.gff3')
         merge.export_equivalences(stringent=False, return_df=False, export_csv=True, export_self=True, NAs=False)
@@ -96,5 +99,5 @@ if __name__ == "__main__":
     parser.add_argument('--source_priority', nargs='+', default=['Araport', 'Viridiplantae', 'Eudicots'], help="Source priority list for redundancy reduction.")
 
     args = parser.parse_args()
-    
+
     main(args)

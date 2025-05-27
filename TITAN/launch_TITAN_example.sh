@@ -13,4 +13,4 @@ module load nextflow/24.04.3
 # Run the 'aegis' workflow and generate its DAG
 nextflow run main.nf \
   -with-dag dag_aegis.png \
-  --workflow aegis
+  --workflow aegis -resume
