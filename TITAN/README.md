@@ -40,8 +40,8 @@ Aegis run are launched chromosome by chromosome: a for loop and sequential annot
   default: `"0.03"`
 - **`STAR_memory_per_job`**: For STAR alignment process. If the depth of your RNAseq samples is high, TITAN may crash with an out of memory error, during the STAR alignment step. You can increase the memory here, it's in bytes, for example 60000000000 is about 55Gb per sample/job.
   default: `"60000000000"`
-  - **`paramfile_egapx`**: The input parameter file for NCBI/egapx annotation pipeline run.
-    default: `"$projectDir/data/input_egapx.yaml"`
+- **`paramfile_egapx`**: The input parameter file for NCBI/egapx annotation pipeline run.
+  default: `"$projectDir/data/input_egapx.yaml"`
 
 ## **Example command-line to run**
 
