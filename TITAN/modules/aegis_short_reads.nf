@@ -24,7 +24,8 @@ process aegis_short_reads {
 
     output:
         path "final_annotation.gff3", emit: aegis_gff
-        path "final_merged_annotation_unique_proteins.fasta", emit: aegis_proteins_unique
+        path "final_annotation_proteins_all.fasta", emit: aegis_proteins_all
+        path "final_annotation_proteins_main.fasta", emit: aegis_proteins_main
 
     script:
         """
@@ -44,7 +45,7 @@ process aegis_short_reads {
             clean_line=\$(echo "\$line" | tr -d '\r' | awk '{\$1=\$1; print}')
 
             IFS=' ' read -r name path <<< "\$clean_line"
-            
+
             PROTEIN_MAP["\$name"]="\$path"
             PROTEIN_KEYS+=("\$name")
         done
@@ -89,11 +90,11 @@ process aegis_short_reads {
 
         # Extract chromosomes names from fasta file
         chromosomes=\$(grep '^>' /genome_path/$genome | cut -d' ' -f1 | sed 's/>//' | uniq)
-        
+
         for chrom in \$chromosomes
         do
 
-            # here we create the path to Diamond results, of type : 
+            # here we create the path to Diamond results, of type :
             # Viridiplantae=/path/to/viridiplantae_vs_proteins_assembly.diamond Eudicots=/path/to/eudicots_vs_proteins_assembly.diamond
             diamond_paths=""
             for key in "\${!PROTEIN_MAP[@]}"; do
@@ -142,13 +143,21 @@ process aegis_short_reads {
         done
 
         # final concatenate of all final protein files
-        proteins_final="\$PWD/final_merged_annotation_unique_proteins.fasta"
+        proteins_final_all="\$PWD/final_annotation_proteins_all.fasta"
+        proteins_final_main="\$PWD/final_annotation_proteins_main.fasta"
 
-        > "\$proteins_final"
-        
-        for proteins_chrom in `ls \$PWD/*/merged_annotation_*_unique_proteins.fasta`
+        > "\$proteins_final_all"
+
+        for proteins_chrom_all in `ls \$PWD/*/final_annotation_*_proteins_p_id_all.fasta`
         do
-            cat \$proteins_chrom >> \$proteins_final
+            cat \$proteins_chrom_all >> \$proteins_final_all
+        done
+
+        > "\$proteins_final_main"
+
+        for proteins_chrom_main in `ls \$PWD/*/final_annotation_*_proteins_p_id_main.fasta`
+        do
+            cat \$proteins_chrom_main >> \$proteins_final_main
         done
         """
 }
