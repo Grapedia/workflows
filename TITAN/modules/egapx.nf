@@ -17,9 +17,9 @@ process egapx {
     """
     DATE=\$(date "+%Y-%m-%d %H:%M:%S")
 
-    CMD="python3 /opt/egapx/ui/egapx.py -o egapx_ncbi_out -e local -c /opt/egapx/egapx_config -w dfs_work -o dfs_out -lc /opt/egapx/local_cache /egapx_param_path/$egapx_paramfile_name"
+    CMD="python3 /opt/egapx/ui/egapx.py -e local -c /opt/egapx/work/egapx_config -w dfs_work -o dfs_out -lc /opt/egapx/local_cache /egapx_param_path/$egapx_paramfile_name"
     echo "[\$DATE] Executing: \$CMD"
 
-    python3 /opt/egapx/ui/egapx.py -o egapx_ncbi_out -e local -c /opt/egapx/egapx_config -w dfs_work -o dfs_out -lc /opt/egapx/local_cache /egapx_param_path/$egapx_paramfile_name
+    python3 /opt/egapx/ui/egapx.py -e local -c /opt/egapx/work/egapx_config -w dfs_work -o dfs_out -lc /opt/egapx/local_cache /egapx_param_path/$egapx_paramfile_name
     """
 }
