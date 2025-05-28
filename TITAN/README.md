@@ -6,14 +6,7 @@
 
 The following parameters are defined in `nextflow.config` and are required for the pipeline execution.
 
-⚠️ aegis_short_reads and aegis_long_reads processes need more RAM than other processes, so you have to define the maximum RAM you have on your server for this step :
-
-_Example_:
-
-  withName: 'aegis_short_reads' {
-    memory = '300GB'
-    cpus = 1
-  }
+Aegis run are launched chromosome by chromosome: a for loop and sequential annotation processing for each chromosome. This is necessary because running on all the chromosomes at the same time requires around 500 GB of RAM. An Aegis ran sequentially on the chromosomes takes around 2/3 days of treatment on 19 chromosomes (Vitis vinifera).
 
 ### **Workflow's general parameters**
 - **`workflow`**: **Which workflow's part to launch**.  
