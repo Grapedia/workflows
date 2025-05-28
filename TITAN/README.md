@@ -6,7 +6,7 @@
 
 The following parameters are defined in `nextflow.config` and are required for the pipeline execution.
 
-⚠️ aegis_short_reads and aegis_long_reads processes need more RAM than other processes, so you have to define the maximum RAM you have on your server for this step : 
+⚠️ aegis_short_reads and aegis_long_reads processes need more RAM than other processes, so you have to define the maximum RAM you have on your server for this step :
 
 _Example_:
 
@@ -47,6 +47,8 @@ _Example_:
   default: `"0.03"`
 - **`STAR_memory_per_job`**: For STAR alignment process. If the depth of your RNAseq samples is high, TITAN may crash with an out of memory error, during the STAR alignment step. You can increase the memory here, it's in bytes, for example 60000000000 is about 55Gb per sample/job.
   default: `"60000000000"`
+  - **`paramfile_egapx`**: The input parameter file for NCBI/egapx annotation pipeline run.
+    default: `"$projectDir/data/input_egapx.yaml"`
 
 ## **Example command-line to run**
 
@@ -76,6 +78,9 @@ nextflow run main.nf \
 ## Workflow Components
 
 ### **Liftoff Annotations**
+Generates a **GFF3 file**, which is used by **Aegis** in the final step.
+
+### **NCBI/egapx Annotations**
 Generates a **GFF3 file**, which is used by **Aegis** in the final step.
 
 ### **StringTie Merging (Short Reads - HISAT2)**
@@ -120,6 +125,7 @@ Generates a **FASTA file** of the **hard-masked genome assembly**, which is used
 At the final step, **Aegis** integrates multiple annotation sources:  
 ✔ **Hard-masked genome assembly**
 ✔ **Liftoff annotations**  
+✔ **NCBI/egapx annotations**  
 ✔ **GeneMark annotations**  
 ✔ **AUGUSTUS annotations**  
 ✔ **Stranded (and unstranded, if available) annotations from STAR/StringTie**  
@@ -146,8 +152,9 @@ Diamond2GO performs **functional gene annotation** based on the **final Aegis pr
 ## **📖 Tools version used**  
 
 ### Aegis
-- **Version**: v1.0.0
-- **Docker image**: avelt/aegis:latest (dockerhub)
+- Source from [GitHub](https://github.com/davnapa/genomics.git)
+- **Version**: v2025_05_20
+- **Docker image**: avelt/aegis:v2025_05_20 (dockerhub)
 
 ### Agat
 - **Version**: 1.2.0
@@ -178,6 +185,14 @@ Diamond2GO performs **functional gene annotation** based on the **final Aegis pr
   - **samtools**: 1.9
 - **Docker image**: avelt/edta:latest (dockerhub)
 
+### egapx
+- **Version**: 0.3.2-alpha [GitHub](https://github.com/ncbi/egapx)  
+- **Dependencies**:
+  - **Python**: 3.12  
+  - **Java**: openjdk version 17.0.15
+  - **Nextflow**: 25.04.2.5947
+- **Docker image**: avelt/ncbi_egapx:0.3.2-alpha (dockerhub)
+
 ### fastp
 - **Version**: 0.23.2
 - **Docker image**: quay.io/biocontainers/fastp:0.23.2--hb7a2d85_2
@@ -197,7 +212,7 @@ Diamond2GO performs **functional gene annotation** based on the **final Aegis pr
 ### Minimap2
 - **Version**: 2.28  
 - **Dependencies**:
-  - **samtools**: 1.9 
+  - **samtools**: 1.9
 - **Docker image**: avelt/minimap2_samtools:latest (dockerhub)
 
 ### PsiCLASS
@@ -236,6 +251,9 @@ Diamond2GO performs **functional gene annotation** based on the **final Aegis pr
 **EDTA** : Ou et al. *Benchmarking Transposable Element Annotation Methods for Creation of a Streamlined, Comprehensive Pipeline.*  
 📄 [Genome Biol., 2019](https://genomebiology.biomedcentral.com/articles/10.1186/s13059-019-1905-y)
 
+**egapx (NCBI)** : *The NCBI Eukaryotic Genome Annotation Pipeline.*  
+📄 [ncbi.nlm.nih.gov](https://www.ncbi.nlm.nih.gov/refseq/annotation_euk/process)
+
 **fastp** : Chen et al. *fastp: an ultra-fast all-in-one FASTQ preprocessor*  
 📄 [Bioinformatics., 2018](https://academic.oup.com/bioinformatics/article/34/17/i884/5093234)
 
@@ -270,5 +288,3 @@ Diamond2GO performs **functional gene annotation** based on the **final Aegis pr
 
 **StringTie** : Shumate et al. *Improved transcriptome assembly using a hybrid of long and short reads with StringTie*  
 📄 [PLOS Computational Biology, 2022](https://journals.plos.org/ploscompbiol/article?id=10.1371/journal.pcbi.1009730)
-
-
