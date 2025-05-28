@@ -66,7 +66,7 @@ nextflow run main.nf \
 
 ## Workflow DAG
 
-![Workflow Diagram](data_example/workflow.dag.jpg)
+![Workflow Diagram](data_example/TITAN_diagram.jpg)
 
 ## Workflow Components
 
