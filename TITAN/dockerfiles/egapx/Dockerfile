@@ -36,6 +36,7 @@ WORKDIR /opt/egapx/work
 # generated config files
 RUN /opt/egapx/virtual_env/bin/python3 /opt/egapx/ui/egapx.py /opt/egapx/examples/input_D_farinae_small.yaml -o /opt/egapx/example_out || true
 # configure config files
+COPY local_cache /opt/egapx/local_cache
 RUN sed -i "s/env.GP_HOME=.*/env.GP_HOME=\"\/img\/gp\/bin\/\"/" /opt/egapx/work/egapx_config/local.config
 RUN sed -i "s|env.PATH = .*|env.PATH = \"/img/gp:/img/gp/third-party/STAR/bin/Linux_x86_64/:/img/gp/third-party/diamond/:/img/gp/third-party/seqkit/bin/:/img/gp/third-party/samtools/bin/:/img/gp/third-party/miniprot/:$PATH\"|" /opt/egapx/work/egapx_config/local.config
 

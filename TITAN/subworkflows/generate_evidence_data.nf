@@ -5,6 +5,7 @@ include { prepare_RNAseq_fastq_files_short } from "../modules/prepare_RNAseq_fas
 include { prepare_RNAseq_fastq_files_long } from "../modules/prepare_RNAseq_fastq_files_long"
 include { trimming_fastq } from "../modules/trimming_fastq"
 include { liftoff_annotations } from "../modules/liftoff_annotations"
+// include { egapx } from "../modules/egapx"
 include { agat_convert_gff3_to_cds_fasta } from "../modules/agat_convert_gff3_to_cds_fasta"
 include { salmon_index } from "../modules/salmon_index"
 include { salmon_strand_inference } from "../modules/salmon_strand_inference"
@@ -33,16 +34,16 @@ workflow generate_evidence_data {
         protein_list
 
     main:
-        
+
         // Prepare RNAseq short reads for processing
         short_reads_prepared = prepare_RNAseq_fastq_files_short(samples_list_short_reads)
-        
+
         // Prepare long reads (if any) for processing
         long_reads_prepared = prepare_RNAseq_fastq_files_long(samples_list_long_reads)
-        
+
         // Trim Illumina short reads
         trimmed_reads = trimming_fastq(short_reads_prepared.prepared_fastqs)
-        
+
         // Lift over previous annotations to new assembly
         previous_annotations = liftoff_annotations(
             file(params.new_assembly).getParent(),
@@ -52,24 +53,30 @@ workflow generate_evidence_data {
             file(params.previous_annotations).getParent(),
             file(params.previous_annotations).getName()
         )
-        
+
+        // egapx annotation pipeline on new assembly
+        // egapx_annotations = egapx(
+        //     file(params.egapx_paramfile).getParent(),
+        //     file(params.egapx_paramfile).getName()
+        // )
+
         // Convert GFF3 to CDS FASTA for Salmon strand inference
         gff_cds = agat_convert_gff3_to_cds_fasta(
             file(params.new_assembly).getParent(),
             file(params.new_assembly).getName(),
             previous_annotations.liftoff_previous_annotations
         )
-        
+
         // Salmon index and strand inference
         salmon_index_result = salmon_index(gff_cds)
         strand_inference = salmon_strand_inference(trimmed_reads.trimmed_reads, salmon_index_result.index)
-        
+
         // Process strand inference results
         salmon_output_processed = strand_inference.strand_inference_result.map { sample_ID, library_layout, reads, strand_file ->
             def strand_info = file(strand_file).text.trim()
             return [sample_ID, library_layout, reads, strand_info]
         }
-        
+
         // Process STAR alignments
         star_indices = star_genome_indices(
             file(params.new_assembly).getParent(),
@@ -81,14 +88,14 @@ workflow generate_evidence_data {
           .collect()
           .map { it[0] }
           .set{ concat_star_bams_BRAKER3 }
-        
+
         // Process HISAT2 alignments
         hisat2_indices = hisat2_genome_indices(
             file(params.new_assembly).getParent(),
             file(params.new_assembly).getName()
         )
         hisat2_aligned = hisat2_alignment(hisat2_indices.index, salmon_output_processed, file(params.new_assembly).getName())
-        
+
         // Process hisat2 assemblies
         hisat2_assemblies_stringtie = assembly_transcriptome_hisat2_stringtie(hisat2_aligned.samples_aligned)
 
@@ -122,11 +129,11 @@ workflow generate_evidence_data {
 
             merged_long_reads = Stringtie_merging_long_reads(concat_minimap2_stringtie_for_merging)
         }
-        
+
         // Process short read assemblies
         star_assemblies_stringtie = assembly_transcriptome_star_stringtie(star_aligned.samples_aligned)
         star_assemblies_psiclass = assembly_transcriptome_star_psiclass(star_aligned.samples_aligned)
-        
+
         concat_star_stringtie_for_merging = star_assemblies_stringtie.star_stringtie_transcriptome_gtf
         .groupTuple()
         .collect()
@@ -149,7 +156,7 @@ workflow generate_evidence_data {
                 file(params.new_assembly).getName()
             )
         }
-        
+
         // Run BRAKER3
         if (params.use_long_reads) {
             braker3_results = braker3_prediction_with_long_reads(

@@ -19,3 +19,4 @@ TITAN/main_old.nf
 TITAN/null/
 TITAN/OUTDIR
 TITAN/*.png
+TITAN/dockerfiles/egapx/local_cache
