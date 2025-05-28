@@ -43,6 +43,8 @@ RUN sed -i "s|env.PATH = .*|env.PATH = \"/img/gp:/img/gp/third-party/STAR/bin/Li
 # Add binaries EGAPx to PATH
 ENV GP_HOME="/img/gp/bin/"
 ENV PATH="/img/gp:/img/gp/third-party/STAR/bin/Linux_x86_64/:/img/gp/third-party/diamond/:/img/gp/third-party/seqkit/bin/:/img/gp/third-party/samtools/bin/:/img/gp/third-party/miniprot/:$PATH"
+ENV VIRTUAL_ENV=/opt/egapx/virtual_env
+ENV PATH="$VIRTUAL_ENV/bin:$PATH"
 
 CMD ["/bin/bash"]
 
