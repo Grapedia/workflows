@@ -6,9 +6,10 @@ params.new_assembly = false
 params.previous_assembly = false
 params.previous_annotations = false
 params.output_dir = false
+params.egapx_paramfile = false
 
-if (!params.output_dir || !params.RNAseq_samplesheet || !params.protein_samplesheet || !params.new_assembly || !params.previous_assembly || !params.previous_annotations) {
-    error "Missing required parameters. Please provide values for: output_dir, RNAseq_samplesheet, protein_samplesheet, new_assembly, previous_assembly, previous_annotations"
+if (!params.output_dir || !params.egapx_paramfile || !params.RNAseq_samplesheet || !params.protein_samplesheet || !params.new_assembly || !params.previous_assembly || !params.previous_annotations) {
+    error "Missing required parameters. Please provide values for: output_dir, egapx_paramfile, RNAseq_samplesheet, protein_samplesheet, new_assembly, previous_assembly, previous_annotations"
 }
 
 // Include subworkflows

@@ -5,7 +5,7 @@ include { prepare_RNAseq_fastq_files_short } from "../modules/prepare_RNAseq_fas
 include { prepare_RNAseq_fastq_files_long } from "../modules/prepare_RNAseq_fastq_files_long"
 include { trimming_fastq } from "../modules/trimming_fastq"
 include { liftoff_annotations } from "../modules/liftoff_annotations"
-include { egapx } from "../modules/egapx"
+// include { egapx } from "../modules/egapx"
 include { agat_convert_gff3_to_cds_fasta } from "../modules/agat_convert_gff3_to_cds_fasta"
 include { salmon_index } from "../modules/salmon_index"
 include { salmon_strand_inference } from "../modules/salmon_strand_inference"
@@ -55,10 +55,10 @@ workflow generate_evidence_data {
         )
 
         // egapx annotation pipeline on new assembly
-        egapx_annotations = egapx(
-            file(params.egapx_paramfile).getParent(),
-            file(params.egapx_paramfile).getName()
-        )
+        // egapx_annotations = egapx(
+        //    file(params.egapx_paramfile).getParent(),
+        //    file(params.egapx_paramfile).getName()
+        //)
 
         // Convert GFF3 to CDS FASTA for Salmon strand inference
         gff_cds = agat_convert_gff3_to_cds_fasta(
