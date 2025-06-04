@@ -4,6 +4,7 @@ from Bio.Seq import Seq
 from Bio.SeqRecord import SeqRecord
 import sys
 import re
+import os
 
 if len(sys.argv) != 4:
     print("Usage: clean_protein_fasta.py input.fasta output.fasta prefix_protein_name")

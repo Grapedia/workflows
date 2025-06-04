@@ -3,7 +3,7 @@
 # Ensures AEGIS doesn't run if generate_evidence_data fails
 set -e
 # Navigate to the project workflow directory
-cd /home/avelt/data2/2024_assembly_GW_RI_hifiasm/Riesling/2025_genes_annotation/test_with_long_reads/workflows/TITAN
+cd /home/avelt/data2/2024_assembly_GW_RI_hifiasm/Riesling/2025_genes_annotation/test_without_unstranded/workflows/TITAN
 # Load required Nextflow module
 module load nextflow/24.04.3
 # Run the 'generate_evidence_data' workflow and generate its DAG
@@ -13,4 +13,4 @@ nextflow run main.nf \
 # Run the 'aegis' workflow and generate its DAG
 nextflow run main.nf \
   -with-dag dag_aegis.png \
-  --workflow aegis -resume
+  --workflow aegis
