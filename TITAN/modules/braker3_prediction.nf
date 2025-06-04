@@ -51,7 +51,7 @@ process braker3_prediction {
         cleaned="\${file%.fasta}.cleaned.fasta"
 
         # Launch the "clean" script
-        python3 /scripts/clean_protein_fasta_for_BRAKER3.py "\$file" "\$cleaned"
+        python3 /scripts/clean_protein_fasta_for_BRAKER3.py "\$file" "\$cleaned" "\${file%.fasta}"
 
         # Add the cleaned filename to the cleaned variable
         if [[ -z "\$cleaned_proteins" ]]; then
@@ -60,7 +60,7 @@ process braker3_prediction {
             cleaned_proteins="\$cleaned_proteins,\$cleaned"
         fi
     done
-    
+
     CMD="/BRAKER-3.0.8/scripts/braker.pl --genome=/genome_path/$genome --bam=\${bam} \
     --prot_seq=\${cleaned_proteins} \
     --threads=${task.cpus} --workingdir=\${PWD} --softmasking --gff3 \

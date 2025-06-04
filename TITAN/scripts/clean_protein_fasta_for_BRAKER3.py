@@ -5,19 +5,20 @@ from Bio.SeqRecord import SeqRecord
 import sys
 import re
 
-if len(sys.argv) != 3:
-    print("Usage: clean_protein_fasta.py input.fasta output.fasta")
+if len(sys.argv) != 4:
+    print("Usage: clean_protein_fasta.py input.fasta output.fasta prefix_protein_name")
     sys.exit(1)
 
 input_file = sys.argv[1]
 output_file = sys.argv[2]
+prefix = sys.argv[3]
 
 records = []
 for i, record in enumerate(SeqIO.parse(input_file, "fasta"), start=1):
     # Clean the sequence ID
     simple_id = re.split(r"[ \t|]", record.id)[0]
-    new_id = f"protein{i:06d}"
-    
+    new_id = f"{prefix}_protein{i:06d}"
+
     # Clean AA sequence : replace '.' or '*' by 'X'
     cleaned_seq = str(record.seq).replace('.', 'X').replace('*', 'X').upper()
 

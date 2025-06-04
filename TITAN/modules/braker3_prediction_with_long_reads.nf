@@ -52,7 +52,7 @@ process braker3_prediction_with_long_reads {
         cleaned="\${file%.fasta}.cleaned.fasta"
 
         # Launch the "clean" script
-        python3 /scripts/clean_protein_fasta_for_BRAKER3.py "\$file" "\$cleaned"
+        python3 /scripts/clean_protein_fasta_for_BRAKER3.py "\$file" "\$cleaned" "\${file%.fasta}"
 
         # Add the cleaned filename to the cleaned variable
         if [[ -z "\$cleaned_proteins" ]]; then
