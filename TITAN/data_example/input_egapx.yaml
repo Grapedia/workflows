@@ -1,0 +1,9 @@
+genome: /path/to/TITAN/data/assemblies/genome_assembly.fa
+taxid: 29760
+reads:
+  - /path/to/TITAN/data/RNAseq_data/sample1_1.fastq.gz
+  - /path/to/TITAN/data/RNAseq_data/sample1_2.fastq.gz
+  - /path/to/TITAN/data/TITAN/data/RNAseq_data/sample2.fastq.gz
+annotation_provider: egapx_ncbi
+annotation_name_prefix: Assembly
+locus_tag_prefix: EGAPX
