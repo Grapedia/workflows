@@ -11,7 +11,7 @@ if len(sys.argv) != 4:
 
 input_file = sys.argv[1]
 output_file = sys.argv[2]
-prefix = sys.argv[3]
+prefix = os.path.basename(sys.argv[3])
 
 records = []
 for i, record in enumerate(SeqIO.parse(input_file, "fasta"), start=1):
