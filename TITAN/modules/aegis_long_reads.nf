@@ -84,13 +84,14 @@ process aegis_long_reads {
     gffread -E ${gffcompare_stranded} -o- > psiclass_stranded_STAR.gff3
     gffread -E ${long_reads_default_args} -o- > stringtie_Isoseq_default.gff3
     gffread -E ${long_reads_alt_args} -o- > stringtie_Isoseq_AltCommands.gff3
-    if [ -s "${gffcompare_unstranded}" ]; then
+
+    if [ "\$(basename ${gffcompare_unstranded})" != "dev_null3" ]; then
         gffread -E ${gffcompare_unstranded} -o- > psiclass_unstranded_STAR.gff3
     fi
-    if [ -s "${unstranded_default_args}" ]; then
+    if [ "\$(basename ${unstranded_default_args})" != "dev_null1" ]; then
         gffread -E ${unstranded_default_args} -o- > stringtie_unstranded_default_STAR.gff3
     fi
-    if [ -s "${unstranded_alt_args}" ]; then
+    if [ "\$(basename ${unstranded_alt_args})" != "dev_null2" ]; then
         gffread -E ${unstranded_alt_args} -o- > stringtie_unstranded_AltCommands_STAR.gff3
     fi
 
@@ -115,22 +116,21 @@ process aegis_long_reads {
         echo "[\$(date '+%Y-%m-%d %H:%M:%S')] Aegis on chromosome : \$chrom"
 
         CMD_aegis_1="/scripts/Aegis1.py --genome_name New_assembly --genome_path /genome_path/$genome --augustus_path ${augustus_gff} --genemark_path BRAKER3_genemark.gff3 --liftoff_path ${liftoff_annotations} --psiclass_stranded_STAR_path psiclass_stranded_STAR.gff3 --stringtie_stranded_default_STAR_path stringtie_stranded_default_STAR.gff3 --stringtie_stranded_AltCommands_STAR_path stringtie_stranded_AltCommands_STAR.gff3 --stringtie_Isoseq_default_path stringtie_Isoseq_default.gff3 --stringtie_Isoseq_AltCommands_path stringtie_Isoseq_AltCommands.gff3 --output_dir \$PWD/\${chrom} --output_gff aegis_final_merged_annotations_\${chrom}.gff3 --output_pickle aegis_final_merged_annotations_\${chrom}.pkl --chromosome \$chrom"
-        if [ -s "${gffcompare_unstranded}" ]; then
+        if [ "\$(basename ${gffcompare_unstranded})" != "dev_null3" ]; then
             CMD_aegis_1="\$CMD_aegis_1 --psiclass_unstranded_STAR_path psiclass_unstranded_STAR.gff3"
         fi
-        if [ -s "${unstranded_default_args}" ]; then
+        if [ "\$(basename ${unstranded_default_args})" != "dev_null1" ]; then
             CMD_aegis_1="\$CMD_aegis_1 --stringtie_unstranded_default_STAR_path stringtie_unstranded_default_STAR.gff3"
         fi
-
-        if [ -s "${unstranded_alt_args}" ]; then
+        if [ "\$(basename ${unstranded_alt_args})" != "dev_null2" ]; then
             CMD_aegis_1="\$CMD_aegis_1 --stringtie_unstranded_AltCommands_STAR_path stringtie_unstranded_AltCommands_STAR.gff3"
         fi
          echo "[\$DATE] Executing: \$CMD_aegis_1"
          eval "\$CMD_aegis_1"
          echo "[\$DATE] Executing: /scripts/Aegis2.sh -q \$PWD/\${chrom}/merged_annotation_\${chrom}_unique_proteins.fasta -t ${task.cpus} -d \$protein_paths -o \$PWD/\${chrom}"
          /scripts/Aegis2.sh -q \$PWD/\${chrom}/merged_annotation_\${chrom}_unique_proteins.fasta -t ${task.cpus} -d \$protein_paths -o \$PWD/\${chrom}
-         echo "[\$DATE] Executing: /scripts/Aegis3.py --merged_annotation aegis_final_merged_annotations_\${chrom}.pkl --hard_masked_genome ${edta_masked_genome} --diamond_hits \${diamond_paths} --intermediate_annotation intermediate_annotation_\${chrom}.pkl --final_annotation final_annotation_\${chrom}.pkl --export_dir \$PWD/\${chrom} --final_export_dir \$PWD/\${chrom} --update --chromosome \$chrom --source_priority \$protein_names"
-         /scripts/Aegis3.py --merged_annotation aegis_final_merged_annotations_\${chrom}.pkl --hard_masked_genome ${edta_masked_genome} --diamond_hits \${diamond_paths} --intermediate_annotation intermediate_annotation_\${chrom}.pkl --final_annotation final_annotation_\${chrom}.pkl --export_dir \$PWD/\${chrom} --final_export_dir \$PWD/\${chrom} --update --chromosome \$chrom --source_priority \$protein_names
+         echo "[\$DATE] Executing: /scripts/Aegis3.py --merged_annotation \$PWD/\${chrom}/aegis_final_merged_annotations_\${chrom}.pkl --hard_masked_genome ${edta_masked_genome} --diamond_hits \${diamond_paths} --intermediate_annotation intermediate_annotation_\${chrom}.pkl --final_annotation final_annotation_\${chrom}.pkl --export_dir \$PWD/\${chrom} --final_export_dir \$PWD/\${chrom} --update --chromosome \$chrom --source_priority \$protein_names"
+         /scripts/Aegis3.py --merged_annotation \$PWD/\${chrom}/aegis_final_merged_annotations_\${chrom}.pkl --hard_masked_genome ${edta_masked_genome} --diamond_hits \${diamond_paths} --intermediate_annotation intermediate_annotation_\${chrom}.pkl --final_annotation final_annotation_\${chrom}.pkl --export_dir \$PWD/\${chrom} --final_export_dir \$PWD/\${chrom} --update --chromosome \$chrom --source_priority \$protein_names
     done
 
     # final concatenate of all final GFF3 files
