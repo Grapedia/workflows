@@ -78,13 +78,14 @@ process aegis_short_reads {
         gffread -E ${stranded_default_args} -o- > stringtie_stranded_default_STAR.gff3
         gffread -E ${stranded_alt_args} -o- > stringtie_stranded_AltCommands_STAR.gff3
         gffread -E ${gffcompare_stranded} -o- > psiclass_stranded_STAR.gff3
-        if [ -s "${gffcompare_unstranded}" ]; then
+
+        if [ "\$(basename ${gffcompare_unstranded})" != "dev_null3" ]; then
             gffread -E ${gffcompare_unstranded} -o- > psiclass_unstranded_STAR.gff3
         fi
-        if [ -s "${unstranded_default_args}" ]; then
+        if [ "\$(basename ${unstranded_default_args})" != "dev_null1" ]; then
             gffread -E ${unstranded_default_args} -o- > stringtie_unstranded_default_STAR.gff3
         fi
-        if [ -s "${unstranded_alt_args}" ]; then
+        if [ "\$(basename ${unstranded_alt_args})" != "dev_null2" ]; then
             gffread -E ${unstranded_alt_args} -o- > stringtie_unstranded_AltCommands_STAR.gff3
         fi
 
@@ -111,13 +112,14 @@ process aegis_short_reads {
             echo "[\$(date '+%Y-%m-%d %H:%M:%S')] Aegis on chromosome : \$chrom"
 
             CMD_aegis_1="/scripts/Aegis1.py --genome_name New_assembly --genome_path /genome_path/$genome --augustus_path ${augustus_gff} --genemark_path BRAKER3_genemark.gff3 --liftoff_path ${liftoff_annotations} --psiclass_stranded_STAR_path psiclass_stranded_STAR.gff3 --stringtie_stranded_default_STAR_path stringtie_stranded_default_STAR.gff3 --stringtie_stranded_AltCommands_STAR_path stringtie_stranded_AltCommands_STAR.gff3 --output_dir \$PWD/\${chrom} --output_gff aegis_final_merged_annotations_\${chrom}.gff3 --output_pickle aegis_final_merged_annotations_\${chrom}.pkl --chromosome \$chrom"
-            if [ -s "${gffcompare_unstranded}" ]; then
+
+            if [ "\$(basename ${gffcompare_unstranded})" != "dev_null3" ]; then
                 CMD_aegis_1="\$CMD_aegis_1 --psiclass_unstranded_STAR_path psiclass_unstranded_STAR.gff3"
             fi
-            if [ -s "${unstranded_default_args}" ]; then
+            if [ "\$(basename ${unstranded_default_args})" != "dev_null1" ]; then
                 CMD_aegis_1="\$CMD_aegis_1 --stringtie_unstranded_default_STAR_path stringtie_unstranded_default_STAR.gff3"
             fi
-            if [ -s "${unstranded_alt_args}" ]; then
+            if [ "\$(basename ${unstranded_alt_args})" != "dev_null2" ]; then
                 CMD_aegis_1="\$CMD_aegis_1 --stringtie_unstranded_AltCommands_STAR_path stringtie_unstranded_AltCommands_STAR.gff3"
             fi
 
