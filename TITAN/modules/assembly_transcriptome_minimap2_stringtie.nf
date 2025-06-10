@@ -24,8 +24,8 @@ process assembly_transcriptome_minimap2_stringtie {
     CMD="/scripts/Stringtie.sh -t ${task.cpus} -o ${sample_ID}_transcriptome.gtf -b ${bam_file} -r long"
     echo "[\$DATE] Executing: \$CMD"
     /scripts/Stringtie.sh -t ${task.cpus} -o ${sample_ID}_transcriptome.gtf -b ${bam_file} -r long
-    CMD="/scripts/Stringtie_AltCommands.sh -o ${sample_ID}_transcriptome.AltCommands.gtf -b ${bam_file} -r long"
+    CMD="/scripts/Stringtie_AltCommands.sh -t ${task.cpus} -o ${sample_ID}_transcriptome.AltCommands.gtf -b ${bam_file} -r long"
     echo "[\$DATE] Executing: \$CMD"
-    /scripts/Stringtie_AltCommands.sh -o ${sample_ID}_transcriptome.AltCommands.gtf -b ${bam_file} -r long
+    /scripts/Stringtie_AltCommands.sh -t ${task.cpus} -o ${sample_ID}_transcriptome.AltCommands.gtf -b ${bam_file} -r long
     """
 }
