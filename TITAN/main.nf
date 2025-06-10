@@ -79,6 +79,24 @@ workflow {
 
       def workflow_inputs = []
 
+      def fake_null_merged_star_stringtie_default_args_unstranded = file("${params.output_dir}/dev_null1")
+
+      if (!fake_null_merged_star_stringtie_default_args_unstranded.exists() || fake_null_merged_star_stringtie_default_args_unstranded.size() == 0) {
+          fake_null_merged_star_stringtie_default_args_unstranded.text = "FAKE merged_star_stringtie_default_args_unstranded"
+      }
+
+      def fake_null_merged_star_stringtie_unstranded_alt = file("${params.output_dir}/dev_null2")
+
+      if (!fake_null_merged_star_stringtie_unstranded_alt.exists() || fake_null_merged_star_stringtie_unstranded_alt.size() == 0) {
+          fake_null_merged_star_stringtie_unstranded_alt.text = "FAKE merged_star_stringtie_unstranded_alt"
+      }
+
+      def fake_null_gffcompare_out_star_psiclass_unstranded = file("${params.output_dir}/dev_null3")
+
+      if (!fake_null_gffcompare_out_star_psiclass_unstranded.exists() || fake_null_gffcompare_out_star_psiclass_unstranded.size() == 0) {
+          fake_null_gffcompare_out_star_psiclass_unstranded.text = "FAKE gffcompare_out_star_psiclass_unstranded"
+      }
+
       // Load manually the outputs of generate_evidence_data workflow
       if (params.EDTA == 'yes') {
         if (file("${outdir_1}/assembly_masked.EDTA.fasta").exists()) {
@@ -138,19 +156,19 @@ workflow {
           workflow_inputs << tuple("merged_star_stringtie.default_args_unstranded", file("${outdir_1}/merged_star_stringtie_unstranded_default.gtf"))
       } else {
         println "WARNING : no RNAseq unstranded data used in this run !"
-        tuple("merged_star_stringtie.default_args_unstranded", null)
+        workflow_inputs << tuple("merged_star_stringtie.default_args_unstranded", file(fake_null_merged_star_stringtie_default_args_unstranded))
       }
       if (file("${outdir_1}/merged_star_stringtie_unstranded_alt.gtf").exists()) {
           workflow_inputs << tuple("merged_star_stringtie.alt_args_unstranded", file("${outdir_1}/merged_star_stringtie_unstranded_alt.gtf"))
       } else {
         println "WARNING : no RNAseq unstranded data used in this run !"
-        tuple("merged_star_stringtie.alt_args_unstranded", null)
+        workflow_inputs << tuple("merged_star_stringtie.alt_args_unstranded", file(fake_null_merged_star_stringtie_unstranded_alt))
       }
       if (file("${outdir_1}/merged_star_psiclass_unstranded.gtf").exists()) {
           workflow_inputs << tuple("gffcompare_out.star_psiclass_unstranded", file("${outdir_1}/merged_star_psiclass_unstranded.gtf"))
       } else {
         println "WARNING : no RNAseq unstranded data used in this run !"
-        tuple("gffcompare_out.star_psiclass_unstranded", null)
+        workflow_inputs << tuple("gffcompare_out.star_psiclass_unstranded", file(fake_null_gffcompare_out_star_psiclass_unstranded))
       }
 
       def workflow_inputs_list = workflow_inputs // Keep the list as it is
