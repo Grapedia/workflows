@@ -56,20 +56,35 @@ workflow aegis {
             println "Stringtie_merging_short_reads_STAR_alt_args_stranded file: ${Stringtie_merging_short_reads_STAR_alt_args_stranded}"
         }
         if (key == "merged_star_stringtie.default_args_unstranded") {
-            Stringtie_merging_short_reads_STAR_default_args_unstranded << filepath
-            println "Stringtie_merging_short_reads_STAR_default_args_unstranded file: ${Stringtie_merging_short_reads_STAR_default_args_unstranded}"
+            if (!filepath.name.equals("dev_null1")) {
+                Stringtie_merging_short_reads_STAR_default_args_unstranded << filepath
+                println "Stringtie_merging_short_reads_STAR_default_args_unstranded file: ${Stringtie_merging_short_reads_STAR_default_args_unstranded}"
+            } else {
+                Stringtie_merging_short_reads_STAR_default_args_unstranded << filepath
+                println "Stringtie_merging_short_reads_STAR_default_args_unstranded : no unstranded data available, pass ..."
+            }
         }
         if (key == "merged_star_stringtie.alt_args_unstranded") {
-            Stringtie_merging_short_reads_STAR_alt_args_unstranded << filepath
-            println "Stringtie_merging_short_reads_STAR_alt_args_unstranded file: ${Stringtie_merging_short_reads_STAR_alt_args_unstranded}"
+            if (!filepath.name.equals("dev_null2")) {
+                Stringtie_merging_short_reads_STAR_alt_args_unstranded << filepath
+                println "Stringtie_merging_short_reads_STAR_alt_args_unstranded file: ${Stringtie_merging_short_reads_STAR_alt_args_unstranded}"
+            } else {
+                Stringtie_merging_short_reads_STAR_alt_args_unstranded << filepath
+                println "Stringtie_merging_short_reads_STAR_alt_args_unstranded : no unstranded data available, pass ..."
+            }
         }
         if (key == "gffcompare_out.star_psiclass_stranded") {
             gffcompare_star_psiclass_stranded << filepath
             println "gffcompare_star_psiclass_stranded file: ${gffcompare_star_psiclass_stranded}"
         }
         if (key == "gffcompare_out.star_psiclass_unstranded") {
-            gffcompare_star_psiclass_unstranded << filepath
-            println "gffcompare_star_psiclass_unstranded file: ${gffcompare_star_psiclass_unstranded}"
+            if (!filepath.name.equals("dev_null3")) {
+                gffcompare_star_psiclass_unstranded << filepath
+                println "gffcompare_star_psiclass_unstranded file: ${gffcompare_star_psiclass_unstranded}"
+            } else {
+                gffcompare_star_psiclass_unstranded << filepath
+                println "gffcompare_star_psiclass_unstranded : no unstranded data available, pass ..."
+            }
         }
         if (params.use_long_reads) {
           if (key == "merged_long_reads.default_args_gff") {
