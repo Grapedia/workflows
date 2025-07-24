@@ -32,7 +32,7 @@ process minimap2_alignment {
     then
       CMD="minimap2 -t ${task.cpus} -ax splice:hq -uf \${minimap2_index} /RNAseq_data/${sample_ID}.fasta > ${sample_ID}_Aligned.sam"
       echo "[\$DATE] Executing: \$CMD"
-      minimap2 -t ${task.cpus} -ax splice:hq -uf \${minimap2_index} /RNAseq_data/${sample_ID}.fastq.gz > ${sample_ID}_Aligned.sam
+      minimap2 -t ${task.cpus} -ax splice:hq -uf \${minimap2_index} /RNAseq_data/${sample_ID}.fasta > ${sample_ID}_Aligned.sam
     fi
     samtools view -b ${sample_ID}_Aligned.sam | samtools sort - > ${sample_ID}_Aligned.sorted.bam
     rm ${sample_ID}_Aligned.sam
