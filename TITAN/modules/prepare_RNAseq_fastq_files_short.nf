@@ -31,7 +31,7 @@ process prepare_RNAseq_fastq_files_short {
         continue
       else
         echo "[\$DATE] Downloading SRA sample: $sample_ID - paired-end sample"
-        prefetch --force all -O /RNAseq_data/ $sample_ID
+        prefetch --force all --max-size 100G -O /RNAseq_data/ $sample_ID
         echo "[\$DATE] Converting .sra to FASTQ for $sample_ID"
         fastq-dump --outdir /RNAseq_data/ --split-files $sample_ID
         rm -R /RNAseq_data/$sample_ID
@@ -47,7 +47,7 @@ process prepare_RNAseq_fastq_files_short {
         continue
       else
         echo "[\$DATE] Downloading SRA sample: $sample_ID - single-end sample"
-        prefetch --force all -O /RNAseq_data/ $sample_ID
+        prefetch --force all --max-size 100G -O /RNAseq_data/ $sample_ID
         echo "[\$DATE] Converting .sra to FASTQ for $sample_ID"
         fastq-dump --outdir /RNAseq_data/ $sample_ID
         rm -R /RNAseq_data/$sample_ID

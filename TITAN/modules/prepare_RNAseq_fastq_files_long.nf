@@ -32,7 +32,7 @@ process prepare_RNAseq_fastq_files_long {
       continue
     else
       #echo "[\$DATE] Downloading SRA sample: $sample_ID"
-      prefetch --force all -O /RNAseq_data/ $sample_ID
+      prefetch --force all --max-size 100G -O /RNAseq_data/ $sample_ID
       #echo "[\$DATE] Converting .sra to FASTQ for $sample_ID"
       fastq-dump --outdir /RNAseq_data/ $sample_ID
       rm -R /RNAseq_data/$sample_ID
@@ -48,8 +48,17 @@ process prepare_RNAseq_fastq_files_long {
     else
       echo "[\$DATE] WARNING: ${projectDir}/data/RNAseq_data/$sample_ID*fastq.gz does not exist!"
     fi
+  elif [[ $SRA_or_FASTQ == "FASTA" ]]
+  then
+    if ls /RNAseq_data/$sample_ID*fasta 1> /dev/null 2>&1
+    then
+      #echo "[\$DATE] FASTA sample $sample_ID already exists. Skipping."
+      continue
+    else
+      echo "[\$DATE] WARNING: ${projectDir}/data/RNAseq_data/$sample_ID*fasta does not exist!"
+    fi
   else
-    echo "[\$DATE] ERROR: \$SRA_or_FASTQ is not equal to SRA or FASTQ!"
+    echo "[\$DATE] ERROR: \$SRA_or_FASTQ is not equal to SRA, FASTQ or FASTA!"
   fi
   """
 }
