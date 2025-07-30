@@ -28,6 +28,11 @@ process minimap2_alignment {
       CMD="minimap2 -t ${task.cpus} -ax splice:hq -uf \${minimap2_index} /RNAseq_data/${sample_ID}.fastq.gz > ${sample_ID}_Aligned.sam"
       echo "[\$DATE] Executing: \$CMD"
       minimap2 -t ${task.cpus} -ax splice:hq -uf \${minimap2_index} /RNAseq_data/${sample_ID}.fastq.gz > ${sample_ID}_Aligned.sam
+    elif [[ $SRA_or_FASTQ == "SRA" ]]
+    then
+      CMD="minimap2 -t ${task.cpus} -ax splice:hq -uf \${minimap2_index} /RNAseq_data/${sample_ID}.fastq.gz > ${sample_ID}_Aligned.sam"
+      echo "[\$DATE] Executing: \$CMD"
+      minimap2 -t ${task.cpus} -ax splice:hq -uf \${minimap2_index} /RNAseq_data/${sample_ID}.fastq.gz > ${sample_ID}_Aligned.sam
     elif [[ $SRA_or_FASTQ == "FASTA" ]]
     then
       CMD="minimap2 -t ${task.cpus} -ax splice:hq -uf \${minimap2_index} /RNAseq_data/${sample_ID}.fasta > ${sample_ID}_Aligned.sam"
