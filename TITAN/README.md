@@ -5,7 +5,7 @@
 
 David Navarro, Antonio Santiago, José Tomás Matus [TomsBio Lab](https://tomsbiolab.com/)
 
-Amandine Velt, Camille Rustenholz [INRAE](https://eng-svqv.colmar.hub.inrae.fr/presentation2/teams/grapevine-genomics-and-metabolism)
+Amandine Velt, Camille Rustenholz [INRAE](https://eng-svqv.colmar.hub.inrae.fr/)
 
 Marco Moretto [Fondazione Edmund Mach](https://fmach.it/)
 
