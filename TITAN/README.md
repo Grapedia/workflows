@@ -1,6 +1,19 @@
 # TITAN: The Intensive Transcript Annotation Pipeline
 
+
+**Contributors:**
+
+David Navarro, Antonio Santiago, José Tomás Matus [TomsBio Lab](https://tomsbiolab.com/)
+
+Amandine Velt, Camille Rustenholz [INRAE](https://eng-svqv.colmar.hub.inrae.fr/presentation2/teams/grapevine-genomics-and-metabolism)
+
+Marco Moretto [Fondazione Edmund Mach](https://fmach.it/)
+
+_____________________________________________________________________________________________
+
 📖 **Full documentation**: [Read the Docs](https://grapedia.readthedocs.io/en/latest/workflows.html#titan-the-intensive-transcript-annotation-pipeline)
+
+_____________________________________________________________________________________________
 
 ## **Inputs**
 
