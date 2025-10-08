@@ -149,14 +149,14 @@ process aegis_long_reads {
 
     > "\$proteins_final_all"
 
-    for proteins_chrom_all in `ls \$PWD/*/final_annotation_*_proteins_p_id_all.fasta`
+    for proteins_chrom_all in `ls \$PWD/*/final_annotation_*_all_proteins.fasta`
     do
         cat \$proteins_chrom_all >> \$proteins_final_all
     done
 
     > "\$proteins_final_main"
 
-    for proteins_chrom_main in `ls \$PWD/*/final_annotation_*_proteins_p_id_main.fasta`
+    for proteins_chrom_main in `ls \$PWD/*/final_annotation_*_main_proteins.fasta`
     do
         cat \$proteins_chrom_main >> \$proteins_final_main
     done
