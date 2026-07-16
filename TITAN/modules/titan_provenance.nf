@@ -1,4 +1,5 @@
 process titan_provenance {
+  label 'process_low'
   tag "TITAN evidence manifest"
 
   publishDir "${params.output_dir}/provenance", mode: 'copy'

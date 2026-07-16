@@ -1,10 +1,9 @@
 process aegis_long_reads {
+  label 'process_aegis'
   tag "AEGIS merge of short- and long-read evidence"
 
   container "${params.aegis_container}"
   publishDir "${params.output_dir}/aegis_outputs", mode: 'copy'
-  cpus 1
-
   input:
     path(edta_masked_genome)
     path(augustus_gff)

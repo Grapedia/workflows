@@ -1,10 +1,20 @@
 #!/usr/bin/env python3
 import subprocess
 import sys
+import re
 from pathlib import Path
 
 
 ROOT = Path(__file__).resolve().parents[1]
+RESOURCE_LABELS = {
+    "process_low",
+    "process_index",
+    "process_alignment",
+    "process_transcriptome",
+    "process_prediction",
+    "process_merge",
+    "process_aegis",
+}
 
 
 def fail(message):
@@ -39,13 +49,54 @@ def validate_no_container_options():
     return 0
 
 
+def validate_resource_labels():
+    base_config = (ROOT / "conf" / "base.config").read_text()
+    missing_config = [label for label in sorted(RESOURCE_LABELS) if f"withLabel: {label}" not in base_config]
+    if missing_config:
+        return fail("conf/base.config is missing resource label(s): " + ", ".join(missing_config))
+
+    offenders = []
+    missing_labels = []
+    unknown_labels = []
+    for path in sorted((ROOT / "modules").glob("*.nf")):
+        text = path.read_text()
+        labels = re.findall(r"""label\s+['"](process_[^'"]+)['"]""", text)
+        if not labels:
+            missing_labels.append(str(path.relative_to(ROOT)))
+        unknown_labels.extend(
+            f"{path.relative_to(ROOT)}: {label}"
+            for label in labels
+            if label not in RESOURCE_LABELS
+        )
+        for line_number, line in enumerate(text.splitlines(), 1):
+            stripped = line.strip()
+            if stripped.startswith("cpus "):
+                offenders.append(f"{path.relative_to(ROOT)}:{line_number}: {stripped}")
+    if missing_labels:
+        return fail("module process resource labels are missing:\n" + "\n".join(missing_labels))
+    if unknown_labels:
+        return fail("unknown module process resource label(s):\n" + "\n".join(unknown_labels))
+    if offenders:
+        return fail("module cpus directives must be configured through labels or withName selectors:\n" + "\n".join(offenders))
+    return 0
+
+
+def validate_configured_cpus(profile, config):
+    if "cpus = null" in config:
+        return fail(f"profile {profile} resolved at least one process CPU directive to null")
+    return 0
+
+
 def main():
     result = validate_no_container_options()
     if result:
         return result
+    result = validate_resource_labels()
+    if result:
+        return result
 
     expectations = {
-        "test": ["executor = 'local'", "enabled = false", "workDir ="],
+        "test": ["executor = 'local'", "enabled = false", "workDir =", "withLabel:process_prediction"],
         "local": ["executor = 'local'", "docker", "enabled = true", "egapx_executor = 'docker'"],
         "apptainer,test": ["apptainer", "enabled = true", "egapx_executor = 'singularity'"],
         "test,slurm,apptainer": ["executor = 'slurm'", "queueSize", "submitRateLimit", "egapx_executor = 'singularity'"],
@@ -58,6 +109,9 @@ def main():
             print(exc.output, file=sys.stderr)
             return fail(f"nextflow config failed for profile {profile}")
         result = require_contains(profile, config, expected)
+        if result:
+            return result
+        result = validate_configured_cpus(profile, config)
         if result:
             return result
 

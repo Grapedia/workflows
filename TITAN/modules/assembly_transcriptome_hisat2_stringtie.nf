@@ -1,5 +1,6 @@
 // 4. Transcriptome assembly with StringTie
 process assembly_transcriptome_hisat2_stringtie {
+  label 'process_transcriptome'
 
   tag "Hisat2/StringTie - short reads on ${sample_ID}"
   container params.container_stringtie
@@ -10,8 +11,6 @@ process assembly_transcriptome_hisat2_stringtie {
       return "${params.output_dir}/intermediate_files/evidence_data/transcriptomes/StringTie/short_reads/HISAT2/stranded"
     }
   }
-  cpus 4
-
   input:
     tuple val(sample_ID), path(bam_file), val(strand_type)
     path(stringtie_script)

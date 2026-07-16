@@ -1,10 +1,9 @@
 // 2. gffcompare
 process gffcompare {
+  label 'process_merge'
 
   tag "gffcompare on STAR/PsiCLASS GTF to merge them"
   container params.container_gffcompare
-  cpus 4
-
   publishDir "${params.output_dir}/tmp", mode: 'copy'
   publishDir "${params.output_dir}", mode: 'copy', saveAs: { filename ->
     if (filename == 'stranded_merged_output.combined.gtf') {

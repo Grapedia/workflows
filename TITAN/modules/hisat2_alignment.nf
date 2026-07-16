@@ -1,5 +1,6 @@
 // 2. Aligning RNAseq data on reference genome with HISAT2
 process hisat2_alignment {
+  label 'process_alignment'
 
   tag "HISAT2 on ${sample_ID} (${strand_type})"
   container params.container_hisat2
@@ -11,9 +12,6 @@ process hisat2_alignment {
       return "${params.output_dir}/intermediate_files/evidence_data/RNAseq_alignments/HISAT2/stranded"
     }
   }
-
-  cpus 4
-
   input:
     path(hisat2_databases)
     tuple val(sample_ID), val(library_layout), path(reads), val(strand_type)

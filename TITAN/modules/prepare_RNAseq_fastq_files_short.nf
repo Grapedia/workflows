@@ -3,6 +3,7 @@
 // Once done, the RNAseq samples are ready for transcriptome assembly.
 
 process prepare_RNAseq_fastq_files_short {
+  label 'process_low'
   tag "prepare_RNAseq_fastq_files on $sample_ID"
   container params.container_sra_tools
   debug true

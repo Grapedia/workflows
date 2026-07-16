@@ -323,6 +323,8 @@ nextflow config -profile test,slurm,apptainer
 
 Use `test,slurm,apptainer` only for configuration resolution on the minimal fixtures. Production HPC runs should use `slurm,apptainer`.
 
+Runtime resources are centralized in `conf/base.config` through process labels such as `process_index`, `process_alignment`, `process_transcriptome`, `process_prediction`, `process_merge` and `process_aegis`. Adjust resources in config profiles or with Nextflow process selectors rather than editing module files.
+
 For a direct Nextflow command:
 
 ```bash

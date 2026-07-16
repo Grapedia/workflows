@@ -1,11 +1,10 @@
 // 2. Aligning RNAseq data on reference genome with minimap2
 process minimap2_alignment {
+  label 'process_alignment'
 
   tag "Minimap2 on ${sample_ID}"
   container params.container_minimap2_samtools
   publishDir "${params.output_dir}/intermediate_files/evidence_data/RNAseq_alignments/minimap2"
-  cpus 4
-
   input:
     path(minimap2_genome_indices)
     tuple val(sample_ID), val(SRA_or_FASTQ), val(library_layout), path(reads)

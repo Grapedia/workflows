@@ -221,6 +221,20 @@ nextflow config -profile slurm,apptainer
 nextflow config -profile test,slurm,apptainer
 ```
 
+Resource policy is centralized in [conf/base.config](conf/base.config). Active modules use process labels instead of local `cpus` directives:
+
+| Label | Typical work |
+| --- | --- |
+| `process_low` | lightweight preparation, validation, Liftoff post-processing and provenance |
+| `process_index` | genome or transcriptome index generation |
+| `process_alignment` | read trimming and alignments |
+| `process_transcriptome` | per-sample transcriptome assembly |
+| `process_prediction` | EDTA, EGAPx and BRAKER3 prediction steps |
+| `process_merge` | StringTie and GFFCompare merge steps |
+| `process_aegis` | AEGIS and final functional annotation |
+
+Override resources through `conf/base.config`, a profile config, or Nextflow process selectors. EDTA, EGAPx and Diamond2GO still honor `--edta_cpus`, `--egapx_cpus` and `--diamond2go_cpus` through `withName` selectors.
+
 ## Outputs
 
 Main public output families:

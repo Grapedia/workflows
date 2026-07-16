@@ -1,10 +1,9 @@
 process diamond2go {
+  label 'process_aegis'
 
   tag "Executing diamond2go annotation on $proteins_file_all and $proteins_file_main"
   container params.container_diamond2go
   publishDir "${params.output_dir}/Diamond2GO_outputs", mode: 'copy'
-  cpus params.diamond2go_cpus
-
   input:
     path(proteins_file_all)
     path(proteins_file_main)

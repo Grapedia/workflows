@@ -1,11 +1,10 @@
 // 1. Generate reference genome indices using STAR
 process star_genome_indices {
+  label 'process_index'
 
   tag "STAR genomeGenerate on $genome"
   container params.container_star
   publishDir "${params.output_dir}/intermediate_files/evidence_data/star_databases/"
-  cpus 4
-
   input:
     path(genome_fasta)
     val(genome)

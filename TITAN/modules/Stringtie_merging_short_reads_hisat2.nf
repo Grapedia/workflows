@@ -1,11 +1,10 @@
 // Transcriptomes merging with StringTie
 process Stringtie_merging_short_reads_hisat2 {
+  label 'process_merge'
 
   tag "Hisat2/StringTie merging - short reads"
   container params.container_stringtie
   publishDir "${params.output_dir}", mode: 'copy'
-  cpus 4
-
   input:
     path(stranded_default_gtfs)
     path(stranded_alt_gtfs)

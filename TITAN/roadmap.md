@@ -384,19 +384,19 @@ Faible.
 
 ## TITAN-P4-001 - Optimiser ressources HPC
 Priorite : P4
-Statut : A faire
+Statut : Fait
 Risque : Moyen
 
 ### Objectif
 Definir CPU, memoire, temps, retries et concurrence par type de processus.
 ### Constat
-Ressources hardcodees dans modules et config globale `100GB/20 CPU`.
+Les ressources des modules actifs sont pilotees par labels dans `conf/base.config`; les directives `cpus` locales ont ete retirees des modules et l'ancien defaut global `100GB/20 CPU` a ete supprime.
 ### Fichiers concernes
 `conf/base.config`, `modules/*.nf`.
 ### Etapes d'implementation
-Introduire labels (`process_index`, `process_alignment`, `process_transcriptome`, `process_prediction`, `process_merge`, `process_aegis`, `process_low`) et les appliquer progressivement.
+Introduire labels (`process_index`, `process_alignment`, `process_transcriptome`, `process_prediction`, `process_merge`, `process_aegis`, `process_low`) et les appliquer progressivement. Les modules actifs sont maintenant labellises; EDTA, EGAPx et Diamond2GO gardent leurs parametres CPU via `withName`.
 ### Tests
-`nextflow config -flat`; test local; validation Slurm sur petit run/stub.
+`python3 scripts/validate_profiles.py`; `nextflow config -flat -profile test`; `nextflow config -flat -profile slurm,apptainer`; `nextflow run main.nf -profile test -stub-run -ansi-log false`; `scripts/run-tests.sh`.
 ### Criteres d'acceptation
 Ressources adaptables sans modifier les modules.
 ### Risques et retour arriere

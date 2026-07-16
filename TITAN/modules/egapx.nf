@@ -1,9 +1,8 @@
 process egapx {
+  label 'process_prediction'
 
   tag "Executing NCBI egapx gene annotation pipeline ..."
   publishDir "${params.output_dir}/egapx", mode: 'copy'
-  cpus params.egapx_cpus
-
   input:
     path egapx_paramfile
 

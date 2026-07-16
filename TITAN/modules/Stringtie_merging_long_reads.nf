@@ -1,10 +1,9 @@
 // Transcriptomes merging with StringTie
 process Stringtie_merging_long_reads {
+  label 'process_merge'
 
   tag "StringTie merging - long reads"
   container params.container_stringtie
-  cpus 4
-
   publishDir "${params.output_dir}/tmp", mode: 'copy'
   publishDir "${params.output_dir}", mode: 'copy', saveAs: { filename ->
     if (filename == 'merged_transcriptomes.minimap2.long_reads.default_args.gtf') {

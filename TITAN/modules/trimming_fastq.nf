@@ -1,11 +1,10 @@
 // Trimming RNAseq data with fastp (much faster than Trimmomatic)
 process trimming_fastq {
+  label 'process_alignment'
 
     tag "FASTP on $sample_ID"
     container params.container_fastp
     publishDir "${params.output_dir}/intermediate_files/evidence_data/RNAseq_data/trimmed_data"
-    cpus 4
-
     input:
       tuple val(sample_ID), val(SRA_or_FASTQ), val(library_layout), path(reads)
 

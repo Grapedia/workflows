@@ -1,5 +1,6 @@
 // 4. Transcriptome assembly with PsiCLASS
 process assembly_transcriptome_star_psiclass {
+  label 'process_transcriptome'
 
   tag "STAR/PsiCLASS - short reads - on ${sample_ID}"
   container params.container_psiclass_samtools
@@ -10,8 +11,6 @@ process assembly_transcriptome_star_psiclass {
       return "${params.output_dir}/intermediate_files/transcriptomes/STAR_PsiCLASS/stranded"
     }
   }
-  cpus 4
-
   input:
     tuple val(sample_ID), path(bam_file), val(strand_type)
 

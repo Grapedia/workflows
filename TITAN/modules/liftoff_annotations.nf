@@ -4,12 +4,11 @@
 //   * the target assembly
 // * the annotations to lift over the target assembly
 process liftoff_annotations {
+  label 'process_low'
 
   cache 'deep'
   tag "Executing liftoff on the new assembly $genome"
   container params.container_liftoff
-  cpus 4
-
   publishDir "${params.output_dir}", mode: 'copy'
 
   input:

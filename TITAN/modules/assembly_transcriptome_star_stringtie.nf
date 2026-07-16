@@ -1,5 +1,6 @@
 // 4. Transcriptome assembly with StringTie
 process assembly_transcriptome_star_stringtie {
+  label 'process_transcriptome'
 
   tag "STAR/StringTie - short reads on ${sample_ID}"
   container params.container_stringtie
@@ -10,9 +11,6 @@ process assembly_transcriptome_star_stringtie {
       return "${params.output_dir}/intermediate_files/evidence_data/transcriptomes/StringTie/short_reads/STAR/stranded"
     }
   }
-
-  cpus 4
-
   input:
     tuple val(sample_ID), path(bam_file), val(strand_type)
     path(stringtie_script)

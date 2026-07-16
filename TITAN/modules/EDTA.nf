@@ -1,8 +1,8 @@
 process EDTA {
+  label 'process_prediction'
 
   tag "Executing EDTA TE annotation on the following genome: $genome"
   container params.container_edta
-  cpus params.edta_cpus
   publishDir "${params.output_dir}/tmp", mode: 'copy'
   publishDir "${params.output_dir}", mode: 'copy', saveAs: { filename ->
     filename.endsWith('.MAKER.masked') ? 'assembly_masked.EDTA.fasta' : null

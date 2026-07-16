@@ -1,10 +1,9 @@
 // Transcriptomes merging with StringTie
 process Stringtie_merging_short_reads_STAR {
+  label 'process_merge'
 
   tag "STAR/StringTie merging - short reads"
   container params.container_stringtie
-  cpus 4
-
   publishDir "${params.output_dir}/tmp", mode: 'copy'
   publishDir "${params.output_dir}", mode: 'copy', saveAs: { filename ->
     if (filename == 'merged_transcriptomes.STAR.short_reads.default_args.stranded.gtf') {

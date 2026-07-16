@@ -1,11 +1,10 @@
 // 4. Transcriptome assembly with StringTie
 process assembly_transcriptome_minimap2_stringtie {
+  label 'process_transcriptome'
 
   tag "Minimap2/StringTie - long reads"
   container params.container_stringtie
   publishDir "${params.output_dir}/intermediate_files/evidence_data/transcriptomes/StringTie/long_reads"
-  cpus 4
-
   input:
     tuple val(sample_ID), path(bam_file)
     path(stringtie_script)

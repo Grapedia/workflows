@@ -1,10 +1,9 @@
 // AUGUSTUS can be run directly using the pipeline BRAKER3
 process braker3_prediction_with_long_reads {
+  label 'process_prediction'
 
   tag "Executing BRAKER3/AUGUSTUS-Genemark prediction"
   container params.container_braker3
-  cpus 4
-
   publishDir "${params.output_dir}", mode: 'copy'
 
   input:

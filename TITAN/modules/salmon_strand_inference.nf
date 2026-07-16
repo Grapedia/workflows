@@ -1,10 +1,9 @@
 process salmon_strand_inference {
 
+  label 'process_low'
   tag "Executing salmon strand inference on $sample_ID"
   container params.container_salmon
   publishDir "${params.output_dir}/intermediate_files/salmon_strand/"
-  cpus 4
-
   input:
     tuple val(sample_ID), val(library_layout), path(reads)
     path(salmon_index)

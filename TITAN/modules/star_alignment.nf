@@ -1,5 +1,6 @@
 // 2. Aligning RNAseq data on reference genome with STAR
 process star_alignment {
+  label 'process_alignment'
 
   tag "STAR on ${sample_ID} (${strand_type})"
   container params.container_star
@@ -10,8 +11,6 @@ process star_alignment {
       return "${params.output_dir}/intermediate_files/evidence_data/RNAseq_alignments/STAR/stranded"
     }
   }
-  cpus 4
-
   input:
     path(star_database)
     tuple val(sample_ID), val(library_layout), path(reads), val(strand_type)
