@@ -359,6 +359,8 @@ Before launching a long run:
 * Use `-resume` for restart after interrupted runs.
 * Keep `nextflow_reports/`, `trace.txt`, `timeline.html` and `.nextflow.log` with the run outputs.
 
+For quick troubleshooting and the current limitations of stub tests, CI, SRA handling and cluster-specific Apptainer behavior, see the README sections `Troubleshooting` and `Limitations`.
+
 ## 11. References
 
 * EGAPx official repository and `v0.5.2` runner: <https://github.com/ncbi/egapx/tree/v0.5.2>

@@ -364,19 +364,19 @@ Apptainer peut etre limite dans GitHub Actions; la CI rapide n'execute pas Slurm
 
 ## TITAN-P3-001 - Refonte documentaire utilisateur
 Priorite : P3
-Statut : A faire
+Statut : Fait
 Risque : Faible
 
 ### Objectif
 README complet: quick start, entrees, sorties, profils, exemples, troubleshooting.
 ### Constat
-README utile mais encore insuffisant pour expliquer les profils production, le contrat d'evidences, la reprise future via manifeste et les limites actuelles.
+README restructure comme guide utilisateur: contrat workflow unique, quick start, entrees, samplesheets, profils, outputs, reprise, validation, CI, troubleshooting et limites.
 ### Fichiers concernes
 `README.md`, `docs/`.
 ### Etapes d'implementation
 Documenter contrat workflow unique, contrats samplesheets, outputs publics, reprise future via manifeste, EGAPx, EDTA/masked assembly et troubleshooting.
 ### Tests
-Verifier chaque commande documentee.
+`scripts/run-tests.sh`; verification des commandes documentees par inspection et controles statiques.
 ### Criteres d'acceptation
 Un nouvel utilisateur peut lancer un test local et comprendre comment preparer un run production.
 ### Risques et retour arriere
