@@ -12,9 +12,16 @@ process prepare_RNAseq_fastq_files_short {
 
   input:
   tuple val(sample_ID), val(SRA_or_FASTQ), val(library_layout), path(local_reads)
+  val(ena_download_timeout_seconds)
+  val(ena_max_download_attempts)
+  val(ena_retry_wait_seconds)
+  val(ena_verify_md5)
 
   output:
   tuple val(sample_ID), val(SRA_or_FASTQ), val(library_layout), path("${sample_ID}*.fastq.gz", includeInputs: true), emit: prepared_fastqs
+    path "versions.yml", emit: versions
+
+
 
   script:
   """
@@ -31,10 +38,10 @@ process prepare_RNAseq_fastq_files_short {
         --accession $sample_ID \\
         --layout paired \\
         --outdir . \\
-        --timeout-seconds ${params.ena_download_timeout_seconds} \\
-        --max-attempts ${params.ena_max_download_attempts} \\
-        --retry-wait-seconds ${params.ena_retry_wait_seconds} \\
-        ${params.ena_verify_md5 ? '--verify-md5' : '--no-verify-md5'}
+        --timeout-seconds ${ena_download_timeout_seconds} \\
+        --max-attempts ${ena_max_download_attempts} \\
+        --retry-wait-seconds ${ena_retry_wait_seconds} \\
+        ${ena_verify_md5 ? '--verify-md5' : '--no-verify-md5'}
     elif [[ $library_layout == "single" ]]
     then
       echo "[\$DATE] Downloading SRA single-end sample through ENA API: $sample_ID"
@@ -42,10 +49,10 @@ process prepare_RNAseq_fastq_files_short {
         --accession $sample_ID \\
         --layout single \\
         --outdir . \\
-        --timeout-seconds ${params.ena_download_timeout_seconds} \\
-        --max-attempts ${params.ena_max_download_attempts} \\
-        --retry-wait-seconds ${params.ena_retry_wait_seconds} \\
-        ${params.ena_verify_md5 ? '--verify-md5' : '--no-verify-md5'}
+        --timeout-seconds ${ena_download_timeout_seconds} \\
+        --max-attempts ${ena_max_download_attempts} \\
+        --retry-wait-seconds ${ena_retry_wait_seconds} \\
+        ${ena_verify_md5 ? '--verify-md5' : '--no-verify-md5'}
     else
       echo "[\$DATE] ERROR: $library_layout is not equal to paired or single" >&2
       exit 1
@@ -65,6 +72,7 @@ process prepare_RNAseq_fastq_files_short {
     echo "[\$DATE] ERROR: \$SRA_or_FASTQ is not equal to SRA or FASTQ" >&2
     exit 1
   fi
+    printf '"%s":\n  container: "not_recorded"\n' "${task.process}" > versions.yml
   """
 
   stub:
@@ -77,5 +85,6 @@ process prepare_RNAseq_fastq_files_short {
   else
     printf "@stub\\nACGT\\n+\\n!!!!\\n" | gzip -c > ${sample_ID}.fastq.gz
   fi
+    printf '"%s":\n  container: "not_recorded"\n' "${task.process}" > versions.yml
   """
 }

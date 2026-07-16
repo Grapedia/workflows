@@ -8,13 +8,13 @@ Perimetre lu: `README.md`, `nextflow.config`, `main.nf`, `workflows/titan.nf`, `
 
 ### P0 - Robustesse du graphe et reproductibilite
 
-- Eviter de modifier `params` dans `main.nf`. Les valeurs par defaut doivent vivre dans `nextflow.config` ou dans un schema de parametres. Muter `params` au runtime rend les profils et les overrides moins lisibles.
-- Reduire l'usage direct de `params` dans les modules. Les modules DSL2 devraient recevoir leurs options metier en `val` ou `path`, et garder seulement `container`, `label` et eventuellement `publishDir` comme configuration externe.
-- Ajouter `set -euo pipefail` a tous les scripts shell non triviaux, surtout ceux avec pipes (`samtools`, `grep`, `awk`, `STAR`, `HISAT2`, `fastp`, `liftoff`, `EDTA`).
-- Remplacer les sorties glob trop larges (`file("*.gtf")`, `file("*.trimmed.fastq.gz")`, `path("${sample_ID}*")`) par des noms explicites ou des tuples normalises. Les glob larges peuvent capturer des fichiers temporaires et casser les contrats de canal.
-- Normaliser les canaux vides. Plusieurs merges utilisent `collect().ifEmpty([])` puis un `path(...)`; c'est fragile parce que `[]` n'est pas un fichier. Preferer produire un fichier sentinelle explicite, ou scinder les branches optionnelles avec des workflows conditionnels.
-- Ajouter des `versions.yml` a tous les processus publics, pas seulement EGAPx, AEGIS et provenance. C'est une pratique courante nf-core et utile pour tracer les outils.
-- Ajouter des tests `nf-test` par module critique avant refactor: prepare FASTQ, trimming, alignements, merges, BRAKER, AEGIS, provenance.
+- [x] Eviter de modifier `params` dans `main.nf`. Les valeurs par defaut doivent vivre dans `nextflow.config` ou dans un schema de parametres. Muter `params` au runtime rend les profils et les overrides moins lisibles.
+- [x] Reduire l'usage direct de `params` dans les modules. Les modules DSL2 devraient recevoir leurs options metier en `val` ou `path`, et garder seulement `container`, `label` et eventuellement `publishDir` comme configuration externe.
+- [x] Ajouter `set -euo pipefail` a tous les scripts shell non triviaux, surtout ceux avec pipes (`samtools`, `grep`, `awk`, `STAR`, `HISAT2`, `fastp`, `liftoff`, `EDTA`).
+- [x] Remplacer les sorties glob trop larges (`file("*.gtf")`, `file("*.trimmed.fastq.gz")`, `path("${sample_ID}*")`) par des noms explicites ou des tuples normalises. Les glob larges peuvent capturer des fichiers temporaires et casser les contrats de canal.
+- [x] Normaliser les canaux vides. Plusieurs merges utilisent `collect().ifEmpty([])` puis un `path(...)`; c'est fragile parce que `[]` n'est pas un fichier. Preferer produire un fichier sentinelle explicite, ou scinder les branches optionnelles avec des workflows conditionnels.
+- [x] Ajouter des `versions.yml` a tous les processus publics, pas seulement EGAPx, AEGIS et provenance. C'est une pratique courante nf-core et utile pour tracer les outils.
+- [x] Ajouter des tests de garde avant refactor: prepare FASTQ, trimming, alignements, merges, BRAKER, AEGIS, provenance. `nf-test` n'est pas disponible dans l'environnement courant; le verrouillage ajoute `scripts/validate_nextflow_quality_p0.py` a la suite rapide et conserve le `stub-run` complet.
 
 ### P1 - Maintenabilite DSL2
 

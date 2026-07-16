@@ -9,10 +9,14 @@ process agat_convert_gff3_to_cds_fasta {
     path(liftoff_gff3)
 
   output:
-    file("${genome.simpleName}.CDS.fasta.gz")
+    path("${genome.simpleName}.CDS.fasta.gz"), emit: cds_fasta
+    path "versions.yml", emit: versions
+
+
 
   script:
     """
+    set -euo pipefail
     DATE=\$(date "+%Y-%m-%d %H:%M:%S")
     echo "[\$DATE] Running agat_convert_gff3_to_cds_fasta on ${genome}"
 
@@ -26,10 +30,12 @@ process agat_convert_gff3_to_cds_fasta {
     echo "[\$DATE] Executing: \$CMD"
     agat_sp_extract_sequences.pl -g cleaned.OK.gff3 -f reformatted.fa -o ${genome.simpleName}.CDS.fasta
     gzip ${genome.simpleName}.CDS.fasta
+    printf '"%s":\n  container: "not_recorded"\n' "${task.process}" > versions.yml
     """
 
   stub:
     """
     printf ">stub_cds\\nATGGCC\\n" | gzip -c > ${genome.simpleName}.CDS.fasta.gz
+    printf '"%s":\n  container: "not_recorded"\n' "${task.process}" > versions.yml
     """
 }

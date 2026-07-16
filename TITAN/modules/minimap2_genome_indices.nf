@@ -11,18 +11,24 @@ process minimap2_genome_indices {
 
   output:
     path("${genome}.mmi"), emit : index
+    path "versions.yml", emit: versions
+
+
 
   script:
     """
+    set -euo pipefail
     DATE=\$(date "+%Y-%m-%d %H:%M:%S")
     echo "[\$DATE] Running minimap2 index creation on $genome"
     CMD="minimap2 -d ${genome}.mmi ${genome_fasta}"
     echo "[\$DATE] Executing: \$CMD"
     minimap2 -d ${genome}.mmi ${genome_fasta}
+    printf '"%s":\n  container: "not_recorded"\n' "${task.process}" > versions.yml
     """
 
   stub:
     """
     printf "stub minimap2 index\\n" > ${genome}.mmi
+    printf '"%s":\n  container: "not_recorded"\n' "${task.process}" > versions.yml
     """
 }

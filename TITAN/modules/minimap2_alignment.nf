@@ -10,35 +10,31 @@ process minimap2_alignment {
     tuple val(sample_ID), val(SRA_or_FASTQ), val(library_layout), path(reads)
 
   output:
-    tuple val(sample_ID), path("${sample_ID}_Aligned.sorted.bam"), emit : samples_aligned
+    tuple val(sample_ID), path("${sample_ID}_Aligned.sorted.bam"), emit: samples_aligned
+    path "versions.yml", emit: versions
 
   script:
-    // PacBio Iso-seq/traditional cDNA parameters
     """
+    set -euo pipefail
     DATE=\$(date "+%Y-%m-%d %H:%M:%S")
     echo "[\$DATE] Running minimap2 alignment of $sample_ID"
-    if [[ $SRA_or_FASTQ == "FASTQ" ]]
-    then
-      CMD="minimap2 -t ${task.cpus} -ax splice:hq -uf ${minimap2_genome_indices} ${reads} > ${sample_ID}_Aligned.sam"
-      echo "[\$DATE] Executing: \$CMD"
-      minimap2 -t ${task.cpus} -ax splice:hq -uf ${minimap2_genome_indices} ${reads} > ${sample_ID}_Aligned.sam
-    elif [[ $SRA_or_FASTQ == "SRA" ]]
-    then
-      CMD="minimap2 -t ${task.cpus} -ax splice:hq -uf ${minimap2_genome_indices} ${reads} > ${sample_ID}_Aligned.sam"
-      echo "[\$DATE] Executing: \$CMD"
-      minimap2 -t ${task.cpus} -ax splice:hq -uf ${minimap2_genome_indices} ${reads} > ${sample_ID}_Aligned.sam
-    elif [[ $SRA_or_FASTQ == "FASTA" ]]
-    then
-      CMD="minimap2 -t ${task.cpus} -ax splice:hq -uf ${minimap2_genome_indices} ${reads} > ${sample_ID}_Aligned.sam"
-      echo "[\$DATE] Executing: \$CMD"
-      minimap2 -t ${task.cpus} -ax splice:hq -uf ${minimap2_genome_indices} ${reads} > ${sample_ID}_Aligned.sam
+
+    if [[ $SRA_or_FASTQ != "FASTQ" && $SRA_or_FASTQ != "SRA" && $SRA_or_FASTQ != "FASTA" ]]; then
+      echo "[\$DATE] ERROR: $SRA_or_FASTQ is not equal to FASTQ, SRA or FASTA" >&2
+      exit 1
     fi
-    samtools view -b ${sample_ID}_Aligned.sam | samtools sort - > ${sample_ID}_Aligned.sorted.bam
-    rm ${sample_ID}_Aligned.sam
+
+    CMD="minimap2 -t ${task.cpus} -ax splice:hq -uf ${minimap2_genome_indices} ${reads} | samtools view -b - | samtools sort -o ${sample_ID}_Aligned.sorted.bam -"
+    echo "[\$DATE] Executing: \$CMD"
+    minimap2 -t ${task.cpus} -ax splice:hq -uf ${minimap2_genome_indices} ${reads} \\
+      | samtools view -b - \\
+      | samtools sort -o ${sample_ID}_Aligned.sorted.bam -
+    printf '"%s":\n  container: "not_recorded"\n' "${task.process}" > versions.yml
     """
 
   stub:
     """
     printf "BAM\\n" > ${sample_ID}_Aligned.sorted.bam
+    printf '"%s":\n  container: "not_recorded"\n' "${task.process}" > versions.yml
     """
 }

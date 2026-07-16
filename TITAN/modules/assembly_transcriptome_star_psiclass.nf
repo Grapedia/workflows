@@ -13,21 +13,29 @@ process assembly_transcriptome_star_psiclass {
   }
   input:
     tuple val(sample_ID), path(bam_file), val(strand_type)
+    val(psiclass_vd_option)
+    val(psiclass_c_option)
 
   output:
     tuple val(sample_ID), file("${sample_ID}_vote.gtf"), val(strand_type), emit: psiclass_assemblies
+    path "versions.yml", emit: versions
+
+
 
   script:
     """
+    set -euo pipefail
     DATE=\$(date "+%Y-%m-%d %H:%M:%S")
     echo "[\$DATE] Running PsiCLASS transcriptome assembly on $sample_ID"
-    CMD="/PsiCLASS-1.0.2/psiclass -p ${task.cpus} -b ${bam_file} -o ${sample_ID} --vd ${params.PSICLASS_vd_option} -c ${params.PSICLASS_c_option} --primaryParalog"
+    CMD="/PsiCLASS-1.0.2/psiclass -p ${task.cpus} -b ${bam_file} -o ${sample_ID} --vd ${psiclass_vd_option} -c ${psiclass_c_option} --primaryParalog"
     echo "[\$DATE] Executing: \$CMD"
-    /PsiCLASS-1.0.2/psiclass -p ${task.cpus} -b ${bam_file} -o ${sample_ID} --vd ${params.PSICLASS_vd_option} -c ${params.PSICLASS_c_option} --primaryParalog
+    /PsiCLASS-1.0.2/psiclass -p ${task.cpus} -b ${bam_file} -o ${sample_ID} --vd ${psiclass_vd_option} -c ${psiclass_c_option} --primaryParalog
+    printf '"%s":\n  container: "not_recorded"\n' "${task.process}" > versions.yml
     """
 
   stub:
     """
     printf "chr1\\tPsiCLASS\\ttranscript\\t1\\t10\\t.\\t+\\t.\\tgene_id \\"${sample_ID}_psiclass_gene\\"; transcript_id \\"${sample_ID}_psiclass_tx\\";\\n" > ${sample_ID}_vote.gtf
+    printf '"%s":\n  container: "not_recorded"\n' "${task.process}" > versions.yml
     """
 }

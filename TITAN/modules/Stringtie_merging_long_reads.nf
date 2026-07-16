@@ -22,6 +22,9 @@ process Stringtie_merging_long_reads {
   output:
     path "merged_transcriptomes.minimap2.long_reads.default_args.gtf", emit: default_args_gff
     path "merged_transcriptomes.minimap2.long_reads.alt_args.gtf", emit: alt_args_gff
+    path "versions.yml", emit: versions
+
+
 
   script:
     """
@@ -32,11 +35,13 @@ process Stringtie_merging_long_reads {
     printf '%s\\n' ${alt_gtfs} > alt_gtfs.txt
     stringtie --merge -o merged_transcriptomes.minimap2.long_reads.default_args.gtf default_gtfs.txt
     stringtie --merge -o merged_transcriptomes.minimap2.long_reads.alt_args.gtf alt_gtfs.txt
+    printf '"%s":\n  container: "not_recorded"\n' "${task.process}" > versions.yml
     """
 
   stub:
     """
     printf "chr1\\tStringTie\\ttranscript\\t1\\t10\\t.\\t+\\t.\\tgene_id \\"long_merged_gene\\"; transcript_id \\"long_merged_tx\\";\\n" > merged_transcriptomes.minimap2.long_reads.default_args.gtf
     printf "chr1\\tStringTie\\ttranscript\\t1\\t10\\t.\\t+\\t.\\tgene_id \\"long_merged_alt_gene\\"; transcript_id \\"long_merged_alt_tx\\";\\n" > merged_transcriptomes.minimap2.long_reads.alt_args.gtf
+    printf '"%s":\n  container: "not_recorded"\n' "${task.process}" > versions.yml
     """
 }

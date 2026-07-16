@@ -21,7 +21,7 @@ process aegis_short_reads {
         path "final_annotation.gff3", emit: aegis_gff
         path "final_annotation_proteins_all.fasta", emit: aegis_proteins_all
         path "final_annotation_proteins_main.fasta", emit: aegis_proteins_main
-        path "versions.yml", emit: versions
+    path "versions.yml", emit: versions
 
     script:
         """

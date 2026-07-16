@@ -41,9 +41,19 @@ workflow generate_evidence_data {
         def edta_script = file("${projectDir}/scripts/edta.sh")
         def stringtie_script = file("${projectDir}/scripts/Stringtie.sh")
         def stringtie_alt_script = file("${projectDir}/scripts/Stringtie_AltCommands.sh")
+        def empty_gtf = file("${projectDir}/assets/empty.gtf")
+        def empty_default_gtf = file("${projectDir}/assets/empty_default.gtf")
+        def empty_alt_gtf = file("${projectDir}/assets/empty_alt.gtf")
+        def empty_psiclass_gtf = file("${projectDir}/assets/empty_psiclass.gtf")
 
         // Prepare RNAseq short reads for processing
-        short_reads_prepared = prepare_RNAseq_fastq_files_short(samples_list_short_reads)
+        short_reads_prepared = prepare_RNAseq_fastq_files_short(
+            samples_list_short_reads,
+            params.ena_download_timeout_seconds,
+            params.ena_max_download_attempts,
+            params.ena_retry_wait_seconds,
+            params.ena_verify_md5
+        )
 
         // Trim Illumina short reads
         trimmed_reads = trimming_fastq(short_reads_prepared.prepared_fastqs)
@@ -68,7 +78,7 @@ workflow generate_evidence_data {
         )
 
         // Salmon index and strand inference
-        salmon_index_result = salmon_index(gff_cds)
+        salmon_index_result = salmon_index(gff_cds.cds_fasta)
         strand_inference = salmon_strand_inference(trimmed_reads.trimmed_reads, salmon_index_result.index)
 
         // Process strand inference results
@@ -82,7 +92,7 @@ workflow generate_evidence_data {
             new_assembly,
             new_assembly.getName()
         )
-        star_aligned = star_alignment(star_indices.index, salmon_output_processed)
+        star_aligned = star_alignment(star_indices.index, salmon_output_processed, params.STAR_memory_per_job)
 
         star_aligned.samples_aligned
           .map { sample_ID, bam_file, strand_type -> bam_file }
@@ -119,14 +129,14 @@ workflow generate_evidence_data {
           .filter { sample_ID, default_gtf, alt_gtf, strand_type -> strand_type == 'unstranded' }
           .map { sample_ID, default_gtf, alt_gtf, strand_type -> default_gtf }
           .collect()
-          .ifEmpty([])
+          .ifEmpty(empty_default_gtf)
           .set { hisat2_unstranded_default_gtfs }
 
         hisat2_assemblies_stringtie.hisat2_stringtie_transcriptomes
           .filter { sample_ID, default_gtf, alt_gtf, strand_type -> strand_type == 'unstranded' }
           .map { sample_ID, default_gtf, alt_gtf, strand_type -> alt_gtf }
           .collect()
-          .ifEmpty([])
+          .ifEmpty(empty_alt_gtf)
           .set { hisat2_unstranded_alt_gtfs }
 
         merged_hisat2_stringtie = Stringtie_merging_short_reads_hisat2(
@@ -136,13 +146,19 @@ workflow generate_evidence_data {
             hisat2_unstranded_alt_gtfs
         )
 
-        merged_long_reads_default_args_gff = Channel.value([])
-        merged_long_reads_alt_args_gff = Channel.value([])
+        merged_long_reads_default_args_gff = Channel.value(empty_default_gtf)
+        merged_long_reads_alt_args_gff = Channel.value(empty_alt_gtf)
 
         // Process minimap2 alignments for long reads
         if (has_long_reads) {
             // Prepare long reads (if any) for processing
-            long_reads_prepared = prepare_RNAseq_fastq_files_long(samples_list_long_reads)
+            long_reads_prepared = prepare_RNAseq_fastq_files_long(
+                samples_list_long_reads,
+                params.ena_download_timeout_seconds,
+                params.ena_max_download_attempts,
+                params.ena_retry_wait_seconds,
+                params.ena_verify_md5
+            )
 
             minimap2_indices = minimap2_genome_indices(
                 new_assembly,
@@ -183,7 +199,11 @@ workflow generate_evidence_data {
             stringtie_script,
             stringtie_alt_script
         )
-        star_assemblies_psiclass = assembly_transcriptome_star_psiclass(star_aligned.samples_aligned)
+        star_assemblies_psiclass = assembly_transcriptome_star_psiclass(
+            star_aligned.samples_aligned,
+            params.PSICLASS_vd_option,
+            params.PSICLASS_c_option
+        )
 
         star_assemblies_stringtie.star_stringtie_transcriptomes
           .filter { sample_ID, default_gtf, alt_gtf, strand_type -> strand_type != 'unstranded' }
@@ -201,14 +221,14 @@ workflow generate_evidence_data {
           .filter { sample_ID, default_gtf, alt_gtf, strand_type -> strand_type == 'unstranded' }
           .map { sample_ID, default_gtf, alt_gtf, strand_type -> default_gtf }
           .collect()
-          .ifEmpty([])
+          .ifEmpty(empty_default_gtf)
           .set { star_unstranded_default_gtfs }
 
         star_assemblies_stringtie.star_stringtie_transcriptomes
           .filter { sample_ID, default_gtf, alt_gtf, strand_type -> strand_type == 'unstranded' }
           .map { sample_ID, default_gtf, alt_gtf, strand_type -> alt_gtf }
           .collect()
-          .ifEmpty([])
+          .ifEmpty(empty_alt_gtf)
           .set { star_unstranded_alt_gtfs }
 
         // Merge assemblies
@@ -229,7 +249,7 @@ workflow generate_evidence_data {
           .filter { sample_ID, gtf_file, strand_type -> strand_type == 'unstranded' }
           .map { sample_ID, gtf_file, strand_type -> gtf_file }
           .collect()
-          .ifEmpty([])
+          .ifEmpty(empty_psiclass_gtf)
           .set { star_psiclass_unstranded_gtfs }
 
         // GFFcompare to merge PsiCLASS transcriptomes

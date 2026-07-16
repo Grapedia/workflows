@@ -11,20 +11,26 @@ process star_genome_indices {
 
   output:
     path("${genome}_index"), emit: index
+    path "versions.yml", emit: versions
+
+
 
   script:
     """
+    set -euo pipefail
     DATE=\$(date "+%Y-%m-%d %H:%M:%S")
     echo "[\$DATE] Running STAR index creation on $genome"
     CMD="STAR --runThreadN ${task.cpus} --runMode genomeGenerate --genomeDir ${genome}_index --genomeFastaFiles ${genome_fasta}"
     echo "[\$DATE] Executing: \$CMD"
     STAR --runThreadN ${task.cpus} --runMode genomeGenerate --genomeDir ${genome}_index --genomeFastaFiles ${genome_fasta}
     chmod -R 755 ${genome}_index
+    printf '"%s":\n  container: "not_recorded"\n' "${task.process}" > versions.yml
     """
 
   stub:
     """
     mkdir -p ${genome}_index
     printf "stub STAR index\\n" > ${genome}_index/Genome
+    printf '"%s":\n  container: "not_recorded"\n' "${task.process}" > versions.yml
     """
 }

@@ -10,9 +10,13 @@ process salmon_strand_inference {
 
   output:
     tuple val(sample_ID), val(library_layout), path(reads), path("${sample_ID}.strand_info.classified"), emit: strand_inference_result
+    path "versions.yml", emit: versions
+
+
 
   script:
     """
+    set -euo pipefail
     DATE=\$(date "+%Y-%m-%d %H:%M:%S")
     echo "[\$DATE] Running salmon strand inference on $sample_ID"
 
@@ -52,10 +56,12 @@ process salmon_strand_inference {
     fi
 
     echo "\$strand_info" > "${sample_ID}.strand_info.classified"
+    printf '"%s":\n  container: "not_recorded"\n' "${task.process}" > versions.yml
     """
 
   stub:
     """
     echo "stranded_forward" > ${sample_ID}.strand_info.classified
+    printf '"%s":\n  container: "not_recorded"\n' "${task.process}" > versions.yml
     """
 }

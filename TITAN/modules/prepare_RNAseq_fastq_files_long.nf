@@ -12,9 +12,16 @@ process prepare_RNAseq_fastq_files_long {
 
   input:
   tuple val(sample_ID), val(SRA_or_FASTQ), val(library_layout), path(local_reads)
+  val(ena_download_timeout_seconds)
+  val(ena_max_download_attempts)
+  val(ena_retry_wait_seconds)
+  val(ena_verify_md5)
 
   output:
-  tuple val(sample_ID), val(SRA_or_FASTQ), val(library_layout), path("${sample_ID}*", includeInputs: true), emit : prepared_fastqs
+  tuple val(sample_ID), val(SRA_or_FASTQ), val(library_layout), path("long_read_input.*"), emit: prepared_fastqs
+    path "versions.yml", emit: versions
+
+
 
   script:
   """
@@ -29,10 +36,10 @@ process prepare_RNAseq_fastq_files_long {
       --accession $sample_ID \\
       --layout long \\
       --outdir . \\
-      --timeout-seconds ${params.ena_download_timeout_seconds} \\
-      --max-attempts ${params.ena_max_download_attempts} \\
-      --retry-wait-seconds ${params.ena_retry_wait_seconds} \\
-      ${params.ena_verify_md5 ? '--verify-md5' : '--no-verify-md5'}
+      --timeout-seconds ${ena_download_timeout_seconds} \\
+      --max-attempts ${ena_max_download_attempts} \\
+      --retry-wait-seconds ${ena_retry_wait_seconds} \\
+      ${ena_verify_md5 ? '--verify-md5' : '--no-verify-md5'}
   elif [[ $SRA_or_FASTQ == "FASTQ" ]]
   then
     test -s ${sample_ID}.fastq.gz
@@ -43,11 +50,25 @@ process prepare_RNAseq_fastq_files_long {
     echo "[\$DATE] ERROR: \$SRA_or_FASTQ is not equal to SRA, FASTQ or FASTA" >&2
     exit 1
   fi
+
+  if [[ -s ${sample_ID}.fastq.gz ]]; then
+    cp ${sample_ID}.fastq.gz long_read_input.fastq.gz
+  elif compgen -G "${sample_ID}*.fastq.gz" > /dev/null; then
+    first_fastq=\$(compgen -G "${sample_ID}*.fastq.gz" | sort | head -n 1)
+    cp "\$first_fastq" long_read_input.fastq.gz
+  elif [[ -s ${sample_ID}.fasta ]]; then
+    cp ${sample_ID}.fasta long_read_input.fasta
+  else
+    echo "[\$DATE] ERROR: no prepared long-read FASTQ/FASTA found for $sample_ID" >&2
+    exit 1
+  fi
+    printf '"%s":\n  container: "not_recorded"\n' "${task.process}" > versions.yml
   """
 
   stub:
   """
   rm -f ${sample_ID}*
-  printf "@stub\\nACGT\\n+\\n!!!!\\n" | gzip -c > ${sample_ID}.fastq.gz
+  printf "@stub\\nACGT\\n+\\n!!!!\\n" | gzip -c > long_read_input.fastq.gz
+  printf '"%s":\n  container: "not_recorded"\n' "${task.process}" > versions.yml
   """
 }

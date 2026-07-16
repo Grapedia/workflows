@@ -13,9 +13,13 @@ process validate_final_annotation {
   output:
     path "final_annotation_validation.json", emit: json_report
     path "final_annotation_validation.txt", emit: text_report
+    path "versions.yml", emit: versions
+
+
 
   script:
     """
+    set -euo pipefail
     python3 ${projectDir}/scripts/validate_final_annotation.py \\
       --genome ${genome} \\
       --annotation ${annotation} \\
@@ -23,6 +27,7 @@ process validate_final_annotation {
       --proteins-main ${proteins_main} \\
       --json-report final_annotation_validation.json \\
       --text-report final_annotation_validation.txt
+    printf '"%s":\n  container: "not_recorded"\n' "${task.process}" > versions.yml
     """
 
   stub:
@@ -34,5 +39,6 @@ process validate_final_annotation {
       --proteins-main ${proteins_main} \\
       --json-report final_annotation_validation.json \\
       --text-report final_annotation_validation.txt
+    printf '"%s":\n  container: "not_recorded"\n' "${task.process}" > versions.yml
     """
 }

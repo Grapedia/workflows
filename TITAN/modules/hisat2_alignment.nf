@@ -19,9 +19,13 @@ process hisat2_alignment {
 
   output:
     tuple val(sample_ID), path("${sample_ID}_Aligned.sort.bam"), val(strand_type), emit: samples_aligned
+    path "versions.yml", emit: versions
+
+
 
   script:
     """
+    set -euo pipefail
     DATE=\$(date "+%Y-%m-%d %H:%M:%S")
     echo "[\$DATE] Running HISAT2 alignment on $sample_ID"
     if [[ $library_layout == "paired" ]]
@@ -55,10 +59,12 @@ process hisat2_alignment {
         /hisat2-2.2.1/hisat2 -p ${task.cpus} -x ${genome} --rna-strandness RF -U ${reads} | samtools sort -o ${sample_ID}_Aligned.sort.bam -
       fi
     fi
+    printf '"%s":\n  container: "not_recorded"\n' "${task.process}" > versions.yml
     """
 
   stub:
     """
     printf "BAM\\n" > ${sample_ID}_Aligned.sort.bam
+    printf '"%s":\n  container: "not_recorded"\n' "${task.process}" > versions.yml
     """
 }

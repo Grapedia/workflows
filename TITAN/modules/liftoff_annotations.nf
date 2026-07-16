@@ -22,9 +22,13 @@ process liftoff_annotations {
   output:
     path("liftoff_previous_annotations.gff3"), emit : liftoff_previous_annotations
     path("unmapped_features.txt"), emit : unmapped_features
+    path "versions.yml", emit: versions
+
+
 
   script:
     """
+    set -euo pipefail
     DATE=\$(date "+%Y-%m-%d %H:%M:%S")
     echo "[\$DATE] Running liftoff on $genome"
 
@@ -32,6 +36,7 @@ process liftoff_annotations {
 
     echo "[\$DATE] Executing: \$CMD"
     liftoff -g ${previous_annotations_gff3} -o liftoff_previous_annotations.gff3 -u unmapped_features.txt ${genome_fasta} ${previous_assembly_fasta}
+    printf '"%s":\n  container: "not_recorded"\n' "${task.process}" > versions.yml
 
     """
 
@@ -39,5 +44,6 @@ process liftoff_annotations {
     """
     printf "##gff-version 3\\nchr1\\tliftoff\\tgene\\t1\\t10\\t.\\t+\\t.\\tID=liftoff_stub_gene\\n" > liftoff_previous_annotations.gff3
     printf "stub_unmapped\\n" > unmapped_features.txt
+    printf '"%s":\n  container: "not_recorded"\n' "${task.process}" > versions.yml
     """
 }

@@ -35,6 +35,7 @@ expect_failure() {
 }
 
 run_step python3 scripts/validate_container_pins.py
+run_step python3 scripts/validate_nextflow_quality_p0.py
 run_step python3 scripts/validate_profiles.py
 run_step python3 scripts/validate_minimal_test_data.py
 run_step python3 scripts/test_validate_inputs.py
