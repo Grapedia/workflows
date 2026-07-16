@@ -1,0 +1,46 @@
+name: TITAN CI
+
+on:
+  push:
+    paths:
+      - "TITAN/**"
+      - ".github/workflows/titan-ci.yml"
+  pull_request:
+    paths:
+      - "TITAN/**"
+      - ".github/workflows/titan-ci.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  quick-tests:
+    name: TITAN quick tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    defaults:
+      run:
+        shell: bash
+        working-directory: TITAN
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+
+      - name: Install Nextflow
+        run: |
+          export NXF_VER=24.04.3
+          curl -s https://get.nextflow.io | bash
+          mkdir -p "$HOME/.local/bin"
+          mv nextflow "$HOME/.local/bin/nextflow"
+          echo "$HOME/.local/bin" >> "$GITHUB_PATH"
+
+      - name: Run quick tests
+        run: scripts/run-tests.sh

@@ -344,23 +344,23 @@ Risque de tests fragiles si les contrats ne sont pas d'abord clarifies.
 
 ## TITAN-P2-003 - CI GitHub Actions rapide
 Priorite : P2
-Statut : A faire
+Statut : Fait
 Risque : Moyen
 
 ### Objectif
 Verifier syntaxe, config et tests rapides sans gros calcul.
 ### Constat
-Pas de CI TITAN dediee detectee.
+Une CI GitHub Actions dediee lance les tests rapides TITAN sur push et pull request quand `TITAN/**` ou le workflow CI changent.
 ### Fichiers concernes
 `.github/workflows/titan-ci.yml`.
 ### Etapes d'implementation
-Installer Nextflow, lancer checks statiques, validateur fixtures et profil test/stub.
+Installer Java et Nextflow 24.04.3, lancer `scripts/run-tests.sh` depuis le repertoire `TITAN`.
 ### Tests
-Execution locale des commandes CI.
+`scripts/run-tests.sh`; verification statique du workflow GitHub Actions.
 ### Criteres d'acceptation
 CI sans secrets ni donnees lourdes.
 ### Risques et retour arriere
-Apptainer peut etre limite dans GitHub Actions; documenter.
+Apptainer peut etre limite dans GitHub Actions; la CI rapide n'execute pas Slurm, Apptainer ni les conteneurs scientifiques.
 
 ## TITAN-P3-001 - Refonte documentaire utilisateur
 Priorite : P3
