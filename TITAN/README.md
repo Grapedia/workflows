@@ -23,8 +23,8 @@ Aegis run are launched chromosome by chromosome: a for loop and sequential annot
 
 ### **Workflow's general parameters**
 - **`workflow`**: **Which workflow's part to launch**.  
-  _Options_: `"generate_evidence_data"` or `"aegis"` (default: `"generate_evidence_data"`)
-  ⚠️ You can simply generate the evidence data with ‘generate_evidence_data’ or launch aegis only with ‘aegis’, but you need to have generated the evidence data first.
+  _Options_: `"generate_evidence_data"`, `"aegis"` or `"all"` (default: `"generate_evidence_data"`)
+  ⚠️ `all` runs evidence generation and Aegis in one Nextflow graph. `generate_evidence_data` only creates evidences. `aegis` is an Aegis-only compatibility mode and requires previously generated evidence files in `output_dir`.
 - **`output_dir`**: Path to output directory, where the final files will be write.
 
 ### **Genome Assemblies**
@@ -79,7 +79,9 @@ Current static inventory from `main.nf`, `workflows/titan.nf`, `subworkflows/*.n
 
 ### **Named Evidence Contract**
 
-`generate_evidence_data` emits named evidence channels instead of a mixed key/file channel. The Aegis subworkflow consumes explicit inputs for the hard-masked genome, Liftoff, BRAKER/AUGUSTUS, GeneMark, STAR/StringTie, STAR/PsiCLASS and detected long-read evidence. In `--workflow aegis` mode, `workflows/titan.nf` still reloads published evidence files from `output_dir`, then passes them to Aegis through the same named contract.
+`generate_evidence_data` emits named evidence channels instead of a mixed key/file channel. The Aegis subworkflow consumes explicit inputs for the hard-masked genome, Liftoff, BRAKER/AUGUSTUS, GeneMark, STAR/StringTie, STAR/PsiCLASS and detected long-read evidence.
+
+In `--workflow all` mode, Aegis consumes those channels directly. The EDTA hard-masked genome flows as `EDTA.masked_genome -> generate_evidence_data.masked_genome -> aegis(masked_genome)`, so the full run no longer depends on `assembly_masked.EDTA.fasta` being rediscovered from `output_dir`. In `--workflow aegis` mode, `workflows/titan.nf` still reloads published evidence files from `output_dir`, then passes them to Aegis through the same named contract.
 
 ### **Parameter validation**
 
@@ -101,10 +103,8 @@ Invalid input fails early with explicit messages such as:
 Missing required parameter(s): --RNAseq_samplesheet
 Required input file(s) not found:
   --previous_annotations: test-data/minimal/valid/missing.gff3
-Invalid --workflow 'nope'. Allowed values: generate_evidence_data, aegis
+Invalid --workflow 'nope'. Allowed values: generate_evidence_data, aegis, all
 ```
-
-`--workflow all` is not implemented yet; use `generate_evidence_data` or `aegis`.
 
 ### **Output contract inventory**
 
@@ -134,14 +134,13 @@ set -e
 cd /path/to/projectDir/workflows/TITAN
 # Load required Nextflow module
 module load nextflow/24.04.3
-# Run the 'generate_evidence_data' workflow and generate its DAG
+# Run the full workflow and generate its DAG
 nextflow run main.nf \
-  -with-dag dag_evidence_data.png \
-  --workflow generate_evidence_data
-# Run the 'aegis' workflow and generate its DAG
-nextflow run main.nf \
-  -with-dag dag_aegis.png \
-  --workflow aegis
+  -with-dag dag_titan_all.png \
+  --workflow all
+
+# Compatibility mode: run Aegis only after evidence files already exist in output_dir
+nextflow run main.nf --workflow aegis
 ```
 
 ## **Local test profile**
@@ -150,11 +149,12 @@ TITAN includes a minimal local test profile for configuration and lightweight wo
 
 ```bash
 nextflow config -profile test
+nextflow run main.nf -profile test --workflow all -stub-run -ansi-log false
 nextflow run main.nf -profile test --workflow generate_evidence_data -stub-run -ansi-log false
 nextflow run main.nf -profile test --workflow aegis -stub-run -ansi-log false
 ```
 
-The `test` profile uses synthetic fixtures under `test-data/minimal/valid`, `RNAseq_data_dir = test-data/minimal/valid/rnaseq`, and ignored transient directories `test-results/` and `test-work/`. `generate_evidence_data -stub-run` now exercises the full evidence graph, including mandatory EDTA/EGAPx and auto-detected long reads, without running scientific containers. The Aegis stub command can then consume the evidence files published in `test-results/`.
+The `test` profile uses synthetic fixtures under `test-data/minimal/valid`, `RNAseq_data_dir = test-data/minimal/valid/rnaseq`, and ignored transient directories `test-results/` and `test-work/`. `all -stub-run` exercises the full graph, including mandatory EDTA/EGAPx, auto-detected long reads and direct EDTA-to-Aegis channel wiring, without running scientific containers. The Aegis-only stub command can also consume the evidence files published in `test-results/`.
 
 Validate the synthetic fixture set directly with:
 

@@ -272,7 +272,7 @@ Le profil `test` est defini dans `conf/test.config` et inclus depuis `nextflow.c
 * `output_dir = "${projectDir}/test-results"`;
 * entrees pointees vers `test-data/minimal/valid`;
 * `RNAseq_data_dir = "${projectDir}/test-data/minimal/valid/rnaseq"` pour decoupler les FASTQ de `data/RNAseq_data`;
-* `workflow = "aegis"` par defaut, avec `generate_evidence_data -stub-run` comme test de graphe complet;
+* `workflow = "aegis"` par defaut, avec `all -stub-run` comme test de graphe complet et `generate_evidence_data -stub-run` comme test de generation d'evidences seule;
 * `edta_cpus = 2`, `egapx_cpus = 2` et `diamond2go_cpus = 2` pour permettre les tests stub sur une machine de developpement;
 * ressources plafonnees a 2 CPU et 4 GB pour les labels utilises par les futurs tests.
 
@@ -280,11 +280,14 @@ Commandes validees:
 
 ```bash
 nextflow config -profile test
+nextflow run main.nf -profile test --workflow all -stub-run -ansi-log false
 nextflow run main.nf -profile test --workflow generate_evidence_data -stub-run -ansi-log false
 nextflow run main.nf -profile test --workflow aegis -stub-run -ansi-log false
 ```
 
-Limite: ce profil valide la resolution Nextflow, les shapes de channels et les noms de fichiers publics en mode stub. Il ne valide pas biologiquement les outils lourds ni les conteneurs.
+Decision P1-004: `--workflow all` est maintenant le mode de test principal pour le lien EDTA -> Aegis. Il lance la generation d'evidences puis Aegis dans le meme graphe, en passant `evidence_data.masked_genome` directement au sous-workflow `aegis`. Le mode `aegis` separe reste conserve pour compatibilite et relit encore les fichiers publies dans `output_dir`.
+
+Limite: ce profil valide la resolution Nextflow, les shapes de channels, le lien EDTA -> Aegis en mode stub et les noms de fichiers publics en mode Aegis-only. Il ne valide pas biologiquement les outils lourds ni les conteneurs.
 
 ## Validation des parametres P0-005
 

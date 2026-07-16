@@ -13,8 +13,9 @@ Highest-risk findings:
 
 * P1-002 made `main.nf` a thin entrypoint; orchestration now lives in `workflows/titan.nf`.
 * P1-003 replaced the string-keyed mixed evidence channel with named emits and explicit Aegis inputs.
+* P1-004 added a real `all` mode: evidence generation feeds Aegis directly through named channels, including the EDTA `masked_genome` output.
 * `aegis` mode reads files back from `params.output_dir` by filename. That means Aegis is coupled to publish side effects instead of process outputs.
-* EDTA is now mandatory in the evidence workflow, and Aegis-only runs fail early if the hard-masked genome is missing. The remaining issue is that Aegis still discovers that file from `output_dir` instead of a typed channel or manifest.
+* EDTA is now mandatory in the evidence workflow. Full runs pass the hard-masked genome to Aegis as a typed channel; Aegis-only runs still discover that file from `output_dir` and should move to a manifest.
 * EGAPx is now mandatory in `generate_evidence_data` and its module input is staged as `path egapx_paramfile`. Its outputs are still captured broadly and are not yet named or consumed by Aegis.
 * Many modules take `val()` inputs and then ignore them, reading from mounted `params.output_dir`, `projectDir/data/*` or helper scripts instead. This makes caching, resume and portability fragile.
 * Long-read processing is now detected from `RNAseq_samplesheet` rows where `library_layout` is `long`; the old `use_long_reads` flag is no longer part of the runtime contract.
@@ -25,8 +26,8 @@ The recommended path is to stabilize contracts before changing scientific behavi
 
 1. Done in P1-002: keep `main.nf` thin and continue building the canonical orchestration in `workflows/titan.nf`.
 2. Done in P1-003: introduce named evidence outputs and explicit Aegis inputs.
-3. Make Aegis consume process outputs directly, not files discovered in `output_dir`.
-4. Move the required EDTA hard-masked genome from `output_dir` discovery to a typed Aegis input or evidence manifest.
+3. Done in P1-004 for full runs: make Aegis consume process outputs directly in `--workflow all`, not files discovered in `output_dir`.
+4. Done in P1-004 for full runs: move the required EDTA hard-masked genome from `output_dir` discovery to a typed Aegis input. Remaining work: replace Aegis-only filename discovery with an evidence manifest.
 5. Replace broad EGAPx output capture with named EGAPx emits and add its GFF3 to the same evidence contract once output names are confirmed.
 6. Migrate modules to staged `path` inputs and named emits module by module.
 
@@ -41,8 +42,9 @@ main.nf
 
 workflows/titan.nf
   validates parameters
-  builds RNA/protein channels for generate_evidence_data
-  OR scans output_dir for Aegis evidence files
+  builds RNA/protein channels for generate_evidence_data/all
+  feeds named evidence channels into Aegis in all mode
+  OR scans output_dir for Aegis-only evidence files
 
 subworkflows/generate_evidence_data.nf
   prepares reads
@@ -94,14 +96,13 @@ subworkflows/aegis_integration
 Evidence:
 
 * `main.nf` now only sets public fallback params, includes `TITAN` from `workflows/titan.nf` and calls it.
-* `workflows/titan.nf` includes subworkflows, validates parameters, builds CSV channels, scans `output_dir`, creates placeholder files and dispatches Aegis.
-* `params.workflow == "all"` was accepted by validation but errored later before P1-001; it is now rejected early until a real `all` mode exists.
+* `workflows/titan.nf` includes subworkflows, validates parameters, builds CSV channels, dispatches `generate_evidence_data`, optionally passes its named outputs to Aegis, and still scans `output_dir` for Aegis-only compatibility.
+* `params.workflow == "all"` now runs `generate_evidence_data` and Aegis in one graph.
 
 Impact:
 
 * hard to test one layer at a time;
 * hard to add EGAPx cleanly;
-* hard to support a true `all` mode;
 * user-facing workflow modes are implementation details rather than stable workflow contracts.
 
 Recommendation:
@@ -136,12 +137,13 @@ Evidence:
 
 * `generate_evidence_data` now always runs EDTA.
 * `aegis` now always requires `masked_genome.masked_genome` and fails if it is missing.
+* In `all` mode, `workflows/titan.nf` passes `evidence_data.masked_genome` directly to `aegis`.
 * In Aegis-only mode, `workflows/titan.nf` still discovers `assembly_masked.EDTA.fasta` by filename in `params.output_dir`.
 * `EDTA.nf` emits `*MAKER.masked` but also manually copies it to `/outputdir/assembly_masked.EDTA.fasta`.
 
 Impact:
 
-* Aegis requirements are now explicit but still file-name based in Aegis-only mode;
+* Aegis requirements are explicit and channel-based in full runs, but still file-name based in Aegis-only mode;
 * EDTA output naming depends on manual copy side effects.
 
 Recommendation:
@@ -206,7 +208,7 @@ Impact:
 * missing evidence in Aegis-only mode now fails before the Aegis subworkflow call;
 * optional outputs are hard to reason about;
 * boolean behavior can differ by layer;
-* true `all` mode will be fragile until contracts are explicit.
+* optional evidence still needs a cleaner absence model.
 
 Recommendation:
 
@@ -265,8 +267,8 @@ The safest order is contract-first:
 2. Add a samplesheet/schema validator for RNA-seq and proteins.
 3. Done in P1-002: create `workflows/titan.nf` and keep `main.nf` thin.
 4. Done in P1-003: replace the mixed evidence channel with named emits.
-5. Rewrite Aegis integration to consume named evidence directly.
-6. Make EDTA hard-masked genome an explicit required Aegis input.
+5. Done in P1-004 for `--workflow all`: rewrite Aegis integration to consume named evidence directly.
+6. Done in P1-004 for `--workflow all`: make EDTA hard-masked genome an explicit required Aegis input. Remaining work: Aegis-only manifest.
 7. Replace broad mandatory EGAPx results with named EGAPx evidence emits and connect them to Aegis.
 8. Migrate modules away from mounted output directories and hidden scans.
 9. Add `-stub-run` and nf-test coverage for critical subworkflows.

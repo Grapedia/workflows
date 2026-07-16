@@ -136,7 +136,7 @@ Rendre les modes `generate_evidence_data`, `aegis` et futur `all` explicites. Ce
 ### Etapes d'implementation
 Ajouter un bloc de validation de parametres, refuser `all` tant qu'il n'est pas implemente, supprimer les booleens biologiques du contrat runtime et passer la detection long reads aux sous-workflows.
 ### Tests
-`nextflow config -profile test`; `nextflow run main.nf -profile test --workflow aegis` doit echouer clairement si les evidences Aegis obligatoires manquent; `python3 scripts/validate_minimal_test_data.py`; tests negatifs `--workflow all`.
+`nextflow config -profile test`; `nextflow run main.nf -profile test --workflow aegis` doit echouer clairement si les evidences Aegis obligatoires manquent; `python3 scripts/validate_minimal_test_data.py`; test negatif `--workflow nope`.
 ### Criteres d'acceptation
 Chaque mode a un comportement documente et aucun module ne depend d'une chaine booleenne ambigue.
 ### Risques et retour arriere
@@ -190,17 +190,17 @@ Risque : Eleve
 ### Objectif
 Modeliser explicitement le genome hard-masked requis par Aegis.
 ### Constat
-EDTA n'est plus optionnel dans `generate_evidence_data`. Aegis exige maintenant un genome masque `assembly_masked.EDTA.fasta` en mode Aegis-only et echoue clairement si cette evidence manque.
+EDTA n'est plus optionnel dans `generate_evidence_data`. Le mode `all` execute maintenant evidence generation puis Aegis dans le meme graphe Nextflow: le `masked_genome` emis par EDTA passe par le contrat nomme de `generate_evidence_data` et devient l'input explicite `masked_genome` du sous-workflow Aegis. Le mode Aegis-only reste compatible avec les runs separes en relisant `assembly_masked.EDTA.fasta` depuis `output_dir` et echoue clairement si cette evidence manque.
 ### Fichiers concernes
-`main.nf`, `subworkflows/generate_evidence_data.nf`, `subworkflows/aegis.nf`, `modules/EDTA.nf`, `modules/aegis_*.nf`.
+`workflows/titan.nf`, `subworkflows/generate_evidence_data.nf`, `subworkflows/aegis.nf`, `modules/EDTA.nf`, `modules/aegis_*.nf`, documentation.
 ### Etapes d'implementation
-Supprimer les flags `EDTA`/`run_edta` du contrat runtime, lancer EDTA systematiquement dans `generate_evidence_data`, et faire echouer Aegis si le genome hard-masked requis n'est pas disponible.
+Supprimer les flags `EDTA`/`run_edta` du contrat runtime, lancer EDTA systematiquement dans `generate_evidence_data`, ajouter un vrai mode `all`, transmettre `evidence_data.masked_genome` directement a `aegis`, et faire echouer Aegis-only si le genome hard-masked requis n'est pas disponible.
 ### Tests
-`nextflow config -profile test`; `nextflow run main.nf -profile test --workflow aegis -ansi-log false` echoue avec la liste des evidences requises manquantes.
+`nextflow config -profile test`; `python3 scripts/validate_minimal_test_data.py`; `nextflow run main.nf -profile test --workflow all -stub-run -ansi-log false`; `nextflow run main.nf -profile test --workflow generate_evidence_data -stub-run -ansi-log false`; `nextflow run main.nf -profile test --workflow aegis -stub-run -ansi-log false`.
 ### Criteres d'acceptation
-Aegis ne peut plus etre saute par `EDTA=no`; son input hard-masked est obligatoire.
+Aegis ne peut plus etre saute par `EDTA=no`; son input hard-masked est obligatoire. En mode `all`, Aegis consomme la sortie EDTA par channel Nextflow et ne depend pas d'un scan de `output_dir`.
 ### Risques et retour arriere
-Risque scientifique et UX; conserver compatibilite des anciens parametres pendant une version.
+Risque scientifique et UX; conserver le mode Aegis-only par fichiers publies pendant une version, puis le remplacer par un manifeste d'evidences.
 
 ## TITAN-P1-005 - Integrer EGAPx proprement
 Priorite : P1
