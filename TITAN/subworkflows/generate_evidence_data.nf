@@ -180,7 +180,14 @@ workflow generate_evidence_data {
 
     emit:
         masked_genome = edta_results.masked_genome
-        egapx_results = egapx_annotations.egapx_results
+        egapx_gff3 = egapx_annotations.gff3
+        egapx_gtf = egapx_annotations.gtf
+        egapx_proteins = egapx_annotations.proteins
+        egapx_cds = egapx_annotations.cds
+        egapx_transcripts = egapx_annotations.transcripts
+        egapx_annotated_genome_asn = egapx_annotations.annotated_genome_asn
+        egapx_output_dir = egapx_annotations.output_dir
+        egapx_versions = egapx_annotations.versions
         liftoff_gff3 = previous_annotations.liftoff_previous_annotations
         liftoff_unmapped_features = previous_annotations.unmapped_features
         braker_augustus_gff3 = braker3_results.augustus_gff

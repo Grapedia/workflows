@@ -204,23 +204,23 @@ Risque scientifique et UX; les reruns partiels devront etre reintroduits plus ta
 
 ## TITAN-P1-005 - Integrer EGAPx proprement
 Priorite : P1
-Statut : En cours
+Statut : Fait
 Risque : Eleve
 
 ### Objectif
-Brancher EGAPx comme source d'annotation obligatoire et testable, puis integrer ses sorties nommees au contrat d'evidences Aegis.
+Brancher EGAPx comme source d'annotation obligatoire et testable, puis integrer ses sorties nommees au contrat d'evidences TITAN.
 ### Constat
-`modules/egapx.nf` est maintenant appele par le sous-workflow interne `generate_evidence_data` avec un `path egapx_paramfile`, publie `${output_dir}/egapx` et fournit un stub minimal. Ses sorties restent larges (`egapx.results`) tant que les noms exacts des fichiers EGAPx a consommer par Aegis ne sont pas stabilises.
+`modules/egapx.nf` utilise maintenant le runner officiel EGAPx `v0.5.2`, pilote l'image Docker officielle `ncbi/egapx:0.5.2`, publie `${output_dir}/egapx` et emet des outputs nommes: GFF3, GTF, proteines, CDS, transcrits, ASN, repertoire complet et versions. Les sorties EGAPx sont typees dans `generate_evidence_data`; la consommation scientifique directe par Aegis reste a definir dans un ticket separe car Aegis ne possede pas encore d'argument EGAPx dedie.
 ### Fichiers concernes
 `modules/egapx.nf`, `subworkflows/generate_evidence_data.nf`, `subworkflows/aegis.nf`, `modules/aegis_*.nf`, `test-data/minimal/valid/evidence/`.
 ### Etapes d'implementation
-Supprimer `run_egapx`, corriger le module pour prendre `path egapx_paramfile`, lancer EGAPx systematiquement, ajouter un stub EGAPx, puis identifier et emettre les vrais outputs EGAPx (`egapx_gff3`, proteines, rapports) pour les connecter a Aegis.
+Supprimer `run_egapx`, corriger le module pour prendre `path egapx_paramfile`, lancer EGAPx systematiquement, remplacer l'image custom par l'image NCBI versionnee, telecharger/executer le runner officiel versionne, ajouter un stub EGAPx complet, puis emettre les vrais outputs EGAPx (`egapx_gff3`, `egapx_gtf`, proteines, CDS, transcrits, ASN, repertoire complet, versions).
 ### Tests
-`nextflow config -profile test`; `nextflow run main.nf -profile test -stub-run -ansi-log false`; test d'integration Aegis avec fixture EGAPx nommee.
+`docker pull ncbi/egapx:0.5.2`; `docker run --rm ncbi/egapx:0.5.2 python3 -c 'import yaml'`; `nextflow config -profile test`; `nextflow run main.nf -profile test -stub-run -ansi-log false`.
 ### Criteres d'acceptation
-EGAPx n'est plus activable/desactivable par parametre, produit des emits nommes et peut etre consomme explicitement par Aegis.
+EGAPx n'est plus activable/desactivable par parametre, utilise une image officielle versionnee et produit des emits nommes.
 ### Risques et retour arriere
-EGAPx embarque son propre Nextflow et peut etre lourd; continuer avec stub/fixture et stabiliser les outputs nommes avant de les faire consommer par Aegis.
+EGAPx embarque son propre Nextflow et peut etre lourd; le module reste isole et peut etre reverti sans modifier les commandes Aegis.
 
 ## TITAN-P1-006 - Supprimer les scans de dossiers internes
 Priorite : P1

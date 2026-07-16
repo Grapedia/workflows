@@ -52,6 +52,7 @@ TITAN has one public execution contract: evidence generation and Aegis are alway
   default: `"5"`
 - **`egapx_cpus`**: CPU allocation for the EGAPx process.
   default: `"5"`
+- **`egapx_version` / `egapx_revision` / `egapx_container`**: EGAPx runner and container version. Defaults are `0.5.2`, `v0.5.2` and `ncbi/egapx:0.5.2`.
 - **`PSICLASS_vd_option`**: For PSICLASS process, the minimum average coverage depth of a transcript to be reported (FLOAT). This option is used to reduce the number of false monoexon genes.
   default: `"5.0"`
 - **`PSICLASS_c_option`**: For PSICLASS process, only use the subexons with classifier score <= than the given number (FLOAT). This option is used to reduce the number of false monoexon genes.
@@ -120,6 +121,7 @@ Required input file(s) not found:
 | BRAKER3 | `augustus.hints.gff3`, `genemark.gtf`, `genemark_supported.gtf`, `braker.gff3` | `${output_dir}` |
 | Aegis final annotation | `final_annotation.gff3`, `final_annotation_proteins_all.fasta`, `final_annotation_proteins_main.fasta` | `${output_dir}/aegis_outputs` |
 | Diamond2GO | `*-diamond*` | `${output_dir}/Diamond2GO_outputs` |
+| EGAPx | `egapx.complete.genomic.gff3`, `egapx.complete.genomic.gtf`, `egapx.complete.proteins.faa`, `egapx.complete.cds.fna`, `egapx.complete.transcripts.fna`, `egapx.annotated_genome.asn`, `egapx_out/`, `versions.yml` | `${output_dir}/egapx` |
 
 ## **Example command-line to run**
 
@@ -164,7 +166,7 @@ Development notes for the completed P0 hardening work are in `docs/development/p
 Generates a **GFF3 file**, which is used by **Aegis** in the final step.
 
 ### **NCBI/egapx Annotations**
-Runs the **NCBI EGAPx** workflow from `egapx_paramfile` and publishes the EGAPx result directory under `${output_dir}/egapx`. EGAPx is currently emitted as a required evidence-generation result; its exact GFF3/protein outputs still need named emits before Aegis consumes them directly.
+Runs the **NCBI EGAPx** workflow from `egapx_paramfile` using the official EGAPx runner `v0.5.2` and official Docker image `ncbi/egapx:0.5.2`. TITAN publishes named EGAPx outputs under `${output_dir}/egapx`: GFF3, GTF, proteins, CDS, transcripts, ASN, full EGAPx output directory and `versions.yml`. EGAPx is now a typed evidence source; Aegis command-line integration of the EGAPx GFF3 remains a separate scientific wiring step.
 
 ### **StringTie Merging (Short Reads - HISAT2)**
 Generates **GTF file(s)**.  
@@ -269,12 +271,11 @@ Diamond2GO performs **functional gene annotation** based on the **final Aegis pr
 - **Docker image**: avelt/edta:latest (dockerhub)
 
 ### egapx
-- **Version**: 0.3.2-alpha [GitHub](https://github.com/ncbi/egapx)  
+- **Version**: 0.5.2 [GitHub](https://github.com/ncbi/egapx)
 - **Dependencies**:
-  - **Python**: 3.12  
-  - **Java**: openjdk version 17.0.15
-  - **Nextflow**: 25.04.2.5947
-- **Docker image**: avelt/ncbi_egapx:0.3.2-alpha (dockerhub)
+  - **Python**: 3.9+ for the EGAPx runner
+  - **Nextflow**: v23.10.1+ for the nested EGAPx workflow
+- **Docker image**: ncbi/egapx:0.5.2 (dockerhub)
 
 ### fastp
 - **Version**: 0.23.2

@@ -78,7 +78,7 @@ Corrections P0 appliquees:
 TITAN annote un nouvel assemblage de genome en combinant:
 
 * transfert d'annotations precedentes via Liftoff;
-* annotation EGAPx obligatoire dans `generate_evidence_data`;
+* annotation EGAPx obligatoire et emise sous forme de sorties nommees;
 * conversion AGAT GFF3 vers CDS FASTA pour inference de brin;
 * preparation RNA-seq court/long depuis FASTQ/FASTA/SRA;
 * trimming fastp;
@@ -137,7 +137,7 @@ for f in modules/*.nf; do awk '/^[[:space:]]*output:/{flag=1} /^[[:space:]]*scri
 | BRAKER3 | Prediction ab initio | v3.0.8 documente | Non, image latest | `braker3_prediction*` | `avelt/braker3:latest` | Non | Non |
 | Diamond2GO | Annotation fonctionnelle | commit documente | Non, image latest | `diamond2go` | `avelt/diamond2go:latest` | Non | Non |
 | EDTA | Masquage TE | GitHub latest documente | Non | `EDTA` | `avelt/edta:latest` | Non | Non |
-| EGAPx | Annotation NCBI | 0.3.2-alpha | Oui | `egapx` | `avelt/ncbi_egapx:0.3.2-alpha` | Non | Non |
+| EGAPx | Annotation NCBI | 0.5.2 | Oui | `egapx` | `ncbi/egapx:0.5.2` | Stub | `versions.yml` |
 | fastp | Trimming | 0.23.2 | Oui | `trimming_fastq` | `quay.io/biocontainers/fastp:0.23.2--hb7a2d85_2` | Non | Non |
 | GFFCompare | Fusion PsiCLASS | 0.12.6 | Non, image latest | `gffcompare` | `avelt/gffcompare:latest` | Non | Non |
 | HISAT2 | Index/alignment | 2.2.1 documente | Non, image latest | `hisat2_*` | `avelt/hisat2:latest` | Non | Non |
@@ -161,7 +161,7 @@ for f in modules/*.nf; do awk '/^[[:space:]]*output:/{flag=1} /^[[:space:]]*scri
 | Annotation precedente | `params.previous_annotations` | GFF3 | fichier existant | Liftoff, puis AGAT | Source du transfert et de la FASTA CDS pour Salmon. |
 | Samplesheet RNA-seq | `params.RNAseq_samplesheet` | CSV avec header | `sampleID`, `SRA_or_FASTQ`, `library_layout` | preparation reads, fastp, Salmon, STAR, HISAT2, Minimap2 | `library_layout` alimente les branches `single`, `paired` et `long`; la presence d'une ligne `long` active automatiquement la branche longue. |
 | Samplesheet proteines | `params.protein_samplesheet` | CSV avec header | `organism`, `filename` | BRAKER3, Aegis | Les modules montent aussi `${projectDir}/data/protein_data`; ce couplage reste a normaliser. |
-| Parametres EGAPx | `params.egapx_paramfile` | YAML | parametres EGAPx | module `egapx` | Obligatoire dans `generate_evidence_data`; sorties publiees sous `${output_dir}/egapx`. |
+| Parametres EGAPx | `params.egapx_paramfile` | YAML | parametres EGAPx | module `egapx` | Obligatoire; sorties nommees publiees sous `${output_dir}/egapx`. |
 | Options outil | `params.edta_cpus`, `params.egapx_cpus`, `params.PSICLASS_*`, `params.STAR_memory_per_job` | entiers CPU, floats, entier bytes | valeurs scalaires | EDTA, EGAPx, PsiCLASS, STAR | Les anciens flags biologiques ne pilotent plus EDTA, EGAPx ou les long reads. |
 | Evidences Aegis | emits nommes de `generate_evidence_data` | chemins stages par Nextflow | `masked_genome`, `braker_augustus_gff`, `braker_genemark_gtf`, `liftoff_annotation`, STAR/StringTie, STAR/PsiCLASS, long reads si detectes | sous-workflow `aegis` | Le workflow public ne relit plus ces evidences depuis `output_dir`. |
 
@@ -196,7 +196,7 @@ for f in modules/*.nf; do awk '/^[[:space:]]*output:/{flag=1} /^[[:space:]]*scri
 | `aegis_short_reads` | genome masque, BRAKER3, Liftoff, STAR/StringTie, GFFCompare | `final_annotation.gff3`, `final_annotation_proteins_all.fasta`, `final_annotation_proteins_main.fasta` | `${output_dir}/aegis_outputs` | Diamond2GO |
 | `aegis_long_reads` | idem short + StringTie long reads | `final_annotation.gff3`, `final_annotation_proteins_all.fasta`, `final_annotation_proteins_main.fasta` | `${output_dir}/aegis_outputs` | Diamond2GO |
 | `diamond2go` | proteines Aegis all/main | `*-diamond*` | `${output_dir}/Diamond2GO_outputs` | sortie finale fonctionnelle |
-| `egapx` | YAML EGAPx | `*` via emit `egapx_results` | `${output_dir}/egapx` | Evidence generation; sorties a nommer avant consommation Aegis |
+| `egapx` | YAML EGAPx | `egapx.complete.genomic.gff3`, `egapx.complete.genomic.gtf`, `egapx.complete.proteins.faa`, `egapx.complete.cds.fna`, `egapx.complete.transcripts.fna`, `egapx.annotated_genome.asn`, `egapx_out/`, `versions.yml` | `${output_dir}/egapx` | Evidence generation; sortie GFF3 a connecter a Aegis quand le contrat scientifique Aegis est defini |
 
 Points de vigilance P0-002:
 
@@ -204,7 +204,7 @@ Points de vigilance P0-002:
 * les images `latest` rendent l'inventaire de versions non reproductible sans validation externe;
 * aucune version n'est collectee dans un artefact de sortie;
 * les chemins de samplesheets sont valides avant construction des channels depuis P0-005; le schema complet des colonnes reste a renforcer;
-* EGAPx est documente et le module existe, mais la branche est commentee dans le sous-workflow.
+* EGAPx est documente, obligatoire et expose des sorties nommees.
 
 ## Constats critiques
 

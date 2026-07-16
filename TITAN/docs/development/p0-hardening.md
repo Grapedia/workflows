@@ -102,7 +102,7 @@ The P0 work intentionally avoids large architectural refactors. Remaining issues
 
 * `workflows/titan.nf` still carries orchestration logic that should move progressively toward typed evidence contracts.
 * Several images still use `latest`.
-* EGAPx is mandatory in TITAN, but its broad result directory still needs named emits before direct Aegis consumption.
+* EGAPx is mandatory in TITAN and now emits named outputs; direct Aegis consumption of `egapx_gff3` still needs a dedicated Aegis command contract.
 * The test profile validates channel/file contracts in stub mode; it does not run scientific containers or heavy tools.
 * There is no CI yet.
 * Protein-related module volume mounts still assume production data layout in places such as `data/protein_data`.

@@ -16,7 +16,7 @@ Highest-risk findings:
 * P1-004 removed public partial workflow modes: TITAN now always runs evidence generation and Aegis in one graph.
 * Aegis consumes generated evidence directly through named channels, including the EDTA `masked_genome` output.
 * EDTA is now mandatory in TITAN. The hard-masked genome is passed to Aegis as a typed channel.
-* EGAPx is now mandatory and its module input is staged as `path egapx_paramfile`. Its outputs are still captured broadly and are not yet named or consumed by Aegis.
+* EGAPx is now mandatory, uses the official `ncbi/egapx:0.5.2` image through the official `v0.5.2` runner, and emits named outputs. Its GFF3 is not yet consumed by Aegis because the Aegis command contract still needs a dedicated EGAPx input.
 * Many modules take `val()` inputs and then ignore them, reading from mounted `params.output_dir`, `projectDir/data/*` or helper scripts instead. This makes caching, resume and portability fragile.
 * Long-read processing is now detected from `RNAseq_samplesheet` rows where `library_layout` is `long`; the old `use_long_reads` flag is no longer part of the runtime contract.
 * Multiple modules copy files manually to `/outputdir` in addition to `publishDir`, creating hidden dependencies and duplicate output semantics.
@@ -28,7 +28,7 @@ The recommended path is to stabilize contracts before changing scientific behavi
 2. Done in P1-003: introduce named evidence outputs and explicit Aegis inputs.
 3. Done in P1-004: make Aegis consume process outputs directly, not files discovered in `output_dir`.
 4. Done in P1-004: move the required EDTA hard-masked genome from `output_dir` discovery to a typed Aegis input.
-5. Replace broad EGAPx output capture with named EGAPx emits and add its GFF3 to the same evidence contract once output names are confirmed.
+5. Done in P1-005: replace broad EGAPx output capture with named EGAPx emits. Remaining work: add its GFF3 to the Aegis command contract once the scientific priority is confirmed.
 6. Migrate modules to staged `path` inputs and named emits module by module.
 
 ## Current topology
@@ -148,24 +148,24 @@ Recommendation:
 * Aegis requires exactly one hard-masked genome input;
 * emit `masked_genome` with the final public name directly from the EDTA process.
 
-### 4. EGAPx is integrated in evidence generation but not typed
+### 4. EGAPx is integrated and typed
 
 Evidence:
 
 * `generate_evidence_data` now includes and calls `egapx(file(params.egapx_paramfile))` as an internal TITAN stage.
-* `modules/egapx.nf` declares `path egapx_paramfile` and emits `egapx_results`.
-* output is still `path("*")`, unnamed and too broad for stable Aegis integration.
+* `modules/egapx.nf` declares `path egapx_paramfile`.
+* The module uses official EGAPx runner `v0.5.2` and official Docker image `ncbi/egapx:0.5.2`.
+* The module emits named EGAPx outputs: GFF3, GTF, proteins, CDS, transcripts, ASN, full output directory and versions.
 
 Impact:
 
 * EGAPx is mandatory in evidence generation;
-* the output cannot yet be connected cleanly to Aegis;
-* broad output capture can publish unrelated files and makes tests brittle.
+* EGAPx output can now be referenced by stable channel names;
+* Aegis still does not consume EGAPx directly.
 
 Recommendation:
 
-* emit named outputs such as `egapx_gff3`, `egapx_proteins`, `egapx_report` once actual EGAPx output names are confirmed;
-* integrate `egapx_gff3` into the evidence bundle and Aegis command line when the output contract is stable.
+* integrate `egapx_gff3` into the Aegis command line when the Aegis input contract is extended.
 
 ### 5. Module inputs are not consistently staged
 
@@ -265,7 +265,7 @@ The safest order is contract-first:
 4. Done in P1-003: replace the mixed evidence channel with named emits.
 5. Done in P1-004: rewrite Aegis integration to consume named evidence directly.
 6. Done in P1-004: make EDTA hard-masked genome an explicit required Aegis input.
-7. Replace broad mandatory EGAPx results with named EGAPx evidence emits and connect them to Aegis.
+7. Done in P1-005 for evidence generation: replace broad mandatory EGAPx results with named EGAPx evidence emits. Remaining work: connect `egapx_gff3` to Aegis.
 8. Migrate modules away from mounted output directories and hidden scans.
 9. Add `-stub-run` and nf-test coverage for critical subworkflows.
 10. Add CI once the contracts are stable.
