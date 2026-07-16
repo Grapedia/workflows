@@ -16,9 +16,6 @@ process prepare_RNAseq_fastq_files_long {
   output:
   tuple val(sample_ID), val(SRA_or_FASTQ), val(library_layout), emit : prepared_fastqs
 
-  when:
-  params.use_long_reads
-
   script:
   """
   DATE=\$(date "+%Y-%m-%d %H:%M:%S")

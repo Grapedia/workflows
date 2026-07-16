@@ -14,9 +14,6 @@ process assembly_transcriptome_minimap2_stringtie {
     tuple val(sample_ID), path("*_transcriptome.gtf"), emit: minimap2_stringtie_transcriptome_gtf
     tuple val(sample_ID), path("*_transcriptome.AltCommands.gtf"), emit: minimap2_stringtie_alt_commands_gtf
 
-  when:
-  params.use_long_reads
-
   script:
     """
     DATE=\$(date "+%Y-%m-%d %H:%M:%S")

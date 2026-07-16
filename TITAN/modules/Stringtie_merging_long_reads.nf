@@ -15,9 +15,6 @@ process Stringtie_merging_long_reads {
     path "merged_transcriptomes.minimap2.long_reads.default_args.gtf", emit: default_args_gff
     path "merged_transcriptomes.minimap2.long_reads.alt_args.gtf", emit: alt_args_gff
 
-  when:
-  params.use_long_reads
-
   script:
     """
     DATE=\$(date "+%Y-%m-%d %H:%M:%S")

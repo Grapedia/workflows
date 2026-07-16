@@ -36,18 +36,57 @@ def validateExistingInputFiles(requiredFiles) {
 }
 
 def validateWorkflowName() {
-    def allowedWorkflows = ['generate_evidence_data', 'aegis', 'all']
+    def allowedWorkflows = ['generate_evidence_data', 'aegis']
     if (!allowedWorkflows.contains(params.workflow)) {
         error "Invalid --workflow '${params.workflow}'. Allowed values: ${allowedWorkflows.join(', ')}"
     }
+}
+
+def normalizeBooleanParam(value, paramName) {
+    if (value == null) {
+        return false
+    }
+    if (value instanceof Boolean) {
+        return value
+    }
+
+    def normalizedValue = value.toString().trim().toLowerCase()
+    if (['true', 'yes', 'y', '1'].contains(normalizedValue)) {
+        return true
+    }
+    if (['false', 'no', 'n', '0'].contains(normalizedValue)) {
+        return false
+    }
+
+    error "Invalid boolean value for --${paramName}: '${value}'. Allowed values: true/false, yes/no, 1/0"
+}
+
+def normalizeRuntimeFlags() {
+    def useLongReads = normalizeBooleanParam(params.use_long_reads, 'use_long_reads')
+    def runEgapx = normalizeBooleanParam(params.run_egapx, 'run_egapx')
+    def runEdta
+
+    if (params.run_edta != null) {
+        runEdta = normalizeBooleanParam(params.run_edta, 'run_edta')
+    } else {
+        runEdta = normalizeBooleanParam(params.EDTA, 'EDTA')
+    }
+
+    // Keep the historical EDTA parameter synchronized while downstream modules migrate.
+    params.EDTA = runEdta ? 'yes' : 'no'
+
+    return [
+        run_edta: runEdta,
+        run_egapx: runEgapx,
+        use_long_reads: useLongReads
+    ]
 }
 
 workflow {
     validateWorkflowName()
     validateRequiredParams(['output_dir', 'egapx_paramfile', 'RNAseq_samplesheet', 'protein_samplesheet', 'new_assembly', 'previous_assembly', 'previous_annotations'])
     validateExistingInputFiles(['egapx_paramfile', 'RNAseq_samplesheet', 'protein_samplesheet', 'new_assembly', 'previous_assembly', 'previous_annotations'])
-
-    def use_long_reads_enabled = params.use_long_reads == true || params.use_long_reads == 'true' || params.use_long_reads == 'yes'
+    def runtime_flags = normalizeRuntimeFlags()
 
     // if the workflow parameter is equal to generate_evidence_data the first workflow is executed
     if (params.workflow == "generate_evidence_data") {
@@ -82,7 +121,10 @@ workflow {
         evidence_data = generate_evidence_data(
             samples_list_long_reads, 
             samples_list_short_reads, 
-            protein_list
+            protein_list,
+            runtime_flags.run_edta,
+            runtime_flags.run_egapx,
+            runtime_flags.use_long_reads
         )
     }
     
@@ -125,7 +167,7 @@ workflow {
       }
 
       // Load manually the outputs of generate_evidence_data workflow
-      if (params.EDTA == 'yes') {
+      if (runtime_flags.run_edta) {
         if (file("${outdir_1}/assembly_masked.EDTA.fasta").exists()) {
           workflow_inputs << tuple("masked_genome.masked_genome", file("${outdir_1}/assembly_masked.EDTA.fasta"))
         } else {
@@ -135,7 +177,7 @@ workflow {
         println "EDTA = No, we need this output for Aegis. EXIT."
       }
 
-      if (use_long_reads_enabled) {
+      if (runtime_flags.use_long_reads) {
         if (file("${outdir_1}/merged_minimap2_stringtie_long_reads_default.gtf").exists()) {
           workflow_inputs << tuple("merged_long_reads.default_args_gff", file("${outdir_1}/merged_minimap2_stringtie_long_reads_default.gtf"))
         } else {
@@ -202,9 +244,6 @@ workflow {
 
       println "Files sent to Aegis : ${workflow_inputs_list}"
 
-      aegis(workflow_inputs_list) // We send the list directly, not a Channel
-  }
-  else if (params.workflow == "all") {
-      error "Workflow mode 'all' is declared but not implemented yet. Use --workflow generate_evidence_data or --workflow aegis."
+      aegis(workflow_inputs_list, runtime_flags.run_edta, runtime_flags.use_long_reads) // We send the list directly, not a Channel
   }
 }

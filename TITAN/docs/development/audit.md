@@ -69,6 +69,7 @@ Corrections P0 appliquees:
 * validation des parametres et creation des channels de `generate_evidence_data` deplacees dans le bloc `workflow`;
 * construction des channels RNA/proteines limitee a la branche `generate_evidence_data`;
 * interpretation explicite de `params.use_long_reads` pour eviter qu'une chaine `"false"` soit truthy;
+* normalisation P1-001 de `use_long_reads`, `run_edta` et `run_egapx` en booleens canoniques au demarrage du workflow;
 * creation de `output_dir` avant ecriture des placeholders `dev_null*` de la branche `aegis`;
 * remplacement d'une boucle `for` non supportee par Nextflow 26 dans `subworkflows/aegis.nf`;
 * correction du tag `diamond2go` qui referenceait une variable inexistante;
@@ -163,7 +164,7 @@ for f in modules/*.nf; do awk '/^[[:space:]]*output:/{flag=1} /^[[:space:]]*scri
 | Samplesheet RNA-seq | `params.RNAseq_samplesheet` | CSV avec header | `sampleID`, `SRA_or_FASTQ`, `library_layout` | preparation reads, fastp, Salmon, STAR, HISAT2, Minimap2 | `library_layout` alimente les branches `single`, `paired` et `long`; la branche longue reste conditionnee par `use_long_reads`. |
 | Samplesheet proteines | `params.protein_samplesheet` | CSV avec header | `organism`, `filename` | BRAKER3, Aegis | Les modules montent aussi `${projectDir}/data/protein_data`; ce couplage reste a normaliser. |
 | Parametres EGAPx | `params.egapx_paramfile` | YAML | parametres EGAPx | module `egapx` | Module present mais include et appel commentes dans `generate_evidence_data`. |
-| Options biologiques | `params.EDTA`, `params.use_long_reads`, `params.PSICLASS_*`, `params.STAR_memory_per_job` | chaines, booleens, floats, entier bytes | valeurs scalaires | EDTA, branches long reads, PsiCLASS, STAR | `use_long_reads` est interprete differemment selon modules; a harmoniser. |
+| Options biologiques | `params.run_edta`, `params.EDTA`, `params.run_egapx`, `params.use_long_reads`, `params.PSICLASS_*`, `params.STAR_memory_per_job` | booleens normalises, alias historique EDTA, floats, entier bytes | valeurs scalaires | EDTA, future branche EGAPx, branches long reads, PsiCLASS, STAR | `EDTA` reste un alias historique synchronise vers `run_edta`. |
 | Entrees Aegis-only | channel `input_data` construit dans `main.nf` | liste de paires cle/fichier | cles `masked_genome.masked_genome`, `braker3_results.*`, `previous_annotations.*`, `merged_*`, `gffcompare_out.*` | sous-workflow `aegis` | En mode minimal `EDTA=no`, des fichiers `dev_null*` remplacent les sorties unstranded absentes. |
 
 ### Inventaire des sorties par module

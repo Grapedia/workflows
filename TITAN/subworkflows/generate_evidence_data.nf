@@ -32,14 +32,14 @@ workflow generate_evidence_data {
         samples_list_long_reads
         samples_list_short_reads
         protein_list
+        run_edta
+        run_egapx
+        use_long_reads
 
     main:
 
         // Prepare RNAseq short reads for processing
         short_reads_prepared = prepare_RNAseq_fastq_files_short(samples_list_short_reads)
-
-        // Prepare long reads (if any) for processing
-        long_reads_prepared = prepare_RNAseq_fastq_files_long(samples_list_long_reads)
 
         // Trim Illumina short reads
         trimmed_reads = trimming_fastq(short_reads_prepared.prepared_fastqs)
@@ -107,7 +107,10 @@ workflow generate_evidence_data {
         merged_hisat2_stringtie = Stringtie_merging_short_reads_hisat2(concat_hisat2_stringtie_for_merging)
 
         // Process minimap2 alignments for long reads
-        if (params.use_long_reads) {
+        if (use_long_reads) {
+            // Prepare long reads (if any) for processing
+            long_reads_prepared = prepare_RNAseq_fastq_files_long(samples_list_long_reads)
+
             minimap2_indices = minimap2_genome_indices(
                 file(params.new_assembly).getParent(),
                 file(params.new_assembly).getName()
@@ -150,7 +153,7 @@ workflow generate_evidence_data {
         gffcompare_out = gffcompare(concat_star_psiclass_for_merging)
 
         // Run EDTA if enabled
-        if (params.EDTA == 'yes') {
+        if (run_edta) {
             masked_genome = EDTA(
                 file(params.new_assembly).getParent(),
                 file(params.new_assembly).getName()
@@ -158,7 +161,7 @@ workflow generate_evidence_data {
         }
 
         // Run BRAKER3
-        if (params.use_long_reads) {
+        if (use_long_reads) {
             braker3_results = braker3_prediction_with_long_reads(
                 file(params.new_assembly).getParent(),
                 file(params.new_assembly).getName(),
@@ -181,14 +184,14 @@ workflow generate_evidence_data {
     outputs_ch = Channel.empty()
 
     // Add EDTA outputs if enabled
-    if (params.EDTA == 'yes') {
+    if (run_edta) {
         outputs_ch = outputs_ch.mix(
             Channel.of("masked_genome.masked_genome").combine(masked_genome.masked_genome)
         )
     }
 
     // Add long reads outputs if enabled
-    if (params.use_long_reads) {
+    if (use_long_reads) {
         outputs_ch = outputs_ch.mix(
             Channel.of("merged_long_reads.default_args_gff").combine(merged_long_reads.default_args_gff),
             Channel.of("merged_long_reads.alt_args_gff").combine(merged_long_reads.alt_args_gff)

@@ -14,9 +14,6 @@ process minimap2_alignment {
   output:
     tuple val(sample_ID), path("${sample_ID}_Aligned.sorted.bam"), emit : samples_aligned
 
-  when:
-  params.use_long_reads
-
   script:
     // PacBio Iso-seq/traditional cDNA parameters
     """

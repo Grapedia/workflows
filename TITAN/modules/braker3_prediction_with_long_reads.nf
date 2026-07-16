@@ -22,9 +22,6 @@ process braker3_prediction_with_long_reads {
     path "genemark_supported.gtf", emit: genemark_supported_gtf
     path "braker.gff3", emit: braker_gff
 
-  when:
-  params.use_long_reads
-
   script:
     """
     DATE=\$(date "+%Y-%m-%d %H:%M:%S")

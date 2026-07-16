@@ -124,19 +124,19 @@ Aucun impact runtime.
 
 ## TITAN-P1-001 - Clarifier les modes workflow et normaliser les booleens
 Priorite : P1
-Statut : A faire
+Statut : Fait
 Risque : Moyen
 
 ### Objectif
 Rendre les modes `generate_evidence_data`, `aegis` et futur `all` explicites et normaliser `EDTA`, `use_long_reads` et futurs flags EGAPx une seule fois.
 ### Constat
-`main.nf` accepte `all` mais l'erreur ensuite; plusieurs modules utilisent encore `params.use_long_reads` directement, ce qui peut rendre une chaine `"false"` truthy.
+`main.nf` rejette maintenant `all` explicitement tant que ce mode n'est pas implemente. `use_long_reads`, `run_edta` et `run_egapx` sont normalises en booleens canoniques au demarrage du workflow; `EDTA` reste un alias historique synchronise vers `run_edta`.
 ### Fichiers concernes
-`main.nf`, futurs helpers de validation, `subworkflows/*.nf`, modules avec `when: params.use_long_reads`.
+`main.nf`, `nextflow.config`, `conf/test.config`, `subworkflows/*.nf`, documentation.
 ### Etapes d'implementation
-Ajouter un bloc de normalisation de parametres, refuser `all` tant qu'il n'est pas implemente ou le brancher vraiment, passer les booleens normalises aux sous-workflows, remplacer les `when:` directs.
+Ajouter un bloc de normalisation de parametres, refuser `all` tant qu'il n'est pas implemente, passer les booleens normalises aux sous-workflows et synchroniser `EDTA` vers `run_edta`.
 ### Tests
-`nextflow run main.nf -profile test --workflow aegis`; tests negatifs `--workflow all` si non implemente, `--use_long_reads false`, `--use_long_reads true`.
+`nextflow config -profile test`; `nextflow run main.nf -profile test --workflow aegis`; tests negatifs `--workflow all`, `--use_long_reads maybe`, `--EDTA=maybe`, `--run_egapx maybe`; tests `--use_long_reads false`, `--use_long_reads true`, `--EDTA no`, `--run_edta false`.
 ### Criteres d'acceptation
 Chaque mode a un comportement documente et aucun module ne depend d'une chaine booleenne ambigue.
 ### Risques et retour arriere

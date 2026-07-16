@@ -14,9 +14,6 @@ process minimap2_genome_indices {
   output:
     path("${genome}.mmi"), emit : index
 
-  when:
-  params.use_long_reads
-
   script:
     """
     DATE=\$(date "+%Y-%m-%d %H:%M:%S")

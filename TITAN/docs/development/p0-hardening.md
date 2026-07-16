@@ -108,6 +108,8 @@ The P0 work intentionally avoids large architectural refactors. Remaining issues
 * There is no CI yet.
 * Historical module volume mounts still assume production data layout in places such as `data/RNAseq_data` and `data/protein_data`.
 
+P1-001 now normalizes `use_long_reads`, `run_edta` and `run_egapx` at workflow startup; the remaining architectural work is tracked in `roadmap.md`.
+
 ## Relevant files
 
 * `roadmap.md`: P0 status and acceptance criteria.

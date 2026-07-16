@@ -9,12 +9,14 @@ workflow aegis {
 
   take:
     input_data
+    run_edta
+    use_long_reads
 
   main:
 
     def workflow_inputs = input_data // Create a new variable
-    def edta_enabled = params.EDTA == 'yes'
-    def use_long_reads_enabled = params.use_long_reads == true || params.use_long_reads == 'true' || params.use_long_reads == 'yes'
+    def edta_enabled = run_edta
+    def use_long_reads_enabled = use_long_reads
     // println "Files sent to Aegis process : ${workflow_inputs}"
 
     def masked_genome = []
@@ -144,7 +146,7 @@ workflow aegis {
         )
       }
     } else {
-      println "Skipping the AEGIS process because EDTA was not run (params.EDTA = '${params.EDTA}'). To enable EDTA, and consequently AEGIS, set EDTA = 'yes' in the nextflow.config file."
+      println "Skipping the AEGIS process because EDTA was not run (run_edta = '${edta_enabled}'). To enable EDTA, and consequently AEGIS, set run_edta = true or EDTA = 'yes'."
     }
 
     // ----------------------------------------------------------------------------------------
@@ -158,7 +160,7 @@ workflow aegis {
          diamond2go(aegis_short_reads.out.aegis_proteins_all, aegis_short_reads.out.aegis_proteins_main)
       }
     } else {
-      println "Skipping the Diamond2GO process because EDTA was not run (params.EDTA = '${params.EDTA}'). To enable EDTA, and consequently AEGIS and Diamond2GO, set EDTA = 'yes' in the nextflow.config file."
+      println "Skipping the Diamond2GO process because EDTA was not run (run_edta = '${edta_enabled}'). To enable EDTA, and consequently AEGIS and Diamond2GO, set run_edta = true or EDTA = 'yes'."
     }
 
   // Outputs

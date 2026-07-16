@@ -17,7 +17,7 @@ Highest-risk findings:
 * EDTA is optional in the evidence workflow, but Aegis is functionally dependent on a hard-masked genome. The current `EDTA=no` path is only a lightweight skip path, not a coherent production mode.
 * EGAPx is present as a module but commented out. Its input declaration is wrong for the way it is intended to be called, and its outputs are not named or integrated into the evidence contract.
 * Many modules take `val()` inputs and then ignore them, reading from mounted `params.output_dir`, `projectDir/data/*` or helper scripts instead. This makes caching, resume and portability fragile.
-* Several `when:` clauses still use `params.use_long_reads` directly, so string values such as `"false"` can behave as truthy in module conditions.
+* Several `when:` clauses use `params.use_long_reads`; since P1-001 this value is normalized to a boolean at workflow startup.
 * Multiple modules copy files manually to `/outputdir` in addition to `publishDir`, creating hidden dependencies and duplicate output semantics.
 * Several processes use `containerOptions` mounts for Docker-specific paths. This fights Nextflow staging and weakens Apptainer/HPC portability.
 
@@ -91,7 +91,7 @@ subworkflows/aegis_integration
 Evidence:
 
 * `main.nf` includes subworkflows, mutates defaults, validates parameters, builds CSV channels, scans `output_dir`, creates placeholder files and dispatches Aegis.
-* `params.workflow == "all"` is accepted by validation but still errors as not implemented.
+* `params.workflow == "all"` was accepted by validation but errored later before P1-001; it is now rejected early until a real `all` mode exists.
 
 Impact:
 
@@ -130,7 +130,7 @@ Recommendation:
 
 Evidence:
 
-* `generate_evidence_data` runs EDTA only if `params.EDTA == 'yes'`.
+* Before P1-001, `generate_evidence_data` ran EDTA only if `params.EDTA == 'yes'`; it now receives a normalized `run_edta` boolean from `main.nf`.
 * `aegis` only runs Aegis if EDTA is enabled, because `aegis_short_reads` and `aegis_long_reads` require `edta_masked_genome`.
 * `main.nf` prints `EDTA = No, we need this output for Aegis. EXIT.` but does not exit. This path is useful for P0 lightweight validation but not a production contract.
 * `EDTA.nf` emits `*MAKER.masked` but also manually copies it to `/outputdir/assembly_masked.EDTA.fasta`.
@@ -205,7 +205,7 @@ Evidence:
 * `generate_evidence_data` emits a mixed channel of key/file pairs.
 * optional unstranded outputs are emitted as optional paths, then mixed unconditionally.
 * `aegis.nf` converts a list of pairs into arrays and indexes `[0]`.
-* long-read branch checks are split between `main.nf`, subworkflow `if (params.use_long_reads)`, and process-level `when: params.use_long_reads`.
+* Before P1-001, long-read branch checks were split between `main.nf`, subworkflow `if (params.use_long_reads)`, and process-level `when: params.use_long_reads`. The branch is now controlled by a normalized `use_long_reads` boolean passed from `main.nf`, with process-level `when:` guards removed from the long-read-only modules.
 
 Impact:
 

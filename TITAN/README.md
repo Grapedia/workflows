@@ -47,6 +47,10 @@ Aegis run are launched chromosome by chromosome: a for loop and sequential annot
 - **`EDTA`**: Whether to run **EDTA (transposable element annotation tool)**.  
   _Options_: `"yes"` or `"no"` (default: `"no"`)
   ⚠️ If EDTA is not set to "yes", the Aegis and Diamond2Go steps will not be executed, as Aegis requires a hard-masked genome. TITAN will only generate the evidence data.
+- **`run_edta`**: Boolean replacement for `EDTA`. If unset, TITAN falls back to the historical `EDTA` value.
+  _Options_: `true`/`false`, `yes`/`no`, `1`/`0`.
+- **`run_egapx`**: Boolean flag reserved for the planned EGAPx integration. The module exists but is not wired into `generate_evidence_data` yet.
+  _Options_: `true`/`false`, `yes`/`no`, `1`/`0` (default: `false`).
 - **`use_long_reads`**: Flag to indicate whether **long-read sequencing data** should be used.  
   _Options_: `true` or `false` (default: `true`)
 - **`PSICLASS_vd_option`**: For PSICLASS process, the minimum average coverage depth of a transcript to be reported (FLOAT). This option is used to reduce the number of false monoexon genes.
@@ -68,7 +72,7 @@ Current static inventory from `main.nf`, `subworkflows/*.nf` and `modules/*.nf`:
 | Protein samplesheet | `--protein_samplesheet` | CSV with header `organism,filename`; filenames may be relative paths in the minimal fixtures, while historical modules still mount `data/protein_data` | BRAKER3, Aegis |
 | EGAPx parameter file | `--egapx_paramfile` | YAML parameter file for EGAPx | EGAPx module, currently not wired in `generate_evidence_data` |
 | Evidence list for Aegis-only runs | internal channel built when `--workflow aegis` | Key/file pairs for masked genome, BRAKER3, Liftoff, STAR/StringTie and GFFCompare outputs | Aegis subworkflow |
-| Biological options | `--EDTA`, `--use_long_reads`, `--PSICLASS_vd_option`, `--PSICLASS_c_option`, `--STAR_memory_per_job` | Runtime switches and tool options | Conditional branches and tool commands |
+| Biological options | `--run_edta`, `--EDTA`, `--run_egapx`, `--use_long_reads`, `--PSICLASS_vd_option`, `--PSICLASS_c_option`, `--STAR_memory_per_job` | Runtime switches and tool options | Conditional branches and tool commands |
 
 `library_layout` is split into `single`, `paired` and `long` branches. Long-read modules are conditional on `use_long_reads`; Aegis and Diamond2GO are conditional on `EDTA=yes`.
 
@@ -92,10 +96,10 @@ Invalid input fails early with explicit messages such as:
 Missing required parameter(s): --RNAseq_samplesheet
 Required input file(s) not found:
   --previous_annotations: test-data/minimal/valid/missing.gff3
-Invalid --workflow 'nope'. Allowed values: generate_evidence_data, aegis, all
+Invalid --workflow 'nope'. Allowed values: generate_evidence_data, aegis
 ```
 
-`--workflow all` is reserved in the validation layer but is not implemented yet; use `generate_evidence_data` or `aegis`.
+`--workflow all` is not implemented yet; use `generate_evidence_data` or `aegis`.
 
 ### **Output contract inventory**
 
