@@ -101,6 +101,9 @@ workflow generate_evidence_data {
 
         merged_hisat2_stringtie = Stringtie_merging_short_reads_hisat2(concat_hisat2_stringtie_for_merging)
 
+        merged_long_reads_default_args_gff = Channel.empty()
+        merged_long_reads_alt_args_gff = Channel.empty()
+
         // Process minimap2 alignments for long reads
         if (has_long_reads) {
             // Prepare long reads (if any) for processing
@@ -126,6 +129,8 @@ workflow generate_evidence_data {
             .map { it[0] }
 
             merged_long_reads = Stringtie_merging_long_reads(concat_minimap2_stringtie_for_merging)
+            merged_long_reads_default_args_gff = merged_long_reads.default_args_gff
+            merged_long_reads_alt_args_gff = merged_long_reads.alt_args_gff
         }
 
         // Process short read assemblies
@@ -148,7 +153,7 @@ workflow generate_evidence_data {
         gffcompare_out = gffcompare(concat_star_psiclass_for_merging)
 
         // EDTA is mandatory: Aegis requires the hard-masked genome.
-        masked_genome = EDTA(
+        edta_results = EDTA(
             file(params.new_assembly).getParent(),
             file(params.new_assembly).getName()
         )
@@ -173,34 +178,21 @@ workflow generate_evidence_data {
             )
         }
 
-    // emit outputs
-    outputs_ch = Channel.empty()
-
-    outputs_ch = outputs_ch.mix(
-        Channel.of("masked_genome.masked_genome").combine(masked_genome.masked_genome),
-        Channel.of("egapx.results").combine(egapx_annotations.egapx_results)
-    )
-
-    // Add long reads outputs if detected in the RNA-seq samplesheet.
-    if (has_long_reads) {
-        outputs_ch = outputs_ch.mix(
-            Channel.of("merged_long_reads.default_args_gff").combine(merged_long_reads.default_args_gff),
-            Channel.of("merged_long_reads.alt_args_gff").combine(merged_long_reads.alt_args_gff)
-        )
-    }
-
-    outputs_ch = outputs_ch.mix(
-        Channel.of("braker3_results.augustus_gff").combine(braker3_results.augustus_gff),
-        Channel.of("braker3_results.genemark_gtf").combine(braker3_results.genemark_gtf),
-        Channel.of("previous_annotations.liftoff_previous_annotations").combine(previous_annotations.liftoff_previous_annotations),
-        Channel.of("merged_star_stringtie.default_args_stranded").combine(merged_star_stringtie.default_args_stranded),
-        Channel.of("merged_star_stringtie.alt_args_stranded").combine(merged_star_stringtie.alt_args_stranded),
-        Channel.of("gffcompare_out.star_psiclass_stranded").combine(gffcompare_out.star_psiclass_stranded),
-        Channel.of("merged_star_stringtie.default_args_unstranded").combine(merged_star_stringtie.default_args_unstranded),
-        Channel.of("merged_star_stringtie.alt_args_unstranded").combine(merged_star_stringtie.alt_args_unstranded),
-        Channel.of("gffcompare_out.star_psiclass_unstranded").combine(gffcompare_out.star_psiclass_unstranded)
-    )
-
     emit:
-        results = outputs_ch
+        masked_genome = edta_results.masked_genome
+        egapx_results = egapx_annotations.egapx_results
+        liftoff_gff3 = previous_annotations.liftoff_previous_annotations
+        liftoff_unmapped_features = previous_annotations.unmapped_features
+        braker_augustus_gff3 = braker3_results.augustus_gff
+        braker_genemark_gtf = braker3_results.genemark_gtf
+        braker_genemark_supported_gtf = braker3_results.genemark_supported_gtf
+        braker_gff3 = braker3_results.braker_gff
+        star_stringtie_stranded_default_gtf = merged_star_stringtie.default_args_stranded
+        star_stringtie_stranded_alt_gtf = merged_star_stringtie.alt_args_stranded
+        star_stringtie_unstranded_default_gtf = merged_star_stringtie.default_args_unstranded
+        star_stringtie_unstranded_alt_gtf = merged_star_stringtie.alt_args_unstranded
+        star_psiclass_stranded_gtf = gffcompare_out.star_psiclass_stranded
+        star_psiclass_unstranded_gtf = gffcompare_out.star_psiclass_unstranded
+        long_reads_default_gtf = merged_long_reads_default_args_gff
+        long_reads_alt_gtf = merged_long_reads_alt_args_gff
 }

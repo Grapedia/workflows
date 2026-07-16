@@ -12,7 +12,7 @@ TITAN has a useful biological decomposition, but the workflow is not yet archite
 Highest-risk findings:
 
 * P1-002 made `main.nf` a thin entrypoint; orchestration now lives in `workflows/titan.nf`.
-* `generate_evidence_data` emits a string-keyed mixed channel, while `aegis` expects a manually reconstructed list of files. This bypasses normal Nextflow dataflow guarantees.
+* P1-003 replaced the string-keyed mixed evidence channel with named emits and explicit Aegis inputs.
 * `aegis` mode reads files back from `params.output_dir` by filename. That means Aegis is coupled to publish side effects instead of process outputs.
 * EDTA is now mandatory in the evidence workflow, and Aegis-only runs fail early if the hard-masked genome is missing. The remaining issue is that Aegis still discovers that file from `output_dir` instead of a typed channel or manifest.
 * EGAPx is now mandatory in `generate_evidence_data` and its module input is staged as `path egapx_paramfile`. Its outputs are still captured broadly and are not yet named or consumed by Aegis.
@@ -24,7 +24,7 @@ Highest-risk findings:
 The recommended path is to stabilize contracts before changing scientific behavior:
 
 1. Done in P1-002: keep `main.nf` thin and continue building the canonical orchestration in `workflows/titan.nf`.
-2. Introduce typed evidence outputs rather than string-key/file lists.
+2. Done in P1-003: introduce named evidence outputs and explicit Aegis inputs.
 3. Make Aegis consume process outputs directly, not files discovered in `output_dir`.
 4. Move the required EDTA hard-masked genome from `output_dir` discovery to a typed Aegis input or evidence manifest.
 5. Replace broad EGAPx output capture with named EGAPx emits and add its GFF3 to the same evidence contract once output names are confirmed.
@@ -47,11 +47,10 @@ workflows/titan.nf
 subworkflows/generate_evidence_data.nf
   prepares reads
   runs Liftoff, AGAT, Salmon, STAR, HISAT2, Minimap2, StringTie, PsiCLASS, GFFCompare, EDTA, BRAKER3
-  emits one mixed channel of [string_key, file] pairs
+  emits named evidence channels
 
 subworkflows/aegis.nf
-  receives a list of [string_key, file] pairs
-  reconstructs arrays by key
+  receives explicit evidence inputs
   conditionally runs aegis_short_reads or aegis_long_reads
   conditionally runs Diamond2GO
 ```
@@ -197,21 +196,21 @@ Recommendation:
 
 Evidence:
 
-* `generate_evidence_data` emits a mixed channel of key/file pairs.
-* optional unstranded outputs are emitted as optional paths, then mixed unconditionally.
-* `aegis.nf` converts a list of pairs into arrays and indexes `[0]`.
+* P1-003 replaced the mixed key/file channel with named emits such as `masked_genome`, `liftoff_gff3`, `braker_augustus_gff3`, `star_stringtie_stranded_default_gtf` and long-read emits.
+* optional unstranded outputs remain optional paths and should eventually get clearer placeholder/absence semantics.
+* `aegis.nf` now takes explicit evidence inputs instead of converting a list of pairs into arrays.
 * Before P1-001, long-read branch checks were split between `main.nf`, subworkflow `if (params.use_long_reads)`, and process-level `when: params.use_long_reads`. The branch is now controlled by samplesheet detection: at least one `library_layout=long` row enables long-read modules.
 
 Impact:
 
-* missing evidence can become an index error or a skipped process later;
+* missing evidence in Aegis-only mode now fails before the Aegis subworkflow call;
 * optional outputs are hard to reason about;
 * boolean behavior can differ by layer;
 * true `all` mode will be fragile until contracts are explicit.
 
 Recommendation:
 
-* define typed emits per evidence family;
+* continue refining typed emits per evidence family;
 * normalize booleans once in params validation;
 * pass normalized booleans or channels to subworkflows;
 * create explicit placeholder channels only for genuinely optional evidence, not required evidence.
@@ -265,7 +264,7 @@ The safest order is contract-first:
 1. Normalize booleans and workflow mode semantics.
 2. Add a samplesheet/schema validator for RNA-seq and proteins.
 3. Done in P1-002: create `workflows/titan.nf` and keep `main.nf` thin.
-4. Replace the mixed evidence channel with named emits.
+4. Done in P1-003: replace the mixed evidence channel with named emits.
 5. Rewrite Aegis integration to consume named evidence directly.
 6. Make EDTA hard-masked genome an explicit required Aegis input.
 7. Replace broad mandatory EGAPx results with named EGAPx evidence emits and connect them to Aegis.

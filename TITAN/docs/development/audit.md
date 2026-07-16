@@ -164,7 +164,7 @@ for f in modules/*.nf; do awk '/^[[:space:]]*output:/{flag=1} /^[[:space:]]*scri
 | Samplesheet proteines | `params.protein_samplesheet` | CSV avec header | `organism`, `filename` | BRAKER3, Aegis | Les modules montent aussi `${projectDir}/data/protein_data`; ce couplage reste a normaliser. |
 | Parametres EGAPx | `params.egapx_paramfile` | YAML | parametres EGAPx | module `egapx` | Obligatoire dans `generate_evidence_data`; sorties publiees sous `${output_dir}/egapx`. |
 | Options outil | `params.edta_cpus`, `params.egapx_cpus`, `params.PSICLASS_*`, `params.STAR_memory_per_job` | entiers CPU, floats, entier bytes | valeurs scalaires | EDTA, EGAPx, PsiCLASS, STAR | Les anciens flags biologiques ne pilotent plus EDTA, EGAPx ou les long reads. |
-| Entrees Aegis-only | channel `input_data` construit dans `workflows/titan.nf` | liste de paires cle/fichier | cles `masked_genome.masked_genome`, `braker3_results.*`, `previous_annotations.*`, `merged_*`, `gffcompare_out.*` | sous-workflow `aegis` | Les fichiers requis manquants provoquent une erreur; seuls les outputs unstranded peuvent recevoir des placeholders `dev_null*`. |
+| Entrees Aegis-only | evidences nommees construites dans `workflows/titan.nf` | chemins explicites | `masked_genome`, `braker_augustus_gff`, `braker_genemark_gtf`, `liftoff_annotation`, STAR/StringTie, STAR/PsiCLASS, long reads si detectes | sous-workflow `aegis` | Les fichiers requis manquants provoquent une erreur; seuls les outputs unstranded et les longs reads non utilises peuvent recevoir des placeholders `dev_null*`. |
 
 ### Inventaire des sorties par module
 

@@ -116,15 +116,22 @@ workflow TITAN {
       //     }
       // }
 
-      def workflow_inputs = []
       def missing_required_inputs = []
-      def addRequiredEvidence = { key, filename ->
+      def requiredEvidenceFile = { filename ->
         def candidate = file("${outdir_1}/${filename}")
         if (candidate.exists()) {
-          workflow_inputs << tuple(key, candidate)
-        } else {
-          missing_required_inputs << filename
+          return candidate
         }
+        missing_required_inputs << filename
+        return candidate
+      }
+      def optionalEvidenceFile = { filename, fallback ->
+        def candidate = file("${outdir_1}/${filename}")
+        if (candidate.exists()) {
+          return candidate
+        }
+        println "WARNING : optional evidence ${filename} not found in ${outdir_1}; using ${fallback.name}"
+        return fallback
       }
 
       def fake_null_merged_star_stringtie_default_args_unstranded = file("${params.output_dir}/dev_null1")
@@ -145,48 +152,58 @@ workflow TITAN {
           fake_null_gffcompare_out_star_psiclass_unstranded.text = "FAKE gffcompare_out_star_psiclass_unstranded"
       }
 
+      def fake_null_long_reads_default = file("${params.output_dir}/dev_null_long1")
+
+      if (!fake_null_long_reads_default.exists() || fake_null_long_reads_default.size() == 0) {
+          fake_null_long_reads_default.text = "FAKE merged_long_reads_default"
+      }
+
+      def fake_null_long_reads_alt = file("${params.output_dir}/dev_null_long2")
+
+      if (!fake_null_long_reads_alt.exists() || fake_null_long_reads_alt.size() == 0) {
+          fake_null_long_reads_alt.text = "FAKE merged_long_reads_alt"
+      }
+
       // Load manually the outputs of generate_evidence_data workflow
-      addRequiredEvidence.call("masked_genome.masked_genome", "assembly_masked.EDTA.fasta")
+      def masked_genome = requiredEvidenceFile.call("assembly_masked.EDTA.fasta")
 
+      def long_reads_default = fake_null_long_reads_default
+      def long_reads_alt = fake_null_long_reads_alt
       if (has_long_reads) {
-        addRequiredEvidence.call("merged_long_reads.default_args_gff", "merged_minimap2_stringtie_long_reads_default.gtf")
-        addRequiredEvidence.call("merged_long_reads.alt_args_gff", "merged_minimap2_stringtie_long_reads_alt.gtf")
+        long_reads_default = requiredEvidenceFile.call("merged_minimap2_stringtie_long_reads_default.gtf")
+        long_reads_alt = requiredEvidenceFile.call("merged_minimap2_stringtie_long_reads_alt.gtf")
       }
 
-      addRequiredEvidence.call("braker3_results.augustus_gff", "augustus.hints.gff3")
-      addRequiredEvidence.call("braker3_results.genemark_gtf", "genemark.gtf")
-      addRequiredEvidence.call("previous_annotations.liftoff_previous_annotations", "liftoff_previous_annotations.gff3")
-      addRequiredEvidence.call("merged_star_stringtie.default_args_stranded", "merged_star_stringtie_stranded_default.gtf")
-      addRequiredEvidence.call("merged_star_stringtie.alt_args_stranded", "merged_star_stringtie_stranded_alt.gtf")
-      addRequiredEvidence.call("gffcompare_out.star_psiclass_stranded", "merged_star_psiclass_stranded.gtf")
-
-      if (file("${outdir_1}/merged_star_stringtie_unstranded_default.gtf").exists()) {
-          workflow_inputs << tuple("merged_star_stringtie.default_args_unstranded", file("${outdir_1}/merged_star_stringtie_unstranded_default.gtf"))
-      } else {
-        println "WARNING : no RNAseq unstranded data used in this run !"
-        workflow_inputs << tuple("merged_star_stringtie.default_args_unstranded", file(fake_null_merged_star_stringtie_default_args_unstranded))
-      }
-      if (file("${outdir_1}/merged_star_stringtie_unstranded_alt.gtf").exists()) {
-          workflow_inputs << tuple("merged_star_stringtie.alt_args_unstranded", file("${outdir_1}/merged_star_stringtie_unstranded_alt.gtf"))
-      } else {
-        println "WARNING : no RNAseq unstranded data used in this run !"
-        workflow_inputs << tuple("merged_star_stringtie.alt_args_unstranded", file(fake_null_merged_star_stringtie_unstranded_alt))
-      }
-      if (file("${outdir_1}/merged_star_psiclass_unstranded.gtf").exists()) {
-          workflow_inputs << tuple("gffcompare_out.star_psiclass_unstranded", file("${outdir_1}/merged_star_psiclass_unstranded.gtf"))
-      } else {
-        println "WARNING : no RNAseq unstranded data used in this run !"
-        workflow_inputs << tuple("gffcompare_out.star_psiclass_unstranded", file(fake_null_gffcompare_out_star_psiclass_unstranded))
-      }
+      def braker_augustus_gff = requiredEvidenceFile.call("augustus.hints.gff3")
+      def braker_genemark_gtf = requiredEvidenceFile.call("genemark.gtf")
+      def liftoff_annotation = requiredEvidenceFile.call("liftoff_previous_annotations.gff3")
+      def star_stringtie_default_stranded = requiredEvidenceFile.call("merged_star_stringtie_stranded_default.gtf")
+      def star_stringtie_alt_stranded = requiredEvidenceFile.call("merged_star_stringtie_stranded_alt.gtf")
+      def star_psiclass_stranded = requiredEvidenceFile.call("merged_star_psiclass_stranded.gtf")
+      def star_stringtie_default_unstranded = optionalEvidenceFile.call("merged_star_stringtie_unstranded_default.gtf", fake_null_merged_star_stringtie_default_args_unstranded)
+      def star_stringtie_alt_unstranded = optionalEvidenceFile.call("merged_star_stringtie_unstranded_alt.gtf", fake_null_merged_star_stringtie_unstranded_alt)
+      def star_psiclass_unstranded = optionalEvidenceFile.call("merged_star_psiclass_unstranded.gtf", fake_null_gffcompare_out_star_psiclass_unstranded)
 
       if (missing_required_inputs) {
         error "Missing required Aegis evidence file(s) in ${outdir_1}:\n  ${missing_required_inputs.join('\n  ')}"
       }
 
-      def workflow_inputs_list = workflow_inputs // Keep the list as it is
+      println "Named evidence sent to Aegis: masked_genome=${masked_genome}, braker_augustus_gff=${braker_augustus_gff}, braker_genemark_gtf=${braker_genemark_gtf}, liftoff_annotation=${liftoff_annotation}"
 
-      println "Files sent to Aegis : ${workflow_inputs_list}"
-
-      aegis(workflow_inputs_list, has_long_reads) // We send the list directly, not a Channel
+      aegis(
+          masked_genome,
+          braker_augustus_gff,
+          braker_genemark_gtf,
+          liftoff_annotation,
+          star_stringtie_default_stranded,
+          star_stringtie_alt_stranded,
+          star_psiclass_stranded,
+          star_psiclass_unstranded,
+          star_stringtie_default_unstranded,
+          star_stringtie_alt_unstranded,
+          long_reads_default,
+          long_reads_alt,
+          has_long_reads
+      )
   }
 }

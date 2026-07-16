@@ -77,6 +77,10 @@ Current static inventory from `main.nf`, `workflows/titan.nf`, `subworkflows/*.n
 
 `library_layout` is split into `single`, `paired` and `long` branches. `single` and `paired` feed the short-read path; the presence of at least one `long` row automatically enables Minimap2/StringTie long-read processing and the long-read BRAKER3/Aegis branch. EDTA and EGAPx are always part of `generate_evidence_data`.
 
+### **Named Evidence Contract**
+
+`generate_evidence_data` emits named evidence channels instead of a mixed key/file channel. The Aegis subworkflow consumes explicit inputs for the hard-masked genome, Liftoff, BRAKER/AUGUSTUS, GeneMark, STAR/StringTie, STAR/PsiCLASS and detected long-read evidence. In `--workflow aegis` mode, `workflows/titan.nf` still reloads published evidence files from `output_dir`, then passes them to Aegis through the same named contract.
+
 ### **Parameter validation**
 
 TITAN validates required parameters at workflow startup, before building input channels or launching heavy processes. The following parameters must be provided and point to existing files where applicable:

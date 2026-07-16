@@ -164,21 +164,21 @@ Migration par etapes; commit dedie pour pouvoir revert facilement.
 
 ## TITAN-P1-003 - Definir un contrat d'evidences nomme
 Priorite : P1
-Statut : A faire
+Statut : Fait
 Risque : Eleve
 
 ### Objectif
 Remplacer le channel mixte `[string_key, file]` et les listes Groovy par des emits nommes et documentes.
 ### Constat
-`generate_evidence_data` melange toutes les evidences dans un seul channel cle/fichier; `aegis.nf` reconstruit des arrays et indexe `[0]`.
+`generate_evidence_data` expose maintenant des emits nommes pour les familles d'evidences. `aegis.nf` prend des evidences explicites au lieu d'une liste `[string_key, file]`. Le mode Aegis-only relit encore les fichiers publics depuis `output_dir`, mais les passe ensuite au sous-workflow via un contrat nomme.
 ### Fichiers concernes
 `subworkflows/generate_evidence_data.nf`, `subworkflows/aegis.nf`, `docs/development/architecture-audit.md`, tests.
 ### Etapes d'implementation
 Emettre des channels nommes: Liftoff, EGAPx obligatoire, EDTA masked genome, BRAKER/AUGUSTUS, GeneMark, STAR/StringTie, STAR/PsiCLASS, long reads detectes automatiquement. Documenter les evidences requises et optionnelles.
 ### Tests
-Compilation, `-stub-run`, test de presence des emits, cas evidence requise absente.
+`nextflow config -profile test`; `python3 scripts/validate_minimal_test_data.py`; `nextflow run main.nf -profile test --workflow generate_evidence_data -stub-run -ansi-log false`; `nextflow run main.nf -profile test --workflow aegis -stub-run -ansi-log false`; cas Aegis-only sans evidences publiees qui echoue avec la liste des fichiers requis.
 ### Criteres d'acceptation
-Aegis consomme des channels nommes et echoue clairement si une evidence requise manque.
+Aegis consomme des evidences nommees et echoue clairement si une evidence requise manque.
 ### Risques et retour arriere
 Risque eleve car c'est le coeur du pipeline; ne pas changer les commandes scientifiques dans le meme commit.
 
