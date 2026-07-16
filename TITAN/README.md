@@ -40,6 +40,8 @@ Aegis run are launched chromosome by chromosome: a for loop and sequential annot
   _Example_: `data/RNAseq_data/RNAseq_samplesheet.csv`
 - **`protein_samplesheet`**: Path to the **protein data samplesheet** (CSV file) listing protein datasets to be used.  
   _Example_: `data/protein_data/samplesheet.csv`
+- **`egapx_paramfile`**: Path to the **NCBI/EGAPx YAML parameter file**. The EGAPx process is currently present as a module but not wired into `generate_evidence_data`.
+  _Example_: `data/input_egapx.yaml`
 
 ### **Other Parameters**
 - **`EDTA`**: Whether to run **EDTA (transposable element annotation tool)**.  
@@ -53,9 +55,6 @@ Aegis run are launched chromosome by chromosome: a for loop and sequential annot
   default: `"0.03"`
 - **`STAR_memory_per_job`**: For STAR alignment process. If the depth of your RNAseq samples is high, TITAN may crash with an out of memory error, during the STAR alignment step. You can increase the memory here, it's in bytes, for example 60000000000 is about 55Gb per sample/job.
   default: `"60000000000"`
-- **`paramfile_egapx`**: The input parameter file for NCBI/egapx annotation pipeline run.
-  default: `"$projectDir/data/input_egapx.yaml"`
-
 ### **Input contract inventory**
 
 Current static inventory from `main.nf`, `subworkflows/*.nf` and `modules/*.nf`:
@@ -65,13 +64,38 @@ Current static inventory from `main.nf`, `subworkflows/*.nf` and `modules/*.nf`:
 | Target assembly | `--new_assembly` | FASTA file for the genome to annotate | Liftoff, AGAT, STAR, HISAT2, Minimap2, EDTA, BRAKER3, Aegis |
 | Reference assembly | `--previous_assembly` | FASTA file matching the previous annotation | Liftoff |
 | Previous annotation | `--previous_annotations` | GFF3 annotation on the reference assembly | Liftoff, then AGAT CDS extraction |
-| RNA-seq samplesheet | `--RNAseq_samplesheet` | CSV with header `sample_ID,SRA_or_FASTQ,library_layout,read_type` | read preparation, fastp, Salmon, STAR, HISAT2, Minimap2 |
-| Protein samplesheet | `--protein_samplesheet` | CSV consumed by BRAKER3 and Aegis scripts; files are expected under the protein data directory mounted by the modules | BRAKER3, Aegis |
+| RNA-seq samplesheet | `--RNAseq_samplesheet` | CSV with header `sampleID,SRA_or_FASTQ,library_layout`; `library_layout` values are `single`, `paired` or `long` | read preparation, fastp, Salmon, STAR, HISAT2, Minimap2 |
+| Protein samplesheet | `--protein_samplesheet` | CSV with header `organism,filename`; filenames may be relative paths in the minimal fixtures, while historical modules still mount `data/protein_data` | BRAKER3, Aegis |
 | EGAPx parameter file | `--egapx_paramfile` | YAML parameter file for EGAPx | EGAPx module, currently not wired in `generate_evidence_data` |
 | Evidence list for Aegis-only runs | internal channel built when `--workflow aegis` | Key/file pairs for masked genome, BRAKER3, Liftoff, STAR/StringTie and GFFCompare outputs | Aegis subworkflow |
 | Biological options | `--EDTA`, `--use_long_reads`, `--PSICLASS_vd_option`, `--PSICLASS_c_option`, `--STAR_memory_per_job` | Runtime switches and tool options | Conditional branches and tool commands |
 
-`read_type` is split into `short` and `long` branches. Long-read modules are conditional on `use_long_reads`; Aegis and Diamond2GO are conditional on `EDTA=yes`.
+`library_layout` is split into `single`, `paired` and `long` branches. Long-read modules are conditional on `use_long_reads`; Aegis and Diamond2GO are conditional on `EDTA=yes`.
+
+### **Parameter validation**
+
+TITAN validates required parameters at workflow startup, before building input channels or launching heavy processes. The following parameters must be provided and point to existing files where applicable:
+
+```text
+--output_dir
+--egapx_paramfile
+--RNAseq_samplesheet
+--protein_samplesheet
+--new_assembly
+--previous_assembly
+--previous_annotations
+```
+
+Invalid input fails early with explicit messages such as:
+
+```text
+Missing required parameter(s): --RNAseq_samplesheet
+Required input file(s) not found:
+  --previous_annotations: test-data/minimal/valid/missing.gff3
+Invalid --workflow 'nope'. Allowed values: generate_evidence_data, aegis, all
+```
+
+`--workflow all` is reserved in the validation layer but is not implemented yet; use `generate_evidence_data` or `aegis`.
 
 ### **Output contract inventory**
 
@@ -122,6 +146,15 @@ nextflow run main.nf -profile test --workflow aegis -ansi-log false -resume
 ```
 
 The `test` profile uses synthetic fixtures under `test-data/minimal/valid`, writes transient outputs to ignored directories `test-results/` and `test-work/`, sets `EDTA=no`, and disables long-read processing. This validates configuration resolution and the lightweight Aegis branch only; it is not a biological validation of EDTA, BRAKER3, aligners or Aegis.
+
+Validate the synthetic fixture set directly with:
+
+```bash
+python3 scripts/validate_minimal_test_data.py
+sha256sum -c test-data/minimal/checksums.sha256
+```
+
+Development notes for the completed P0 hardening work are in `docs/development/p0-hardening.md`; the detailed audit and inventory are in `docs/development/audit.md`.
 
 ## Workflow DAG
 

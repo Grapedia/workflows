@@ -1,0 +1,117 @@
+# TITAN P0 hardening summary
+
+Date: 2026-07-16
+Branch: `codex/titan-hardening`
+
+This document summarizes the completed P0 work. It is a short operational guide; the detailed inventory and command log remain in `docs/development/audit.md`.
+
+## Scope
+
+Completed items:
+
+* `TITAN-P0-001`: establish a functional baseline.
+* `TITAN-P0-002`: inventory inputs, outputs, tools and containers.
+* `TITAN-P0-003`: add a minimal local test profile.
+* `TITAN-P0-004`: create a minimal multi-input synthetic test dataset.
+* `TITAN-P0-005`: validate required parameters before channel construction.
+
+## Current baseline
+
+The pipeline now resolves with Nextflow and the local test profile can run the lightweight `aegis` branch without Slurm, Docker or production data:
+
+```bash
+nextflow config -profile test
+nextflow run main.nf -profile test --workflow aegis -ansi-log false
+nextflow run main.nf -profile test --workflow aegis -ansi-log false -resume
+```
+
+The `test` profile uses:
+
+* `conf/test.config`;
+* local executor;
+* Docker disabled;
+* `test-data/minimal/valid` inputs;
+* `test-results/` and `test-work/` transient directories;
+* `EDTA=no` and `use_long_reads=false`.
+
+This is a workflow/bootstrap validation only. It does not validate the biological behavior of EDTA, BRAKER3, STAR, HISAT2, Minimap2, PsiCLASS, Liftoff or Aegis.
+
+## Minimal test data
+
+The synthetic fixture set is under `test-data/minimal`.
+
+It covers:
+
+* reference and target genome FASTA files;
+* previous GFF3 annotation for Liftoff;
+* RNA-seq samplesheet with `single`, `paired` and `long` layouts;
+* tiny gzip-compressed FASTQ files matching the samplesheet;
+* protein samplesheet with two protein evidence sources;
+* EGAPx YAML parameter shape;
+* precomputed minimal evidence files for EDTA, Liftoff, BRAKER/AUGUSTUS, GeneMark, STAR/StringTie, STAR/PsiCLASS and Minimap2/StringTie;
+* negative fixtures for invalid FASTA/GFF3 validation.
+
+Validate the fixture set with:
+
+```bash
+python3 scripts/validate_minimal_test_data.py
+sha256sum -c test-data/minimal/checksums.sha256
+```
+
+## Parameter validation
+
+`main.nf` validates these required parameters inside the `workflow` block before input channels are built:
+
+```text
+output_dir
+egapx_paramfile
+RNAseq_samplesheet
+protein_samplesheet
+new_assembly
+previous_assembly
+previous_annotations
+```
+
+The validation catches:
+
+* missing or empty required values;
+* flags passed without values, which Nextflow can expose as `true`;
+* missing input files;
+* invalid `--workflow` values.
+
+The `generate_evidence_data` branch also uses `Channel.fromPath(..., checkIfExists: true)` for samplesheets.
+
+Negative checks used during P0-005:
+
+```bash
+nextflow run main.nf -profile test --workflow aegis --RNAseq_samplesheet '' -ansi-log false
+nextflow run main.nf -profile test --workflow aegis --previous_annotations test-data/minimal/valid/missing.gff3 -ansi-log false
+nextflow run main.nf -profile test --workflow nope -ansi-log false
+```
+
+Expected messages include:
+
+```text
+Missing required parameter(s): --RNAseq_samplesheet
+Required input file(s) not found
+Invalid --workflow 'nope'
+```
+
+## Known limits after P0
+
+The P0 work intentionally avoids large architectural refactors. Remaining issues for P1 and later:
+
+* `main.nf` still carries orchestration logic that should move progressively into a dedicated workflow layer.
+* Several images still use `latest`.
+* EGAPx is documented and has a module, but its call remains commented in `generate_evidence_data`.
+* The test profile does not run scientific containers or heavy tools.
+* There is no CI yet.
+* Historical module volume mounts still assume production data layout in places such as `data/RNAseq_data` and `data/protein_data`.
+
+## Relevant files
+
+* `roadmap.md`: P0 status and acceptance criteria.
+* `docs/development/audit.md`: detailed inventory, command log and risks.
+* `conf/test.config`: local test profile.
+* `test-data/minimal/README.md`: fixture-level documentation.
+* `scripts/validate_minimal_test_data.py`: static fixture validator.

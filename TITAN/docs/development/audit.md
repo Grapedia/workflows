@@ -160,8 +160,8 @@ for f in modules/*.nf; do awk '/^[[:space:]]*output:/{flag=1} /^[[:space:]]*scri
 | Assemblage cible | `params.new_assembly` | FASTA | fichier existant | Liftoff, AGAT, STAR, HISAT2, Minimap2, EDTA, BRAKER3, Aegis | Chemin separe en dossier + nom dans les modules. |
 | Assemblage precedent | `params.previous_assembly` | FASTA | fichier existant | Liftoff | Doit correspondre a `previous_annotations`. |
 | Annotation precedente | `params.previous_annotations` | GFF3 | fichier existant | Liftoff, puis AGAT | Source du transfert et de la FASTA CDS pour Salmon. |
-| Samplesheet RNA-seq | `params.RNAseq_samplesheet` | CSV avec header | `sample_ID`, `SRA_or_FASTQ`, `library_layout`, `read_type` | preparation reads, fastp, Salmon, STAR, HISAT2, Minimap2 | `read_type == short` alimente la branche courte; `read_type == long` alimente la branche longue. |
-| Samplesheet proteines | `params.protein_samplesheet` | CSV avec header | Structure consommee par les scripts BRAKER3/Aegis | BRAKER3, Aegis | Les modules montent aussi `${projectDir}/data/protein_data`; ce couplage reste a normaliser. |
+| Samplesheet RNA-seq | `params.RNAseq_samplesheet` | CSV avec header | `sampleID`, `SRA_or_FASTQ`, `library_layout` | preparation reads, fastp, Salmon, STAR, HISAT2, Minimap2 | `library_layout` alimente les branches `single`, `paired` et `long`; la branche longue reste conditionnee par `use_long_reads`. |
+| Samplesheet proteines | `params.protein_samplesheet` | CSV avec header | `organism`, `filename` | BRAKER3, Aegis | Les modules montent aussi `${projectDir}/data/protein_data`; ce couplage reste a normaliser. |
 | Parametres EGAPx | `params.egapx_paramfile` | YAML | parametres EGAPx | module `egapx` | Module present mais include et appel commentes dans `generate_evidence_data`. |
 | Options biologiques | `params.EDTA`, `params.use_long_reads`, `params.PSICLASS_*`, `params.STAR_memory_per_job` | chaines, booleens, floats, entier bytes | valeurs scalaires | EDTA, branches long reads, PsiCLASS, STAR | `use_long_reads` est interprete differemment selon modules; a harmoniser. |
 | Entrees Aegis-only | channel `input_data` construit dans `main.nf` | liste de paires cle/fichier | cles `masked_genome.masked_genome`, `braker3_results.*`, `previous_annotations.*`, `merged_*`, `gffcompare_out.*` | sous-workflow `aegis` | En mode minimal `EDTA=no`, des fichiers `dev_null*` remplacent les sorties unstranded absentes. |
@@ -204,15 +204,19 @@ Points de vigilance P0-002:
 * plusieurs modules publient via `publishDir` et copient aussi manuellement dans `${output_dir}`;
 * les images `latest` rendent l'inventaire de versions non reproductible sans validation externe;
 * aucune version n'est collectee dans un artefact de sortie;
-* les schemas reels de samplesheets ne sont pas valides avant construction des channels;
+* les chemins de samplesheets sont valides avant construction des channels depuis P0-005; le schema complet des colonnes reste a renforcer;
 * EGAPx est documente et le module existe, mais la branche est commentee dans le sous-workflow.
 
 ## Constats critiques
 
+Synthese operationnelle P0: `docs/development/p0-hardening.md`.
+
 P0:
 
 * `main.nf` ne compilait pas avec Nextflow 26.04.3 avant correction P0; la commande minimale `aegis` compile et termine maintenant avec `EDTA=no`.
+* La validation P0-005 echoue explicitement avant calcul lourd pour parametre obligatoire vide, fichier d'entree absent et valeur `--workflow` invalide.
 * Profil `test` local ajoute et valide: resolution de configuration et commande minimale `aegis` sans Slurm, Docker ni donnees volumineuses.
+* Jeu de donnees synthetique minimal ajoute sous `test-data/minimal`, avec fixtures RNA-seq, proteines, Liftoff/Aegis et cas invalides.
 * Les chemins par defaut pointent vers `data/` absent du depot, alors que `data_example/` contient des placeholders.
 * Docker est active globalement; Apptainer n'est pas configure.
 * Aucune suite de tests TITAN detectee.
