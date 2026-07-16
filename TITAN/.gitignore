@@ -1,0 +1,5 @@
+test-results/
+test-work/
+.apptainer-cache/
+.apptainer-tmp/
+*.sif

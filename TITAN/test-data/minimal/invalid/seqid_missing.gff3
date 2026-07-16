@@ -1,0 +1,2 @@
+##gff-version 3
+chrMissing	TITAN_TEST	gene	1	10	.	+	.	ID=bad_gene

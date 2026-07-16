@@ -1,0 +1,2 @@
+##gff-version 3
+chrTest1	TITAN_TEST	gene	20	10	.	+	.	ID=bad_coordinates

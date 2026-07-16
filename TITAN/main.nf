@@ -8,10 +8,6 @@ params.previous_annotations = false
 params.output_dir = false
 params.egapx_paramfile = false
 
-if (!params.output_dir || !params.egapx_paramfile || !params.RNAseq_samplesheet || !params.protein_samplesheet || !params.new_assembly || !params.previous_assembly || !params.previous_annotations) {
-    error "Missing required parameters. Please provide values for: output_dir, egapx_paramfile, RNAseq_samplesheet, protein_samplesheet, new_assembly, previous_assembly, previous_annotations"
-}
-
 // Include subworkflows
 include { generate_evidence_data } from './subworkflows/generate_evidence_data'
 include { aegis } from './subworkflows/aegis'
@@ -19,40 +15,43 @@ include { aegis } from './subworkflows/aegis'
 // Define the output directory for intermediate files
 params.workflow = params.workflow ?: "generate_evidence_data"  // default = "generate_evidence_data"
 
-// Define Channels
-Channel.fromPath(file(params.RNAseq_samplesheet))
-       .splitCsv(header: true, sep: ',')
-       .filter( ~/.*long.*/ )
-       .map { row -> [ row.sampleID, row.SRA_or_FASTQ, row.library_layout ] }
-       .set{ samples_list_long_reads }
-
-
-Channel.fromPath(file(params.RNAseq_samplesheet))
-       .splitCsv(header: true, sep: ',')
-       .filter( ~/.*single.*/ )
-       .map { row -> [ row.sampleID, row.SRA_or_FASTQ, row.library_layout ] }
-       .set{ samples_list_single_short_reads }
-
-
-Channel.fromPath(file(params.RNAseq_samplesheet))
-       .splitCsv(header: true, sep: ',')
-       .filter( ~/.*paired.*/ )
-       .map { row -> [ row.sampleID, row.SRA_or_FASTQ, row.library_layout ] }
-       .set{ samples_list_paired_short_reads }
-
-// Combined single and paired-end reads
-samples_list_single_short_reads
-    .concat(samples_list_paired_short_reads)
-    .set { samples_list_short_reads }
-
-Channel.fromPath(file(params.protein_samplesheet))
-       .splitCsv(header: true, sep: ',')
-       .map { row -> [ row.organism, row.filename ] }
-       .set{ protein_list }
-
 workflow {
+    if (!params.output_dir || !params.egapx_paramfile || !params.RNAseq_samplesheet || !params.protein_samplesheet || !params.new_assembly || !params.previous_assembly || !params.previous_annotations) {
+        error "Missing required parameters. Please provide values for: output_dir, egapx_paramfile, RNAseq_samplesheet, protein_samplesheet, new_assembly, previous_assembly, previous_annotations"
+    }
+
+    def use_long_reads_enabled = params.use_long_reads == true || params.use_long_reads == 'true' || params.use_long_reads == 'yes'
+
     // if the workflow parameter is equal to generate_evidence_data the first workflow is executed
     if (params.workflow == "generate_evidence_data") {
+        Channel.fromPath(file(params.RNAseq_samplesheet))
+           .splitCsv(header: true, sep: ',')
+           .filter( ~/.*long.*/ )
+           .map { row -> [ row.sampleID, row.SRA_or_FASTQ, row.library_layout ] }
+           .set{ samples_list_long_reads }
+
+        Channel.fromPath(file(params.RNAseq_samplesheet))
+           .splitCsv(header: true, sep: ',')
+           .filter( ~/.*single.*/ )
+           .map { row -> [ row.sampleID, row.SRA_or_FASTQ, row.library_layout ] }
+           .set{ samples_list_single_short_reads }
+
+        Channel.fromPath(file(params.RNAseq_samplesheet))
+           .splitCsv(header: true, sep: ',')
+           .filter( ~/.*paired.*/ )
+           .map { row -> [ row.sampleID, row.SRA_or_FASTQ, row.library_layout ] }
+           .set{ samples_list_paired_short_reads }
+
+        // Combined single and paired-end reads
+        samples_list_single_short_reads
+            .concat(samples_list_paired_short_reads)
+            .set { samples_list_short_reads }
+
+        Channel.fromPath(file(params.protein_samplesheet))
+           .splitCsv(header: true, sep: ',')
+           .map { row -> [ row.organism, row.filename ] }
+           .set{ protein_list }
+
         evidence_data = generate_evidence_data(
             samples_list_long_reads, 
             samples_list_short_reads, 
@@ -65,6 +64,7 @@ workflow {
 
       def outdir_1 = params.output_dir
       println "Checking output directory: ${outdir_1}"
+      file(outdir_1).mkdirs()
 
       def input_files = file("${outdir_1}").listFiles()
 
@@ -108,7 +108,7 @@ workflow {
         println "EDTA = No, we need this output for Aegis. EXIT."
       }
 
-      if (params.use_long_reads) {
+      if (use_long_reads_enabled) {
         if (file("${outdir_1}/merged_minimap2_stringtie_long_reads_default.gtf").exists()) {
           workflow_inputs << tuple("merged_long_reads.default_args_gff", file("${outdir_1}/merged_minimap2_stringtie_long_reads_default.gtf"))
         } else {

@@ -13,6 +13,8 @@ workflow aegis {
   main:
 
     def workflow_inputs = input_data // Create a new variable
+    def edta_enabled = params.EDTA == 'yes'
+    def use_long_reads_enabled = params.use_long_reads == true || params.use_long_reads == 'true' || params.use_long_reads == 'yes'
     // println "Files sent to Aegis process : ${workflow_inputs}"
 
     def masked_genome = []
@@ -28,7 +30,7 @@ workflow aegis {
     def gffcompare_star_psiclass_stranded = []
     def gffcompare_star_psiclass_unstranded = []
 
-    for (entry in workflow_inputs) {
+    workflow_inputs.each { entry ->
         def key = entry[0]
         def filepath = entry[1]
         if (key == "masked_genome.masked_genome") {
@@ -86,7 +88,7 @@ workflow aegis {
                 println "gffcompare_star_psiclass_unstranded : no unstranded data available, pass ..."
             }
         }
-        if (params.use_long_reads) {
+        if (use_long_reads_enabled) {
           if (key == "merged_long_reads.default_args_gff") {
             Stringtie_merging_long_reads_default_args << filepath
             println "Stringtie_merging_long_reads_default_args file: ${Stringtie_merging_long_reads_default_args}"
@@ -103,8 +105,8 @@ workflow aegis {
     //     Aegis scripts (1, 2, 3) to create the final GFF3 file from all the evidences
     // ----------------------------------------------------------------------------------------
 
-    if (params.EDTA == 'yes') {
-      if (params.use_long_reads) {
+    if (edta_enabled) {
+      if (use_long_reads_enabled) {
         aegis_long_reads(
         file(params.new_assembly).getParent(),
         file(params.new_assembly).getName(),
@@ -149,8 +151,8 @@ workflow aegis {
     //               Diamond2GO on proteins predicted with TITAN/Aegis
     // ----------------------------------------------------------------------------------------
 
-    if (params.EDTA == 'yes') {
-      if (params.use_long_reads) {
+    if (edta_enabled) {
+      if (use_long_reads_enabled) {
          diamond2go(aegis_long_reads.out.aegis_proteins_all, aegis_long_reads.out.aegis_proteins_main)
       } else {
          diamond2go(aegis_short_reads.out.aegis_proteins_all, aegis_short_reads.out.aegis_proteins_main)
@@ -161,8 +163,8 @@ workflow aegis {
 
   // Outputs
   emit:
-    aegis_gff            = params.use_long_reads ? aegis_long_reads.out.aegis_gff : aegis_short_reads.out.aegis_gff
-    aegis_proteins_all  = params.use_long_reads ? aegis_long_reads.out.aegis_proteins_all : aegis_short_reads.out.aegis_proteins_all
-    aegis_proteins_main  = params.use_long_reads ? aegis_long_reads.out.aegis_proteins_main : aegis_short_reads.out.aegis_proteins_main
-    diamond2go_output    = diamond2go.out
+    aegis_gff            = edta_enabled ? (use_long_reads_enabled ? aegis_long_reads.out.aegis_gff : aegis_short_reads.out.aegis_gff) : Channel.empty()
+    aegis_proteins_all   = edta_enabled ? (use_long_reads_enabled ? aegis_long_reads.out.aegis_proteins_all : aegis_short_reads.out.aegis_proteins_all) : Channel.empty()
+    aegis_proteins_main  = edta_enabled ? (use_long_reads_enabled ? aegis_long_reads.out.aegis_proteins_main : aegis_short_reads.out.aegis_proteins_main) : Channel.empty()
+    diamond2go_output    = edta_enabled ? diamond2go.out : Channel.empty()
 }

@@ -1,0 +1,9 @@
+##gff-version 3
+chrTest1	TITAN_TEST	gene	1	39	.	+	.	ID=gene1
+chrTest1	TITAN_TEST	mRNA	1	39	.	+	.	ID=gene1.t1;Parent=gene1
+chrTest1	TITAN_TEST	exon	1	39	.	+	.	ID=gene1.t1.exon1;Parent=gene1.t1
+chrTest1	TITAN_TEST	CDS	1	39	.	+	0	ID=gene1.t1.cds1;Parent=gene1.t1
+chrTest2	TITAN_TEST	gene	1	18	.	-	.	ID=gene2
+chrTest2	TITAN_TEST	mRNA	1	18	.	-	.	ID=gene2.t1;Parent=gene2
+chrTest2	TITAN_TEST	exon	1	18	.	-	.	ID=gene2.t1.exon1;Parent=gene2.t1
+chrTest2	TITAN_TEST	CDS	1	18	.	-	0	ID=gene2.t1.cds1;Parent=gene2.t1

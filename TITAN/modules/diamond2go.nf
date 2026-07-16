@@ -1,6 +1,6 @@
 process diamond2go {
 
-  tag "Executing diamond2go annotation on $proteins_file"
+  tag "Executing diamond2go annotation on $proteins_file_all and $proteins_file_main"
   container 'avelt/diamond2go:latest'
   publishDir "${params.output_dir}/Diamond2GO_outputs", mode: 'copy'
   cpus 5
