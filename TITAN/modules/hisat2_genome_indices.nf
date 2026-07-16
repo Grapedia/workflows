@@ -4,7 +4,7 @@ process hisat2_genome_indices {
 
   tag "HISAT2 indexes generation on $genome"
   container params.container_hisat2
-  publishDir "${params.output_dir}/intermediate_files/evidence_data/hisat2_databases/"
+  publishDir "${params.output_dir}/intermediate_files/evidence_data/hisat2_databases/", mode: "copy", enabled: params.publish_intermediates
   input:
     path(genome_fasta)
     val(genome)

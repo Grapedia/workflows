@@ -3,13 +3,13 @@ process salmon_strand_inference {
   label 'process_low'
   tag "Executing salmon strand inference on $sample_ID"
   container params.container_salmon
-  publishDir "${params.output_dir}/intermediate_files/salmon_strand/"
+  publishDir "${params.output_dir}/intermediate_files/salmon_strand/", mode: "copy", enabled: params.publish_intermediates
   input:
     tuple val(sample_ID), val(library_layout), path(reads)
     path(salmon_index)
 
   output:
-    tuple val(sample_ID), val(library_layout), path(reads), path("${sample_ID}.strand_info.classified"), emit: strand_inference_result
+    tuple val(sample_ID), val(library_layout), path(reads), env('STRAND_INFO'), path("${sample_ID}.strand_info.classified"), emit: strand_inference_result
     path "versions.yml", emit: versions
 
 
@@ -56,12 +56,14 @@ process salmon_strand_inference {
     fi
 
     echo "\$strand_info" > "${sample_ID}.strand_info.classified"
+    export STRAND_INFO="\$strand_info"
     printf '"%s":\n  container: "not_recorded"\n' "${task.process}" > versions.yml
     """
 
   stub:
     """
-    echo "stranded_forward" > ${sample_ID}.strand_info.classified
+    export STRAND_INFO="stranded_forward"
+    echo "\$STRAND_INFO" > ${sample_ID}.strand_info.classified
     printf '"%s":\n  container: "not_recorded"\n' "${task.process}" > versions.yml
     """
 }

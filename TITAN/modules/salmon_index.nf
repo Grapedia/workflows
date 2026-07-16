@@ -3,7 +3,7 @@ process salmon_index {
   label 'process_index'
   tag "Executing salmon indexing on $cds_fasta"
   container params.container_salmon
-  publishDir "${params.output_dir}/intermediate_files/salmon_index/"
+  publishDir "${params.output_dir}/intermediate_files/salmon_index/", mode: "copy", enabled: params.publish_intermediates
   input:
     path(cds_fasta)
 

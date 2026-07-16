@@ -10,7 +10,7 @@ process assembly_transcriptome_star_psiclass {
     } else if (strand_type in ["stranded_forward", "stranded_reverse"]) {
       return "${params.output_dir}/intermediate_files/transcriptomes/STAR_PsiCLASS/stranded"
     }
-  }
+  }, mode: "copy", enabled: params.publish_intermediates
   input:
     tuple val(sample_ID), path(bam_file), val(strand_type)
     val(psiclass_vd_option)

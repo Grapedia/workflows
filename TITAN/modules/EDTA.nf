@@ -3,7 +3,7 @@ process EDTA {
 
   tag "Executing EDTA TE annotation on the following genome: $genome"
   container params.container_edta
-  publishDir "${params.output_dir}/tmp", mode: 'copy'
+  publishDir "${params.output_dir}/tmp", mode: 'copy', enabled: params.publish_intermediates
   publishDir "${params.output_dir}", mode: 'copy', saveAs: { filename ->
     filename.endsWith('.MAKER.masked') ? 'assembly_masked.EDTA.fasta' : null
   }

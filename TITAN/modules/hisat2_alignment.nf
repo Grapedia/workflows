@@ -11,7 +11,7 @@ process hisat2_alignment {
     } else if (strand_type in ["stranded_forward", "stranded_reverse"]) {
       return "${params.output_dir}/intermediate_files/evidence_data/RNAseq_alignments/HISAT2/stranded"
     }
-  }
+  }, mode: "copy", enabled: params.publish_intermediates
   input:
     path(hisat2_databases)
     tuple val(sample_ID), val(library_layout), path(reads), val(strand_type)

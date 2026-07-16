@@ -4,7 +4,7 @@ process Stringtie_merging_long_reads {
 
   tag "StringTie merging - long reads"
   container params.container_stringtie
-  publishDir "${params.output_dir}/tmp", mode: 'copy'
+  publishDir "${params.output_dir}/tmp", mode: 'copy', enabled: params.publish_intermediates
   publishDir "${params.output_dir}", mode: 'copy', saveAs: { filename ->
     if (filename == 'merged_transcriptomes.minimap2.long_reads.default_args.gtf') {
       return 'merged_minimap2_stringtie_long_reads_default.gtf'

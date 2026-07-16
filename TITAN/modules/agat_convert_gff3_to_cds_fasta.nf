@@ -3,7 +3,7 @@ process agat_convert_gff3_to_cds_fasta {
 
   tag "Executing agat to convert liftoff gff3 to cds.fasta"
   container params.container_agat
-  publishDir "${params.output_dir}/intermediate_files/liftoff/gff3_to_cds_fasta"
+  publishDir "${params.output_dir}/intermediate_files/liftoff/gff3_to_cds_fasta", mode: "copy", enabled: params.publish_intermediates
   input:
     path(genome)
     path(liftoff_gff3)

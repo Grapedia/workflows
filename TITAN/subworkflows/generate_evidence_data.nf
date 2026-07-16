@@ -41,6 +41,7 @@ workflow generate_evidence_data {
         def edta_script = file("${projectDir}/scripts/edta.sh")
         def stringtie_script = file("${projectDir}/scripts/Stringtie.sh")
         def stringtie_alt_script = file("${projectDir}/scripts/Stringtie_AltCommands.sh")
+        def stringtie_transcriptome_script = file("${projectDir}/scripts/run_stringtie_transcriptome.sh")
         def empty_gtf = file("${projectDir}/assets/empty.gtf")
         def empty_default_gtf = file("${projectDir}/assets/empty_default.gtf")
         def empty_alt_gtf = file("${projectDir}/assets/empty_alt.gtf")
@@ -82,8 +83,7 @@ workflow generate_evidence_data {
         strand_inference = salmon_strand_inference(trimmed_reads.trimmed_reads, salmon_index_result.index)
 
         // Process strand inference results
-        salmon_output_processed = strand_inference.strand_inference_result.map { sample_ID, library_layout, reads, strand_file ->
-            def strand_info = file(strand_file).text.trim()
+        salmon_output_processed = strand_inference.strand_inference_result.map { sample_ID, library_layout, reads, strand_info, strand_file ->
             return [sample_ID, library_layout, reads, strand_info]
         }
 
@@ -110,7 +110,8 @@ workflow generate_evidence_data {
         hisat2_assemblies_stringtie = assembly_transcriptome_hisat2_stringtie(
             hisat2_aligned.samples_aligned,
             stringtie_script,
-            stringtie_alt_script
+            stringtie_alt_script,
+            stringtie_transcriptome_script
         )
 
         hisat2_assemblies_stringtie.hisat2_stringtie_transcriptomes
@@ -175,7 +176,8 @@ workflow generate_evidence_data {
             long_reads_assemblies = assembly_transcriptome_minimap2_stringtie(
                 minimap2_aligned.samples_aligned,
                 stringtie_script,
-                stringtie_alt_script
+                stringtie_alt_script,
+                stringtie_transcriptome_script
             )
 
             long_reads_assemblies.minimap2_stringtie_transcriptomes
@@ -197,7 +199,8 @@ workflow generate_evidence_data {
         star_assemblies_stringtie = assembly_transcriptome_star_stringtie(
             star_aligned.samples_aligned,
             stringtie_script,
-            stringtie_alt_script
+            stringtie_alt_script,
+            stringtie_transcriptome_script
         )
         star_assemblies_psiclass = assembly_transcriptome_star_psiclass(
             star_aligned.samples_aligned,

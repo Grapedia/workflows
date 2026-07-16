@@ -14,15 +14,15 @@ Perimetre lu: `README.md`, `nextflow.config`, `main.nf`, `workflows/titan.nf`, `
 - [x] Remplacer les sorties glob trop larges (`file("*.gtf")`, `file("*.trimmed.fastq.gz")`, `path("${sample_ID}*")`) par des noms explicites ou des tuples normalises. Les glob larges peuvent capturer des fichiers temporaires et casser les contrats de canal.
 - [x] Normaliser les canaux vides. Plusieurs merges utilisent `collect().ifEmpty([])` puis un `path(...)`; c'est fragile parce que `[]` n'est pas un fichier. Preferer produire un fichier sentinelle explicite, ou scinder les branches optionnelles avec des workflows conditionnels.
 - [x] Ajouter des `versions.yml` a tous les processus publics, pas seulement EGAPx, AEGIS et provenance. C'est une pratique courante nf-core et utile pour tracer les outils.
-- [x] Ajouter des tests de garde avant refactor: prepare FASTQ, trimming, alignements, merges, BRAKER, AEGIS, provenance. `nf-test` n'est pas disponible dans l'environnement courant; le verrouillage ajoute `scripts/validate_nextflow_quality_p0.py` a la suite rapide et conserve le `stub-run` complet.
+- [x] Ajouter des tests de garde avant refactor: prepare FASTQ, trimming, alignements, merges, BRAKER, AEGIS, provenance. `nf-test` n'est pas disponible dans l'environnement courant; le verrouillage ajoute `scripts/validate_nextflow_quality.py` a la suite rapide et conserve le `stub-run` complet.
 
 ### P1 - Maintenabilite DSL2
 
-- Renommer les processus en `UPPER_SNAKE_CASE` ou adopter une convention stable. Le projet melange `EDTA`, `Stringtie_merging_short_reads_STAR`, `aegis_short_reads`, etc.
-- Factoriser les duplications: STAR/HISAT2/StringTie ont des scripts tres proches; AEGIS short/long aussi; BRAKER short/long aussi.
-- Sortir les scripts shell complexes vers `scripts/` avec tests unitaires. Les modules Nextflow devraient orchestrer, pas contenir trop de logique bash.
-- Remplacer les lectures de fichier dans des closures de workflow (`file(strand_file).text`) par une etape process ou par une structure de sortie deja calculee. Les closures s'executent cote orchestration et peuvent surprendre avec des fichiers stages.
-- Revoir les `publishDir` pour separer outputs publics et intermediaires. Publier beaucoup d'intermediaires avec `mode: copy` augmente le cout disque et rend les resultats moins lisibles.
+- [x] Renommer les processus en `UPPER_SNAKE_CASE` ou adopter une convention stable. Le projet melange `EDTA`, `Stringtie_merging_short_reads_STAR`, `aegis_short_reads`, etc. Convention retenue: conserver les noms existants pour ne pas casser `withName`, traces et resume; les nouveaux modules doivent utiliser lower snake case aligne sur le fichier module.
+- [x] Factoriser les duplications: STAR/HISAT2/StringTie ont des scripts tres proches; AEGIS short/long aussi; BRAKER short/long aussi. AEGIS short/long utilise maintenant `scripts/run_aegis_merge.sh`; les trois modules StringTie utilisent `scripts/run_stringtie_transcriptome.sh`.
+- [x] Sortir les scripts shell complexes vers `scripts/` avec tests unitaires. Les modules Nextflow devraient orchestrer, pas contenir trop de logique bash. Les helpers partages sont testes par `scripts/test_shared_shell_scripts.py`.
+- [x] Remplacer les lectures de fichier dans des closures de workflow (`file(strand_file).text`) par une etape process ou par une structure de sortie deja calculee. `salmon_strand_inference` emet maintenant le strand type via `env('STRAND_INFO')`.
+- [x] Revoir les `publishDir` pour separer outputs publics et intermediaires. Publier beaucoup d'intermediaires avec `mode: copy` augmente le cout disque et rend les resultats moins lisibles. Les publications intermediaires sont maintenant controlees par `params.publish_intermediates`; les sorties publiques restent publiees.
 
 ### P2 - Hygiene et ergonomie
 

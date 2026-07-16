@@ -26,6 +26,7 @@ workflow aegis {
   main:
 
     def has_long_reads_enabled = has_long_reads
+    def aegis_merge_script = file("${projectDir}/scripts/run_aegis_merge.sh")
 
     // ----------------------------------------------------------------------------------------
     //     AEGIS CLI merge over all named annotation evidence
@@ -45,7 +46,8 @@ workflow aegis {
         star_psiclass_stranded,
         star_psiclass_unstranded,
         star_stringtie_default_unstranded,
-        star_stringtie_alt_unstranded
+        star_stringtie_alt_unstranded,
+        aegis_merge_script
         )
     } else {
       aegis_short_reads(
@@ -59,7 +61,8 @@ workflow aegis {
         star_psiclass_stranded,
         star_psiclass_unstranded,
         star_stringtie_default_unstranded,
-        star_stringtie_alt_unstranded
+        star_stringtie_alt_unstranded,
+        aegis_merge_script
         )
     }
 

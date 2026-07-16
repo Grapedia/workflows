@@ -4,7 +4,7 @@ process minimap2_genome_indices {
 
   tag "Minimap2 genome indices on ${genome}"
   container params.container_minimap2_samtools
-  publishDir "${params.output_dir}/intermediate_files/evidence_data/minimap2_databases/"
+  publishDir "${params.output_dir}/intermediate_files/evidence_data/minimap2_databases/", mode: "copy", enabled: params.publish_intermediates
   input:
     path(genome_fasta)
     val(genome)

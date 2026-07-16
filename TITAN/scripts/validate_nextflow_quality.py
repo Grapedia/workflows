@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Static P0 quality checks for TITAN Nextflow modules."""
+"""Static quality checks for TITAN Nextflow modules."""
 
 from pathlib import Path
 import re
@@ -54,5 +54,17 @@ for nextflow_path in [
     text = nextflow_path.read_text(encoding="utf-8")
     if ".ifEmpty([])" in text or "Channel.value([])" in text:
         fail(f"{nextflow_path.relative_to(ROOT)} uses an untyped empty list channel")
+    if re.search(r"file\s*\([^)]*\)\.text", text):
+        fail(f"{nextflow_path.relative_to(ROOT)} reads task files from workflow Groovy code")
 
-print("P0 Nextflow quality checks OK")
+for helper in ["run_aegis_merge.sh", "run_stringtie_transcriptome.sh"]:
+    helper_path = ROOT / "scripts" / helper
+    if not helper_path.exists():
+        fail(f"shared helper script is missing: scripts/{helper}")
+    if not helper_path.stat().st_mode & 0o111:
+        fail(f"shared helper script is not executable: scripts/{helper}")
+
+if not (ROOT / "docs" / "development" / "nextflow-dsl2-conventions.md").exists():
+    fail("Nextflow DSL2 conventions document is missing")
+
+print("Nextflow quality checks OK")

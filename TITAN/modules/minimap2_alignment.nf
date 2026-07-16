@@ -4,7 +4,7 @@ process minimap2_alignment {
 
   tag "Minimap2 on ${sample_ID}"
   container params.container_minimap2_samtools
-  publishDir "${params.output_dir}/intermediate_files/evidence_data/RNAseq_alignments/minimap2"
+  publishDir "${params.output_dir}/intermediate_files/evidence_data/RNAseq_alignments/minimap2", mode: "copy", enabled: params.publish_intermediates
   input:
     path(minimap2_genome_indices)
     tuple val(sample_ID), val(SRA_or_FASTQ), val(library_layout), path(reads)

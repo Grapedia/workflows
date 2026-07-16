@@ -10,11 +10,12 @@ process assembly_transcriptome_hisat2_stringtie {
     } else if (strand_type in ["stranded_forward", "stranded_reverse"]) {
       return "${params.output_dir}/intermediate_files/evidence_data/transcriptomes/StringTie/short_reads/HISAT2/stranded"
     }
-  }
+  }, mode: "copy", enabled: params.publish_intermediates
   input:
     tuple val(sample_ID), path(bam_file), val(strand_type)
     path(stringtie_script)
     path(stringtie_alt_script)
+    path(stringtie_transcriptome_script)
 
   output:
     tuple val(sample_ID), path("${sample_ID}_transcriptome.gtf"), path("${sample_ID}_transcriptome.AltCommands.gtf"), val(strand_type), emit: hisat2_stringtie_transcriptomes
@@ -27,12 +28,14 @@ process assembly_transcriptome_hisat2_stringtie {
     set -euo pipefail
     DATE=\$(date "+%Y-%m-%d %H:%M:%S")
     echo "[\$DATE] Running transcriptome assembly with StringTie on HISAT2 $sample_ID"
-    CMD="${stringtie_script} -t ${task.cpus} -o ${sample_ID}_transcriptome.gtf -b ${bam_file} -r short"
-    echo "[\$DATE] Executing: \$CMD"
-    ${stringtie_script} -t ${task.cpus} -o ${sample_ID}_transcriptome.gtf -b ${bam_file} -r short
-    CMD="${stringtie_alt_script} -t ${task.cpus} -o ${sample_ID}_transcriptome.AltCommands.gtf -b ${bam_file} -r short"
-    echo "[\$DATE] Executing: \$CMD"
-    ${stringtie_alt_script} -t ${task.cpus} -o ${sample_ID}_transcriptome.AltCommands.gtf -b ${bam_file} -r short
+    bash ${stringtie_transcriptome_script} \\
+      ${stringtie_script} \\
+      ${stringtie_alt_script} \\
+      ${task.cpus} \\
+      ${bam_file} \\
+      short \\
+      ${sample_ID}_transcriptome.gtf \\
+      ${sample_ID}_transcriptome.AltCommands.gtf
     printf '"%s":\n  container: "not_recorded"\n' "${task.process}" > versions.yml
     """
 
