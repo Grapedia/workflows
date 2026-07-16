@@ -1,0 +1,2 @@
+sampleID,SRA_or_FASTQ,library_layout
+bad_layout,FASTQ,paired_end

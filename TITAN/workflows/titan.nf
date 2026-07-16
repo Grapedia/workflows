@@ -25,6 +25,32 @@ def validateExistingInputFiles(requiredFiles) {
     }
 }
 
+def validateInputSchema() {
+    def command = [
+        'python3',
+        "${projectDir}/scripts/validate_inputs.py",
+        '--project-dir', projectDir.toString(),
+        '--new-assembly', params.new_assembly.toString(),
+        '--previous-assembly', params.previous_assembly.toString(),
+        '--previous-annotations', params.previous_annotations.toString(),
+        '--rnaseq-samplesheet', params.RNAseq_samplesheet.toString(),
+        '--rnaseq-data-dir', params.RNAseq_data_dir.toString(),
+        '--protein-samplesheet', params.protein_samplesheet.toString(),
+        '--egapx-paramfile', params.egapx_paramfile.toString(),
+        '--egapx-executor', params.egapx_executor.toString(),
+        '--psiclass-vd', params.PSICLASS_vd_option.toString(),
+        '--psiclass-c', params.PSICLASS_c_option.toString()
+    ]
+    def process = command.execute()
+    def stdout = new StringBuffer()
+    def stderr = new StringBuffer()
+    process.waitForProcessOutput(stdout, stderr)
+    if (process.exitValue() != 0) {
+        error stderr.toString().trim()
+    }
+    println stdout.toString().trim()
+}
+
 def samplesheetHasLongReads(samplesheetPath) {
     def rows = file(samplesheetPath).readLines().findAll { line ->
         def trimmed = line.trim()
@@ -72,8 +98,9 @@ def rnaseqLocalFiles(row) {
 
 workflow TITAN {
     rejectDeprecatedWorkflowParam()
-    validateRequiredParams(['output_dir', 'egapx_paramfile', 'RNAseq_samplesheet', 'protein_samplesheet', 'new_assembly', 'previous_assembly', 'previous_annotations'])
+    validateRequiredParams(['output_dir', 'egapx_paramfile', 'RNAseq_samplesheet', 'RNAseq_data_dir', 'protein_samplesheet', 'new_assembly', 'previous_assembly', 'previous_annotations'])
     validateExistingInputFiles(['egapx_paramfile', 'RNAseq_samplesheet', 'protein_samplesheet', 'new_assembly', 'previous_assembly', 'previous_annotations'])
+    validateInputSchema()
     def has_long_reads = samplesheetHasLongReads(params.RNAseq_samplesheet)
     println "Long-read RNA-seq detected from samplesheet: ${has_long_reads}"
 

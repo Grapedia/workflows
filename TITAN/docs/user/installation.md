@@ -138,15 +138,21 @@ Allowed `library_layout` values:
 * `paired`: paired-end short reads.
 * `long`: long-read RNA-seq.
 
+Allowed `SRA_or_FASTQ` values:
+
+* `FASTQ`: local gzip-compressed FASTQ files under `RNAseq_data_dir`.
+* `FASTA`: local FASTA file under `RNAseq_data_dir`; only valid with `library_layout=long`.
+* `SRA`: SRA accession matching `sampleID`; TITAN will download and convert it during the run.
+
 Long-read processing is automatic: if at least one row has `library_layout=long`, TITAN launches the long-read branch and Aegis receives long-read evidence.
 
 Example:
 
 ```csv
 sampleID,SRA_or_FASTQ,library_layout
-leaf_single,leaf_single.fastq.gz,single
-berry_paired,berry_paired,paired
-isoseq_leaf,isoseq_leaf.fastq.gz,long
+leaf_single,FASTQ,single
+berry_paired,FASTQ,paired
+isoseq_leaf,FASTQ,long
 ```
 
 Current historical modules infer local files from `sampleID` under `RNAseq_data_dir`. Keep file names consistent with existing module expectations:
@@ -175,7 +181,7 @@ Araport,araport.fa
 SwissProtPlants,swissprot_plants.fa
 ```
 
-The `filename` entries should point to FASTA protein files available to BRAKER3. Some current modules still mount `${projectDir}/data/protein_data`; until that is fully refactored, keep a production-compatible protein data layout or test your profile on a small run first.
+The `filename` entries should point to FASTA protein files available to BRAKER3. Relative paths are resolved from the TITAN project directory.
 
 ## 7. EGAPx YAML input
 
@@ -186,7 +192,10 @@ Minimum fields expected by EGAPx:
 ```yaml
 genome: /absolute/path/to/project/assemblies/target.fa
 taxid: 29760
+organism: Vitis vinifera
 ```
+
+TITAN validates that the YAML contains `genome`, `taxid` and `organism`, and that `genome` points to a readable FASTA file. Relative `genome` paths are resolved from the YAML file directory.
 
 TITAN production runs should provide RNA-seq evidence to EGAPx as well:
 
@@ -278,11 +287,20 @@ Before running production, verify the local workflow bootstrap:
 nextflow config -profile test
 python3 scripts/validate_container_pins.py
 python3 scripts/validate_profiles.py
+python3 scripts/validate_inputs.py \
+  --project-dir . \
+  --new-assembly test-data/minimal/valid/target.fa \
+  --previous-assembly test-data/minimal/valid/reference.fa \
+  --previous-annotations test-data/minimal/valid/reference.gff3 \
+  --rnaseq-samplesheet test-data/minimal/valid/rnaseq_samplesheet.csv \
+  --rnaseq-data-dir test-data/minimal/valid/rnaseq \
+  --protein-samplesheet test-data/minimal/valid/protein_samplesheet.csv \
+  --egapx-paramfile test-data/minimal/valid/input_egapx.yaml
 python3 scripts/validate_minimal_test_data.py
 nextflow run main.nf -profile test -stub-run -ansi-log false
 ```
 
-This validates parameter wiring and channel contracts. It does not validate biological output quality.
+This validates input schemas, parameter wiring and channel contracts. It does not validate biological output quality.
 
 ## 9. Production launch
 

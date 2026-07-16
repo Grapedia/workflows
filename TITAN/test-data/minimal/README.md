@@ -31,6 +31,11 @@ Negative fixtures:
 * `invalid/seqid_missing.gff3`: GFF3 seqid absent from FASTA.
 * `invalid/bad_coordinates.gff3`: invalid coordinates.
 * `invalid/bad_parent.gff3`: invalid Parent relation.
+* `invalid/rnaseq_bad_layout.csv`: invalid RNA-seq `library_layout`.
+* `invalid/rnaseq_missing_fastq.csv`: local FASTQ row with missing file.
+* `invalid/rnaseq_duplicate_sample.csv`: duplicated RNA-seq sample ID.
+* `invalid/protein_missing_file.csv`: protein samplesheet path that does not exist.
+* `invalid/egapx_missing_genome.yaml`: EGAPx YAML missing required `genome`.
 
 ## Source and license
 
@@ -44,5 +49,7 @@ Validate the dataset with:
 
 ```bash
 python3 scripts/validate_minimal_test_data.py
+python3 scripts/validate_inputs.py --project-dir . --new-assembly test-data/minimal/valid/target.fa --previous-assembly test-data/minimal/valid/reference.fa --previous-annotations test-data/minimal/valid/reference.gff3 --rnaseq-samplesheet test-data/minimal/valid/rnaseq_samplesheet.csv --rnaseq-data-dir test-data/minimal/valid/rnaseq --protein-samplesheet test-data/minimal/valid/protein_samplesheet.csv --egapx-paramfile test-data/minimal/valid/input_egapx.yaml
+python3 scripts/test_validate_inputs.py
 sha256sum -c test-data/minimal/checksums.sha256
 ```

@@ -304,23 +304,23 @@ Risque HPC residuel: le vrai run Slurm/Apptainer doit etre valide sur le cluster
 
 ## TITAN-P2-001 - Ajouter schema et validation avancee des entrees
 Priorite : P2
-Statut : A faire
+Statut : Fait
 Risque : Moyen
 
 ### Objectif
 Valider FASTA, GFF3, samplesheets, chemins proteiques, options et coherence seqid avant calcul lourd.
 ### Constat
-P0-005 valide presence des parametres et existence des fichiers, pas encore le schema complet ni la coherence biologique de base.
+TITAN lance maintenant `scripts/validate_inputs.py` au demarrage du workflow, avant creation des channels et avant calcul lourd. Le validateur controle FASTA, GFF3, samplesheets RNA-seq/proteines, chemins FASTQ/FASTA/proteines, YAML EGAPx minimal, enums et options numeriques.
 ### Fichiers concernes
-`scripts/validate_minimal_test_data.py`, futur `scripts/validate_inputs.py`, `test-data/minimal/invalid/`.
+`scripts/validate_inputs.py`, `scripts/test_validate_inputs.py`, `workflows/titan.nf`, `launch_TITAN_example.sh`, `test-data/minimal/invalid/`, documentation.
 ### Etapes d'implementation
-Ajouter validation CSV stricte, presence FASTQ/proteines, seqids GFF3/FASTA, coordonnees, Parent, options enum.
+Ajouter validation CSV stricte, presence FASTQ/proteines, seqids GFF3/FASTA, coordonnees, Parent, options enum et integration au workflow/lanceur.
 ### Tests
-Fixtures invalides existantes plus nouveaux cas samplesheets.
+`python3 scripts/validate_inputs.py ...`; `python3 scripts/test_validate_inputs.py`; `nextflow run main.nf -profile test -stub-run -ansi-log false`; cas negatif Nextflow avec `test-data/minimal/invalid/rnaseq_bad_layout.csv`.
 ### Criteres d'acceptation
 Chaque entree invalide echoue avant calcul lourd avec message actionnable.
 ### Risques et retour arriere
-Risque de faux positifs sur donnees historiques; commencer en mode warning si necessaire.
+Risque de faux positifs sur donnees historiques; adapter explicitement le schema si un format historique valide doit etre conserve.
 
 ## TITAN-P2-002 - Mettre en place la strategie de tests
 Priorite : P2

@@ -1,0 +1,3 @@
+sampleID,SRA_or_FASTQ,library_layout
+dup_sample,FASTQ,single
+dup_sample,FASTQ,single

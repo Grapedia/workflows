@@ -98,7 +98,7 @@ TITAN annote un nouvel assemblage de genome en combinant:
 | DSL2 | DSL2 structure valide | DSL2 active mais compilation cassee sous Nextflow 26 | Bloquant | Deplacer statements top-level dans `workflow`. |
 | Point d'entree | Help et validation parametres | Pas de `--help`; validation top-level | UX et compilation | Ajouter help non executant et validation interne. |
 | Parametres | YAML utilisateur + schema | Parametres dans `nextflow.config` | Peu portable | Introduire config YAML/schema sans casser les anciens `--param`. |
-| Validation entrees | Scripts Python testes | Validation minimale | Risque calcul lourd invalide | Ajouter validateur FASTA/GFF3/samplesheets. |
+| Validation entrees | Scripts Python testes | `scripts/validate_inputs.py` integre au workflow | Partiel | Etendre vers schema nf-validation si besoin. |
 | Modules | Process atomiques labels | Modules nombreux mais scripts/volumes couples | Fragile | Clarifier contrats et labels module par module. |
 | Sous-workflows | Fonctions coherentes | Deux sous-workflows biologiques | Base utile | Garder mais typer les emits. |
 | Dependances | Versions documentees et images | Images runtime centralisees et digest-pinned | Partiel | Etendre les `versions.yml` module par module. |
@@ -203,7 +203,7 @@ Points de vigilance P0-002:
 * plusieurs modules publient via `publishDir`; les copies manuelles `/outputdir` ont ete supprimees des merges StringTie, GFFCompare et EDTA;
 * les images runtime sont centralisees dans `nextflow.config` et verrouillees par digest depuis P1-008;
 * EGAPx, AEGIS et TITAN provenance collectent un `versions.yml`; les autres modules restent a couvrir progressivement;
-* les chemins de samplesheets sont valides avant construction des channels depuis P0-005; le schema complet des colonnes reste a renforcer;
+* le schema d'entrees est valide avant construction des channels depuis P2-001: FASTA, GFF3, samplesheets, chemins FASTQ/proteines, YAML EGAPx minimal et enums;
 * EGAPx est documente, obligatoire, expose des sorties nommees et son GFF3 est consomme par AEGIS.
 
 ## Constats critiques
@@ -231,7 +231,7 @@ P1:
 
 P2/P3:
 
-* Pas de schema de parametres.
+* Schema d'entrees Python present; schema Nextflow/nf-validation non encore introduit.
 * Pas de contrat de sorties.
 * Documentation des limites et troubleshooting incomplete.
 * Pas de CI rapide detectee.
@@ -310,6 +310,27 @@ Messages attendus verifies:
 * `Missing required parameter(s): --RNAseq_samplesheet`
 * `Required input file(s) not found`
 * `--workflow is no longer supported`
+
+## Validation avancee des entrees P2-001
+
+Le validateur `scripts/validate_inputs.py` est appele au demarrage de `workflows/titan.nf` et par `launch_TITAN_example.sh`. Il bloque avant calcul lourd si les entrees ne respectent pas le contrat TITAN.
+
+Commandes de validation:
+
+```bash
+python3 scripts/validate_inputs.py --project-dir . --new-assembly test-data/minimal/valid/target.fa --previous-assembly test-data/minimal/valid/reference.fa --previous-annotations test-data/minimal/valid/reference.gff3 --rnaseq-samplesheet test-data/minimal/valid/rnaseq_samplesheet.csv --rnaseq-data-dir test-data/minimal/valid/rnaseq --protein-samplesheet test-data/minimal/valid/protein_samplesheet.csv --egapx-paramfile test-data/minimal/valid/input_egapx.yaml
+python3 scripts/test_validate_inputs.py
+nextflow run main.nf -profile test --RNAseq_samplesheet test-data/minimal/invalid/rnaseq_bad_layout.csv -stub-run -ansi-log false
+```
+
+Contrats controles:
+
+* FASTA non vides et IDs uniques;
+* GFF3 a 9 colonnes, seqids presents dans FASTA, coordonnees valides, IDs uniques et Parents resolus;
+* samplesheet RNA-seq avec colonnes `sampleID,SRA_or_FASTQ,library_layout`, valeurs enumerees, sample IDs uniques et fichiers locaux presents;
+* samplesheet proteines avec colonnes `organism,filename` et FASTA presents;
+* YAML EGAPx contenant `genome`, `taxid`, `organism` et genome lisible;
+* options `egapx_executor`, `PSICLASS_vd_option`, `PSICLASS_c_option`.
 
 ## Strategie de modularisation
 

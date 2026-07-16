@@ -91,6 +91,7 @@ TITAN validates required parameters at workflow startup, before building input c
 --output_dir
 --egapx_paramfile
 --RNAseq_samplesheet
+--RNAseq_data_dir
 --protein_samplesheet
 --new_assembly
 --previous_assembly
@@ -103,7 +104,23 @@ Invalid input fails early with explicit messages such as:
 Missing required parameter(s): --RNAseq_samplesheet
 Required input file(s) not found:
   --previous_annotations: test-data/minimal/valid/missing.gff3
+TITAN input validation failed:
+  ERROR: rnaseq_samplesheet.csv: line 2: library_layout must be one of ['long', 'paired', 'single']
 --workflow is no longer supported. TITAN always runs evidence generation followed by Aegis in one graph.
+```
+
+The full input validator can also be run directly before production submission:
+
+```bash
+python3 scripts/validate_inputs.py \
+  --project-dir . \
+  --new-assembly test-data/minimal/valid/target.fa \
+  --previous-assembly test-data/minimal/valid/reference.fa \
+  --previous-annotations test-data/minimal/valid/reference.gff3 \
+  --rnaseq-samplesheet test-data/minimal/valid/rnaseq_samplesheet.csv \
+  --rnaseq-data-dir test-data/minimal/valid/rnaseq \
+  --protein-samplesheet test-data/minimal/valid/protein_samplesheet.csv \
+  --egapx-paramfile test-data/minimal/valid/input_egapx.yaml
 ```
 
 ### **Output contract inventory**

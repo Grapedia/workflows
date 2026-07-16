@@ -172,8 +172,37 @@ command -v nextflow >/dev/null 2>&1 || die "nextflow is not available in PATH"
 
 cd "$PROJECT_DIR"
 
+CONFIG_SNAPSHOT="$(mktemp)"
+trap 'rm -f "$CONFIG_SNAPSHOT"' EXIT
+nextflow config -profile "$PROFILE" > "$CONFIG_SNAPSHOT"
+
+config_value() {
+  local key="$1"
+  awk -v key="$key" '
+    $1 == key && $2 == "=" {
+      value = $0
+      sub("^[[:space:]]*" key "[[:space:]]*=[[:space:]]*", "", value)
+      gsub(/^'\''|'\''$/, "", value)
+      print value
+      exit
+    }
+  ' "$CONFIG_SNAPSHOT"
+}
+
 python3 scripts/validate_container_pins.py >/dev/null
-nextflow config -profile "$PROFILE" >/dev/null
+python3 scripts/validate_profiles.py >/dev/null
+python3 scripts/validate_inputs.py \
+  --project-dir "$PROJECT_DIR" \
+  --new-assembly "$NEW_ASSEMBLY" \
+  --previous-assembly "$PREVIOUS_ASSEMBLY" \
+  --previous-annotations "$PREVIOUS_ANNOTATIONS" \
+  --rnaseq-samplesheet "$RNASEQ_SAMPLESHEET" \
+  --rnaseq-data-dir "$RNASEQ_DATA_DIR" \
+  --protein-samplesheet "$PROTEIN_SAMPLESHEET" \
+  --egapx-paramfile "$EGAPX_PARAMFILE" \
+  --egapx-executor "$(config_value egapx_executor)" \
+  --psiclass-vd "$(config_value PSICLASS_vd_option)" \
+  --psiclass-c "$(config_value PSICLASS_c_option)" >/dev/null
 
 cmd=(
   nextflow run main.nf
