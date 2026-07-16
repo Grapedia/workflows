@@ -142,7 +142,7 @@ Allowed `SRA_or_FASTQ` values:
 
 * `FASTQ`: local gzip-compressed FASTQ files under `RNAseq_data_dir`.
 * `FASTA`: local FASTA file under `RNAseq_data_dir`; only valid with `library_layout=long`.
-* `SRA`: SRA accession matching `sampleID`; TITAN will download and convert it during the run.
+* `SRA`: SRR, ERR or DRR run accession matching `sampleID`; TITAN resolves ENA FASTQ URLs, downloads the gzipped FASTQ files, retries transient failures and verifies ENA MD5 checksums when available.
 
 Long-read processing is automatic: if at least one row has `library_layout=long`, TITAN launches the long-read branch and Aegis receives long-read evidence.
 
@@ -155,7 +155,7 @@ berry_paired,FASTQ,paired
 isoseq_leaf,FASTQ,long
 ```
 
-Current historical modules infer local files from `sampleID` under `RNAseq_data_dir`. Keep file names consistent with existing module expectations:
+Local files are inferred from `sampleID` under `RNAseq_data_dir`. Keep file names consistent with existing module expectations:
 
 ```text
 single: <sampleID>.fastq.gz
@@ -163,7 +163,7 @@ paired: <sampleID>_1.fastq.gz and <sampleID>_2.fastq.gz
 long:   <sampleID>.fastq.gz or <sampleID>.fasta
 ```
 
-SRA accessions are still accepted by the historical preparation modules, but production runs are more reproducible when FASTQ/FASTA files are downloaded and versioned outside TITAN.
+SRA accessions are accepted when the run is available through ENA FASTQ metadata. Production runs are still more reproducible when FASTQ/FASTA files are downloaded and versioned outside TITAN.
 
 ## 6. Protein samplesheet
 
@@ -251,7 +251,7 @@ Important EGAPx notes:
 * `taxid` must be the NCBI taxonomy identifier for the target organism.
 * RNA-seq is highly recommended for EGAPx annotation quality.
 * Local RNA-seq files should be FASTA or FASTQ, not BAM.
-* If using SRA accessions, check the number of runs before launching production. Large SRA queries can expand to many runs.
+* If using SRA accessions, provide one run accession per row and check ENA availability before launching production.
 * EGAPx performs its own masking; it does not require the EDTA-masked genome as input.
 * EGAPx currently supports many vertebrates, arthropods, echinoderms and plants; fungi, protists and nematodes are out of scope according to NCBI documentation.
 

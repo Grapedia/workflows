@@ -31,8 +31,8 @@ This checks:
 | Liftoff | `container_liftoff` | `quay.io/biocontainers/liftoff@sha256:460d5e82b0c59e8348633f3e0b9a19cf29f9227f7457e90bd7f1d1a2403b3555` |
 | Minimap2 + samtools | `container_minimap2_samtools` | `avelt/minimap2_samtools@sha256:70dcb87bb8021c90fc5eb660bbe1e6fc6bedadbf85c552c66704d27957b1f4ba` |
 | PsiCLASS + samtools | `container_psiclass_samtools` | `avelt/psiclass_samtools@sha256:5cad8ecfd81293287bb6612ac8a6daaf17e626339016d326cf79615606acb285` |
+| Python | `container_python` | `docker.io/library/python@sha256:57cd7c3a7a273101a6485ba99423ee568157882804b1124b4dd04266317710de` |
 | Salmon | `container_salmon` | `quay.io/biocontainers/salmon@sha256:71ffc3b4961971159a6a2327d55686fb499c43335644ea5623476a082e826fc0` |
-| sra-tools | `container_sra_tools` | `quay.io/biocontainers/sra-tools@sha256:05de2c580cccc4c609ec7c645902563e5d5ffbd366662e1983cb152545ec7bc0` |
 | STAR | `container_star` | `quay.io/biocontainers/star@sha256:f5910f39a9f5bc171a51fe7400d33e7586cb353c47d759a7c190562322150067` |
 | StringTie | `container_stringtie` | `avelt/stringtie@sha256:856395c26e0c36544ef5c66e24badcac4f68fd5fa51864a0f964a737250545bb` |
 

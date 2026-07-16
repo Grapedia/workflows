@@ -19,8 +19,8 @@ REQUIRED_PARAMS = {
     "container_liftoff",
     "container_minimap2_samtools",
     "container_psiclass_samtools",
+    "container_python",
     "container_salmon",
-    "container_sra_tools",
     "container_star",
     "container_stringtie",
 }

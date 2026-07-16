@@ -1,13 +1,13 @@
 // We check that if the samples are of type FASTQ they exist in params.RNAseq_data_dir.
-// If the samples are SRA, we'll download the .sra file, convert it to fastq and gzip the fastq file.
+// If the samples are SRA, we'll resolve ENA FASTQ URLs and download gzipped FASTQ files.
 // Once done, the RNAseq samples are ready for transcriptome assembly.
 
 process prepare_RNAseq_fastq_files_long {
   label 'process_low'
   tag "prepare_RNAseq_fastq_files on $sample_ID"
-  container params.container_sra_tools
+  container params.container_python
   debug true
-  // Sometimes the SRA download encounters an error, so we retry the process until the download works.
+  // ENA downloads have script-level retries and keep a process retry as an outer safety net.
   errorStrategy 'retry'
 
   input:
@@ -24,10 +24,15 @@ process prepare_RNAseq_fastq_files_long {
 
   if [[ $SRA_or_FASTQ == "SRA" ]]
   then
-    prefetch --force all --max-size 100G -O . $sample_ID
-    fastq-dump --outdir . $sample_ID
-    rm -rf "$sample_ID"
-    gzip ${sample_ID}*.fastq
+    echo "[\$DATE] Downloading SRA long-read sample through ENA API: $sample_ID"
+    python3 ${projectDir}/scripts/download_sra_fastq.py \\
+      --accession $sample_ID \\
+      --layout long \\
+      --outdir . \\
+      --timeout-seconds ${params.ena_download_timeout_seconds} \\
+      --max-attempts ${params.ena_max_download_attempts} \\
+      --retry-wait-seconds ${params.ena_retry_wait_seconds} \\
+      ${params.ena_verify_md5 ? '--verify-md5' : '--no-verify-md5'}
   elif [[ $SRA_or_FASTQ == "FASTQ" ]]
   then
     test -s ${sample_ID}.fastq.gz

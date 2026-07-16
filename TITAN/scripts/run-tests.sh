@@ -39,6 +39,7 @@ run_step python3 scripts/validate_profiles.py
 run_step python3 scripts/validate_minimal_test_data.py
 run_step python3 scripts/test_validate_inputs.py
 run_step python3 scripts/test_validate_final_annotation.py
+run_step python3 scripts/test_download_sra_fastq.py
 
 run_step nextflow config -profile test
 run_step nextflow run main.nf -profile test -stub-run -ansi-log false

@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 import subprocess
 import sys
+import tempfile
 from pathlib import Path
 
 
@@ -68,6 +69,15 @@ def main():
         print("ERROR: valid fixture command failed", file=sys.stderr)
         print(valid.stdout + valid.stderr, file=sys.stderr)
         return 1
+
+    with tempfile.NamedTemporaryFile("w", suffix=".csv", dir=INVALID) as handle:
+        handle.write("sampleID,SRA_or_FASTQ,library_layout\nnot_a_run,SRA,single\n")
+        handle.flush()
+        failures += expect_failure(
+            "bad SRA accession",
+            replace_arg(BASE_ARGS, "--rnaseq-samplesheet", handle.name),
+            "SRA sampleID must be an SRR, ERR or DRR run accession",
+        )
 
     cases = [
         (

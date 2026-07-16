@@ -8,6 +8,7 @@ from pathlib import Path
 
 
 SAMPLE_ID_RE = re.compile(r"^[A-Za-z0-9_.-]+$")
+SRA_ACCESSION_RE = re.compile(r"^[SED]RR[0-9]+$")
 RNA_COLUMNS = ["sampleID", "SRA_or_FASTQ", "library_layout"]
 PROTEIN_COLUMNS = ["organism", "filename"]
 RNA_SOURCES = {"SRA", "FASTQ", "FASTA"}
@@ -140,6 +141,8 @@ def validate_rnaseq_samplesheet(path, rnaseq_data_dir):
         seen.add(sample_id)
         if source not in RNA_SOURCES:
             errors.append(error(f"{path}: line {index}: SRA_or_FASTQ must be one of {sorted(RNA_SOURCES)}, got '{source}'"))
+        if source == "SRA" and not SRA_ACCESSION_RE.match(sample_id):
+            errors.append(error(f"{path}: line {index}: SRA sampleID must be an SRR, ERR or DRR run accession, got '{sample_id}'"))
         if layout not in RNA_LAYOUTS:
             errors.append(error(f"{path}: line {index}: library_layout must be one of {sorted(RNA_LAYOUTS)}, got '{layout}'"))
         else:

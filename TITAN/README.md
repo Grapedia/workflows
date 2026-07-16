@@ -128,7 +128,7 @@ Allowed `SRA_or_FASTQ` values:
 
 * `FASTQ`: local gzip-compressed FASTQ files under `RNAseq_data_dir`.
 * `FASTA`: local FASTA file under `RNAseq_data_dir`, only valid with `library_layout=long`.
-* `SRA`: accession handled by the historical preparation modules.
+* `SRA`: SRR, ERR or DRR run accession. TITAN resolves ENA FASTQ URLs, downloads the gzipped FASTQ files, retries transient failures and verifies ENA MD5 checksums when available.
 
 Example:
 
@@ -147,7 +147,7 @@ paired: <sampleID>_1.fastq.gz and <sampleID>_2.fastq.gz
 long:   <sampleID>.fastq.gz or <sampleID>.fasta
 ```
 
-Production runs are more reproducible when FASTQ/FASTA files are downloaded and checked outside TITAN instead of relying on SRA expansion at runtime.
+Local FASTQ/FASTA files remain the most reproducible option for controlled production runs. SRA accessions are accepted when the run is available through ENA FASTQ metadata.
 
 ## Protein Samplesheet
 
@@ -317,7 +317,7 @@ The `test` profile and CI run only stub execution on synthetic fixtures. They va
 
 Real Slurm and Apptainer behavior must still be validated on the target cluster because queue policy, shared filesystems and container cache settings are site-specific.
 
-SRA inputs remain supported by historical modules, but local FASTQ/FASTA files are preferred for controlled production runs.
+SRA inputs are downloaded through ENA FASTQ metadata with internal retry and optional MD5 verification. Local FASTQ/FASTA files are still preferred when inputs must be frozen before production.
 
 Final validation currently covers structural consistency: GFF3 format, coordinates, seqids, Parent links, CDS phase and protein FASTA integrity. Deeper biological quality assessment and historical annotation comparison remain separate scientific review work.
 
@@ -340,6 +340,6 @@ Final validation currently covers structural consistency: GFF3 format, coordinat
 * [Minimap2](https://github.com/lh3/minimap2)
 * [PsiCLASS](https://github.com/splicebox/PsiCLASS)
 * [Salmon](https://combine-lab.github.io/salmon/)
-* [sra-tools](https://github.com/ncbi/sra-tools)
+* [ENA Browser API](https://www.ebi.ac.uk/ena/browser/api/)
 * [STAR](https://github.com/alexdobin/STAR)
 * [StringTie](https://ccb.jhu.edu/software/stringtie/)

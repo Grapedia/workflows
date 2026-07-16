@@ -145,7 +145,7 @@ for f in modules/*.nf; do awk '/^[[:space:]]*output:/{flag=1} /^[[:space:]]*scri
 | Minimap2 | Alignement long reads | 2.28 documente | Digest-pinned | `minimap2_*` | `params.container_minimap2_samtools` | Stub | Non |
 | PsiCLASS | Assemblage transcriptome | 1.0.2 | Digest-pinned | `assembly_transcriptome_star_psiclass` | `params.container_psiclass_samtools` | Stub | Non |
 | Salmon | Inference strandedness | 1.10.3 | Digest-pinned | `salmon_*` | `params.container_salmon` | Stub | Non |
-| sra-tools | SRA download | 3.1.1 | Digest-pinned | `prepare_RNAseq_fastq_files_*` | `params.container_sra_tools` | Stub | Non |
+| ENA API downloader | SRA/ENA FASTQ staging | Python stdlib | Digest-pinned | `prepare_RNAseq_fastq_files_*`, `scripts/download_sra_fastq.py` | `params.container_python` | Unit + Stub | Non |
 | STAR | Index/alignment | 2.7.11b | Digest-pinned | `star_*` | `params.container_star` | Stub | Non |
 | StringTie | Assemblage/fusion | 2.2.3 documente | Digest-pinned | `assembly_transcriptome_*`, `Stringtie_merging_*` | `params.container_stringtie` | Stub | Non |
 | gffread | Conversion GTF/GFF3 | Non requis par les modules AEGIS actuels | Non | n/a | n/a | n/a | n/a |
@@ -226,7 +226,7 @@ P1:
 * Les conteneurs runtime et bases Dockerfile sont digest-pinned depuis P1-008.
 * les `containerOptions` Docker-centriques ont ete retires des modules actifs depuis P1-009; les chemins genome, RNA-seq et scripts sont stages par Nextflow.
 * les scans internes de dossiers publies ont ete retires des merges StringTie, GFFCompare, BRAKER3, AGAT, Salmon et des alignements STAR/HISAT2/Minimap2.
-* Telechargements SRA pendant le workflow avec `--max-size 100G`.
+* Telechargements SRA pendant le workflow via metadonnees FASTQ ENA, avec retry et verification MD5 optionnelle.
 * Versions non collectees dans les sorties.
 
 P2/P3:
