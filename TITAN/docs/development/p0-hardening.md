@@ -61,7 +61,7 @@ sha256sum -c test-data/minimal/checksums.sha256
 
 ## Parameter validation
 
-`main.nf` validates these required parameters inside the `workflow` block before input channels are built:
+`workflows/titan.nf` validates these required parameters inside the `TITAN` workflow before input channels are built:
 
 ```text
 output_dir
@@ -102,7 +102,7 @@ Invalid --workflow 'nope'
 
 The P0 work intentionally avoids large architectural refactors. Remaining issues for P1 and later:
 
-* `main.nf` still carries orchestration logic that should move progressively into a dedicated workflow layer.
+* `workflows/titan.nf` still carries orchestration logic that should move progressively toward typed evidence contracts.
 * Several images still use `latest`.
 * EGAPx is mandatory in `generate_evidence_data`, but its broad result directory still needs named emits before direct Aegis consumption.
 * The test profile validates channel/file contracts in stub mode; it does not run scientific containers or heavy tools.

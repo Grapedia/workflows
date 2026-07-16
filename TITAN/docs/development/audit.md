@@ -21,7 +21,7 @@ Resultat synthetique: branche initiale `main`, remote `origin git@github-amandin
 
 ## Architecture actuelle
 
-Point d'entree principal: `main.nf`.
+Point d'entree principal: `main.nf`. Depuis P1-002, `main.nf` inclut et appelle le workflow `TITAN` defini dans `workflows/titan.nf`.
 
 Sous-workflows:
 
@@ -95,7 +95,7 @@ TITAN annote un nouvel assemblage de genome en combinant:
 
 | Domaine | atcg-rnaseq | TITAN actuel | Ecart | Adaptation recommandee |
 | --- | --- | --- | --- | --- |
-| Architecture Nextflow | `main.nf` leger + `workflows/`, `subworkflows/`, `modules/local/` | `main.nf` orchestre directement channels et branches | Orchestration trop chargee | Migrer progressivement vers `workflows/titan.nf`. |
+| Architecture Nextflow | `main.nf` leger + `workflows/`, `subworkflows/`, `modules/local/` | `main.nf` est leger; `workflows/titan.nf` porte encore l'orchestration et le scan Aegis-only | Contrats encore trop couples a `output_dir` | Migrer progressivement vers des evidences nommees et un manifeste. |
 | DSL2 | DSL2 structure valide | DSL2 active mais compilation cassee sous Nextflow 26 | Bloquant | Deplacer statements top-level dans `workflow`. |
 | Point d'entree | Help et validation parametres | Pas de `--help`; validation top-level | UX et compilation | Ajouter help non executant et validation interne. |
 | Parametres | YAML utilisateur + schema | Parametres dans `nextflow.config` | Peu portable | Introduire config YAML/schema sans casser les anciens `--param`. |
@@ -164,7 +164,7 @@ for f in modules/*.nf; do awk '/^[[:space:]]*output:/{flag=1} /^[[:space:]]*scri
 | Samplesheet proteines | `params.protein_samplesheet` | CSV avec header | `organism`, `filename` | BRAKER3, Aegis | Les modules montent aussi `${projectDir}/data/protein_data`; ce couplage reste a normaliser. |
 | Parametres EGAPx | `params.egapx_paramfile` | YAML | parametres EGAPx | module `egapx` | Obligatoire dans `generate_evidence_data`; sorties publiees sous `${output_dir}/egapx`. |
 | Options outil | `params.edta_cpus`, `params.egapx_cpus`, `params.PSICLASS_*`, `params.STAR_memory_per_job` | entiers CPU, floats, entier bytes | valeurs scalaires | EDTA, EGAPx, PsiCLASS, STAR | Les anciens flags biologiques ne pilotent plus EDTA, EGAPx ou les long reads. |
-| Entrees Aegis-only | channel `input_data` construit dans `main.nf` | liste de paires cle/fichier | cles `masked_genome.masked_genome`, `braker3_results.*`, `previous_annotations.*`, `merged_*`, `gffcompare_out.*` | sous-workflow `aegis` | Les fichiers requis manquants provoquent une erreur; seuls les outputs unstranded peuvent recevoir des placeholders `dev_null*`. |
+| Entrees Aegis-only | channel `input_data` construit dans `workflows/titan.nf` | liste de paires cle/fichier | cles `masked_genome.masked_genome`, `braker3_results.*`, `previous_annotations.*`, `merged_*`, `gffcompare_out.*` | sous-workflow `aegis` | Les fichiers requis manquants provoquent une erreur; seuls les outputs unstranded peuvent recevoir des placeholders `dev_null*`. |
 
 ### Inventaire des sorties par module
 
@@ -288,7 +288,7 @@ Limite: ce profil valide la resolution Nextflow, les shapes de channels et les n
 
 ## Validation des parametres P0-005
 
-Decision: conserver la validation dans `main.nf`, a l'interieur du bloc `workflow`, pour eviter les effets de bord de code executable top-level avec Nextflow 26. Les controles couvrent:
+Decision initiale P0: conserver la validation dans un bloc `workflow`, pour eviter les effets de bord de code executable top-level avec Nextflow 26. Depuis P1-002, cette validation vit dans `workflows/titan.nf`. Les controles couvrent:
 
 * parametres obligatoires vides ou passes comme flags sans valeur;
 * fichiers d'entree absents;

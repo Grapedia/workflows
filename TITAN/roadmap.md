@@ -110,7 +110,7 @@ Risque : Faible
 ### Objectif
 Identifier les defauts structurels qui rendent TITAN fragile avant d'ajouter de nouvelles fonctionnalites.
 ### Constat
-L'audit confirme que le probleme principal est le contrat entre couches: `main.nf` orchestre trop, Aegis relit les fichiers publies dans `output_dir`, EDTA depend encore d'un nom publie pour Aegis-only, et EGAPx doit encore exposer des sorties nommees pour Aegis.
+L'audit confirme que le probleme principal est le contrat entre couches: l'orchestration est maintenant dans `workflows/titan.nf`, mais Aegis relit encore les fichiers publies dans `output_dir`, EDTA depend encore d'un nom publie pour Aegis-only, et EGAPx doit encore exposer des sorties nommees pour Aegis.
 ### Fichiers concernes
 `docs/development/architecture-audit.md`, `roadmap.md`.
 ### Etapes d'implementation
@@ -144,21 +144,21 @@ Peut changer le comportement historique de configs qui passaient des chaines; do
 
 ## TITAN-P1-002 - Introduire une architecture Nextflow standard
 Priorite : P1
-Statut : A faire
+Statut : Fait
 Risque : Moyen
 
 ### Objectif
 Faire de `main.nf` un point d'entree leger et deplacer l'orchestration vers une couche `workflows/` plus testable.
 ### Constat
-`main.nf` valide les parametres, construit des channels, scanne `output_dir`, fabrique des placeholders et appelle les sous-workflows.
+`main.nf` est maintenant un point d'entree leger. L'orchestration historique a ete deplacee dans `workflows/titan.nf`; elle valide les parametres, construit les channels, scanne encore `output_dir` pour le mode Aegis-only et appelle les sous-workflows.
 ### Fichiers concernes
 `main.nf`, `workflows/titan.nf`, `subworkflows/`, `docs/development/architecture-audit.md`.
 ### Etapes d'implementation
-Creer `workflows/titan.nf`, y deplacer validation/orchestration, garder `main.nf` limite aux includes et a l'appel du workflow principal, conserver les noms publics de parametres.
+Creer `workflows/titan.nf`, y deplacer validation/orchestration, garder `main.nf` limite aux defaults publics, a l'include et a l'appel du workflow principal, conserver les noms publics de parametres.
 ### Tests
-`nextflow config -profile test`; `nextflow run main.nf -profile test --workflow aegis -ansi-log false`; `-resume`.
+`nextflow config -profile test`; `python3 scripts/validate_minimal_test_data.py`; `nextflow run main.nf -profile test --workflow generate_evidence_data -stub-run -ansi-log false`; `nextflow run main.nf -profile test --workflow aegis -stub-run -ansi-log false`.
 ### Criteres d'acceptation
-`main.nf` ne contient plus de logique biologique ni de scan de fichiers; les tests P0 restent verts.
+`main.nf` ne contient plus de logique biologique ni de scan de fichiers; les tests stub restent verts et les process sont names sous le workflow `TITAN`.
 ### Risques et retour arriere
 Migration par etapes; commit dedie pour pouvoir revert facilement.
 

@@ -11,7 +11,7 @@ TITAN has a useful biological decomposition, but the workflow is not yet archite
 
 Highest-risk findings:
 
-* `main.nf` still acts as orchestration, validation and Aegis evidence loader instead of being a thin entrypoint.
+* P1-002 made `main.nf` a thin entrypoint; orchestration now lives in `workflows/titan.nf`.
 * `generate_evidence_data` emits a string-keyed mixed channel, while `aegis` expects a manually reconstructed list of files. This bypasses normal Nextflow dataflow guarantees.
 * `aegis` mode reads files back from `params.output_dir` by filename. That means Aegis is coupled to publish side effects instead of process outputs.
 * EDTA is now mandatory in the evidence workflow, and Aegis-only runs fail early if the hard-masked genome is missing. The remaining issue is that Aegis still discovers that file from `output_dir` instead of a typed channel or manifest.
@@ -23,7 +23,7 @@ Highest-risk findings:
 
 The recommended path is to stabilize contracts before changing scientific behavior:
 
-1. Create a thin `main.nf` and a canonical `workflows/titan.nf`.
+1. Done in P1-002: keep `main.nf` thin and continue building the canonical orchestration in `workflows/titan.nf`.
 2. Introduce typed evidence outputs rather than string-key/file lists.
 3. Make Aegis consume process outputs directly, not files discovered in `output_dir`.
 4. Move the required EDTA hard-masked genome from `output_dir` discovery to a typed Aegis input or evidence manifest.
@@ -36,6 +36,10 @@ Current control flow:
 
 ```text
 main.nf
+  sets public fallback params
+  includes and calls TITAN
+
+workflows/titan.nf
   validates parameters
   builds RNA/protein channels for generate_evidence_data
   OR scans output_dir for Aegis evidence files
@@ -52,7 +56,7 @@ subworkflows/aegis.nf
   conditionally runs Diamond2GO
 ```
 
-Target control flow:
+Target control flow after remaining P1 work:
 
 ```text
 main.nf
@@ -86,11 +90,12 @@ subworkflows/aegis_integration
 
 ## Findings
 
-### 1. Entrypoint and orchestration are mixed
+### 1. Entrypoint is thin; orchestration still needs contract cleanup
 
 Evidence:
 
-* `main.nf` includes subworkflows, mutates defaults, validates parameters, builds CSV channels, scans `output_dir`, creates placeholder files and dispatches Aegis.
+* `main.nf` now only sets public fallback params, includes `TITAN` from `workflows/titan.nf` and calls it.
+* `workflows/titan.nf` includes subworkflows, validates parameters, builds CSV channels, scans `output_dir`, creates placeholder files and dispatches Aegis.
 * `params.workflow == "all"` was accepted by validation but errored later before P1-001; it is now rejected early until a real `all` mode exists.
 
 Impact:
@@ -102,16 +107,16 @@ Impact:
 
 Recommendation:
 
-* keep `main.nf` as a thin entrypoint;
-* move orchestration into `workflows/titan.nf`;
+* keep `main.nf` thin;
+* continue reducing orchestration complexity in `workflows/titan.nf`;
 * split Aegis-only and full-run paths at workflow level, not by scanning output directories.
 
 ### 2. Aegis is coupled to published files instead of process outputs
 
 Evidence:
 
-* `main.nf` in `--workflow aegis` checks hard-coded names such as `assembly_masked.EDTA.fasta`, `augustus.hints.gff3`, `genemark.gtf`, `liftoff_previous_annotations.gff3`, `merged_star_stringtie_stranded_default.gtf` inside `params.output_dir`.
-* Missing required files are printed as `ERROR`, but execution continues until Aegis is skipped or receives incomplete arrays.
+* `workflows/titan.nf` in `--workflow aegis` checks hard-coded names such as `assembly_masked.EDTA.fasta`, `augustus.hints.gff3`, `genemark.gtf`, `liftoff_previous_annotations.gff3`, `merged_star_stringtie_stranded_default.gtf` inside `params.output_dir`.
+* Missing required files now produce an explicit workflow error, but discovery still depends on published filenames.
 
 Impact:
 
@@ -132,7 +137,7 @@ Evidence:
 
 * `generate_evidence_data` now always runs EDTA.
 * `aegis` now always requires `masked_genome.masked_genome` and fails if it is missing.
-* In Aegis-only mode, `main.nf` still discovers `assembly_masked.EDTA.fasta` by filename in `params.output_dir`.
+* In Aegis-only mode, `workflows/titan.nf` still discovers `assembly_masked.EDTA.fasta` by filename in `params.output_dir`.
 * `EDTA.nf` emits `*MAKER.masked` but also manually copies it to `/outputdir/assembly_masked.EDTA.fasta`.
 
 Impact:
@@ -259,7 +264,7 @@ The safest order is contract-first:
 
 1. Normalize booleans and workflow mode semantics.
 2. Add a samplesheet/schema validator for RNA-seq and proteins.
-3. Create `workflows/titan.nf` and keep `main.nf` thin.
+3. Done in P1-002: create `workflows/titan.nf` and keep `main.nf` thin.
 4. Replace the mixed evidence channel with named emits.
 5. Rewrite Aegis integration to consume named evidence directly.
 6. Make EDTA hard-masked genome an explicit required Aegis input.

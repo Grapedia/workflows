@@ -61,7 +61,7 @@ Aegis run are launched chromosome by chromosome: a for loop and sequential annot
   default: `"60000000000"`
 ### **Input contract inventory**
 
-Current static inventory from `main.nf`, `subworkflows/*.nf` and `modules/*.nf`:
+Current static inventory from `main.nf`, `workflows/titan.nf`, `subworkflows/*.nf` and `modules/*.nf`:
 
 | Input | Parameter or channel | Expected content | Used by |
 | --- | --- | --- | --- |
