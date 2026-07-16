@@ -13,6 +13,8 @@ ________________________________________________________________________________
 
 📖 **Full documentation**: [Read the Docs](https://grapedia.readthedocs.io/en/latest/workflows.html#titan-the-intensive-transcript-annotation-pipeline)
 
+🛠️ **Installation and input preparation**: [docs/user/installation.md](docs/user/installation.md)
+
 _____________________________________________________________________________________________
 
 ## **Inputs**
@@ -273,7 +275,7 @@ Diamond2GO performs **functional gene annotation** based on the **final Aegis pr
 ### egapx
 - **Version**: 0.5.2 [GitHub](https://github.com/ncbi/egapx)
 - **Dependencies**:
-  - **Python**: 3.9+ for the EGAPx runner
+  - **Python**: 3.11+ for the EGAPx runner
   - **Nextflow**: v23.10.1+ for the nested EGAPx workflow
 - **Docker image**: ncbi/egapx:0.5.2 (dockerhub)
 
