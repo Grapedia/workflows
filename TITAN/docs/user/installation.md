@@ -284,23 +284,10 @@ versions.yml
 Before running production, verify the local workflow bootstrap:
 
 ```bash
-nextflow config -profile test
-python3 scripts/validate_container_pins.py
-python3 scripts/validate_profiles.py
-python3 scripts/validate_inputs.py \
-  --project-dir . \
-  --new-assembly test-data/minimal/valid/target.fa \
-  --previous-assembly test-data/minimal/valid/reference.fa \
-  --previous-annotations test-data/minimal/valid/reference.gff3 \
-  --rnaseq-samplesheet test-data/minimal/valid/rnaseq_samplesheet.csv \
-  --rnaseq-data-dir test-data/minimal/valid/rnaseq \
-  --protein-samplesheet test-data/minimal/valid/protein_samplesheet.csv \
-  --egapx-paramfile test-data/minimal/valid/input_egapx.yaml
-python3 scripts/validate_minimal_test_data.py
-nextflow run main.nf -profile test -stub-run -ansi-log false
+scripts/run-tests.sh
 ```
 
-This validates input schemas, parameter wiring and channel contracts. It does not validate biological output quality.
+This validates input schemas, parameter wiring, profile resolution, container pinning, fixture integrity and channel contracts in stub mode. It does not validate biological output quality.
 
 ## 9. Production launch
 

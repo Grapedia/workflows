@@ -1,5 +1,8 @@
 test-results/
 test-work/
+work/
+.nextflow/
+.nextflow.log*
 .apptainer-cache/
 .apptainer-tmp/
 *.sif

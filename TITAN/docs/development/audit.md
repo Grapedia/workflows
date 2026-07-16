@@ -356,10 +356,7 @@ Migration recommandee: ne pas deplacer massivement les modules existants. Commen
 CI rapide proposee:
 
 * installer Nextflow;
-* `nextflow config`;
-* `nextflow config -profile test`;
-* tests statiques Bash/Python;
-* `nextflow run main.nf -profile test -stub-run` quand le profil test est executable.
+* `scripts/run-tests.sh`, qui lance les validations statiques, les tests Python, `nextflow config -profile test`, le run stub minimal et un cas negatif d'entree invalide.
 
 Ne pas tester Slurm reel dans GitHub Actions. Apptainer peut etre ajoute plus tard ou remplace par validation de configuration si l'environnement CI est insuffisant.
 

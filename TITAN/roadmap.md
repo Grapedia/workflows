@@ -324,19 +324,19 @@ Risque de faux positifs sur donnees historiques; adapter explicitement le schema
 
 ## TITAN-P2-002 - Mettre en place la strategie de tests
 Priorite : P2
-Statut : A faire
+Statut : Fait
 Risque : Moyen
 
 ### Objectif
 Ajouter tests statiques, unitaires, integration et bout en bout minimal.
 ### Constat
-Aucun repertoire `tests/` TITAN dedie.
+Une commande unique `scripts/run-tests.sh` orchestre les tests rapides locaux: validations statiques, profils, fixtures, cas unitaires du validateur, run Nextflow stub et cas negatif d'entree invalide.
 ### Fichiers concernes
 `tests/`, `scripts/run-tests.sh`, `nf-test.config`.
 ### Etapes d'implementation
-Commencer par checks config et validations Python; ajouter nf-test apres stabilisation des contrats; couvrir les sous-workflows evidence et Aegis en stub.
+Commencer par checks config et validations Python; ajouter nf-test apres stabilisation des contrats; couvrir les sous-workflows evidence et Aegis en stub. La premiere passe ajoute le runner rapide et prepare la configuration nf-test sans rendre nf-test obligatoire.
 ### Tests
-Pytest ou Bash statique; nf-test module cible; `-stub-run`.
+`scripts/run-tests.sh`; `nextflow run main.nf -profile test -stub-run -ansi-log false`; cas negatif Nextflow avec `test-data/minimal/invalid/rnaseq_bad_layout.csv`.
 ### Criteres d'acceptation
 Une commande unique de tests rapides existe et tourne en local.
 ### Risques et retour arriere

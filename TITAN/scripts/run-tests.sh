@@ -1,0 +1,52 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+cd "$ROOT_DIR"
+
+run_step() {
+  printf '\n==> %s\n' "$*"
+  "$@"
+}
+
+expect_failure() {
+  local name="$1"
+  local expected="$2"
+  shift 2
+  local output_file
+  output_file="$(mktemp)"
+
+  printf '\n==> %s\n' "$name"
+  if "$@" >"$output_file" 2>&1; then
+    cat "$output_file"
+    rm -f "$output_file"
+    printf 'ERROR: %s: expected failure but command succeeded\n' "$name" >&2
+    return 1
+  fi
+
+  if ! grep -Fq "$expected" "$output_file"; then
+    cat "$output_file"
+    rm -f "$output_file"
+    printf 'ERROR: %s: expected message fragment not found: %s\n' "$name" "$expected" >&2
+    return 1
+  fi
+
+  rm -f "$output_file"
+}
+
+run_step python3 scripts/validate_container_pins.py
+run_step python3 scripts/validate_profiles.py
+run_step python3 scripts/validate_minimal_test_data.py
+run_step python3 scripts/test_validate_inputs.py
+
+run_step nextflow config -profile test
+run_step nextflow run main.nf -profile test -stub-run -ansi-log false
+
+expect_failure \
+  "Nextflow rejects invalid RNA-seq samplesheet before heavy execution" \
+  "library_layout must be one of" \
+  nextflow run main.nf -profile test \
+    --RNAseq_samplesheet test-data/minimal/invalid/rnaseq_bad_layout.csv \
+    -stub-run -ansi-log false
+
+printf '\nTITAN quick tests OK\n'
