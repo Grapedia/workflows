@@ -8,8 +8,6 @@ params.previous_annotations = false
 params.output_dir = false
 params.egapx_paramfile = false
 
-params.workflow = params.workflow ?: "generate_evidence_data"
-
 include { TITAN } from './workflows/titan'
 
 workflow {

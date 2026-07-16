@@ -21,8 +21,7 @@ The pipeline now resolves with Nextflow and the local test profile can run the f
 
 ```bash
 nextflow config -profile test
-nextflow run main.nf -profile test --workflow generate_evidence_data -stub-run -ansi-log false
-nextflow run main.nf -profile test --workflow aegis -stub-run -ansi-log false
+nextflow run main.nf -profile test -stub-run -ansi-log false
 ```
 
 The `test` profile uses:
@@ -32,7 +31,7 @@ The `test` profile uses:
 * Docker disabled;
 * `test-data/minimal/valid` inputs;
 * `test-results/` and `test-work/` transient directories;
-* EDTA and EGAPx are mandatory in evidence generation.
+* EDTA and EGAPx are mandatory in TITAN.
 * Long reads are detected from `library_layout=long` in the RNA-seq samplesheet.
 
 This is a workflow/bootstrap validation only. It does not validate the biological behavior of EDTA, EGAPx, BRAKER3, STAR, HISAT2, Minimap2, PsiCLASS, Liftoff or Aegis.
@@ -78,16 +77,15 @@ The validation catches:
 * missing or empty required values;
 * flags passed without values, which Nextflow can expose as `true`;
 * missing input files;
-* invalid `--workflow` values.
-
-The `generate_evidence_data` branch also uses `Channel.fromPath(..., checkIfExists: true)` for samplesheets.
+* the deprecated `--workflow` parameter, because TITAN now always runs the full graph.
+The workflow also uses `Channel.fromPath(..., checkIfExists: true)` for samplesheets.
 
 Negative checks used during P0-005:
 
 ```bash
-nextflow run main.nf -profile test --workflow aegis --RNAseq_samplesheet '' -ansi-log false
-nextflow run main.nf -profile test --workflow aegis --previous_annotations test-data/minimal/valid/missing.gff3 -ansi-log false
-nextflow run main.nf -profile test --workflow nope -ansi-log false
+nextflow run main.nf -profile test --RNAseq_samplesheet '' -stub-run -ansi-log false
+nextflow run main.nf -profile test --previous_annotations test-data/minimal/valid/missing.gff3 -stub-run -ansi-log false
+nextflow run main.nf -profile test --workflow aegis -stub-run -ansi-log false
 ```
 
 Expected messages include:
@@ -95,7 +93,7 @@ Expected messages include:
 ```text
 Missing required parameter(s): --RNAseq_samplesheet
 Required input file(s) not found
-Invalid --workflow 'nope'
+--workflow is no longer supported
 ```
 
 ## Known limits after P0
@@ -104,12 +102,12 @@ The P0 work intentionally avoids large architectural refactors. Remaining issues
 
 * `workflows/titan.nf` still carries orchestration logic that should move progressively toward typed evidence contracts.
 * Several images still use `latest`.
-* EGAPx is mandatory in `generate_evidence_data`, but its broad result directory still needs named emits before direct Aegis consumption.
+* EGAPx is mandatory in TITAN, but its broad result directory still needs named emits before direct Aegis consumption.
 * The test profile validates channel/file contracts in stub mode; it does not run scientific containers or heavy tools.
 * There is no CI yet.
 * Protein-related module volume mounts still assume production data layout in places such as `data/protein_data`.
 
-P1-001 initially normalized the historical booleans; the current contract removes those biological switches. EDTA and EGAPx are mandatory in `generate_evidence_data`, and long reads are inferred from the samplesheet. The remaining architectural work is tracked in `roadmap.md`.
+P1-001 initially normalized the historical booleans; the current contract removes those biological switches and public partial workflow modes. EDTA and EGAPx are mandatory in TITAN, Aegis always runs after evidence generation, and long reads are inferred from the samplesheet. The remaining architectural work is tracked in `roadmap.md`.
 
 ## Relevant files
 

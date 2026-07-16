@@ -22,10 +22,9 @@ The following parameters are defined in `nextflow.config` and are required for t
 Aegis run are launched chromosome by chromosome: a for loop and sequential annotation processing for each chromosome. This is necessary because running on all the chromosomes at the same time requires around 500 GB of RAM. An Aegis ran sequentially on the chromosomes takes around 2/3 days of treatment on 19 chromosomes (Vitis vinifera).
 
 ### **Workflow's general parameters**
-- **`workflow`**: **Which workflow's part to launch**.  
-  _Options_: `"generate_evidence_data"`, `"aegis"` or `"all"` (default: `"generate_evidence_data"`)
-  ⚠️ `all` runs evidence generation and Aegis in one Nextflow graph. `generate_evidence_data` only creates evidences. `aegis` is an Aegis-only compatibility mode and requires previously generated evidence files in `output_dir`.
 - **`output_dir`**: Path to output directory, where the final files will be write.
+
+TITAN has one public execution contract: evidence generation and Aegis are always launched together in the same Nextflow graph. The former `generate_evidence_data`, `aegis` and `all` workflow modes are no longer user-facing options.
 
 ### **Genome Assemblies**
 - **`previous_assembly`**: Path to the **reference genome assembly** (FASTA).  
@@ -42,12 +41,12 @@ Aegis run are launched chromosome by chromosome: a for loop and sequential annot
   _Example_: `data/RNAseq_data`
 - **`protein_samplesheet`**: Path to the **protein data samplesheet** (CSV file) listing protein datasets to be used.  
   _Example_: `data/protein_data/samplesheet.csv`
-- **`egapx_paramfile`**: Path to the **NCBI/EGAPx YAML parameter file**. EGAPx is mandatory in `generate_evidence_data`.
+- **`egapx_paramfile`**: Path to the **NCBI/EGAPx YAML parameter file**. EGAPx is mandatory in TITAN.
   _Example_: `data/input_egapx.yaml`
 
 ### **Other Parameters**
-- **EDTA**: EDTA is not a runtime option anymore. `generate_evidence_data` always runs EDTA because Aegis requires a hard-masked genome.
-- **EGAPx**: EGAPx is not a runtime option anymore. `generate_evidence_data` always runs EGAPx from `egapx_paramfile` and publishes its results under `${output_dir}/egapx`.
+- **EDTA**: EDTA is not a runtime option anymore. TITAN always runs EDTA because Aegis requires a hard-masked genome.
+- **EGAPx**: EGAPx is not a runtime option anymore. TITAN always runs EGAPx from `egapx_paramfile` and publishes its results under `${output_dir}/egapx`.
 - **Long reads**: Long-read processing is not controlled by a flag anymore. TITAN detects it from `RNAseq_samplesheet` rows where `library_layout` is `long`.
 - **`edta_cpus`**: CPU allocation for the EDTA process.
   default: `"5"`
@@ -71,17 +70,16 @@ Current static inventory from `main.nf`, `workflows/titan.nf`, `subworkflows/*.n
 | RNA-seq samplesheet | `--RNAseq_samplesheet` | CSV with header `sampleID,SRA_or_FASTQ,library_layout`; `library_layout` values are `single`, `paired` or `long` | read preparation, fastp, Salmon, STAR, HISAT2, Minimap2 |
 | RNA-seq data directory | `--RNAseq_data_dir` | Directory containing FASTQ/FASTA files matching RNA-seq sample IDs | read preparation, fastp, Minimap2 |
 | Protein samplesheet | `--protein_samplesheet` | CSV with header `organism,filename`; filenames may be relative paths in the minimal fixtures, while historical modules still mount `data/protein_data` | BRAKER3, Aegis |
-| EGAPx parameter file | `--egapx_paramfile` | YAML parameter file for EGAPx | Mandatory EGAPx process in `generate_evidence_data` |
-| Evidence list for Aegis-only runs | internal channel built when `--workflow aegis` | Key/file pairs for masked genome, BRAKER3, Liftoff, STAR/StringTie and GFFCompare outputs | Aegis subworkflow |
+| EGAPx parameter file | `--egapx_paramfile` | YAML parameter file for EGAPx | Mandatory EGAPx process |
 | Tool/resource options | `--edta_cpus`, `--egapx_cpus`, `--PSICLASS_vd_option`, `--PSICLASS_c_option`, `--STAR_memory_per_job` | Tool resource and tuning values | Tool commands |
 
-`library_layout` is split into `single`, `paired` and `long` branches. `single` and `paired` feed the short-read path; the presence of at least one `long` row automatically enables Minimap2/StringTie long-read processing and the long-read BRAKER3/Aegis branch. EDTA and EGAPx are always part of `generate_evidence_data`.
+`library_layout` is split into `single`, `paired` and `long` branches. `single` and `paired` feed the short-read path; the presence of at least one `long` row automatically enables Minimap2/StringTie long-read processing and the long-read BRAKER3/Aegis branch. EDTA and EGAPx are always part of TITAN.
 
 ### **Named Evidence Contract**
 
-`generate_evidence_data` emits named evidence channels instead of a mixed key/file channel. The Aegis subworkflow consumes explicit inputs for the hard-masked genome, Liftoff, BRAKER/AUGUSTUS, GeneMark, STAR/StringTie, STAR/PsiCLASS and detected long-read evidence.
+The internal evidence-generation subworkflow emits named evidence channels instead of a mixed key/file channel. The Aegis subworkflow consumes explicit inputs for the hard-masked genome, Liftoff, BRAKER/AUGUSTUS, GeneMark, STAR/StringTie, STAR/PsiCLASS and detected long-read evidence.
 
-In `--workflow all` mode, Aegis consumes those channels directly. The EDTA hard-masked genome flows as `EDTA.masked_genome -> generate_evidence_data.masked_genome -> aegis(masked_genome)`, so the full run no longer depends on `assembly_masked.EDTA.fasta` being rediscovered from `output_dir`. In `--workflow aegis` mode, `workflows/titan.nf` still reloads published evidence files from `output_dir`, then passes them to Aegis through the same named contract.
+Aegis consumes those channels directly. The EDTA hard-masked genome flows as `EDTA.masked_genome -> generate_evidence_data.masked_genome -> aegis(masked_genome)`, so TITAN no longer depends on `assembly_masked.EDTA.fasta` being rediscovered from `output_dir`.
 
 ### **Parameter validation**
 
@@ -103,7 +101,7 @@ Invalid input fails early with explicit messages such as:
 Missing required parameter(s): --RNAseq_samplesheet
 Required input file(s) not found:
   --previous_annotations: test-data/minimal/valid/missing.gff3
-Invalid --workflow 'nope'. Allowed values: generate_evidence_data, aegis, all
+--workflow is no longer supported. TITAN always runs evidence generation followed by Aegis in one graph.
 ```
 
 ### **Output contract inventory**
@@ -127,20 +125,13 @@ Invalid --workflow 'nope'. Allowed values: generate_evidence_data, aegis, all
 
 ```bash
 #!/usr/bin/env bash
-# Exit immediately if a command exits with a non-zero status
-# Ensures AEGIS doesn't run if generate_evidence_data fails
-set -e
 # Navigate to the project workflow directory
 cd /path/to/projectDir/workflows/TITAN
 # Load required Nextflow module
 module load nextflow/24.04.3
 # Run the full workflow and generate its DAG
 nextflow run main.nf \
-  -with-dag dag_titan_all.png \
-  --workflow all
-
-# Compatibility mode: run Aegis only after evidence files already exist in output_dir
-nextflow run main.nf --workflow aegis
+  -with-dag dag_titan.png
 ```
 
 ## **Local test profile**
@@ -149,12 +140,10 @@ TITAN includes a minimal local test profile for configuration and lightweight wo
 
 ```bash
 nextflow config -profile test
-nextflow run main.nf -profile test --workflow all -stub-run -ansi-log false
-nextflow run main.nf -profile test --workflow generate_evidence_data -stub-run -ansi-log false
-nextflow run main.nf -profile test --workflow aegis -stub-run -ansi-log false
+nextflow run main.nf -profile test -stub-run -ansi-log false
 ```
 
-The `test` profile uses synthetic fixtures under `test-data/minimal/valid`, `RNAseq_data_dir = test-data/minimal/valid/rnaseq`, and ignored transient directories `test-results/` and `test-work/`. `all -stub-run` exercises the full graph, including mandatory EDTA/EGAPx, auto-detected long reads and direct EDTA-to-Aegis channel wiring, without running scientific containers. The Aegis-only stub command can also consume the evidence files published in `test-results/`.
+The `test` profile uses synthetic fixtures under `test-data/minimal/valid`, `RNAseq_data_dir = test-data/minimal/valid/rnaseq`, and ignored transient directories `test-results/` and `test-work/`. `-stub-run` exercises the full graph, including mandatory EDTA/EGAPx, auto-detected long reads and direct EDTA-to-Aegis channel wiring, without running scientific containers.
 
 Validate the synthetic fixture set directly with:
 

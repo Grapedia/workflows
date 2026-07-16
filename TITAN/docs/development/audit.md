@@ -40,8 +40,7 @@ Documentees dans `README.md` et `launch_TITAN_example.sh`:
 
 ```bash
 module load nextflow/24.04.3
-nextflow run main.nf -with-dag dag_evidence_data.png --workflow generate_evidence_data
-nextflow run main.nf -with-dag dag_aegis.png --workflow aegis
+nextflow run main.nf -with-dag dag_titan.png
 ```
 
 Le script historique contient un chemin absolu specifique a une machine: `/home/avelt/data2/.../workflows/TITAN`.
@@ -54,7 +53,7 @@ Le script historique contient un chemin absolu specifique a une machine: `/home/
 | Configuration | `nextflow config` | Succes | ~2 s | Les parametres par defaut resolvent. |
 | Lancement minimal historique initial | `nextflow run main.nf --workflow aegis -ansi-log false` | Echec | ~3 s | Erreur de compilation DSL2: statements top-level melanges avec declarations. |
 | Profils locaux | `nextflow config -profile local >/dev/null && nextflow config -profile test >/dev/null && nextflow config -profile slurm,apptainer,test >/dev/null` | Succes | ~5 s | Verifie la resolution des profils ajoutes, sans soumission Slurm. |
-| Lancement Aegis apres contrat EDTA obligatoire | `nextflow run main.nf -profile test --workflow aegis -ansi-log false` | Echec attendu | ~6 s | Compile puis echoue clairement car `test-results/` ne contient pas les evidences Aegis obligatoires, dont `assembly_masked.EDTA.fasta`. |
+| Lancement TITAN stub apres contrat unique | `nextflow run main.nf -profile test -stub-run -ansi-log false` | Succes | ~5 s | Compile et lance generation d'evidences puis Aegis dans le meme graphe. |
 | Profil test P0-003 | `nextflow config -profile test`; `python3 scripts/validate_minimal_test_data.py` | Succes | ~3 s | Profil local, sans Slurm ni Docker, pointe vers `test-data/minimal/valid`, ecrit dans `test-results/` et `test-work/`. |
 
 Erreur exacte principale:
@@ -66,10 +65,10 @@ Error main.nf:11:1: Statements cannot be mixed with script declarations -- move 
 Corrections P0 appliquees:
 
 * validation des parametres et creation des channels de `generate_evidence_data` deplacees dans le bloc `workflow`;
-* construction des channels RNA/proteines limitee a la branche `generate_evidence_data`;
+* construction des channels RNA/proteines dans le workflow TITAN unique;
 * detection des long reads depuis `library_layout=long` dans la samplesheet RNA-seq;
 * suppression des flags biologiques `EDTA`, `run_edta`, `run_egapx` et `use_long_reads` du contrat runtime;
-* creation de `output_dir` avant ecriture des placeholders `dev_null*` de la branche `aegis`;
+* suppression du routage public Aegis-only par fichiers publies;
 * remplacement d'une boucle `for` non supportee par Nextflow 26 dans `subworkflows/aegis.nf`;
 * correction du tag `diamond2go` qui referenceait une variable inexistante;
 * erreur explicite lorsque les evidences Aegis obligatoires manquent.
@@ -95,7 +94,7 @@ TITAN annote un nouvel assemblage de genome en combinant:
 
 | Domaine | atcg-rnaseq | TITAN actuel | Ecart | Adaptation recommandee |
 | --- | --- | --- | --- | --- |
-| Architecture Nextflow | `main.nf` leger + `workflows/`, `subworkflows/`, `modules/local/` | `main.nf` est leger; `workflows/titan.nf` porte encore l'orchestration et le scan Aegis-only | Contrats encore trop couples a `output_dir` | Migrer progressivement vers des evidences nommees et un manifeste. |
+| Architecture Nextflow | `main.nf` leger + `workflows/`, `subworkflows/`, `modules/local/` | `main.nf` est leger; `workflows/titan.nf` porte l'orchestration unique et connecte les evidences nommees a Aegis | Modules encore trop couples aux dossiers publies | Migrer progressivement vers des inputs `path` stages et des emits nommes. |
 | DSL2 | DSL2 structure valide | DSL2 active mais compilation cassee sous Nextflow 26 | Bloquant | Deplacer statements top-level dans `workflow`. |
 | Point d'entree | Help et validation parametres | Pas de `--help`; validation top-level | UX et compilation | Ajouter help non executant et validation interne. |
 | Parametres | YAML utilisateur + schema | Parametres dans `nextflow.config` | Peu portable | Introduire config YAML/schema sans casser les anciens `--param`. |
@@ -164,7 +163,7 @@ for f in modules/*.nf; do awk '/^[[:space:]]*output:/{flag=1} /^[[:space:]]*scri
 | Samplesheet proteines | `params.protein_samplesheet` | CSV avec header | `organism`, `filename` | BRAKER3, Aegis | Les modules montent aussi `${projectDir}/data/protein_data`; ce couplage reste a normaliser. |
 | Parametres EGAPx | `params.egapx_paramfile` | YAML | parametres EGAPx | module `egapx` | Obligatoire dans `generate_evidence_data`; sorties publiees sous `${output_dir}/egapx`. |
 | Options outil | `params.edta_cpus`, `params.egapx_cpus`, `params.PSICLASS_*`, `params.STAR_memory_per_job` | entiers CPU, floats, entier bytes | valeurs scalaires | EDTA, EGAPx, PsiCLASS, STAR | Les anciens flags biologiques ne pilotent plus EDTA, EGAPx ou les long reads. |
-| Entrees Aegis-only | evidences nommees construites dans `workflows/titan.nf` | chemins explicites | `masked_genome`, `braker_augustus_gff`, `braker_genemark_gtf`, `liftoff_annotation`, STAR/StringTie, STAR/PsiCLASS, long reads si detectes | sous-workflow `aegis` | Les fichiers requis manquants provoquent une erreur; seuls les outputs unstranded et les longs reads non utilises peuvent recevoir des placeholders `dev_null*`. |
+| Evidences Aegis | emits nommes de `generate_evidence_data` | chemins stages par Nextflow | `masked_genome`, `braker_augustus_gff`, `braker_genemark_gtf`, `liftoff_annotation`, STAR/StringTie, STAR/PsiCLASS, long reads si detectes | sous-workflow `aegis` | Le workflow public ne relit plus ces evidences depuis `output_dir`. |
 
 ### Inventaire des sorties par module
 
@@ -214,9 +213,9 @@ Audit architecture/refactor: `docs/development/architecture-audit.md`.
 
 P0:
 
-* `main.nf` ne compilait pas avec Nextflow 26.04.3 avant correction P0; depuis le durcissement P1, la commande minimale `aegis` compile puis echoue si les evidences obligatoires ne sont pas presentes.
-* La validation P0-005 echoue explicitement avant calcul lourd pour parametre obligatoire vide, fichier d'entree absent et valeur `--workflow` invalide.
-* Profil `test` local ajoute et valide: resolution de configuration et commande minimale `aegis` sans Slurm, Docker ni donnees volumineuses.
+* `main.nf` ne compilait pas avec Nextflow 26.04.3 avant correction P0; depuis le durcissement P1, TITAN compile et lance le graphe complet en stub.
+* La validation P0-005 echoue explicitement avant calcul lourd pour parametre obligatoire vide et fichier d'entree absent.
+* Profil `test` local ajoute et valide: resolution de configuration et commande minimale TITAN sans Slurm, Docker ni donnees volumineuses.
 * Jeu de donnees synthetique minimal ajoute sous `test-data/minimal`, avec fixtures RNA-seq, proteines, Liftoff/Aegis et cas invalides.
 * Les chemins par defaut pointent vers `data/` absent du depot, alors que `data_example/` contient des placeholders.
 * Docker est active globalement; Apptainer n'est pas configure.
@@ -272,7 +271,7 @@ Le profil `test` est defini dans `conf/test.config` et inclus depuis `nextflow.c
 * `output_dir = "${projectDir}/test-results"`;
 * entrees pointees vers `test-data/minimal/valid`;
 * `RNAseq_data_dir = "${projectDir}/test-data/minimal/valid/rnaseq"` pour decoupler les FASTQ de `data/RNAseq_data`;
-* `workflow = "aegis"` par defaut, avec `all -stub-run` comme test de graphe complet et `generate_evidence_data -stub-run` comme test de generation d'evidences seule;
+* aucun mode `workflow` public: le profil test lance le graphe TITAN complet en stub;
 * `edta_cpus = 2`, `egapx_cpus = 2` et `diamond2go_cpus = 2` pour permettre les tests stub sur une machine de developpement;
 * ressources plafonnees a 2 CPU et 4 GB pour les labels utilises par les futurs tests.
 
@@ -280,14 +279,12 @@ Commandes validees:
 
 ```bash
 nextflow config -profile test
-nextflow run main.nf -profile test --workflow all -stub-run -ansi-log false
-nextflow run main.nf -profile test --workflow generate_evidence_data -stub-run -ansi-log false
-nextflow run main.nf -profile test --workflow aegis -stub-run -ansi-log false
+nextflow run main.nf -profile test -stub-run -ansi-log false
 ```
 
-Decision P1-004: `--workflow all` est maintenant le mode de test principal pour le lien EDTA -> Aegis. Il lance la generation d'evidences puis Aegis dans le meme graphe, en passant `evidence_data.masked_genome` directement au sous-workflow `aegis`. Le mode `aegis` separe reste conserve pour compatibilite et relit encore les fichiers publies dans `output_dir`.
+Decision P1-004: TITAN n'expose plus de modes partiels. Le workflow lance la generation d'evidences puis Aegis dans le meme graphe, en passant `evidence_data.masked_genome` directement au sous-workflow `aegis`.
 
-Limite: ce profil valide la resolution Nextflow, les shapes de channels, le lien EDTA -> Aegis en mode stub et les noms de fichiers publics en mode Aegis-only. Il ne valide pas biologiquement les outils lourds ni les conteneurs.
+Limite: ce profil valide la resolution Nextflow, les shapes de channels et le lien EDTA -> Aegis en mode stub. Il ne valide pas biologiquement les outils lourds ni les conteneurs.
 
 ## Validation des parametres P0-005
 
@@ -295,24 +292,24 @@ Decision initiale P0: conserver la validation dans un bloc `workflow`, pour evit
 
 * parametres obligatoires vides ou passes comme flags sans valeur;
 * fichiers d'entree absents;
-* valeur `--workflow` invalide;
-* `Channel.fromPath(..., checkIfExists: true)` pour les samplesheets de la branche `generate_evidence_data`.
+* rejet explicite de l'ancien parametre `--workflow`;
+* `Channel.fromPath(..., checkIfExists: true)` pour les samplesheets.
 
 Commandes validees:
 
 ```bash
 nextflow config -profile test
-nextflow run main.nf -profile test --workflow aegis -ansi-log false
-nextflow run main.nf -profile test --workflow aegis --RNAseq_samplesheet '' -ansi-log false
-nextflow run main.nf -profile test --workflow aegis --previous_annotations test-data/minimal/valid/missing.gff3 -ansi-log false
-nextflow run main.nf -profile test --workflow nope -ansi-log false
+nextflow run main.nf -profile test -stub-run -ansi-log false
+nextflow run main.nf -profile test --RNAseq_samplesheet '' -stub-run -ansi-log false
+nextflow run main.nf -profile test --previous_annotations test-data/minimal/valid/missing.gff3 -stub-run -ansi-log false
+nextflow run main.nf -profile test --workflow aegis -stub-run -ansi-log false
 ```
 
 Messages attendus verifies:
 
 * `Missing required parameter(s): --RNAseq_samplesheet`
 * `Required input file(s) not found`
-* `Invalid --workflow 'nope'`
+* `--workflow is no longer supported`
 
 ## Strategie de modularisation
 

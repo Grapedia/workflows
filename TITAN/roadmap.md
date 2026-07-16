@@ -10,13 +10,13 @@ Risque : Faible
 ### Objectif
 Documenter l'etat initial, les commandes historiques et les erreurs bloquantes avant refactor.
 ### Constat
-`nextflow config` fonctionne. Le lancement minimal echouait initialement a la compilation DSL2; une correction P0 a permis une commande minimale `aegis`. Depuis le durcissement P1, Aegis echoue volontairement si les evidences obligatoires manquent.
+`nextflow config` fonctionne. Le lancement minimal echouait initialement a la compilation DSL2; une correction P0 a permis une commande minimale. Depuis le durcissement P1, TITAN lance obligatoirement la generation d'evidences puis Aegis dans le meme graphe.
 ### Fichiers concernes
 `main.nf`, `nextflow.config`, `docs/development/audit.md`.
 ### Etapes d'implementation
 Capturer les commandes, corriger uniquement le blocage de compilation, verifier que la configuration reste resolvable.
 ### Tests
-`nextflow config`; `nextflow run main.nf --workflow aegis -ansi-log false` ou commande test adaptee.
+`nextflow config`; `nextflow run main.nf -ansi-log false` ou commande test adaptee.
 ### Criteres d'acceptation
 La baseline est documentee et une commande minimale atteint la phase workflow sans erreur de syntaxe.
 ### Risques et retour arriere
@@ -56,7 +56,7 @@ Le profil `test` local est disponible dans `conf/test.config`; il pointe vers `t
 ### Etapes d'implementation
 Ajouter profils local/test sans changer les parametres historiques par defaut; pointer le profil test vers fixtures minimales.
 ### Tests
-`nextflow config -profile test`; `nextflow run main.nf -profile test --workflow aegis -ansi-log false`; `nextflow run main.nf -profile test --workflow aegis -ansi-log false -resume`.
+`nextflow config -profile test`; `nextflow run main.nf -profile test -stub-run -ansi-log false`; `nextflow run main.nf -profile test -stub-run -ansi-log false -resume`.
 ### Criteres d'acceptation
 Le profil test resout et ne depend pas de Slurm.
 ### Risques et retour arriere
@@ -76,7 +76,7 @@ Fournir un jeu de donnees synthetique, petit et versionne qui represente les fam
 ### Etapes d'implementation
 Structurer `test-data/minimal/valid` avec assemblies FASTA, GFF3 de reference, RNA-seq FASTQ gzip single/paired/long, deux FASTA proteiques, samplesheets TITAN, `input_egapx.yaml` et fixtures d'evidences EDTA/Liftoff/BRAKER/StringTie/PsiCLASS/Minimap2. Conserver des cas invalides courts pour les validations negatives. Ajouter un validateur statique et regenerer les checksums.
 ### Tests
-`python3 scripts/validate_minimal_test_data.py`; `sha256sum -c test-data/minimal/checksums.sha256`; `nextflow config -profile test`; `nextflow run main.nf -profile test --workflow aegis -ansi-log false`.
+`python3 scripts/validate_minimal_test_data.py`; `sha256sum -c test-data/minimal/checksums.sha256`; `nextflow config -profile test`; `nextflow run main.nf -profile test -stub-run -ansi-log false`.
 ### Criteres d'acceptation
 Fixtures versionnees, petites, documentees et verifiees par checksums. Le samplesheet RNA-seq couvre `single`, `paired` et `long`; le samplesheet proteique couvre plusieurs sources; les evidences Aegis/Liftoff existent sous forme minimale pour tests futurs.
 ### Risques et retour arriere
@@ -94,9 +94,9 @@ La validation est maintenant executee dans `workflow`, avant la construction des
 ### Fichiers concernes
 `main.nf`, `docs/development/audit.md`.
 ### Etapes d'implementation
-Ajouter des helpers de validation dans `main.nf`, verifier les parametres obligatoires, verifier l'existence des fichiers d'entree et utiliser `Channel.fromPath(..., checkIfExists: true)` pour les samplesheets de la branche `generate_evidence_data`.
+Ajouter des helpers de validation dans `workflows/titan.nf`, verifier les parametres obligatoires, verifier l'existence des fichiers d'entree et utiliser `Channel.fromPath(..., checkIfExists: true)` pour les samplesheets.
 ### Tests
-`nextflow config -profile test`; `nextflow run main.nf -profile test --workflow aegis -ansi-log false`; cas negatifs avec parametre vide, fichier absent et workflow invalide.
+`nextflow config -profile test`; `nextflow run main.nf -profile test -stub-run -ansi-log false`; cas negatifs avec parametre vide et fichier absent.
 ### Criteres d'acceptation
 Erreur lisible avant calcul lourd pour parametre manquant, fichier absent et workflow invalide.
 ### Risques et retour arriere
@@ -110,7 +110,7 @@ Risque : Faible
 ### Objectif
 Identifier les defauts structurels qui rendent TITAN fragile avant d'ajouter de nouvelles fonctionnalites.
 ### Constat
-L'audit confirme que le probleme principal est le contrat entre couches: l'orchestration est maintenant dans `workflows/titan.nf`, mais Aegis relit encore les fichiers publies dans `output_dir`, EDTA depend encore d'un nom publie pour Aegis-only, et EGAPx doit encore exposer des sorties nommees pour Aegis.
+L'audit confirme que le probleme principal est le contrat entre couches: l'orchestration est maintenant dans `workflows/titan.nf`, Aegis consomme les evidences nommees directement, et EGAPx doit encore exposer des sorties nommees pour Aegis.
 ### Fichiers concernes
 `docs/development/architecture-audit.md`, `roadmap.md`.
 ### Etapes d'implementation
@@ -122,23 +122,23 @@ Document d'audit present avec constats, impacts, recommandations et ordre de mig
 ### Risques et retour arriere
 Aucun impact runtime.
 
-## TITAN-P1-001 - Clarifier les modes workflow et normaliser les booleens
+## TITAN-P1-001 - Clarifier le contrat workflow et normaliser les booleens
 Priorite : P1
 Statut : Fait
 Risque : Moyen
 
 ### Objectif
-Rendre les modes `generate_evidence_data`, `aegis` et futur `all` explicites. Cette etape a d'abord normalise les booleens historiques; le contrat a ensuite evolue: EDTA et EGAPx sont obligatoires et les long reads sont detectes depuis la samplesheet.
+Supprimer les modes partiels comme contrat utilisateur et normaliser les booleens historiques. TITAN lance obligatoirement la generation d'evidences puis Aegis; EDTA et EGAPx sont obligatoires et les long reads sont detectes depuis la samplesheet.
 ### Constat
-`main.nf` rejette maintenant `all` explicitement tant que ce mode n'est pas implemente. Les flags biologiques `EDTA`, `run_edta`, `run_egapx` et `use_long_reads` ne pilotent plus l'execution: EDTA/EGAPx sont obligatoires dans `generate_evidence_data`, et `library_layout=long` active automatiquement la branche long reads.
+`params.workflow` n'est plus un parametre public. Les flags biologiques `EDTA`, `run_edta`, `run_egapx` et `use_long_reads` ne pilotent plus l'execution: EDTA/EGAPx sont obligatoires dans TITAN, et `library_layout=long` active automatiquement la branche long reads.
 ### Fichiers concernes
 `main.nf`, `nextflow.config`, `conf/test.config`, `subworkflows/*.nf`, documentation.
 ### Etapes d'implementation
-Ajouter un bloc de validation de parametres, refuser `all` tant qu'il n'est pas implemente, supprimer les booleens biologiques du contrat runtime et passer la detection long reads aux sous-workflows.
+Ajouter un bloc de validation de parametres, supprimer le routage par `params.workflow`, supprimer les booleens biologiques du contrat runtime et passer la detection long reads aux sous-workflows.
 ### Tests
-`nextflow config -profile test`; `nextflow run main.nf -profile test --workflow aegis` doit echouer clairement si les evidences Aegis obligatoires manquent; `python3 scripts/validate_minimal_test_data.py`; test negatif `--workflow nope`.
+`nextflow config -profile test`; `nextflow run main.nf -profile test -stub-run -ansi-log false`; `python3 scripts/validate_minimal_test_data.py`.
 ### Criteres d'acceptation
-Chaque mode a un comportement documente et aucun module ne depend d'une chaine booleenne ambigue.
+Le pipeline a un seul comportement documente et aucun module ne depend d'une chaine booleenne ambigue.
 ### Risques et retour arriere
 Peut changer le comportement historique de configs qui passaient des chaines; documenter les alias conserves.
 
@@ -150,13 +150,13 @@ Risque : Moyen
 ### Objectif
 Faire de `main.nf` un point d'entree leger et deplacer l'orchestration vers une couche `workflows/` plus testable.
 ### Constat
-`main.nf` est maintenant un point d'entree leger. L'orchestration historique a ete deplacee dans `workflows/titan.nf`; elle valide les parametres, construit les channels, scanne encore `output_dir` pour le mode Aegis-only et appelle les sous-workflows.
+`main.nf` est maintenant un point d'entree leger. L'orchestration historique a ete deplacee dans `workflows/titan.nf`; elle valide les parametres, construit les channels et appelle obligatoirement les sous-workflows evidence generation puis Aegis.
 ### Fichiers concernes
 `main.nf`, `workflows/titan.nf`, `subworkflows/`, `docs/development/architecture-audit.md`.
 ### Etapes d'implementation
 Creer `workflows/titan.nf`, y deplacer validation/orchestration, garder `main.nf` limite aux defaults publics, a l'include et a l'appel du workflow principal, conserver les noms publics de parametres.
 ### Tests
-`nextflow config -profile test`; `python3 scripts/validate_minimal_test_data.py`; `nextflow run main.nf -profile test --workflow generate_evidence_data -stub-run -ansi-log false`; `nextflow run main.nf -profile test --workflow aegis -stub-run -ansi-log false`.
+`nextflow config -profile test`; `python3 scripts/validate_minimal_test_data.py`; `nextflow run main.nf -profile test -stub-run -ansi-log false`.
 ### Criteres d'acceptation
 `main.nf` ne contient plus de logique biologique ni de scan de fichiers; les tests stub restent verts et les process sont names sous le workflow `TITAN`.
 ### Risques et retour arriere
@@ -170,13 +170,13 @@ Risque : Eleve
 ### Objectif
 Remplacer le channel mixte `[string_key, file]` et les listes Groovy par des emits nommes et documentes.
 ### Constat
-`generate_evidence_data` expose maintenant des emits nommes pour les familles d'evidences. `aegis.nf` prend des evidences explicites au lieu d'une liste `[string_key, file]`. Le mode Aegis-only relit encore les fichiers publics depuis `output_dir`, mais les passe ensuite au sous-workflow via un contrat nomme.
+`generate_evidence_data` expose maintenant des emits nommes pour les familles d'evidences. `aegis.nf` prend des evidences explicites au lieu d'une liste `[string_key, file]`. TITAN connecte ces emits directement a Aegis dans un seul graphe.
 ### Fichiers concernes
 `subworkflows/generate_evidence_data.nf`, `subworkflows/aegis.nf`, `docs/development/architecture-audit.md`, tests.
 ### Etapes d'implementation
 Emettre des channels nommes: Liftoff, EGAPx obligatoire, EDTA masked genome, BRAKER/AUGUSTUS, GeneMark, STAR/StringTie, STAR/PsiCLASS, long reads detectes automatiquement. Documenter les evidences requises et optionnelles.
 ### Tests
-`nextflow config -profile test`; `python3 scripts/validate_minimal_test_data.py`; `nextflow run main.nf -profile test --workflow generate_evidence_data -stub-run -ansi-log false`; `nextflow run main.nf -profile test --workflow aegis -stub-run -ansi-log false`; cas Aegis-only sans evidences publiees qui echoue avec la liste des fichiers requis.
+`nextflow config -profile test`; `python3 scripts/validate_minimal_test_data.py`; `nextflow run main.nf -profile test -stub-run -ansi-log false`.
 ### Criteres d'acceptation
 Aegis consomme des evidences nommees et echoue clairement si une evidence requise manque.
 ### Risques et retour arriere
@@ -190,17 +190,17 @@ Risque : Eleve
 ### Objectif
 Modeliser explicitement le genome hard-masked requis par Aegis.
 ### Constat
-EDTA n'est plus optionnel dans `generate_evidence_data`. Le mode `all` execute maintenant evidence generation puis Aegis dans le meme graphe Nextflow: le `masked_genome` emis par EDTA passe par le contrat nomme de `generate_evidence_data` et devient l'input explicite `masked_genome` du sous-workflow Aegis. Le mode Aegis-only reste compatible avec les runs separes en relisant `assembly_masked.EDTA.fasta` depuis `output_dir` et echoue clairement si cette evidence manque.
+EDTA n'est plus optionnel. TITAN execute evidence generation puis Aegis dans le meme graphe Nextflow: le `masked_genome` emis par EDTA passe par le contrat nomme de `generate_evidence_data` et devient l'input explicite `masked_genome` du sous-workflow Aegis. Les modes partiels `generate_evidence_data`, `aegis` et `all` ont ete retires du contrat public.
 ### Fichiers concernes
 `workflows/titan.nf`, `subworkflows/generate_evidence_data.nf`, `subworkflows/aegis.nf`, `modules/EDTA.nf`, `modules/aegis_*.nf`, documentation.
 ### Etapes d'implementation
-Supprimer les flags `EDTA`/`run_edta` du contrat runtime, lancer EDTA systematiquement dans `generate_evidence_data`, ajouter un vrai mode `all`, transmettre `evidence_data.masked_genome` directement a `aegis`, et faire echouer Aegis-only si le genome hard-masked requis n'est pas disponible.
+Supprimer les flags `EDTA`/`run_edta` du contrat runtime, lancer EDTA systematiquement, supprimer le routage par `params.workflow`, transmettre `evidence_data.masked_genome` directement a `aegis`.
 ### Tests
-`nextflow config -profile test`; `python3 scripts/validate_minimal_test_data.py`; `nextflow run main.nf -profile test --workflow all -stub-run -ansi-log false`; `nextflow run main.nf -profile test --workflow generate_evidence_data -stub-run -ansi-log false`; `nextflow run main.nf -profile test --workflow aegis -stub-run -ansi-log false`.
+`nextflow config -profile test`; `python3 scripts/validate_minimal_test_data.py`; `nextflow run main.nf -profile test -stub-run -ansi-log false`.
 ### Criteres d'acceptation
-Aegis ne peut plus etre saute par `EDTA=no`; son input hard-masked est obligatoire. En mode `all`, Aegis consomme la sortie EDTA par channel Nextflow et ne depend pas d'un scan de `output_dir`.
+Aegis ne peut plus etre saute par `EDTA=no`; son input hard-masked est obligatoire. Aegis consomme la sortie EDTA par channel Nextflow et ne depend pas d'un scan de `output_dir`.
 ### Risques et retour arriere
-Risque scientifique et UX; conserver le mode Aegis-only par fichiers publies pendant une version, puis le remplacer par un manifeste d'evidences.
+Risque scientifique et UX; les reruns partiels devront etre reintroduits plus tard via un contrat explicite de reprise ou un manifeste d'evidences, pas par un mode Aegis-only implicite.
 
 ## TITAN-P1-005 - Integrer EGAPx proprement
 Priorite : P1
@@ -210,13 +210,13 @@ Risque : Eleve
 ### Objectif
 Brancher EGAPx comme source d'annotation obligatoire et testable, puis integrer ses sorties nommees au contrat d'evidences Aegis.
 ### Constat
-`modules/egapx.nf` est maintenant appele par `generate_evidence_data` avec un `path egapx_paramfile`, publie `${output_dir}/egapx` et fournit un stub minimal. Ses sorties restent larges (`egapx.results`) tant que les noms exacts des fichiers EGAPx a consommer par Aegis ne sont pas stabilises.
+`modules/egapx.nf` est maintenant appele par le sous-workflow interne `generate_evidence_data` avec un `path egapx_paramfile`, publie `${output_dir}/egapx` et fournit un stub minimal. Ses sorties restent larges (`egapx.results`) tant que les noms exacts des fichiers EGAPx a consommer par Aegis ne sont pas stabilises.
 ### Fichiers concernes
 `modules/egapx.nf`, `subworkflows/generate_evidence_data.nf`, `subworkflows/aegis.nf`, `modules/aegis_*.nf`, `test-data/minimal/valid/evidence/`.
 ### Etapes d'implementation
-Supprimer `run_egapx`, corriger le module pour prendre `path egapx_paramfile`, lancer EGAPx systematiquement dans `generate_evidence_data`, ajouter un stub EGAPx, puis identifier et emettre les vrais outputs EGAPx (`egapx_gff3`, proteines, rapports) pour les connecter a Aegis.
+Supprimer `run_egapx`, corriger le module pour prendre `path egapx_paramfile`, lancer EGAPx systematiquement, ajouter un stub EGAPx, puis identifier et emettre les vrais outputs EGAPx (`egapx_gff3`, proteines, rapports) pour les connecter a Aegis.
 ### Tests
-`nextflow config -profile test`; `nextflow run main.nf -profile test --workflow generate_evidence_data -stub-run -ansi-log false`; `nextflow run main.nf -profile test --workflow aegis -stub-run -ansi-log false`; test d'integration Aegis avec fixture EGAPx nommee.
+`nextflow config -profile test`; `nextflow run main.nf -profile test -stub-run -ansi-log false`; test d'integration Aegis avec fixture EGAPx nommee.
 ### Criteres d'acceptation
 EGAPx n'est plus activable/desactivable par parametre, produit des emits nommes et peut etre consomme explicitement par Aegis.
 ### Risques et retour arriere
@@ -370,11 +370,11 @@ Risque : Faible
 ### Objectif
 README complet: quick start, entrees, sorties, profils, exemples, troubleshooting.
 ### Constat
-README utile mais encore insuffisant pour expliquer les modes production, les evidences Aegis-only et les limites actuelles.
+README utile mais encore insuffisant pour expliquer les profils production, le contrat d'evidences, la reprise future via manifeste et les limites actuelles.
 ### Fichiers concernes
 `README.md`, `docs/`.
 ### Etapes d'implementation
-Documenter modes workflow, contrats samplesheets, outputs publics, reprise Aegis via manifeste, EGAPx, EDTA/masked assembly et troubleshooting.
+Documenter contrat workflow unique, contrats samplesheets, outputs publics, reprise future via manifeste, EGAPx, EDTA/masked assembly et troubleshooting.
 ### Tests
 Verifier chaque commande documentee.
 ### Criteres d'acceptation
