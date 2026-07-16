@@ -44,19 +44,19 @@ Aucun impact runtime.
 
 ## TITAN-P0-003 - Ajouter un profil test local minimal
 Priorite : P0
-Statut : En cours
+Statut : Fait
 Risque : Moyen
 
 ### Objectif
 Permettre une execution de validation rapide sans Slurm ni donnees volumineuses.
 ### Constat
-TITAN n'a pas de `conf/test.config`; le profil Docker est global.
+Le profil `test` local est disponible dans `conf/test.config`; il pointe vers `test-data/minimal/valid`, desactive Docker, isole `test-work`/`test-results` et permet une commande minimale sans Slurm.
 ### Fichiers concernes
 `nextflow.config`, `conf/test.config`, `conf/local.config`, `test-data/`.
 ### Etapes d'implementation
 Ajouter profils local/test sans changer les parametres historiques par defaut; pointer le profil test vers fixtures minimales.
 ### Tests
-`nextflow config -profile test`; execution stub ou sous-workflow cible.
+`nextflow config -profile test`; `nextflow run main.nf -profile test --workflow aegis -ansi-log false`; `nextflow run main.nf -profile test --workflow aegis -ansi-log false -resume`.
 ### Criteres d'acceptation
 Le profil test resout et ne depend pas de Slurm.
 ### Risques et retour arriere

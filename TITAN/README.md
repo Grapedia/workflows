@@ -111,6 +111,18 @@ nextflow run main.nf \
   --workflow aegis
 ```
 
+## **Local test profile**
+
+TITAN includes a minimal local test profile for configuration and lightweight workflow checks without Slurm, Docker or production data.
+
+```bash
+nextflow config -profile test
+nextflow run main.nf -profile test --workflow aegis -ansi-log false
+nextflow run main.nf -profile test --workflow aegis -ansi-log false -resume
+```
+
+The `test` profile uses synthetic fixtures under `test-data/minimal/valid`, writes transient outputs to ignored directories `test-results/` and `test-work/`, sets `EDTA=no`, and disables long-read processing. This validates configuration resolution and the lightweight Aegis branch only; it is not a biological validation of EDTA, BRAKER3, aligners or Aegis.
+
 ## Workflow DAG
 
 ![Workflow Diagram](data_example/TITAN_diagram.jpg)

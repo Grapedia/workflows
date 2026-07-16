@@ -56,6 +56,7 @@ Le script historique contient un chemin absolu specifique a une machine: `/home/
 | Profils locaux | `nextflow config -profile local >/dev/null && nextflow config -profile test >/dev/null && nextflow config -profile slurm,apptainer,test >/dev/null` | Succes | ~5 s | Verifie la resolution des profils ajoutes, sans soumission Slurm. |
 | Lancement minimal apres P0 | `nextflow run main.nf --workflow aegis --output_dir test-data/minimal/valid --new_assembly test-data/minimal/valid/target.fa --previous_assembly test-data/minimal/valid/reference.fa --previous_annotations test-data/minimal/valid/reference.gff3 --RNAseq_samplesheet test-data/minimal/valid/rnaseq_samplesheet.csv --protein_samplesheet test-data/minimal/valid/protein_samplesheet.csv --egapx_paramfile test-data/minimal/valid/input_egapx.yaml --EDTA no --use_long_reads false -ansi-log false` | Succes | ~4 s | Compile et lance la branche Aegis sans process lourd; les evidences absentes sont signalees. |
 | Reprise minimale | `nextflow run main.nf -profile test --workflow aegis -ansi-log false -resume` | Succes | ~4 s | Aucun process scientifique execute; valide la commande minimale et la creation de `output_dir`. |
+| Profil test P0-003 | `nextflow config -profile test`; `nextflow run main.nf -profile test --workflow aegis -ansi-log false`; `nextflow run main.nf -profile test --workflow aegis -ansi-log false -resume` | Succes | ~10 s | Profil local, sans Slurm ni Docker, pointe vers `test-data/minimal/valid`, ecrit dans `test-results/` et `test-work/`. |
 
 Erreur exacte principale:
 
@@ -211,7 +212,7 @@ Points de vigilance P0-002:
 P0:
 
 * `main.nf` ne compilait pas avec Nextflow 26.04.3 avant correction P0; la commande minimale `aegis` compile et termine maintenant avec `EDTA=no`.
-* Pas de profil `test` local, donc pas de validation rapide sans Slurm/Docker lourd.
+* Profil `test` local ajoute et valide: resolution de configuration et commande minimale `aegis` sans Slurm, Docker ni donnees volumineuses.
 * Les chemins par defaut pointent vers `data/` absent du depot, alors que `data_example/` contient des placeholders.
 * Docker est active globalement; Apptainer n'est pas configure.
 * Aucune suite de tests TITAN detectee.
@@ -245,6 +246,28 @@ Cas prevus:
 * FASTA vide.
 
 Checksums actuels: `test-data/minimal/checksums.sha256`.
+
+## Profil test local P0-003
+
+Le profil `test` est defini dans `conf/test.config` et inclus depuis `nextflow.config`. Il conserve les parametres historiques du profil standard et surcharge uniquement le contexte de validation rapide:
+
+* executeur local;
+* Docker desactive;
+* `workDir = "${projectDir}/test-work"`;
+* `output_dir = "${projectDir}/test-results"`;
+* entrees pointees vers `test-data/minimal/valid`;
+* `workflow = "aegis"`, `EDTA = "no"` et `use_long_reads = false` pour eviter tout process scientifique lourd;
+* ressources plafonnees a 2 CPU et 4 GB pour les labels utilises par les futurs tests.
+
+Commandes validees:
+
+```bash
+nextflow config -profile test
+nextflow run main.nf -profile test --workflow aegis -ansi-log false
+nextflow run main.nf -profile test --workflow aegis -ansi-log false -resume
+```
+
+Limite: ce profil valide la resolution Nextflow et la branche minimale `aegis` avec `EDTA=no`. Il ne valide pas biologiquement les outils lourds ni les conteneurs.
 
 ## Strategie de modularisation
 
