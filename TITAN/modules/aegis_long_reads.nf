@@ -161,4 +161,11 @@ process aegis_long_reads {
         cat \$proteins_chrom_main >> \$proteins_final_main
     done
     """
+
+  stub:
+    """
+    printf "##gff-version 3\\nchr1\\tAegis\\tgene\\t1\\t10\\t.\\t+\\t.\\tID=aegis_stub_gene\\n" > final_annotation.gff3
+    printf ">aegis_stub_all\\nM\\n" > final_annotation_proteins_all.fasta
+    printf ">aegis_stub_main\\nM\\n" > final_annotation_proteins_main.fasta
+    """
 }

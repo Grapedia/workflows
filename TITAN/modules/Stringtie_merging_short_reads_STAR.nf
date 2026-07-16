@@ -47,4 +47,17 @@ process Stringtie_merging_short_reads_STAR {
       cp merged_transcriptomes.STAR.short_reads.alt_args.unstranded.gtf /outputdir/merged_star_stringtie_unstranded_alt.gtf
     fi
     """
+
+  stub:
+    """
+    mkdir -p ${params.output_dir}
+    printf "chr1\\tStringTie\\ttranscript\\t1\\t10\\t.\\t+\\t.\\tgene_id \\"star_stranded_gene\\"; transcript_id \\"star_stranded_tx\\";\\n" > merged_transcriptomes.STAR.short_reads.default_args.stranded.gtf
+    printf "chr1\\tStringTie\\ttranscript\\t1\\t10\\t.\\t+\\t.\\tgene_id \\"star_stranded_alt_gene\\"; transcript_id \\"star_stranded_alt_tx\\";\\n" > merged_transcriptomes.STAR.short_reads.alt_args.stranded.gtf
+    printf "chr1\\tStringTie\\ttranscript\\t1\\t10\\t.\\t+\\t.\\tgene_id \\"star_unstranded_gene\\"; transcript_id \\"star_unstranded_tx\\";\\n" > merged_transcriptomes.STAR.short_reads.default_args.unstranded.gtf
+    printf "chr1\\tStringTie\\ttranscript\\t1\\t10\\t.\\t+\\t.\\tgene_id \\"star_unstranded_alt_gene\\"; transcript_id \\"star_unstranded_alt_tx\\";\\n" > merged_transcriptomes.STAR.short_reads.alt_args.unstranded.gtf
+    cp merged_transcriptomes.STAR.short_reads.default_args.stranded.gtf ${params.output_dir}/merged_star_stringtie_stranded_default.gtf
+    cp merged_transcriptomes.STAR.short_reads.alt_args.stranded.gtf ${params.output_dir}/merged_star_stringtie_stranded_alt.gtf
+    cp merged_transcriptomes.STAR.short_reads.default_args.unstranded.gtf ${params.output_dir}/merged_star_stringtie_unstranded_default.gtf
+    cp merged_transcriptomes.STAR.short_reads.alt_args.unstranded.gtf ${params.output_dir}/merged_star_stringtie_unstranded_alt.gtf
+    """
 }

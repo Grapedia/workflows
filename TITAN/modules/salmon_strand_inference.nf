@@ -57,4 +57,9 @@ process salmon_strand_inference {
 
     echo "\$strand_info" > "${sample_ID}.strand_info.classified"
     """
+
+  stub:
+    """
+    echo "stranded_forward" > ${sample_ID}.strand_info.classified
+    """
 }

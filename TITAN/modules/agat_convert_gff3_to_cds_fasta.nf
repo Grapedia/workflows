@@ -31,4 +31,9 @@ process agat_convert_gff3_to_cds_fasta {
     agat_sp_extract_sequences.pl -g cleaned.OK.gff3 -f reformatted.fa -o ${genome}.CDS.fasta
     gzip ${genome}.CDS.fasta
     """
+
+  stub:
+    """
+    printf ">stub_cds\\nATGGCC\\n" | gzip -c > ${genome}.CDS.fasta.gz
+    """
 }

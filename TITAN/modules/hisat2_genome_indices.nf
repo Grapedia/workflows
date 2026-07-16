@@ -23,4 +23,11 @@ process hisat2_genome_indices {
     /hisat2-2.2.1/hisat2-build -p ${task.cpus} /genome_path/$genome $genome
     chmod -R 755 ${genome}*
     """
+
+  stub:
+    """
+    for i in 1 2 3 4 5 6 7 8; do
+      printf "stub HISAT2 index\\n" > ${genome}.\${i}.ht2
+    done
+    """
 }

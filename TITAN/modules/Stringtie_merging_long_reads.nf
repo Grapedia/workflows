@@ -30,4 +30,13 @@ process Stringtie_merging_long_reads {
     cp merged_transcriptomes.minimap2.long_reads.default_args.gtf /outputdir/merged_minimap2_stringtie_long_reads_default.gtf
     cp merged_transcriptomes.minimap2.long_reads.alt_args.gtf /outputdir/merged_minimap2_stringtie_long_reads_alt.gtf
     """
+
+  stub:
+    """
+    mkdir -p ${params.output_dir}
+    printf "chr1\\tStringTie\\ttranscript\\t1\\t10\\t.\\t+\\t.\\tgene_id \\"long_merged_gene\\"; transcript_id \\"long_merged_tx\\";\\n" > merged_transcriptomes.minimap2.long_reads.default_args.gtf
+    printf "chr1\\tStringTie\\ttranscript\\t1\\t10\\t.\\t+\\t.\\tgene_id \\"long_merged_alt_gene\\"; transcript_id \\"long_merged_alt_tx\\";\\n" > merged_transcriptomes.minimap2.long_reads.alt_args.gtf
+    cp merged_transcriptomes.minimap2.long_reads.default_args.gtf ${params.output_dir}/merged_minimap2_stringtie_long_reads_default.gtf
+    cp merged_transcriptomes.minimap2.long_reads.alt_args.gtf ${params.output_dir}/merged_minimap2_stringtie_long_reads_alt.gtf
+    """
 }

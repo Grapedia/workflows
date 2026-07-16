@@ -1,11 +1,11 @@
-// We check that if the samples are of type “FASTQ” they exist in the folder data/RNAseq_data.
+// We check that if the samples are of type FASTQ they exist in params.RNAseq_data_dir.
 // If the samples are SRA, we'll download the .sra file, convert it to fastq and gzip the fastq file.
 // Once done, the RNAseq samples are ready for transcriptome assembly.
 
 process prepare_RNAseq_fastq_files_long {
   tag "prepare_RNAseq_fastq_files on $sample_ID"
   container 'quay.io/biocontainers/sra-tools:3.1.1--h4304569_0'
-  containerOptions "--volume ${projectDir}/data/RNAseq_data:/RNAseq_data"
+  containerOptions "--volume ${params.RNAseq_data_dir}:/RNAseq_data"
   debug true
   // Sometimes the SRA download encounters an error, so we retry the process until the download works.
   errorStrategy 'retry'
@@ -43,7 +43,7 @@ process prepare_RNAseq_fastq_files_long {
       #echo "[\$DATE] FASTQ sample $sample_ID already exists. Skipping."
       continue
     else
-      echo "[\$DATE] WARNING: ${projectDir}/data/RNAseq_data/$sample_ID*fastq.gz does not exist!"
+      echo "[\$DATE] WARNING: ${params.RNAseq_data_dir}/$sample_ID*fastq.gz does not exist!"
     fi
   elif [[ $SRA_or_FASTQ == "FASTA" ]]
   then
@@ -52,10 +52,15 @@ process prepare_RNAseq_fastq_files_long {
       #echo "[\$DATE] FASTA sample $sample_ID already exists. Skipping."
       continue
     else
-      echo "[\$DATE] WARNING: ${projectDir}/data/RNAseq_data/$sample_ID*fasta does not exist!"
+      echo "[\$DATE] WARNING: ${params.RNAseq_data_dir}/$sample_ID*fasta does not exist!"
     fi
   else
     echo "[\$DATE] ERROR: \$SRA_or_FASTQ is not equal to SRA, FASTQ or FASTA!"
   fi
+  """
+
+  stub:
+  """
+  echo "Stub prepare long reads for ${sample_ID}"
   """
 }

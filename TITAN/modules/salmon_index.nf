@@ -21,4 +21,10 @@ process salmon_index {
     echo "[\$DATE] Executing: \$CMD"
     salmon index -t \${index_path} -i salmon_index
     """
+
+  stub:
+    """
+    mkdir -p salmon_index
+    printf "stub salmon index\\n" > salmon_index/versionInfo.json
+    """
 }

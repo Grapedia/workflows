@@ -33,4 +33,13 @@ process gffcompare {
       cp unstranded_merged_output.combined.gtf /outputdir/merged_star_psiclass_unstranded.gtf
     fi
     """
+
+  stub:
+    """
+    mkdir -p ${params.output_dir}
+    printf "chr1\\tgffcompare\\ttranscript\\t1\\t10\\t.\\t+\\t.\\tgene_id \\"psiclass_stranded_gene\\"; transcript_id \\"psiclass_stranded_tx\\";\\n" > stranded_merged_output.combined.gtf
+    printf "chr1\\tgffcompare\\ttranscript\\t1\\t10\\t.\\t+\\t.\\tgene_id \\"psiclass_unstranded_gene\\"; transcript_id \\"psiclass_unstranded_tx\\";\\n" > unstranded_merged_output.combined.gtf
+    cp stranded_merged_output.combined.gtf ${params.output_dir}/merged_star_psiclass_stranded.gtf
+    cp unstranded_merged_output.combined.gtf ${params.output_dir}/merged_star_psiclass_unstranded.gtf
+    """
 }

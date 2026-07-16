@@ -17,12 +17,12 @@ Completed items:
 
 ## Current baseline
 
-The pipeline now resolves with Nextflow and the local test profile can run the lightweight `aegis` branch without Slurm, Docker or production data:
+The pipeline now resolves with Nextflow and the local test profile can run the full evidence-generation graph in stub mode without Slurm, Docker or production data:
 
 ```bash
 nextflow config -profile test
-nextflow run main.nf -profile test --workflow aegis -ansi-log false
-nextflow run main.nf -profile test --workflow aegis -ansi-log false -resume
+nextflow run main.nf -profile test --workflow generate_evidence_data -stub-run -ansi-log false
+nextflow run main.nf -profile test --workflow aegis -stub-run -ansi-log false
 ```
 
 The `test` profile uses:
@@ -105,9 +105,9 @@ The P0 work intentionally avoids large architectural refactors. Remaining issues
 * `main.nf` still carries orchestration logic that should move progressively into a dedicated workflow layer.
 * Several images still use `latest`.
 * EGAPx is mandatory in `generate_evidence_data`, but its broad result directory still needs named emits before direct Aegis consumption.
-* The test profile does not run scientific containers or heavy tools.
+* The test profile validates channel/file contracts in stub mode; it does not run scientific containers or heavy tools.
 * There is no CI yet.
-* Historical module volume mounts still assume production data layout in places such as `data/RNAseq_data` and `data/protein_data`.
+* Protein-related module volume mounts still assume production data layout in places such as `data/protein_data`.
 
 P1-001 initially normalized the historical booleans; the current contract removes those biological switches. EDTA and EGAPx are mandatory in `generate_evidence_data`, and long reads are inferred from the samplesheet. The remaining architectural work is tracked in `roadmap.md`.
 

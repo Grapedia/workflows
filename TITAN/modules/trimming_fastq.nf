@@ -3,7 +3,7 @@ process trimming_fastq {
 
     tag "FASTP on $sample_ID"
     container 'quay.io/biocontainers/fastp:0.23.2--hb7a2d85_2'
-    containerOptions "--volume ${projectDir}/data/RNAseq_data:/RNAseq_data"
+    containerOptions "--volume ${params.RNAseq_data_dir}:/RNAseq_data"
     publishDir "${params.output_dir}/intermediate_files/evidence_data/RNAseq_data/trimmed_data"
     cpus 4
 
@@ -38,6 +38,17 @@ process trimming_fastq {
 
     else
       echo "[\$DATE] WARNING: \$library_layout is not equal to paired or single!"
+    fi
+    """
+
+    stub:
+    """
+    if [[ $library_layout == "paired" ]]
+    then
+      printf "@stub/1\\nACGT\\n+\\n!!!!\\n" | gzip -c > ${sample_ID}_1.trimmed.fastq.gz
+      printf "@stub/2\\nTGCA\\n+\\n!!!!\\n" | gzip -c > ${sample_ID}_2.trimmed.fastq.gz
+    else
+      printf "@stub\\nACGT\\n+\\n!!!!\\n" | gzip -c > ${sample_ID}.trimmed.fastq.gz
     fi
     """
 }

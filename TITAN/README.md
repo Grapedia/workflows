@@ -38,6 +38,8 @@ Aegis run are launched chromosome by chromosome: a for loop and sequential annot
   _Example_: `data/annotations/PN40024_5.1_on_T2T_ref_with_names.gff3`
 - **`RNAseq_samplesheet`**: Path to the **RNA-seq samplesheet** (CSV file) listing RNA-seq datasets to be used.  
   _Example_: `data/RNAseq_data/RNAseq_samplesheet.csv`
+- **`RNAseq_data_dir`**: Directory containing FASTQ/FASTA files referenced by RNA-seq `sampleID` values.
+  _Example_: `data/RNAseq_data`
 - **`protein_samplesheet`**: Path to the **protein data samplesheet** (CSV file) listing protein datasets to be used.  
   _Example_: `data/protein_data/samplesheet.csv`
 - **`egapx_paramfile`**: Path to the **NCBI/EGAPx YAML parameter file**. EGAPx is mandatory in `generate_evidence_data`.
@@ -67,6 +69,7 @@ Current static inventory from `main.nf`, `subworkflows/*.nf` and `modules/*.nf`:
 | Reference assembly | `--previous_assembly` | FASTA file matching the previous annotation | Liftoff |
 | Previous annotation | `--previous_annotations` | GFF3 annotation on the reference assembly | Liftoff, then AGAT CDS extraction |
 | RNA-seq samplesheet | `--RNAseq_samplesheet` | CSV with header `sampleID,SRA_or_FASTQ,library_layout`; `library_layout` values are `single`, `paired` or `long` | read preparation, fastp, Salmon, STAR, HISAT2, Minimap2 |
+| RNA-seq data directory | `--RNAseq_data_dir` | Directory containing FASTQ/FASTA files matching RNA-seq sample IDs | read preparation, fastp, Minimap2 |
 | Protein samplesheet | `--protein_samplesheet` | CSV with header `organism,filename`; filenames may be relative paths in the minimal fixtures, while historical modules still mount `data/protein_data` | BRAKER3, Aegis |
 | EGAPx parameter file | `--egapx_paramfile` | YAML parameter file for EGAPx | Mandatory EGAPx process in `generate_evidence_data` |
 | Evidence list for Aegis-only runs | internal channel built when `--workflow aegis` | Key/file pairs for masked genome, BRAKER3, Liftoff, STAR/StringTie and GFFCompare outputs | Aegis subworkflow |
@@ -143,10 +146,11 @@ TITAN includes a minimal local test profile for configuration and lightweight wo
 
 ```bash
 nextflow config -profile test
-nextflow run main.nf -profile test --workflow aegis -ansi-log false
+nextflow run main.nf -profile test --workflow generate_evidence_data -stub-run -ansi-log false
+nextflow run main.nf -profile test --workflow aegis -stub-run -ansi-log false
 ```
 
-The `test` profile uses synthetic fixtures under `test-data/minimal/valid` and writes transient outputs to ignored directories `test-results/` and `test-work/`. Since EDTA and EGAPx are mandatory and long reads are auto-detected from the samplesheet, `--workflow aegis` now fails early unless `test-results/` already contains the required evidence files. This validates configuration resolution and required-evidence errors; it is not a biological validation of EDTA, EGAPx, BRAKER3, aligners or Aegis.
+The `test` profile uses synthetic fixtures under `test-data/minimal/valid`, `RNAseq_data_dir = test-data/minimal/valid/rnaseq`, and ignored transient directories `test-results/` and `test-work/`. `generate_evidence_data -stub-run` now exercises the full evidence graph, including mandatory EDTA/EGAPx and auto-detected long reads, without running scientific containers. The Aegis stub command can then consume the evidence files published in `test-results/`.
 
 Validate the synthetic fixture set directly with:
 

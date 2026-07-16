@@ -36,4 +36,10 @@ process liftoff_annotations {
     liftoff -g /previous_annotations_path/$previous_annotations -o liftoff_previous_annotations.gff3 -u unmapped_features.txt /genome_path/$genome /previous_assembly_path/$previous_assembly
 
     """
+
+  stub:
+    """
+    printf "##gff-version 3\\nchr1\\tliftoff\\tgene\\t1\\t10\\t.\\t+\\t.\\tID=liftoff_stub_gene\\n" > liftoff_previous_annotations.gff3
+    printf "stub_unmapped\\n" > unmapped_features.txt
+    """
 }

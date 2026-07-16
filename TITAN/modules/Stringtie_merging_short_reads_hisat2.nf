@@ -39,4 +39,9 @@ process Stringtie_merging_short_reads_hisat2 {
         /scripts/Stringtie_merging.sh -o merged_transcriptomes.hisat2.short_reads.alt_args.unstranded.gtf -g \${gtf_unstranded_alt}
     fi
     """
+
+  stub:
+    """
+    printf "chr1\\tStringTie\\ttranscript\\t1\\t10\\t.\\t+\\t.\\tgene_id \\"hisat2_merged_gene\\"; transcript_id \\"hisat2_merged_tx\\";\\n" > merged_transcriptomes.hisat2.short_reads.default_args.stranded.gtf
+    """
 }

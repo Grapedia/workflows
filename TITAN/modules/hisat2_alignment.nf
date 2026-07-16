@@ -59,4 +59,9 @@ process hisat2_alignment {
       fi
     fi
     """
+
+  stub:
+    """
+    printf "BAM\\n" > ${sample_ID}_Aligned.sort.bam
+    """
 }

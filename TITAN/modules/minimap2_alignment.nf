@@ -3,7 +3,7 @@ process minimap2_alignment {
 
   tag "Minimap2 on ${sample_ID}"
   container 'avelt/minimap2_samtools:latest'
-  containerOptions "--volume ${projectDir}/data/RNAseq_data:/RNAseq_data --volume ${projectDir}/work:/work --volume ${projectDir}/scripts:/scripts"
+  containerOptions "--volume ${params.RNAseq_data_dir}:/RNAseq_data --volume ${projectDir}/work:/work --volume ${projectDir}/scripts:/scripts"
   publishDir "${params.output_dir}/intermediate_files/evidence_data/RNAseq_alignments/minimap2"
   cpus 4
 
@@ -38,5 +38,10 @@ process minimap2_alignment {
     fi
     samtools view -b ${sample_ID}_Aligned.sam | samtools sort - > ${sample_ID}_Aligned.sorted.bam
     rm ${sample_ID}_Aligned.sam
+    """
+
+  stub:
+    """
+    printf "BAM\\n" > ${sample_ID}_Aligned.sorted.bam
     """
 }

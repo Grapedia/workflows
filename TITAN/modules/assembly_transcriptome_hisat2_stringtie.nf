@@ -31,4 +31,10 @@ process assembly_transcriptome_hisat2_stringtie {
     echo "[\$DATE] Executing: \$CMD"
     /scripts/Stringtie_AltCommands.sh -t ${task.cpus} -o ${sample_ID}_transcriptome.AltCommands.gtf -b ${bam_file} -r short
     """
+
+  stub:
+    """
+    printf "chr1\\tStringTie\\ttranscript\\t1\\t10\\t.\\t+\\t.\\tgene_id \\"${sample_ID}_hisat_gene\\"; transcript_id \\"${sample_ID}_hisat_tx\\";\\n" > ${sample_ID}_transcriptome.gtf
+    printf "chr1\\tStringTie\\ttranscript\\t1\\t10\\t.\\t+\\t.\\tgene_id \\"${sample_ID}_hisat_gene_alt\\"; transcript_id \\"${sample_ID}_hisat_tx_alt\\";\\n" > ${sample_ID}_transcriptome.AltCommands.gtf
+    """
 }

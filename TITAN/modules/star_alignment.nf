@@ -42,4 +42,9 @@ process star_alignment {
       STAR --readFilesCommand zcat --genomeDir /star_databases/${basename_database} --runThreadN ${task.cpus} --readFilesIn ${reads} --outFileNamePrefix ${sample_ID}_ --outSAMtype BAM SortedByCoordinate --outSAMunmapped Within --outSAMattributes Standard --outSAMstrandField intronMotif --limitBAMsortRAM ${params.STAR_memory_per_job}
     fi
     """
+
+  stub:
+    """
+    printf "BAM\\n" > ${sample_ID}_Aligned.sortedByCoord.out.bam
+    """
 }

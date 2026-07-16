@@ -22,4 +22,9 @@ process minimap2_genome_indices {
     echo "[\$DATE] Executing: \$CMD"
     minimap2 -d ${genome}.mmi /genome_path/$genome
     """
+
+  stub:
+    """
+    printf "stub minimap2 index\\n" > ${genome}.mmi
+    """
 }

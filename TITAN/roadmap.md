@@ -216,7 +216,7 @@ Brancher EGAPx comme source d'annotation obligatoire et testable, puis integrer 
 ### Etapes d'implementation
 Supprimer `run_egapx`, corriger le module pour prendre `path egapx_paramfile`, lancer EGAPx systematiquement dans `generate_evidence_data`, ajouter un stub EGAPx, puis identifier et emettre les vrais outputs EGAPx (`egapx_gff3`, proteines, rapports) pour les connecter a Aegis.
 ### Tests
-`nextflow config -profile test`; `nextflow run main.nf -profile test --workflow generate_evidence_data -stub-run` pour verifier le branchement EGAPx lorsque les autres modules auront des stubs coherents; test d'integration Aegis avec fixture EGAPx nommee.
+`nextflow config -profile test`; `nextflow run main.nf -profile test --workflow generate_evidence_data -stub-run -ansi-log false`; `nextflow run main.nf -profile test --workflow aegis -stub-run -ansi-log false`; test d'integration Aegis avec fixture EGAPx nommee.
 ### Criteres d'acceptation
 EGAPx n'est plus activable/desactivable par parametre, produit des emits nommes et peut etre consomme explicitement par Aegis.
 ### Risques et retour arriere

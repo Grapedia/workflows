@@ -169,7 +169,7 @@ Recommendation:
 
 Evidence:
 
-* read preparation and trimming modules mount `${projectDir}/data/RNAseq_data` and reference `/RNAseq_data/${sample_ID}*.fastq.gz`.
+* read preparation, trimming and long-read alignment now mount `params.RNAseq_data_dir`, but the scripts still infer FASTQ names from `sample_ID` instead of staging explicit `path` inputs from the samplesheet.
 * BRAKER3 and Aegis mount `${projectDir}/data/protein_data`, even though the current samplesheet can point to arbitrary fixture paths.
 * merge modules read from mounted output directories with helper scripts instead of consuming the GTF files passed in their input value.
 * `braker3_prediction` takes `val(bam_short)`, but then retrieves BAMs from `/alignments` by scanning directories.

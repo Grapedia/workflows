@@ -271,18 +271,20 @@ Le profil `test` est defini dans `conf/test.config` et inclus depuis `nextflow.c
 * `workDir = "${projectDir}/test-work"`;
 * `output_dir = "${projectDir}/test-results"`;
 * entrees pointees vers `test-data/minimal/valid`;
-* `workflow = "aegis"` pour tester la resolution et l'erreur d'evidences requises sans lancer les outils lourds;
-* `edta_cpus = 2` et `egapx_cpus = 2` pour permettre les tests stub sur une machine de developpement;
+* `RNAseq_data_dir = "${projectDir}/test-data/minimal/valid/rnaseq"` pour decoupler les FASTQ de `data/RNAseq_data`;
+* `workflow = "aegis"` par defaut, avec `generate_evidence_data -stub-run` comme test de graphe complet;
+* `edta_cpus = 2`, `egapx_cpus = 2` et `diamond2go_cpus = 2` pour permettre les tests stub sur une machine de developpement;
 * ressources plafonnees a 2 CPU et 4 GB pour les labels utilises par les futurs tests.
 
 Commandes validees:
 
 ```bash
 nextflow config -profile test
-nextflow run main.nf -profile test --workflow aegis -ansi-log false
+nextflow run main.nf -profile test --workflow generate_evidence_data -stub-run -ansi-log false
+nextflow run main.nf -profile test --workflow aegis -stub-run -ansi-log false
 ```
 
-Limite: ce profil valide la resolution Nextflow et l'erreur attendue lorsque les evidences Aegis obligatoires manquent. Il ne valide pas biologiquement les outils lourds ni les conteneurs.
+Limite: ce profil valide la resolution Nextflow, les shapes de channels et les noms de fichiers publics en mode stub. Il ne valide pas biologiquement les outils lourds ni les conteneurs.
 
 ## Validation des parametres P0-005
 

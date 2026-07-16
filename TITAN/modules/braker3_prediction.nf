@@ -75,4 +75,12 @@ process braker3_prediction {
     cp GeneMark-ETP/genemark.gtf .
     cp GeneMark-ETP/genemark_supported.gtf .
     """
+
+  stub:
+    """
+    printf "##gff-version 3\\nchr1\\tAUGUSTUS\\tgene\\t1\\t10\\t.\\t+\\t.\\tID=augustus_stub_gene\\n" > augustus.hints.gff3
+    printf "chr1\\tGeneMark\\ttranscript\\t1\\t10\\t.\\t+\\t.\\tgene_id \\"genemark_stub_gene\\"; transcript_id \\"genemark_stub_tx\\";\\n" > genemark.gtf
+    cp genemark.gtf genemark_supported.gtf
+    printf "##gff-version 3\\nchr1\\tBRAKER3\\tgene\\t1\\t10\\t.\\t+\\t.\\tID=braker_stub_gene\\n" > braker.gff3
+    """
 }
