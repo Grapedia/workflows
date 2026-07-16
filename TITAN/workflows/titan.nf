@@ -4,6 +4,7 @@ nextflow.enable.dsl = 2
 include { generate_evidence_data } from '../subworkflows/generate_evidence_data'
 include { aegis } from '../subworkflows/aegis'
 include { titan_provenance } from '../modules/titan_provenance'
+include { validate_final_annotation } from '../modules/validate_final_annotation'
 
 def isMissingParam(value) {
     return value == null || value == true || value == false || value.toString().trim() == '' || value.toString().trim().equalsIgnoreCase('true') || value.toString().trim().equalsIgnoreCase('false')
@@ -155,6 +156,13 @@ workflow TITAN {
         evidence_data.long_reads_default_gtf,
         evidence_data.long_reads_alt_gtf,
         has_long_reads
+    )
+
+    validate_final_annotation(
+        evidence_data.masked_genome,
+        aegis.out.aegis_gff,
+        aegis.out.aegis_proteins_all,
+        aegis.out.aegis_proteins_main
     )
 
     titan_provenance(

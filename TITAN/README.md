@@ -32,7 +32,7 @@ cd workflows/TITAN
 scripts/run-tests.sh
 ```
 
-The quick test suite validates container pins, profile resolution, minimal fixtures, input validation and a full Nextflow `test` profile run in stub mode. It does not run scientific containers or validate biological annotation quality.
+The quick test suite validates container pins, profile resolution, minimal fixtures, input validation, final annotation structural validation and a full Nextflow `test` profile run in stub mode. It does not run scientific containers or validate biological annotation quality.
 
 For production, prepare inputs and run through the launcher:
 
@@ -249,9 +249,12 @@ Main public output families:
 | AEGIS | `final_annotation.gff3`, `final_annotation_proteins_all.fasta`, `final_annotation_proteins_main.fasta` | `${output_dir}/aegis_outputs` |
 | Diamond2GO | Diamond2GO annotation outputs | `${output_dir}/Diamond2GO_outputs` |
 | Provenance | `evidence_manifest.json`, `versions.yml` | `${output_dir}/provenance` |
+| Final validation | `final_annotation_validation.json`, `final_annotation_validation.txt` | `${output_dir}/validation` |
 | Reports | Nextflow report, timeline, trace and DAG | `${output_dir}/nextflow_reports` when using the launcher |
 
 `evidence_manifest.json` records main inputs, AEGIS evidence files, final AEGIS outputs, sizes and SHA-256 checksums. It is the current provenance record and the planned basis for more formal resume/reuse behavior in future work.
+
+The final validation report checks the final GFF3 against the EDTA-masked genome and verifies protein FASTA integrity. Critical GFF3/FASTA errors fail the workflow before completion.
 
 ## Resume And Re-Runs
 
@@ -282,6 +285,7 @@ python3 scripts/validate_container_pins.py
 python3 scripts/validate_profiles.py
 python3 scripts/validate_minimal_test_data.py
 python3 scripts/test_validate_inputs.py
+python3 scripts/test_validate_final_annotation.py
 nextflow run main.nf -profile test -stub-run -ansi-log false
 ```
 
@@ -315,7 +319,7 @@ Real Slurm and Apptainer behavior must still be validated on the target cluster 
 
 SRA inputs remain supported by historical modules, but local FASTQ/FASTA files are preferred for controlled production runs.
 
-Automated final biological validation of the produced annotation is planned separately.
+Final validation currently covers structural consistency: GFF3 format, coordinates, seqids, Parent links, CDS phase and protein FASTA integrity. Deeper biological quality assessment and historical annotation comparison remain separate scientific review work.
 
 ## Workflow Diagram
 

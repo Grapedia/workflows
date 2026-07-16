@@ -29,7 +29,7 @@ process EDTA {
 
   stub:
     """
-    printf ">stub_masked\\nNNNN\\n" > ${genome}.MAKER.masked
+    cp ${genome_fasta} ${genome}.MAKER.masked
     printf ">stub_te\\nNNNN\\n" > ${genome}.TElib.fa
     printf "##gff-version 3\\n" > ${genome}.TEanno.gff3
     """

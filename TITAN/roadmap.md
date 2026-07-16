@@ -404,19 +404,19 @@ Risque de sous-dimensionnement; tester sur petits jeux puis production.
 
 ## TITAN-P5-001 - Validation scientifique des annotations
 Priorite : P5
-Statut : A faire
+Statut : Fait
 Risque : Eleve
 
 ### Objectif
 Valider GFF3 final, FASTA/proteines et coherence biologique.
 ### Constat
-Aucune validation finale automatisee detectee.
+Une validation finale structurelle bloque les erreurs critiques apres AEGIS et publie des rapports JSON/TXT sous `${output_dir}/validation`.
 ### Fichiers concernes
-`scripts/`, `modules/local/validate_annotation`, `tests/`.
+`scripts/validate_final_annotation.py`, `scripts/test_validate_final_annotation.py`, `modules/validate_final_annotation.nf`, `workflows/titan.nf`, documentation.
 ### Etapes d'implementation
-Verifier GFF3, Parent, phases CDS, coordonnees, seqids, duplications, sequences absentes, statistiques d'annotation.
+Verifier GFF3, Parent, phases CDS, coordonnees, seqids, duplications, sequences absentes, statistiques d'annotation et integrite FASTA proteique. La validation biologique approfondie reste une revue scientifique separee.
 ### Tests
-Fixtures valides/invalides et comparaison aux resultats historiques.
+`python3 scripts/test_validate_final_annotation.py`; `nextflow run main.nf -profile test -stub-run -ansi-log false`; `scripts/run-tests.sh`.
 ### Criteres d'acceptation
 Rapport de validation final present et bloque les erreurs critiques.
 ### Risques et retour arriere

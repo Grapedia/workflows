@@ -279,6 +279,15 @@ versions.yml
 
 `evidence_manifest.json` records the main inputs, AEGIS evidence files, final AEGIS outputs, file sizes and SHA-256 checksums.
 
+TITAN publishes final structural validation reports under `${output_dir}/validation`:
+
+```text
+final_annotation_validation.json
+final_annotation_validation.txt
+```
+
+This validation checks final GFF3 structure, coordinates, seqids, Parent links, CDS phase and protein FASTA integrity. Critical errors fail the workflow.
+
 ## 8. Validate with the built-in test profile
 
 Before running production, verify the local workflow bootstrap:

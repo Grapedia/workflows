@@ -38,9 +38,11 @@ run_step python3 scripts/validate_container_pins.py
 run_step python3 scripts/validate_profiles.py
 run_step python3 scripts/validate_minimal_test_data.py
 run_step python3 scripts/test_validate_inputs.py
+run_step python3 scripts/test_validate_final_annotation.py
 
 run_step nextflow config -profile test
 run_step nextflow run main.nf -profile test -stub-run -ansi-log false
+run_step python3 -c 'import json; report=json.load(open("test-results/validation/final_annotation_validation.json")); assert report["status"] == "pass", report'
 
 expect_failure \
   "Nextflow rejects invalid RNA-seq samplesheet before heavy execution" \

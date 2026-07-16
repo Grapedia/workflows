@@ -85,9 +85,12 @@ process aegis_long_reads {
 
   stub:
     """
-    printf "##gff-version 3\\nchr1\\tAegis\\tgene\\t1\\t10\\t.\\t+\\t.\\tID=aegis_stub_gene\\n" > final_annotation.gff3
-    printf ">aegis_stub_all\\nM\\n" > final_annotation_proteins_all.fasta
-    printf ">aegis_stub_main\\nM\\n" > final_annotation_proteins_main.fasta
+    seqid=\$(awk '/^>/ {print substr(\$1, 2); exit}' ${edta_masked_genome})
+    length=\$(awk 'BEGIN{n=0} !/^>/ {n += length(\$0)} END{print n}' ${edta_masked_genome})
+    end=\$(( length < 9 ? length : 9 ))
+    printf "##gff-version 3\\n%s\\tAegis\\tgene\\t1\\t%s\\t.\\t+\\t.\\tID=aegis_stub_gene\\n%s\\tAegis\\tmRNA\\t1\\t%s\\t.\\t+\\t.\\tID=aegis_stub_tx;Parent=aegis_stub_gene\\n%s\\tAegis\\tCDS\\t1\\t%s\\t.\\t+\\t0\\tID=aegis_stub_cds;Parent=aegis_stub_tx\\n" "\$seqid" "\$end" "\$seqid" "\$end" "\$seqid" "\$end" > final_annotation.gff3
+    printf ">aegis_stub_protein\\nM\\n" > final_annotation_proteins_all.fasta
+    printf ">aegis_stub_protein\\nM\\n" > final_annotation_proteins_main.fasta
     printf '"%s":\\n  aegis: "%s"\\n  aegis_container: "%s"\\n' \\
       "${task.process}" "${params.aegis_version}" "${params.aegis_container}" > versions.yml
     """
