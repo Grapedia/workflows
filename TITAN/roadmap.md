@@ -110,7 +110,7 @@ Risque : Faible
 ### Objectif
 Identifier les defauts structurels qui rendent TITAN fragile avant d'ajouter de nouvelles fonctionnalites.
 ### Constat
-L'audit confirme que le probleme principal est le contrat entre couches: l'orchestration est maintenant dans `workflows/titan.nf`, Aegis consomme les evidences nommees directement, et EGAPx doit encore exposer des sorties nommees pour Aegis.
+L'audit confirme que le probleme principal est le contrat entre couches: l'orchestration est maintenant dans `workflows/titan.nf`, Aegis consomme les evidences nommees directement, et EGAPx expose des sorties nommees dont le GFF3 est transmis a AEGIS comme preuve supplementaire.
 ### Fichiers concernes
 `docs/development/architecture-audit.md`, `roadmap.md`.
 ### Etapes d'implementation
@@ -210,7 +210,7 @@ Risque : Eleve
 ### Objectif
 Brancher EGAPx comme source d'annotation obligatoire et testable, puis integrer ses sorties nommees au contrat d'evidences TITAN.
 ### Constat
-`modules/egapx.nf` utilise maintenant le runner officiel EGAPx `v0.5.2`, pilote l'image Docker officielle `ncbi/egapx:0.5.2`, publie `${output_dir}/egapx` et emet des outputs nommes: GFF3, GTF, proteines, CDS, transcrits, ASN, repertoire complet et versions. Les sorties EGAPx sont typees dans `generate_evidence_data`; la consommation scientifique directe par Aegis reste a definir dans un ticket separe car Aegis ne possede pas encore d'argument EGAPx dedie.
+`modules/egapx.nf` utilise maintenant le runner officiel EGAPx `v0.5.2`, pilote l'image Docker officielle `ncbi/egapx:0.5.2`, publie `${output_dir}/egapx` et emet des outputs nommes: GFF3, GTF, proteines, CDS, transcrits, ASN, repertoire complet et versions. Les sorties EGAPx sont typees dans `generate_evidence_data`; `egapx_gff3` est transmis a AEGIS et fusionne comme preuve d'annotation supplementaire.
 ### Fichiers concernes
 `modules/egapx.nf`, `subworkflows/generate_evidence_data.nf`, `subworkflows/aegis.nf`, `modules/aegis_*.nf`, `test-data/minimal/valid/evidence/`.
 ### Etapes d'implementation
@@ -218,9 +218,9 @@ Supprimer `run_egapx`, corriger le module pour prendre `path egapx_paramfile`, l
 ### Tests
 `docker pull ncbi/egapx:0.5.2`; `docker run --rm ncbi/egapx:0.5.2 python3 -c 'import yaml'`; `nextflow config -profile test`; `nextflow run main.nf -profile test -stub-run -ansi-log false`.
 ### Criteres d'acceptation
-EGAPx n'est plus activable/desactivable par parametre, utilise une image officielle versionnee et produit des emits nommes.
+EGAPx n'est plus activable/desactivable par parametre, utilise une image officielle versionnee, produit des emits nommes et fournit un GFF3 consomme par AEGIS.
 ### Risques et retour arriere
-EGAPx embarque son propre Nextflow et peut etre lourd; le module reste isole et peut etre reverti sans modifier les commandes Aegis.
+EGAPx embarque son propre Nextflow et peut etre lourd; le module reste isole mais son GFF3 fait maintenant partie du contrat AEGIS.
 
 ## TITAN-P1-006 - Supprimer les scans de dossiers internes
 Priorite : P1

@@ -48,23 +48,27 @@ If you do not have SSH access configured for the GitHub remote, use the HTTPS UR
 
 ## 3. Container images
 
-TITAN process modules use container images declared in `modules/*.nf`. The current EGAPx integration uses the official NCBI image:
+TITAN process modules use container images declared in `modules/*.nf`. Pull at least the mandatory EGAPx and AEGIS images before a production run:
 
 ```bash
 docker pull ncbi/egapx:0.5.2
 docker image inspect ncbi/egapx:0.5.2 --format '{{index .RepoDigests 0}}'
+docker pull tomsbiolab/aegis:latest
+docker image inspect tomsbiolab/aegis:latest --format '{{index .RepoDigests 0}}'
 ```
 
-The expected image digest at the time of integration was:
+The expected image digests at the time of integration were:
 
 ```text
 ncbi/egapx@sha256:bc657b232d93364d5f3b75ad3bfaf14b6267e46173672b609f26078d48a04298
+tomsbiolab/aegis@sha256:de88470b3fb4fbab3ff2d5fa0fb9fed36b55952d1e383d3fdb2f5a3a530d84e6
 ```
 
 For Apptainer/Singularity environments, pre-pull the same Docker image if your cluster does not allow runtime image downloads:
 
 ```bash
 apptainer pull egapx_0.5.2.sif docker://ncbi/egapx:0.5.2
+apptainer pull aegis_latest.sif docker://tomsbiolab/aegis:latest
 ```
 
 EGAPx is a nested Nextflow workflow. The TITAN EGAPx process runs the official EGAPx runner `v0.5.2`, and that runner launches EGAPx tasks using `params.egapx_executor` and `params.egapx_container`.
@@ -77,9 +81,11 @@ egapx_revision = v0.5.2
 egapx_container = ncbi/egapx:0.5.2
 egapx_executor = docker
 egapx_data_version = current_1
+aegis_version = v0.3.25
+aegis_container = tomsbiolab/aegis:latest
 ```
 
-On HPC without Docker, set `--egapx_executor singularity` or provide a site-specific EGAPx config once that is formalized for your cluster.
+AEGIS now uses the upstream CLI container and runs `aegis merge` followed by `aegis extract`. On HPC without Docker, set `--egapx_executor singularity` for nested EGAPx execution and make the AEGIS image available through your site container runtime.
 
 ## 4. Required input files
 
@@ -171,7 +177,7 @@ Araport,araport.fa
 SwissProtPlants,swissprot_plants.fa
 ```
 
-The `filename` entries should point to FASTA protein files available to BRAKER3 and Aegis. Some current modules still mount `${projectDir}/data/protein_data`; until that is fully refactored, keep a production-compatible protein data layout or test your profile on a small run first.
+The `filename` entries should point to FASTA protein files available to BRAKER3. Some current modules still mount `${projectDir}/data/protein_data`; until that is fully refactored, keep a production-compatible protein data layout or test your profile on a small run first.
 
 ## 7. EGAPx YAML input
 
@@ -255,6 +261,8 @@ egapx_out/
 versions.yml
 ```
 
+`egapx.complete.genomic.gff3` is passed to AEGIS as an additional annotation evidence during the final merge.
+
 ## 8. Validate with the built-in test profile
 
 Before running production, verify the local workflow bootstrap:
@@ -318,6 +326,7 @@ Before launching a long run:
 * Confirm all paths in TITAN params and EGAPx YAML are absolute and visible on compute nodes.
 * Confirm the container runtime works on compute nodes.
 * Confirm EGAPx can pull or access `ncbi/egapx:0.5.2`.
+* Confirm AEGIS can pull or access `tomsbiolab/aegis:latest`.
 * Confirm `python3 -c 'import yaml'` works in the environment that executes the EGAPx process.
 * Run a `-stub-run` after every config/profile edit.
 * Use `-resume` for restart after interrupted runs.
@@ -328,3 +337,5 @@ Before launching a long run:
 * EGAPx official repository and `v0.5.2` runner: <https://github.com/ncbi/egapx/tree/v0.5.2>
 * EGAPx input format and requirements: <https://github.com/ncbi/egapx/blob/v0.5.2/README.md>
 * EGAPx official Docker image: <https://hub.docker.com/r/ncbi/egapx>
+* AEGIS repository and CLI documentation: <https://github.com/Tomsbiolab/aegis>
+* AEGIS Docker image: <https://hub.docker.com/r/tomsbiolab/aegis>

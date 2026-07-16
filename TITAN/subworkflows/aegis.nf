@@ -12,6 +12,7 @@ workflow aegis {
     braker_augustus_gff
     braker_genemark_gtf
     liftoff_annotation
+    egapx_gff3
     star_stringtie_default_stranded
     star_stringtie_alt_stranded
     star_psiclass_stranded
@@ -27,19 +28,16 @@ workflow aegis {
     def has_long_reads_enabled = has_long_reads
 
     // ----------------------------------------------------------------------------------------
-    //     Aegis scripts (1, 2, 3) to create the final GFF3 file from all the evidences
+    //     AEGIS CLI merge over all named annotation evidence
     // ----------------------------------------------------------------------------------------
 
     if (has_long_reads_enabled) {
       aegis_long_reads(
-        file(params.new_assembly).getParent(),
-        file(params.new_assembly).getName(),
-        file(params.protein_samplesheet).getParent(),
-        file(params.protein_samplesheet).getName(),
         masked_genome,
         braker_augustus_gff,
         braker_genemark_gtf,
         liftoff_annotation,
+        egapx_gff3,
         long_reads_default,
         long_reads_alt,
         star_stringtie_default_stranded,
@@ -51,14 +49,11 @@ workflow aegis {
         )
     } else {
       aegis_short_reads(
-        file(params.new_assembly).getParent(),
-        file(params.new_assembly).getName(),
-        file(params.protein_samplesheet).getParent(),
-        file(params.protein_samplesheet).getName(),
         masked_genome,
         braker_augustus_gff,
         braker_genemark_gtf,
         liftoff_annotation,
+        egapx_gff3,
         star_stringtie_default_stranded,
         star_stringtie_alt_stranded,
         star_psiclass_stranded,

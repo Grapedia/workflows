@@ -21,8 +21,6 @@ ________________________________________________________________________________
 
 The following parameters are defined in `nextflow.config` and are required for the pipeline execution.
 
-Aegis run are launched chromosome by chromosome: a for loop and sequential annotation processing for each chromosome. This is necessary because running on all the chromosomes at the same time requires around 500 GB of RAM. An Aegis ran sequentially on the chromosomes takes around 2/3 days of treatment on 19 chromosomes (Vitis vinifera).
-
 ### **Workflow's general parameters**
 - **`output_dir`**: Path to output directory, where the final files will be write.
 
@@ -55,6 +53,7 @@ TITAN has one public execution contract: evidence generation and Aegis are alway
 - **`egapx_cpus`**: CPU allocation for the EGAPx process.
   default: `"5"`
 - **`egapx_version` / `egapx_revision` / `egapx_container`**: EGAPx runner and container version. Defaults are `0.5.2`, `v0.5.2` and `ncbi/egapx:0.5.2`.
+- **`aegis_version` / `aegis_container`**: AEGIS CLI and container version. Defaults are `v0.3.25` and `tomsbiolab/aegis:latest`.
 - **`PSICLASS_vd_option`**: For PSICLASS process, the minimum average coverage depth of a transcript to be reported (FLOAT). This option is used to reduce the number of false monoexon genes.
   default: `"5.0"`
 - **`PSICLASS_c_option`**: For PSICLASS process, only use the subexons with classifier score <= than the given number (FLOAT). This option is used to reduce the number of false monoexon genes.
@@ -72,7 +71,7 @@ Current static inventory from `main.nf`, `workflows/titan.nf`, `subworkflows/*.n
 | Previous annotation | `--previous_annotations` | GFF3 annotation on the reference assembly | Liftoff, then AGAT CDS extraction |
 | RNA-seq samplesheet | `--RNAseq_samplesheet` | CSV with header `sampleID,SRA_or_FASTQ,library_layout`; `library_layout` values are `single`, `paired` or `long` | read preparation, fastp, Salmon, STAR, HISAT2, Minimap2 |
 | RNA-seq data directory | `--RNAseq_data_dir` | Directory containing FASTQ/FASTA files matching RNA-seq sample IDs | read preparation, fastp, Minimap2 |
-| Protein samplesheet | `--protein_samplesheet` | CSV with header `organism,filename`; filenames may be relative paths in the minimal fixtures, while historical modules still mount `data/protein_data` | BRAKER3, Aegis |
+| Protein samplesheet | `--protein_samplesheet` | CSV with header `organism,filename`; filenames may be relative paths in the minimal fixtures, while historical modules still mount `data/protein_data` | BRAKER3 |
 | EGAPx parameter file | `--egapx_paramfile` | YAML parameter file for EGAPx | Mandatory EGAPx process |
 | Tool/resource options | `--edta_cpus`, `--egapx_cpus`, `--PSICLASS_vd_option`, `--PSICLASS_c_option`, `--STAR_memory_per_job` | Tool resource and tuning values | Tool commands |
 
@@ -80,7 +79,7 @@ Current static inventory from `main.nf`, `workflows/titan.nf`, `subworkflows/*.n
 
 ### **Named Evidence Contract**
 
-The internal evidence-generation subworkflow emits named evidence channels instead of a mixed key/file channel. The Aegis subworkflow consumes explicit inputs for the hard-masked genome, Liftoff, BRAKER/AUGUSTUS, GeneMark, STAR/StringTie, STAR/PsiCLASS and detected long-read evidence.
+The internal evidence-generation subworkflow emits named evidence channels instead of a mixed key/file channel. The Aegis subworkflow consumes explicit inputs for the hard-masked genome, Liftoff, EGAPx GFF3, BRAKER/AUGUSTUS, GeneMark, STAR/StringTie, STAR/PsiCLASS and detected long-read evidence.
 
 Aegis consumes those channels directly. The EDTA hard-masked genome flows as `EDTA.masked_genome -> generate_evidence_data.masked_genome -> aegis(masked_genome)`, so TITAN no longer depends on `assembly_masked.EDTA.fasta` being rediscovered from `output_dir`.
 
@@ -168,7 +167,7 @@ Development notes for the completed P0 hardening work are in `docs/development/p
 Generates a **GFF3 file**, which is used by **Aegis** in the final step.
 
 ### **NCBI/egapx Annotations**
-Runs the **NCBI EGAPx** workflow from `egapx_paramfile` using the official EGAPx runner `v0.5.2` and official Docker image `ncbi/egapx:0.5.2`. TITAN publishes named EGAPx outputs under `${output_dir}/egapx`: GFF3, GTF, proteins, CDS, transcripts, ASN, full EGAPx output directory and `versions.yml`. EGAPx is now a typed evidence source; Aegis command-line integration of the EGAPx GFF3 remains a separate scientific wiring step.
+Runs the **NCBI EGAPx** workflow from `egapx_paramfile` using the official EGAPx runner `v0.5.2` and official Docker image `ncbi/egapx:0.5.2`. TITAN publishes named EGAPx outputs under `${output_dir}/egapx`: GFF3, GTF, proteins, CDS, transcripts, ASN, full EGAPx output directory and `versions.yml`. The EGAPx GFF3 is passed to AEGIS as an additional annotation evidence.
 
 ### **StringTie Merging (Short Reads - HISAT2)**
 Generates **GTF file(s)**.  
@@ -209,7 +208,9 @@ Generates a **FASTA file** of the **hard-masked genome assembly**, which is used
 ---
 
 ## **Final Integration by Aegis**
-At the final step, **Aegis** integrates multiple annotation sources:  
+At the final step, **AEGIS** runs `aegis merge` on the named annotation evidence, then `aegis extract` to derive the final protein FASTA files. Merge priority follows the command-line input order: Liftoff, AUGUSTUS, GeneMark, EGAPx, STAR/StringTie, long-read StringTie when present, and STAR/PsiCLASS evidence.
+
+AEGIS integrates multiple annotation sources:
 ✔ **Hard-masked genome assembly**
 ✔ **Liftoff annotations**  
 ✔ **NCBI/egapx annotations**  
@@ -218,10 +219,8 @@ At the final step, **Aegis** integrates multiple annotation sources:
 ✔ **Stranded (and unstranded, if available) annotations from STAR/StringTie**  
 ✔ **IsoSeq annotations (if available)**  
 ✔ **Stranded (and unstranded, if available) annotations from STAR/PsiCLASS**  
-✔ **protein FASTA files**
-
 ### **📖 Reference**  
-Soon available ...
+<https://github.com/Tomsbiolab/aegis>
 
 This results in the final **GFF3 annotation file**.
 
@@ -239,9 +238,9 @@ Diamond2GO performs **functional gene annotation** based on the **final Aegis pr
 ## **📖 Tools version used**  
 
 ### Aegis
-- Source from [GitHub](https://github.com/davnapa/genomics.git)
-- **Version**: v2025_05_20
-- **Docker image**: avelt/aegis:v2025_05_20 (dockerhub)
+- Source from [GitHub](https://github.com/Tomsbiolab/aegis)
+- **Version**: v0.3.25 from the current Docker image label
+- **Docker image**: tomsbiolab/aegis:latest (dockerhub)
 
 ### Agat
 - **Version**: 1.2.0

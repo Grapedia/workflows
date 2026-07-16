@@ -13,6 +13,8 @@ params.egapx_container = params.egapx_container ?: "ncbi/egapx:0.5.2"
 params.egapx_executor = params.egapx_executor ?: "docker"
 params.egapx_data_version = params.egapx_data_version ?: "current_1"
 params.egapx_runner_dir = params.egapx_runner_dir ?: false
+params.aegis_version = params.aegis_version ?: "v0.3.25"
+params.aegis_container = params.aegis_container ?: "tomsbiolab/aegis:latest"
 
 include { TITAN } from './workflows/titan'
 

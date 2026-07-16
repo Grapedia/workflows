@@ -30,7 +30,7 @@ Sous-workflows:
 
 Modules detectes: 27 process Nextflow dans `modules/*.nf`.
 
-Scripts auxiliaires: `scripts/Aegis1.py`, `scripts/Aegis2.sh`, `scripts/Aegis3.py`, wrappers StringTie/EDTA, scripts de recuperation de chemins et scripts Python d'analyse/filtrage.
+Scripts auxiliaires: wrappers StringTie/EDTA, scripts de recuperation de chemins et scripts Python d'analyse/filtrage. Les anciens scripts `scripts/Aegis1.py`, `scripts/Aegis2.sh` et `scripts/Aegis3.py` restent dans le depot mais ne sont plus le chemin TITAN principal; les modules AEGIS utilisent maintenant le CLI upstream.
 
 Donnees exemple: `data_example/` contient des placeholders tres legers, majoritairement de taille 0; ce repertoire ne constitue pas un jeu de test executable fiable.
 
@@ -132,7 +132,7 @@ for f in modules/*.nf; do awk '/^[[:space:]]*output:/{flag=1} /^[[:space:]]*scri
 
 | Outil | Etape | Version actuelle | Version verrouillee | Module | Conteneur | Test | Version collectee |
 | --- | --- | --- | --- | --- | --- | --- | --- |
-| Aegis | Integration finale annotation | v2025_05_20 | Partielle | `aegis_short_reads`, `aegis_long_reads` | `avelt/aegis:v2025_05_20` | Non | Non |
+| Aegis | Integration finale annotation | v0.3.25 image label | Partielle | `aegis_short_reads`, `aegis_long_reads` | `tomsbiolab/aegis:latest` | Stub + test CLI Docker | `versions.yml` |
 | AGAT | GFF3 vers CDS FASTA | 1.2.0 | Oui | `agat_convert_gff3_to_cds_fasta` | `quay.io/biocontainers/agat:1.2.0--pl5321hdfd78af_0` | Non | Non |
 | BRAKER3 | Prediction ab initio | v3.0.8 documente | Non, image latest | `braker3_prediction*` | `avelt/braker3:latest` | Non | Non |
 | Diamond2GO | Annotation fonctionnelle | commit documente | Non, image latest | `diamond2go` | `avelt/diamond2go:latest` | Non | Non |
@@ -148,9 +148,9 @@ for f in modules/*.nf; do awk '/^[[:space:]]*output:/{flag=1} /^[[:space:]]*scri
 | sra-tools | SRA download | 3.1.1 | Oui | `prepare_RNAseq_fastq_files_*` | `quay.io/biocontainers/sra-tools:3.1.1--h4304569_0` | Non | Non |
 | STAR | Index/alignment | 2.7.11b | Oui | `star_*` | `quay.io/biocontainers/star:2.7.11b--h43eeafb_2` | Non | Non |
 | StringTie | Assemblage/fusion | 2.2.3 documente | Non, image latest | `assembly_transcriptome_*`, `Stringtie_merging_*` | `avelt/stringtie:latest` | Non | Non |
-| gffread | Conversion GTF/GFF3 | Incluse Aegis | A confirmer | `aegis_*` | `avelt/aegis:v2025_05_20` | Non | Non |
+| gffread | Conversion GTF/GFF3 | Non requis par les modules AEGIS actuels | Non | n/a | n/a | n/a | n/a |
 | samtools | BAM | 1.9 documente selon images | Partiel | alignements | images combinees | Non | Non |
-| DIAMOND | Aegis/Diamond2GO/BRAKER3 | 2.1.9/2.1.11 selon docs | Partiel | `aegis_*`, `diamond2go`, `braker3` | images combinees | Non | Non |
+| DIAMOND | Diamond2GO/BRAKER3 | 2.1.9/2.1.11 selon docs | Partiel | `diamond2go`, `braker3` | images combinees | Non | Non |
 
 ### Inventaire des entrees
 
@@ -160,10 +160,10 @@ for f in modules/*.nf; do awk '/^[[:space:]]*output:/{flag=1} /^[[:space:]]*scri
 | Assemblage precedent | `params.previous_assembly` | FASTA | fichier existant | Liftoff | Doit correspondre a `previous_annotations`. |
 | Annotation precedente | `params.previous_annotations` | GFF3 | fichier existant | Liftoff, puis AGAT | Source du transfert et de la FASTA CDS pour Salmon. |
 | Samplesheet RNA-seq | `params.RNAseq_samplesheet` | CSV avec header | `sampleID`, `SRA_or_FASTQ`, `library_layout` | preparation reads, fastp, Salmon, STAR, HISAT2, Minimap2 | `library_layout` alimente les branches `single`, `paired` et `long`; la presence d'une ligne `long` active automatiquement la branche longue. |
-| Samplesheet proteines | `params.protein_samplesheet` | CSV avec header | `organism`, `filename` | BRAKER3, Aegis | Les modules montent aussi `${projectDir}/data/protein_data`; ce couplage reste a normaliser. |
+| Samplesheet proteines | `params.protein_samplesheet` | CSV avec header | `organism`, `filename` | BRAKER3 | Les modules BRAKER3 montent aussi `${projectDir}/data/protein_data`; ce couplage reste a normaliser. |
 | Parametres EGAPx | `params.egapx_paramfile` | YAML | parametres EGAPx | module `egapx` | Obligatoire; sorties nommees publiees sous `${output_dir}/egapx`. |
 | Options outil | `params.edta_cpus`, `params.egapx_cpus`, `params.PSICLASS_*`, `params.STAR_memory_per_job` | entiers CPU, floats, entier bytes | valeurs scalaires | EDTA, EGAPx, PsiCLASS, STAR | Les anciens flags biologiques ne pilotent plus EDTA, EGAPx ou les long reads. |
-| Evidences Aegis | emits nommes de `generate_evidence_data` | chemins stages par Nextflow | `masked_genome`, `braker_augustus_gff`, `braker_genemark_gtf`, `liftoff_annotation`, STAR/StringTie, STAR/PsiCLASS, long reads si detectes | sous-workflow `aegis` | Le workflow public ne relit plus ces evidences depuis `output_dir`. |
+| Evidences Aegis | emits nommes de `generate_evidence_data` | chemins stages par Nextflow | `masked_genome`, `liftoff_annotation`, `egapx_gff3`, `braker_augustus_gff`, `braker_genemark_gtf`, STAR/StringTie, STAR/PsiCLASS, long reads si detectes | sous-workflow `aegis` | Le workflow public ne relit plus ces evidences depuis `output_dir`. |
 
 ### Inventaire des sorties par module
 
@@ -193,10 +193,10 @@ for f in modules/*.nf; do awk '/^[[:space:]]*output:/{flag=1} /^[[:space:]]*scri
 | `EDTA` | assemblage cible | `*TElib.fa`, `*TEanno.gff3`, `*MAKER.masked` | `${output_dir}/tmp` plus copies script vers `${output_dir}` | Aegis |
 | `braker3_prediction` | genome, proteines, BAM courts | `augustus.hints.gff3`, `genemark.gtf`, `genemark_supported.gtf`, `braker.gff3` | `${output_dir}` | Aegis |
 | `braker3_prediction_with_long_reads` | genome, proteines, BAM courts + longs | `augustus.hints.gff3`, `genemark.gtf`, `genemark_supported.gtf`, `braker.gff3` | `${output_dir}` | Aegis long reads |
-| `aegis_short_reads` | genome masque, BRAKER3, Liftoff, STAR/StringTie, GFFCompare | `final_annotation.gff3`, `final_annotation_proteins_all.fasta`, `final_annotation_proteins_main.fasta` | `${output_dir}/aegis_outputs` | Diamond2GO |
-| `aegis_long_reads` | idem short + StringTie long reads | `final_annotation.gff3`, `final_annotation_proteins_all.fasta`, `final_annotation_proteins_main.fasta` | `${output_dir}/aegis_outputs` | Diamond2GO |
+| `aegis_short_reads` | genome masque, Liftoff, EGAPx GFF3, BRAKER3, STAR/StringTie, GFFCompare | `final_annotation.gff3`, `final_annotation_proteins_all.fasta`, `final_annotation_proteins_main.fasta`, `versions.yml` | `${output_dir}/aegis_outputs` | Diamond2GO |
+| `aegis_long_reads` | idem short + StringTie long reads | `final_annotation.gff3`, `final_annotation_proteins_all.fasta`, `final_annotation_proteins_main.fasta`, `versions.yml` | `${output_dir}/aegis_outputs` | Diamond2GO |
 | `diamond2go` | proteines Aegis all/main | `*-diamond*` | `${output_dir}/Diamond2GO_outputs` | sortie finale fonctionnelle |
-| `egapx` | YAML EGAPx | `egapx.complete.genomic.gff3`, `egapx.complete.genomic.gtf`, `egapx.complete.proteins.faa`, `egapx.complete.cds.fna`, `egapx.complete.transcripts.fna`, `egapx.annotated_genome.asn`, `egapx_out/`, `versions.yml` | `${output_dir}/egapx` | Evidence generation; sortie GFF3 a connecter a Aegis quand le contrat scientifique Aegis est defini |
+| `egapx` | YAML EGAPx | `egapx.complete.genomic.gff3`, `egapx.complete.genomic.gtf`, `egapx.complete.proteins.faa`, `egapx.complete.cds.fna`, `egapx.complete.transcripts.fna`, `egapx.annotated_genome.asn`, `egapx_out/`, `versions.yml` | `${output_dir}/egapx` | Evidence generation; le GFF3 est transmis a `aegis merge` |
 
 Points de vigilance P0-002:
 
@@ -204,7 +204,7 @@ Points de vigilance P0-002:
 * les images `latest` rendent l'inventaire de versions non reproductible sans validation externe;
 * aucune version n'est collectee dans un artefact de sortie;
 * les chemins de samplesheets sont valides avant construction des channels depuis P0-005; le schema complet des colonnes reste a renforcer;
-* EGAPx est documente, obligatoire et expose des sorties nommees.
+* EGAPx est documente, obligatoire, expose des sorties nommees et son GFF3 est consomme par AEGIS.
 
 ## Constats critiques
 

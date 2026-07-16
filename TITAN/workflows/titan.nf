@@ -100,6 +100,7 @@ workflow TITAN {
         evidence_data.braker_augustus_gff3,
         evidence_data.braker_genemark_gtf,
         evidence_data.liftoff_gff3,
+        evidence_data.egapx_gff3,
         evidence_data.star_stringtie_stranded_default_gtf,
         evidence_data.star_stringtie_stranded_alt_gtf,
         evidence_data.star_psiclass_stranded_gtf,
