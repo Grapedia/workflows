@@ -14,10 +14,10 @@ Highest-risk findings:
 * `main.nf` still acts as orchestration, validation and Aegis evidence loader instead of being a thin entrypoint.
 * `generate_evidence_data` emits a string-keyed mixed channel, while `aegis` expects a manually reconstructed list of files. This bypasses normal Nextflow dataflow guarantees.
 * `aegis` mode reads files back from `params.output_dir` by filename. That means Aegis is coupled to publish side effects instead of process outputs.
-* EDTA is optional in the evidence workflow, but Aegis is functionally dependent on a hard-masked genome. The current `EDTA=no` path is only a lightweight skip path, not a coherent production mode.
-* EGAPx is present as a module but commented out. Its input declaration is wrong for the way it is intended to be called, and its outputs are not named or integrated into the evidence contract.
+* EDTA is now mandatory in the evidence workflow, and Aegis-only runs fail early if the hard-masked genome is missing. The remaining issue is that Aegis still discovers that file from `output_dir` instead of a typed channel or manifest.
+* EGAPx is now mandatory in `generate_evidence_data` and its module input is staged as `path egapx_paramfile`. Its outputs are still captured broadly and are not yet named or consumed by Aegis.
 * Many modules take `val()` inputs and then ignore them, reading from mounted `params.output_dir`, `projectDir/data/*` or helper scripts instead. This makes caching, resume and portability fragile.
-* Several `when:` clauses use `params.use_long_reads`; since P1-001 this value is normalized to a boolean at workflow startup.
+* Long-read processing is now detected from `RNAseq_samplesheet` rows where `library_layout` is `long`; the old `use_long_reads` flag is no longer part of the runtime contract.
 * Multiple modules copy files manually to `/outputdir` in addition to `publishDir`, creating hidden dependencies and duplicate output semantics.
 * Several processes use `containerOptions` mounts for Docker-specific paths. This fights Nextflow staging and weakens Apptainer/HPC portability.
 
@@ -26,8 +26,8 @@ The recommended path is to stabilize contracts before changing scientific behavi
 1. Create a thin `main.nf` and a canonical `workflows/titan.nf`.
 2. Introduce typed evidence outputs rather than string-key/file lists.
 3. Make Aegis consume process outputs directly, not files discovered in `output_dir`.
-4. Treat EDTA hard-masked genome as a required Aegis input, produced by EDTA or supplied externally.
-5. Integrate EGAPx behind an explicit feature flag and add its GFF3 to the same evidence contract.
+4. Move the required EDTA hard-masked genome from `output_dir` discovery to a typed Aegis input or evidence manifest.
+5. Replace broad EGAPx output capture with named EGAPx emits and add its GFF3 to the same evidence contract once output names are confirmed.
 6. Migrate modules to staged `path` inputs and named emits module by module.
 
 ## Current topology
@@ -126,54 +126,44 @@ Recommendation:
 * make Aegis consume those channels directly for full runs;
 * for Aegis-only reruns, introduce an explicit `--evidence_manifest` rather than ad hoc filename discovery.
 
-### 3. EDTA optionality is not modeled correctly
+### 3. EDTA is mandatory but still coupled to published filenames
 
 Evidence:
 
-* Before P1-001, `generate_evidence_data` ran EDTA only if `params.EDTA == 'yes'`; it now receives a normalized `run_edta` boolean from `main.nf`.
-* `aegis` only runs Aegis if EDTA is enabled, because `aegis_short_reads` and `aegis_long_reads` require `edta_masked_genome`.
-* `main.nf` prints `EDTA = No, we need this output for Aegis. EXIT.` but does not exit. This path is useful for P0 lightweight validation but not a production contract.
+* `generate_evidence_data` now always runs EDTA.
+* `aegis` now always requires `masked_genome.masked_genome` and fails if it is missing.
+* In Aegis-only mode, `main.nf` still discovers `assembly_masked.EDTA.fasta` by filename in `params.output_dir`.
 * `EDTA.nf` emits `*MAKER.masked` but also manually copies it to `/outputdir/assembly_masked.EDTA.fasta`.
 
 Impact:
 
-* users can request `--workflow aegis --EDTA no` and get a successful run that skipped the actual result;
-* Aegis requirements are implicit;
+* Aegis requirements are now explicit but still file-name based in Aegis-only mode;
 * EDTA output naming depends on manual copy side effects.
 
 Recommendation:
 
-* replace `EDTA=yes/no` for Aegis with a clearer contract:
-  * `--run_edta true` produces a masked genome;
-  * `--masked_assembly` allows supplying a precomputed masked genome;
-  * Aegis requires exactly one hard-masked genome input.
-* keep `--EDTA` as backward-compatible alias during migration;
+* Aegis requires exactly one hard-masked genome input;
+* replace Aegis-only file discovery with `--evidence_manifest` or explicit `--masked_assembly`;
 * emit `masked_genome` with the final public name directly from the EDTA process.
 
-### 4. EGAPx is not integrated
+### 4. EGAPx is integrated in evidence generation but not typed
 
 Evidence:
 
-* `include { egapx }` and the call in `generate_evidence_data` are commented.
-* `modules/egapx.nf` declares:
-  * `path(egapx_paramfile_path)`
-  * `path(egapx_paramfile_name)`
-* the commented call would pass `file(params.egapx_paramfile).getParent()` and `.getName()`, which are values, not two staged paths.
-* output is `path("*")`, unnamed and too broad.
+* `generate_evidence_data` now includes and calls `egapx(file(params.egapx_paramfile))`.
+* `modules/egapx.nf` declares `path egapx_paramfile` and emits `egapx_results`.
+* output is still `path("*")`, unnamed and too broad for stable Aegis integration.
 
 Impact:
 
-* EGAPx cannot be turned on by parameter alone;
-* the output cannot be connected cleanly to Aegis;
+* EGAPx is mandatory in evidence generation;
+* the output cannot yet be connected cleanly to Aegis;
 * broad output capture can publish unrelated files and makes tests brittle.
 
 Recommendation:
 
-* add `params.run_egapx = false` and keep it disabled by default until validated;
-* rewrite `egapx` input as `path egapx_paramfile`;
 * emit named outputs such as `egapx_gff3`, `egapx_proteins`, `egapx_report` once actual EGAPx output names are confirmed;
-* add an EGAPx minimal fixture or stub output before enabling in production;
-* integrate `egapx_gff3` into the evidence bundle and Aegis command line only when present.
+* integrate `egapx_gff3` into the evidence bundle and Aegis command line when the output contract is stable.
 
 ### 5. Module inputs are not consistently staged
 
@@ -205,7 +195,7 @@ Evidence:
 * `generate_evidence_data` emits a mixed channel of key/file pairs.
 * optional unstranded outputs are emitted as optional paths, then mixed unconditionally.
 * `aegis.nf` converts a list of pairs into arrays and indexes `[0]`.
-* Before P1-001, long-read branch checks were split between `main.nf`, subworkflow `if (params.use_long_reads)`, and process-level `when: params.use_long_reads`. The branch is now controlled by a normalized `use_long_reads` boolean passed from `main.nf`, with process-level `when:` guards removed from the long-read-only modules.
+* Before P1-001, long-read branch checks were split between `main.nf`, subworkflow `if (params.use_long_reads)`, and process-level `when: params.use_long_reads`. The branch is now controlled by samplesheet detection: at least one `library_layout=long` row enables long-read modules.
 
 Impact:
 
@@ -273,7 +263,7 @@ The safest order is contract-first:
 4. Replace the mixed evidence channel with named emits.
 5. Rewrite Aegis integration to consume named evidence directly.
 6. Make EDTA hard-masked genome an explicit required Aegis input.
-7. Fix and integrate EGAPx behind `--run_egapx`.
+7. Replace broad mandatory EGAPx results with named EGAPx evidence emits and connect them to Aegis.
 8. Migrate modules away from mounted output directories and hidden scans.
 9. Add `-stub-run` and nf-test coverage for critical subworkflows.
 10. Add CI once the contracts are stable.

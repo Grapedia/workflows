@@ -9,14 +9,12 @@ workflow aegis {
 
   take:
     input_data
-    run_edta
-    use_long_reads
+    has_long_reads
 
   main:
 
     def workflow_inputs = input_data // Create a new variable
-    def edta_enabled = run_edta
-    def use_long_reads_enabled = use_long_reads
+    def has_long_reads_enabled = has_long_reads
     // println "Files sent to Aegis process : ${workflow_inputs}"
 
     def masked_genome = []
@@ -90,7 +88,7 @@ workflow aegis {
                 println "gffcompare_star_psiclass_unstranded : no unstranded data available, pass ..."
             }
         }
-        if (use_long_reads_enabled) {
+        if (has_long_reads_enabled) {
           if (key == "merged_long_reads.default_args_gff") {
             Stringtie_merging_long_reads_default_args << filepath
             println "Stringtie_merging_long_reads_default_args file: ${Stringtie_merging_long_reads_default_args}"
@@ -103,13 +101,43 @@ workflow aegis {
     }
 
 
+    def missing_required_inputs = []
+    [
+        "masked_genome.masked_genome": masked_genome,
+        "braker3_results.augustus_gff": braker3_prediction_augustus,
+        "braker3_results.genemark_gtf": braker3_prediction_genemark,
+        "previous_annotations.liftoff_previous_annotations": liftoff_annotation,
+        "merged_star_stringtie.default_args_stranded": Stringtie_merging_short_reads_STAR_default_args_stranded,
+        "merged_star_stringtie.alt_args_stranded": Stringtie_merging_short_reads_STAR_alt_args_stranded,
+        "gffcompare_out.star_psiclass_stranded": gffcompare_star_psiclass_stranded,
+        "merged_star_stringtie.default_args_unstranded": Stringtie_merging_short_reads_STAR_default_args_unstranded,
+        "merged_star_stringtie.alt_args_unstranded": Stringtie_merging_short_reads_STAR_alt_args_unstranded,
+        "gffcompare_out.star_psiclass_unstranded": gffcompare_star_psiclass_unstranded
+    ].each { key, values ->
+        if (!values) {
+            missing_required_inputs << key
+        }
+    }
+    if (has_long_reads_enabled) {
+        [
+            "merged_long_reads.default_args_gff": Stringtie_merging_long_reads_default_args,
+            "merged_long_reads.alt_args_gff": Stringtie_merging_long_reads_alt_args
+        ].each { key, values ->
+            if (!values) {
+                missing_required_inputs << key
+            }
+        }
+    }
+    if (missing_required_inputs) {
+        error "Missing required Aegis input(s): ${missing_required_inputs.join(', ')}"
+    }
+
     // ----------------------------------------------------------------------------------------
     //     Aegis scripts (1, 2, 3) to create the final GFF3 file from all the evidences
     // ----------------------------------------------------------------------------------------
 
-    if (edta_enabled) {
-      if (use_long_reads_enabled) {
-        aegis_long_reads(
+    if (has_long_reads_enabled) {
+      aegis_long_reads(
         file(params.new_assembly).getParent(),
         file(params.new_assembly).getName(),
         file(params.protein_samplesheet).getParent(),
@@ -127,8 +155,8 @@ workflow aegis {
         Stringtie_merging_short_reads_STAR_default_args_unstranded[0],
         Stringtie_merging_short_reads_STAR_alt_args_unstranded[0]
         )
-      } else {
-        aegis_short_reads(
+    } else {
+      aegis_short_reads(
         file(params.new_assembly).getParent(),
         file(params.new_assembly).getName(),
         file(params.protein_samplesheet).getParent(),
@@ -144,29 +172,22 @@ workflow aegis {
         Stringtie_merging_short_reads_STAR_default_args_unstranded[0],
         Stringtie_merging_short_reads_STAR_alt_args_unstranded[0]
         )
-      }
-    } else {
-      println "Skipping the AEGIS process because EDTA was not run (run_edta = '${edta_enabled}'). To enable EDTA, and consequently AEGIS, set run_edta = true or EDTA = 'yes'."
     }
 
     // ----------------------------------------------------------------------------------------
     //               Diamond2GO on proteins predicted with TITAN/Aegis
     // ----------------------------------------------------------------------------------------
 
-    if (edta_enabled) {
-      if (use_long_reads_enabled) {
-         diamond2go(aegis_long_reads.out.aegis_proteins_all, aegis_long_reads.out.aegis_proteins_main)
-      } else {
-         diamond2go(aegis_short_reads.out.aegis_proteins_all, aegis_short_reads.out.aegis_proteins_main)
-      }
+    if (has_long_reads_enabled) {
+       diamond2go(aegis_long_reads.out.aegis_proteins_all, aegis_long_reads.out.aegis_proteins_main)
     } else {
-      println "Skipping the Diamond2GO process because EDTA was not run (run_edta = '${edta_enabled}'). To enable EDTA, and consequently AEGIS and Diamond2GO, set run_edta = true or EDTA = 'yes'."
+       diamond2go(aegis_short_reads.out.aegis_proteins_all, aegis_short_reads.out.aegis_proteins_main)
     }
 
   // Outputs
   emit:
-    aegis_gff            = edta_enabled ? (use_long_reads_enabled ? aegis_long_reads.out.aegis_gff : aegis_short_reads.out.aegis_gff) : Channel.empty()
-    aegis_proteins_all   = edta_enabled ? (use_long_reads_enabled ? aegis_long_reads.out.aegis_proteins_all : aegis_short_reads.out.aegis_proteins_all) : Channel.empty()
-    aegis_proteins_main  = edta_enabled ? (use_long_reads_enabled ? aegis_long_reads.out.aegis_proteins_main : aegis_short_reads.out.aegis_proteins_main) : Channel.empty()
-    diamond2go_output    = edta_enabled ? diamond2go.out : Channel.empty()
+    aegis_gff            = has_long_reads_enabled ? aegis_long_reads.out.aegis_gff : aegis_short_reads.out.aegis_gff
+    aegis_proteins_all   = has_long_reads_enabled ? aegis_long_reads.out.aegis_proteins_all : aegis_short_reads.out.aegis_proteins_all
+    aegis_proteins_main  = has_long_reads_enabled ? aegis_long_reads.out.aegis_proteins_main : aegis_short_reads.out.aegis_proteins_main
+    diamond2go_output    = diamond2go.out
 }

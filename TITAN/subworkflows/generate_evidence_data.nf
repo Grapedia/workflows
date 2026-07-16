@@ -5,7 +5,7 @@ include { prepare_RNAseq_fastq_files_short } from "../modules/prepare_RNAseq_fas
 include { prepare_RNAseq_fastq_files_long } from "../modules/prepare_RNAseq_fastq_files_long"
 include { trimming_fastq } from "../modules/trimming_fastq"
 include { liftoff_annotations } from "../modules/liftoff_annotations"
-// include { egapx } from "../modules/egapx"
+include { egapx } from "../modules/egapx"
 include { agat_convert_gff3_to_cds_fasta } from "../modules/agat_convert_gff3_to_cds_fasta"
 include { salmon_index } from "../modules/salmon_index"
 include { salmon_strand_inference } from "../modules/salmon_strand_inference"
@@ -32,9 +32,7 @@ workflow generate_evidence_data {
         samples_list_long_reads
         samples_list_short_reads
         protein_list
-        run_edta
-        run_egapx
-        use_long_reads
+        has_long_reads
 
     main:
 
@@ -54,11 +52,8 @@ workflow generate_evidence_data {
             file(params.previous_annotations).getName()
         )
 
-        // egapx annotation pipeline on new assembly
-        // egapx_annotations = egapx(
-        //    file(params.egapx_paramfile).getParent(),
-        //    file(params.egapx_paramfile).getName()
-        //)
+        // EGAPx annotation pipeline on new assembly
+        egapx_annotations = egapx(file(params.egapx_paramfile))
 
         // Convert GFF3 to CDS FASTA for Salmon strand inference
         gff_cds = agat_convert_gff3_to_cds_fasta(
@@ -107,7 +102,7 @@ workflow generate_evidence_data {
         merged_hisat2_stringtie = Stringtie_merging_short_reads_hisat2(concat_hisat2_stringtie_for_merging)
 
         // Process minimap2 alignments for long reads
-        if (use_long_reads) {
+        if (has_long_reads) {
             // Prepare long reads (if any) for processing
             long_reads_prepared = prepare_RNAseq_fastq_files_long(samples_list_long_reads)
 
@@ -152,16 +147,14 @@ workflow generate_evidence_data {
         // GFFcompare to merge PsiCLASS transcriptomes
         gffcompare_out = gffcompare(concat_star_psiclass_for_merging)
 
-        // Run EDTA if enabled
-        if (run_edta) {
-            masked_genome = EDTA(
-                file(params.new_assembly).getParent(),
-                file(params.new_assembly).getName()
-            )
-        }
+        // EDTA is mandatory: Aegis requires the hard-masked genome.
+        masked_genome = EDTA(
+            file(params.new_assembly).getParent(),
+            file(params.new_assembly).getName()
+        )
 
         // Run BRAKER3
-        if (use_long_reads) {
+        if (has_long_reads) {
             braker3_results = braker3_prediction_with_long_reads(
                 file(params.new_assembly).getParent(),
                 file(params.new_assembly).getName(),
@@ -183,15 +176,13 @@ workflow generate_evidence_data {
     // emit outputs
     outputs_ch = Channel.empty()
 
-    // Add EDTA outputs if enabled
-    if (run_edta) {
-        outputs_ch = outputs_ch.mix(
-            Channel.of("masked_genome.masked_genome").combine(masked_genome.masked_genome)
-        )
-    }
+    outputs_ch = outputs_ch.mix(
+        Channel.of("masked_genome.masked_genome").combine(masked_genome.masked_genome),
+        Channel.of("egapx.results").combine(egapx_annotations.egapx_results)
+    )
 
-    // Add long reads outputs if enabled
-    if (use_long_reads) {
+    // Add long reads outputs if detected in the RNA-seq samplesheet.
+    if (has_long_reads) {
         outputs_ch = outputs_ch.mix(
             Channel.of("merged_long_reads.default_args_gff").combine(merged_long_reads.default_args_gff),
             Channel.of("merged_long_reads.alt_args_gff").combine(merged_long_reads.alt_args_gff)

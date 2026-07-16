@@ -42,69 +42,52 @@ def validateWorkflowName() {
     }
 }
 
-def normalizeBooleanParam(value, paramName) {
-    if (value == null) {
-        return false
-    }
-    if (value instanceof Boolean) {
-        return value
+def samplesheetHasLongReads(samplesheetPath) {
+    def rows = file(samplesheetPath).readLines().findAll { line ->
+        def trimmed = line.trim()
+        trimmed && !trimmed.startsWith('#')
     }
 
-    def normalizedValue = value.toString().trim().toLowerCase()
-    if (['true', 'yes', 'y', '1'].contains(normalizedValue)) {
-        return true
-    }
-    if (['false', 'no', 'n', '0'].contains(normalizedValue)) {
+    if (rows.size() < 2) {
         return false
     }
 
-    error "Invalid boolean value for --${paramName}: '${value}'. Allowed values: true/false, yes/no, 1/0"
-}
-
-def normalizeRuntimeFlags() {
-    def useLongReads = normalizeBooleanParam(params.use_long_reads, 'use_long_reads')
-    def runEgapx = normalizeBooleanParam(params.run_egapx, 'run_egapx')
-    def runEdta
-
-    if (params.run_edta != null) {
-        runEdta = normalizeBooleanParam(params.run_edta, 'run_edta')
-    } else {
-        runEdta = normalizeBooleanParam(params.EDTA, 'EDTA')
+    def header = rows[0].split(',', -1).collect { it.trim() }
+    def layoutIndex = header.indexOf('library_layout')
+    if (layoutIndex < 0) {
+        error "RNA-seq samplesheet must contain a 'library_layout' column"
     }
 
-    // Keep the historical EDTA parameter synchronized while downstream modules migrate.
-    params.EDTA = runEdta ? 'yes' : 'no'
-
-    return [
-        run_edta: runEdta,
-        run_egapx: runEgapx,
-        use_long_reads: useLongReads
-    ]
+    return rows.drop(1).any { row ->
+        def columns = row.split(',', -1).collect { it.trim() }
+        columns.size() > layoutIndex && columns[layoutIndex].equalsIgnoreCase('long')
+    }
 }
 
 workflow {
     validateWorkflowName()
     validateRequiredParams(['output_dir', 'egapx_paramfile', 'RNAseq_samplesheet', 'protein_samplesheet', 'new_assembly', 'previous_assembly', 'previous_annotations'])
     validateExistingInputFiles(['egapx_paramfile', 'RNAseq_samplesheet', 'protein_samplesheet', 'new_assembly', 'previous_assembly', 'previous_annotations'])
-    def runtime_flags = normalizeRuntimeFlags()
+    def has_long_reads = samplesheetHasLongReads(params.RNAseq_samplesheet)
+    println "Long-read RNA-seq detected from samplesheet: ${has_long_reads}"
 
     // if the workflow parameter is equal to generate_evidence_data the first workflow is executed
     if (params.workflow == "generate_evidence_data") {
         Channel.fromPath(params.RNAseq_samplesheet, checkIfExists: true)
            .splitCsv(header: true, sep: ',')
-           .filter( ~/.*long.*/ )
+           .filter { row -> row.library_layout?.toString()?.trim()?.equalsIgnoreCase('long') }
            .map { row -> [ row.sampleID, row.SRA_or_FASTQ, row.library_layout ] }
            .set{ samples_list_long_reads }
 
         Channel.fromPath(params.RNAseq_samplesheet, checkIfExists: true)
            .splitCsv(header: true, sep: ',')
-           .filter( ~/.*single.*/ )
+           .filter { row -> row.library_layout?.toString()?.trim()?.equalsIgnoreCase('single') }
            .map { row -> [ row.sampleID, row.SRA_or_FASTQ, row.library_layout ] }
            .set{ samples_list_single_short_reads }
 
         Channel.fromPath(params.RNAseq_samplesheet, checkIfExists: true)
            .splitCsv(header: true, sep: ',')
-           .filter( ~/.*paired.*/ )
+           .filter { row -> row.library_layout?.toString()?.trim()?.equalsIgnoreCase('paired') }
            .map { row -> [ row.sampleID, row.SRA_or_FASTQ, row.library_layout ] }
            .set{ samples_list_paired_short_reads }
 
@@ -122,9 +105,7 @@ workflow {
             samples_list_long_reads, 
             samples_list_short_reads, 
             protein_list,
-            runtime_flags.run_edta,
-            runtime_flags.run_egapx,
-            runtime_flags.use_long_reads
+            has_long_reads
         )
     }
     
@@ -147,6 +128,15 @@ workflow {
       // }
 
       def workflow_inputs = []
+      def missing_required_inputs = []
+      def addRequiredEvidence = { key, filename ->
+        def candidate = file("${outdir_1}/${filename}")
+        if (candidate.exists()) {
+          workflow_inputs << tuple(key, candidate)
+        } else {
+          missing_required_inputs << filename
+        }
+      }
 
       def fake_null_merged_star_stringtie_default_args_unstranded = file("${params.output_dir}/dev_null1")
 
@@ -167,60 +157,20 @@ workflow {
       }
 
       // Load manually the outputs of generate_evidence_data workflow
-      if (runtime_flags.run_edta) {
-        if (file("${outdir_1}/assembly_masked.EDTA.fasta").exists()) {
-          workflow_inputs << tuple("masked_genome.masked_genome", file("${outdir_1}/assembly_masked.EDTA.fasta"))
-        } else {
-          println "ERROR : File ${outdir_1}/assembly_masked.EDTA.fasta doesn't exists !"
-        }
-      } else {
-        println "EDTA = No, we need this output for Aegis. EXIT."
+      addRequiredEvidence.call("masked_genome.masked_genome", "assembly_masked.EDTA.fasta")
+
+      if (has_long_reads) {
+        addRequiredEvidence.call("merged_long_reads.default_args_gff", "merged_minimap2_stringtie_long_reads_default.gtf")
+        addRequiredEvidence.call("merged_long_reads.alt_args_gff", "merged_minimap2_stringtie_long_reads_alt.gtf")
       }
 
-      if (runtime_flags.use_long_reads) {
-        if (file("${outdir_1}/merged_minimap2_stringtie_long_reads_default.gtf").exists()) {
-          workflow_inputs << tuple("merged_long_reads.default_args_gff", file("${outdir_1}/merged_minimap2_stringtie_long_reads_default.gtf"))
-        } else {
-          println "ERROR : ${outdir_1}/merged_minimap2_stringtie_long_reads_default.gtf doesn't exists !"
-        }
+      addRequiredEvidence.call("braker3_results.augustus_gff", "augustus.hints.gff3")
+      addRequiredEvidence.call("braker3_results.genemark_gtf", "genemark.gtf")
+      addRequiredEvidence.call("previous_annotations.liftoff_previous_annotations", "liftoff_previous_annotations.gff3")
+      addRequiredEvidence.call("merged_star_stringtie.default_args_stranded", "merged_star_stringtie_stranded_default.gtf")
+      addRequiredEvidence.call("merged_star_stringtie.alt_args_stranded", "merged_star_stringtie_stranded_alt.gtf")
+      addRequiredEvidence.call("gffcompare_out.star_psiclass_stranded", "merged_star_psiclass_stranded.gtf")
 
-        if (file("${outdir_1}/merged_minimap2_stringtie_long_reads_alt.gtf").exists()) {
-          workflow_inputs << tuple("merged_long_reads.alt_args_gff", file("${outdir_1}/merged_minimap2_stringtie_long_reads_alt.gtf"))
-        } else {
-          println "ERROR : ${outdir_1}/merged_minimap2_stringtie_long_reads_alt.gtf doesn't exists !"
-        }
-      }
-
-      if (file("${outdir_1}/augustus.hints.gff3").exists()) {
-          workflow_inputs << tuple("braker3_results.augustus_gff", file("${outdir_1}/augustus.hints.gff3"))
-      } else {
-        println "ERROR : ${outdir_1}/augustus.hints.gff3 doesn't exists !"
-      }
-      if (file("${outdir_1}/genemark.gtf").exists()) {
-          workflow_inputs << tuple("braker3_results.genemark_gtf", file("${outdir_1}/genemark.gtf"))
-      } else {
-        println "ERROR : ${outdir_1}/genemark.gtf doesn't exists !"
-      }
-      if (file("${outdir_1}/liftoff_previous_annotations.gff3").exists()) {
-          workflow_inputs << tuple("previous_annotations.liftoff_previous_annotations", file("${outdir_1}/liftoff_previous_annotations.gff3"))
-      } else {
-        println "ERROR : ${outdir_1}/liftoff_previous_annotations.gff3 doesn't exists !"
-      }
-      if (file("${outdir_1}/merged_star_stringtie_stranded_default.gtf").exists()) {
-          workflow_inputs << tuple("merged_star_stringtie.default_args_stranded", file("${outdir_1}/merged_star_stringtie_stranded_default.gtf"))
-      } else {
-        println "ERROR : ${outdir_1}/merged_star_stringtie_stranded_default.gtf doesn't exists !"
-      }
-      if (file("${outdir_1}/merged_star_stringtie_stranded_alt.gtf").exists()) {
-          workflow_inputs << tuple("merged_star_stringtie.alt_args_stranded", file("${outdir_1}/merged_star_stringtie_stranded_alt.gtf"))
-      } else {
-        println "ERROR : ${outdir_1}/merged_star_stringtie_stranded_alt.gtf doesn't exists !"
-      }
-      if (file("${outdir_1}/merged_star_psiclass_stranded.gtf").exists()) {
-          workflow_inputs << tuple("gffcompare_out.star_psiclass_stranded", file("${outdir_1}/merged_star_psiclass_stranded.gtf"))
-      } else {
-        println "ERROR : ${outdir_1}/merged_star_psiclass_stranded.gtf doesn't exists !"
-      }
       if (file("${outdir_1}/merged_star_stringtie_unstranded_default.gtf").exists()) {
           workflow_inputs << tuple("merged_star_stringtie.default_args_unstranded", file("${outdir_1}/merged_star_stringtie_unstranded_default.gtf"))
       } else {
@@ -240,10 +190,14 @@ workflow {
         workflow_inputs << tuple("gffcompare_out.star_psiclass_unstranded", file(fake_null_gffcompare_out_star_psiclass_unstranded))
       }
 
+      if (missing_required_inputs) {
+        error "Missing required Aegis evidence file(s) in ${outdir_1}:\n  ${missing_required_inputs.join('\n  ')}"
+      }
+
       def workflow_inputs_list = workflow_inputs // Keep the list as it is
 
       println "Files sent to Aegis : ${workflow_inputs_list}"
 
-      aegis(workflow_inputs_list, runtime_flags.run_edta, runtime_flags.use_long_reads) // We send the list directly, not a Channel
+      aegis(workflow_inputs_list, has_long_reads) // We send the list directly, not a Channel
   }
 }

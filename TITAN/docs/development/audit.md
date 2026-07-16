@@ -54,9 +54,8 @@ Le script historique contient un chemin absolu specifique a une machine: `/home/
 | Configuration | `nextflow config` | Succes | ~2 s | Les parametres par defaut resolvent. |
 | Lancement minimal historique initial | `nextflow run main.nf --workflow aegis -ansi-log false` | Echec | ~3 s | Erreur de compilation DSL2: statements top-level melanges avec declarations. |
 | Profils locaux | `nextflow config -profile local >/dev/null && nextflow config -profile test >/dev/null && nextflow config -profile slurm,apptainer,test >/dev/null` | Succes | ~5 s | Verifie la resolution des profils ajoutes, sans soumission Slurm. |
-| Lancement minimal apres P0 | `nextflow run main.nf --workflow aegis --output_dir test-data/minimal/valid --new_assembly test-data/minimal/valid/target.fa --previous_assembly test-data/minimal/valid/reference.fa --previous_annotations test-data/minimal/valid/reference.gff3 --RNAseq_samplesheet test-data/minimal/valid/rnaseq_samplesheet.csv --protein_samplesheet test-data/minimal/valid/protein_samplesheet.csv --egapx_paramfile test-data/minimal/valid/input_egapx.yaml --EDTA no --use_long_reads false -ansi-log false` | Succes | ~4 s | Compile et lance la branche Aegis sans process lourd; les evidences absentes sont signalees. |
-| Reprise minimale | `nextflow run main.nf -profile test --workflow aegis -ansi-log false -resume` | Succes | ~4 s | Aucun process scientifique execute; valide la commande minimale et la creation de `output_dir`. |
-| Profil test P0-003 | `nextflow config -profile test`; `nextflow run main.nf -profile test --workflow aegis -ansi-log false`; `nextflow run main.nf -profile test --workflow aegis -ansi-log false -resume` | Succes | ~10 s | Profil local, sans Slurm ni Docker, pointe vers `test-data/minimal/valid`, ecrit dans `test-results/` et `test-work/`. |
+| Lancement Aegis apres contrat EDTA obligatoire | `nextflow run main.nf -profile test --workflow aegis -ansi-log false` | Echec attendu | ~6 s | Compile puis echoue clairement car `test-results/` ne contient pas les evidences Aegis obligatoires, dont `assembly_masked.EDTA.fasta`. |
+| Profil test P0-003 | `nextflow config -profile test`; `python3 scripts/validate_minimal_test_data.py` | Succes | ~3 s | Profil local, sans Slurm ni Docker, pointe vers `test-data/minimal/valid`, ecrit dans `test-results/` et `test-work/`. |
 
 Erreur exacte principale:
 
@@ -68,19 +67,19 @@ Corrections P0 appliquees:
 
 * validation des parametres et creation des channels de `generate_evidence_data` deplacees dans le bloc `workflow`;
 * construction des channels RNA/proteines limitee a la branche `generate_evidence_data`;
-* interpretation explicite de `params.use_long_reads` pour eviter qu'une chaine `"false"` soit truthy;
-* normalisation P1-001 de `use_long_reads`, `run_edta` et `run_egapx` en booleens canoniques au demarrage du workflow;
+* detection des long reads depuis `library_layout=long` dans la samplesheet RNA-seq;
+* suppression des flags biologiques `EDTA`, `run_edta`, `run_egapx` et `use_long_reads` du contrat runtime;
 * creation de `output_dir` avant ecriture des placeholders `dev_null*` de la branche `aegis`;
 * remplacement d'une boucle `for` non supportee par Nextflow 26 dans `subworkflows/aegis.nf`;
 * correction du tag `diamond2go` qui referenceait une variable inexistante;
-* emits Aegis vides lorsque `EDTA=no`, pour eviter de referencer des process non invoques.
+* erreur explicite lorsque les evidences Aegis obligatoires manquent.
 
 ## Fonctionnement biologique compris
 
 TITAN annote un nouvel assemblage de genome en combinant:
 
 * transfert d'annotations precedentes via Liftoff;
-* annotation EGAPx prevue mais actuellement commentee dans le sous-workflow;
+* annotation EGAPx obligatoire dans `generate_evidence_data`;
 * conversion AGAT GFF3 vers CDS FASTA pour inference de brin;
 * preparation RNA-seq court/long depuis FASTQ/FASTA/SRA;
 * trimming fastp;
@@ -161,11 +160,11 @@ for f in modules/*.nf; do awk '/^[[:space:]]*output:/{flag=1} /^[[:space:]]*scri
 | Assemblage cible | `params.new_assembly` | FASTA | fichier existant | Liftoff, AGAT, STAR, HISAT2, Minimap2, EDTA, BRAKER3, Aegis | Chemin separe en dossier + nom dans les modules. |
 | Assemblage precedent | `params.previous_assembly` | FASTA | fichier existant | Liftoff | Doit correspondre a `previous_annotations`. |
 | Annotation precedente | `params.previous_annotations` | GFF3 | fichier existant | Liftoff, puis AGAT | Source du transfert et de la FASTA CDS pour Salmon. |
-| Samplesheet RNA-seq | `params.RNAseq_samplesheet` | CSV avec header | `sampleID`, `SRA_or_FASTQ`, `library_layout` | preparation reads, fastp, Salmon, STAR, HISAT2, Minimap2 | `library_layout` alimente les branches `single`, `paired` et `long`; la branche longue reste conditionnee par `use_long_reads`. |
+| Samplesheet RNA-seq | `params.RNAseq_samplesheet` | CSV avec header | `sampleID`, `SRA_or_FASTQ`, `library_layout` | preparation reads, fastp, Salmon, STAR, HISAT2, Minimap2 | `library_layout` alimente les branches `single`, `paired` et `long`; la presence d'une ligne `long` active automatiquement la branche longue. |
 | Samplesheet proteines | `params.protein_samplesheet` | CSV avec header | `organism`, `filename` | BRAKER3, Aegis | Les modules montent aussi `${projectDir}/data/protein_data`; ce couplage reste a normaliser. |
-| Parametres EGAPx | `params.egapx_paramfile` | YAML | parametres EGAPx | module `egapx` | Module present mais include et appel commentes dans `generate_evidence_data`. |
-| Options biologiques | `params.run_edta`, `params.EDTA`, `params.run_egapx`, `params.use_long_reads`, `params.PSICLASS_*`, `params.STAR_memory_per_job` | booleens normalises, alias historique EDTA, floats, entier bytes | valeurs scalaires | EDTA, future branche EGAPx, branches long reads, PsiCLASS, STAR | `EDTA` reste un alias historique synchronise vers `run_edta`. |
-| Entrees Aegis-only | channel `input_data` construit dans `main.nf` | liste de paires cle/fichier | cles `masked_genome.masked_genome`, `braker3_results.*`, `previous_annotations.*`, `merged_*`, `gffcompare_out.*` | sous-workflow `aegis` | En mode minimal `EDTA=no`, des fichiers `dev_null*` remplacent les sorties unstranded absentes. |
+| Parametres EGAPx | `params.egapx_paramfile` | YAML | parametres EGAPx | module `egapx` | Obligatoire dans `generate_evidence_data`; sorties publiees sous `${output_dir}/egapx`. |
+| Options outil | `params.edta_cpus`, `params.egapx_cpus`, `params.PSICLASS_*`, `params.STAR_memory_per_job` | entiers CPU, floats, entier bytes | valeurs scalaires | EDTA, EGAPx, PsiCLASS, STAR | Les anciens flags biologiques ne pilotent plus EDTA, EGAPx ou les long reads. |
+| Entrees Aegis-only | channel `input_data` construit dans `main.nf` | liste de paires cle/fichier | cles `masked_genome.masked_genome`, `braker3_results.*`, `previous_annotations.*`, `merged_*`, `gffcompare_out.*` | sous-workflow `aegis` | Les fichiers requis manquants provoquent une erreur; seuls les outputs unstranded peuvent recevoir des placeholders `dev_null*`. |
 
 ### Inventaire des sorties par module
 
@@ -198,7 +197,7 @@ for f in modules/*.nf; do awk '/^[[:space:]]*output:/{flag=1} /^[[:space:]]*scri
 | `aegis_short_reads` | genome masque, BRAKER3, Liftoff, STAR/StringTie, GFFCompare | `final_annotation.gff3`, `final_annotation_proteins_all.fasta`, `final_annotation_proteins_main.fasta` | `${output_dir}/aegis_outputs` | Diamond2GO |
 | `aegis_long_reads` | idem short + StringTie long reads | `final_annotation.gff3`, `final_annotation_proteins_all.fasta`, `final_annotation_proteins_main.fasta` | `${output_dir}/aegis_outputs` | Diamond2GO |
 | `diamond2go` | proteines Aegis all/main | `*-diamond*` | `${output_dir}/Diamond2GO_outputs` | sortie finale fonctionnelle |
-| `egapx` | YAML EGAPx | `*` | `${output_dir}/egapx` | Non branche actuellement |
+| `egapx` | YAML EGAPx | `*` via emit `egapx_results` | `${output_dir}/egapx` | Evidence generation; sorties a nommer avant consommation Aegis |
 
 Points de vigilance P0-002:
 
@@ -215,7 +214,7 @@ Audit architecture/refactor: `docs/development/architecture-audit.md`.
 
 P0:
 
-* `main.nf` ne compilait pas avec Nextflow 26.04.3 avant correction P0; la commande minimale `aegis` compile et termine maintenant avec `EDTA=no`.
+* `main.nf` ne compilait pas avec Nextflow 26.04.3 avant correction P0; depuis le durcissement P1, la commande minimale `aegis` compile puis echoue si les evidences obligatoires ne sont pas presentes.
 * La validation P0-005 echoue explicitement avant calcul lourd pour parametre obligatoire vide, fichier d'entree absent et valeur `--workflow` invalide.
 * Profil `test` local ajoute et valide: resolution de configuration et commande minimale `aegis` sans Slurm, Docker ni donnees volumineuses.
 * Jeu de donnees synthetique minimal ajoute sous `test-data/minimal`, avec fixtures RNA-seq, proteines, Liftoff/Aegis et cas invalides.
@@ -272,7 +271,8 @@ Le profil `test` est defini dans `conf/test.config` et inclus depuis `nextflow.c
 * `workDir = "${projectDir}/test-work"`;
 * `output_dir = "${projectDir}/test-results"`;
 * entrees pointees vers `test-data/minimal/valid`;
-* `workflow = "aegis"`, `EDTA = "no"` et `use_long_reads = false` pour eviter tout process scientifique lourd;
+* `workflow = "aegis"` pour tester la resolution et l'erreur d'evidences requises sans lancer les outils lourds;
+* `edta_cpus = 2` et `egapx_cpus = 2` pour permettre les tests stub sur une machine de developpement;
 * ressources plafonnees a 2 CPU et 4 GB pour les labels utilises par les futurs tests.
 
 Commandes validees:
@@ -280,10 +280,9 @@ Commandes validees:
 ```bash
 nextflow config -profile test
 nextflow run main.nf -profile test --workflow aegis -ansi-log false
-nextflow run main.nf -profile test --workflow aegis -ansi-log false -resume
 ```
 
-Limite: ce profil valide la resolution Nextflow et la branche minimale `aegis` avec `EDTA=no`. Il ne valide pas biologiquement les outils lourds ni les conteneurs.
+Limite: ce profil valide la resolution Nextflow et l'erreur attendue lorsque les evidences Aegis obligatoires manquent. Il ne valide pas biologiquement les outils lourds ni les conteneurs.
 
 ## Validation des parametres P0-005
 

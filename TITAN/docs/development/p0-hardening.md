@@ -32,9 +32,10 @@ The `test` profile uses:
 * Docker disabled;
 * `test-data/minimal/valid` inputs;
 * `test-results/` and `test-work/` transient directories;
-* `EDTA=no` and `use_long_reads=false`.
+* EDTA and EGAPx are mandatory in evidence generation.
+* Long reads are detected from `library_layout=long` in the RNA-seq samplesheet.
 
-This is a workflow/bootstrap validation only. It does not validate the biological behavior of EDTA, BRAKER3, STAR, HISAT2, Minimap2, PsiCLASS, Liftoff or Aegis.
+This is a workflow/bootstrap validation only. It does not validate the biological behavior of EDTA, EGAPx, BRAKER3, STAR, HISAT2, Minimap2, PsiCLASS, Liftoff or Aegis.
 
 ## Minimal test data
 
@@ -103,12 +104,12 @@ The P0 work intentionally avoids large architectural refactors. Remaining issues
 
 * `main.nf` still carries orchestration logic that should move progressively into a dedicated workflow layer.
 * Several images still use `latest`.
-* EGAPx is documented and has a module, but its call remains commented in `generate_evidence_data`.
+* EGAPx is mandatory in `generate_evidence_data`, but its broad result directory still needs named emits before direct Aegis consumption.
 * The test profile does not run scientific containers or heavy tools.
 * There is no CI yet.
 * Historical module volume mounts still assume production data layout in places such as `data/RNAseq_data` and `data/protein_data`.
 
-P1-001 now normalizes `use_long_reads`, `run_edta` and `run_egapx` at workflow startup; the remaining architectural work is tracked in `roadmap.md`.
+P1-001 initially normalized the historical booleans; the current contract removes those biological switches. EDTA and EGAPx are mandatory in `generate_evidence_data`, and long reads are inferred from the samplesheet. The remaining architectural work is tracked in `roadmap.md`.
 
 ## Relevant files
 

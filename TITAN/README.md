@@ -40,19 +40,17 @@ Aegis run are launched chromosome by chromosome: a for loop and sequential annot
   _Example_: `data/RNAseq_data/RNAseq_samplesheet.csv`
 - **`protein_samplesheet`**: Path to the **protein data samplesheet** (CSV file) listing protein datasets to be used.  
   _Example_: `data/protein_data/samplesheet.csv`
-- **`egapx_paramfile`**: Path to the **NCBI/EGAPx YAML parameter file**. The EGAPx process is currently present as a module but not wired into `generate_evidence_data`.
+- **`egapx_paramfile`**: Path to the **NCBI/EGAPx YAML parameter file**. EGAPx is mandatory in `generate_evidence_data`.
   _Example_: `data/input_egapx.yaml`
 
 ### **Other Parameters**
-- **`EDTA`**: Whether to run **EDTA (transposable element annotation tool)**.  
-  _Options_: `"yes"` or `"no"` (default: `"no"`)
-  ⚠️ If EDTA is not set to "yes", the Aegis and Diamond2Go steps will not be executed, as Aegis requires a hard-masked genome. TITAN will only generate the evidence data.
-- **`run_edta`**: Boolean replacement for `EDTA`. If unset, TITAN falls back to the historical `EDTA` value.
-  _Options_: `true`/`false`, `yes`/`no`, `1`/`0`.
-- **`run_egapx`**: Boolean flag reserved for the planned EGAPx integration. The module exists but is not wired into `generate_evidence_data` yet.
-  _Options_: `true`/`false`, `yes`/`no`, `1`/`0` (default: `false`).
-- **`use_long_reads`**: Flag to indicate whether **long-read sequencing data** should be used.  
-  _Options_: `true` or `false` (default: `true`)
+- **EDTA**: EDTA is not a runtime option anymore. `generate_evidence_data` always runs EDTA because Aegis requires a hard-masked genome.
+- **EGAPx**: EGAPx is not a runtime option anymore. `generate_evidence_data` always runs EGAPx from `egapx_paramfile` and publishes its results under `${output_dir}/egapx`.
+- **Long reads**: Long-read processing is not controlled by a flag anymore. TITAN detects it from `RNAseq_samplesheet` rows where `library_layout` is `long`.
+- **`edta_cpus`**: CPU allocation for the EDTA process.
+  default: `"5"`
+- **`egapx_cpus`**: CPU allocation for the EGAPx process.
+  default: `"5"`
 - **`PSICLASS_vd_option`**: For PSICLASS process, the minimum average coverage depth of a transcript to be reported (FLOAT). This option is used to reduce the number of false monoexon genes.
   default: `"5.0"`
 - **`PSICLASS_c_option`**: For PSICLASS process, only use the subexons with classifier score <= than the given number (FLOAT). This option is used to reduce the number of false monoexon genes.
@@ -70,11 +68,11 @@ Current static inventory from `main.nf`, `subworkflows/*.nf` and `modules/*.nf`:
 | Previous annotation | `--previous_annotations` | GFF3 annotation on the reference assembly | Liftoff, then AGAT CDS extraction |
 | RNA-seq samplesheet | `--RNAseq_samplesheet` | CSV with header `sampleID,SRA_or_FASTQ,library_layout`; `library_layout` values are `single`, `paired` or `long` | read preparation, fastp, Salmon, STAR, HISAT2, Minimap2 |
 | Protein samplesheet | `--protein_samplesheet` | CSV with header `organism,filename`; filenames may be relative paths in the minimal fixtures, while historical modules still mount `data/protein_data` | BRAKER3, Aegis |
-| EGAPx parameter file | `--egapx_paramfile` | YAML parameter file for EGAPx | EGAPx module, currently not wired in `generate_evidence_data` |
+| EGAPx parameter file | `--egapx_paramfile` | YAML parameter file for EGAPx | Mandatory EGAPx process in `generate_evidence_data` |
 | Evidence list for Aegis-only runs | internal channel built when `--workflow aegis` | Key/file pairs for masked genome, BRAKER3, Liftoff, STAR/StringTie and GFFCompare outputs | Aegis subworkflow |
-| Biological options | `--run_edta`, `--EDTA`, `--run_egapx`, `--use_long_reads`, `--PSICLASS_vd_option`, `--PSICLASS_c_option`, `--STAR_memory_per_job` | Runtime switches and tool options | Conditional branches and tool commands |
+| Tool/resource options | `--edta_cpus`, `--egapx_cpus`, `--PSICLASS_vd_option`, `--PSICLASS_c_option`, `--STAR_memory_per_job` | Tool resource and tuning values | Tool commands |
 
-`library_layout` is split into `single`, `paired` and `long` branches. Long-read modules are conditional on `use_long_reads`; Aegis and Diamond2GO are conditional on `EDTA=yes`.
+`library_layout` is split into `single`, `paired` and `long` branches. `single` and `paired` feed the short-read path; the presence of at least one `long` row automatically enables Minimap2/StringTie long-read processing and the long-read BRAKER3/Aegis branch. EDTA and EGAPx are always part of `generate_evidence_data`.
 
 ### **Parameter validation**
 
@@ -146,10 +144,9 @@ TITAN includes a minimal local test profile for configuration and lightweight wo
 ```bash
 nextflow config -profile test
 nextflow run main.nf -profile test --workflow aegis -ansi-log false
-nextflow run main.nf -profile test --workflow aegis -ansi-log false -resume
 ```
 
-The `test` profile uses synthetic fixtures under `test-data/minimal/valid`, writes transient outputs to ignored directories `test-results/` and `test-work/`, sets `EDTA=no`, and disables long-read processing. This validates configuration resolution and the lightweight Aegis branch only; it is not a biological validation of EDTA, BRAKER3, aligners or Aegis.
+The `test` profile uses synthetic fixtures under `test-data/minimal/valid` and writes transient outputs to ignored directories `test-results/` and `test-work/`. Since EDTA and EGAPx are mandatory and long reads are auto-detected from the samplesheet, `--workflow aegis` now fails early unless `test-results/` already contains the required evidence files. This validates configuration resolution and required-evidence errors; it is not a biological validation of EDTA, EGAPx, BRAKER3, aligners or Aegis.
 
 Validate the synthetic fixture set directly with:
 
@@ -170,7 +167,7 @@ Development notes for the completed P0 hardening work are in `docs/development/p
 Generates a **GFF3 file**, which is used by **Aegis** in the final step.
 
 ### **NCBI/egapx Annotations**
-Generates a **GFF3 file**, which is used by **Aegis** in the final step.
+Runs the **NCBI EGAPx** workflow from `egapx_paramfile` and publishes the EGAPx result directory under `${output_dir}/egapx`. EGAPx is currently emitted as a required evidence-generation result; its exact GFF3/protein outputs still need named emits before Aegis consumes them directly.
 
 ### **StringTie Merging (Short Reads - HISAT2)**
 Generates **GTF file(s)**.  
@@ -187,7 +184,7 @@ Generates **GTF file(s)**, which are used by **Aegis** in the final step.
 Generates a **single GTF file**, which is used by **Aegis** in the final step.  
 - For each **IsoSeq RNA-seq dataset**, a transcriptome is assembled using **Minimap2/StringTie** with **default** and **alt parameters**.  
 - These transcriptomes are then **merged into a single GTF file**, for **default and alt parameters** separately.
-- ⚠️ **Long-read integration is optional**.
+- Long-read integration is automatic when `RNAseq_samplesheet` contains at least one row where `library_layout` is `long`.
 
 ### **BRAKER3 Gene Prediction**
 #### **braker3_prediction OR braker3_prediction_with_long_reads**
