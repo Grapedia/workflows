@@ -2,7 +2,7 @@
 process Stringtie_merging_short_reads_hisat2 {
   label 'process_merge'
 
-  tag "Hisat2/StringTie merging - short reads"
+  tag "HISAT2/StringTie merge: stranded and optional unstranded short-read GTFs"
   container params.container_stringtie
   publishDir "${params.output_dir}", mode: 'copy'
   input:

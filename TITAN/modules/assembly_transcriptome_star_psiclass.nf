@@ -4,7 +4,7 @@ process assembly_transcriptome_star_psiclass {
 
   tag "STAR/PsiCLASS - short reads - on ${sample_ID}"
   container params.container_psiclass_samtools
-  publishDir { 
+  publishDir {
     if (strand_type == "unstranded") {
       return "${params.output_dir}/intermediate_files/transcriptomes/STAR_PsiCLASS/unstranded"
     } else if (strand_type in ["stranded_forward", "stranded_reverse"]) {
@@ -17,7 +17,7 @@ process assembly_transcriptome_star_psiclass {
     val(psiclass_c_option)
 
   output:
-    tuple val(sample_ID), file("${sample_ID}_vote.gtf"), val(strand_type), emit: psiclass_assemblies
+    tuple val(sample_ID), path("${sample_ID}_vote.gtf"), val(strand_type), emit: psiclass_assemblies
     path "versions.yml", emit: versions
 
 

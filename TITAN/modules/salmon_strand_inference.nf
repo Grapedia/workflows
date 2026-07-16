@@ -33,9 +33,9 @@ process salmon_strand_inference {
     fi
 
     if grep 'Automatically detected most likely library type' ${sample_ID}.log > /dev/null
-    then 
+    then
       grep 'Automatically detected most likely library type' ${sample_ID}.log | sed 's/.*type as //' > ${sample_ID}.strand_info
-    else 
+    else
       echo 'U' > ${sample_ID}.strand_info
     fi
 

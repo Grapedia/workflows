@@ -4,7 +4,7 @@ process assembly_transcriptome_star_stringtie {
 
   tag "STAR/StringTie - short reads on ${sample_ID}"
   container params.container_stringtie
-  publishDir { 
+  publishDir {
     if (strand_type == "unstranded") {
       return "${params.output_dir}/intermediate_files/evidence_data/transcriptomes/StringTie/short_reads/STAR/unstranded"
     } else if (strand_type in ["stranded_forward", "stranded_reverse"]) {

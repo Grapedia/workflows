@@ -29,6 +29,10 @@ include { braker3_prediction_with_long_reads } from "../modules/braker3_predicti
 
 workflow generate_evidence_data {
     take:
+        // RNA-seq tuples:
+        //   long:  tuple val(sample_ID), val(SRA_or_FASTQ), val(library_layout), path(local_reads)
+        //   short: tuple val(sample_ID), val(SRA_or_FASTQ), val(library_layout), path(local_reads)
+        // Protein tuples: tuple val(organism), val(filename)
         samples_list_long_reads
         samples_list_short_reads
         protein_list
@@ -78,7 +82,8 @@ workflow generate_evidence_data {
             previous_annotations.liftoff_previous_annotations
         )
 
-        // Salmon index and strand inference
+        // Salmon index and strand inference.
+        // Emits tuple val(sample_ID), val(library_layout), path(reads), val(strand_type).
         salmon_index_result = salmon_index(gff_cds.cds_fasta)
         strand_inference = salmon_strand_inference(trimmed_reads.trimmed_reads, salmon_index_result.index)
 
@@ -87,7 +92,8 @@ workflow generate_evidence_data {
             return [sample_ID, library_layout, reads, strand_info]
         }
 
-        // Process STAR alignments
+        // Process STAR alignments.
+        // Emits tuple val(sample_ID), path(bam_file), val(strand_type).
         star_indices = star_genome_indices(
             new_assembly,
             new_assembly.getName()

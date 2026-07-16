@@ -2,7 +2,7 @@
 process gffcompare {
   label 'process_merge'
 
-  tag "gffcompare on STAR/PsiCLASS GTF to merge them"
+  tag "gffcompare STAR/PsiCLASS: stranded and optional unstranded GTFs"
   container params.container_gffcompare
   publishDir "${params.output_dir}/tmp", mode: 'copy', enabled: params.publish_intermediates
   publishDir "${params.output_dir}", mode: 'copy', saveAs: { filename ->

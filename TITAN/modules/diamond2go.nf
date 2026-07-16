@@ -19,7 +19,7 @@ process diamond2go {
     """
     set -euo pipefail
     DATE=\$(date "+%Y-%m-%d %H:%M:%S")
-    
+
     echo "[\$DATE] Running diamond2go on $proteins_file_all"
     CMD="perl /Diamond2GO/Diamond2go.pl -d /Diamond2GO/resources/nr_clean_d2go.dmnd -q $proteins_file_all -t protein"
     echo "[\$DATE] Executing: \$CMD"

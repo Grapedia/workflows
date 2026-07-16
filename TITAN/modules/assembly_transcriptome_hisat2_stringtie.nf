@@ -4,7 +4,7 @@ process assembly_transcriptome_hisat2_stringtie {
 
   tag "Hisat2/StringTie - short reads on ${sample_ID}"
   container params.container_stringtie
-  publishDir { 
+  publishDir {
     if (strand_type == "unstranded") {
       return "${params.output_dir}/intermediate_files/evidence_data/transcriptomes/StringTie/short_reads/HISAT2/unstranded"
     } else if (strand_type in ["stranded_forward", "stranded_reverse"]) {

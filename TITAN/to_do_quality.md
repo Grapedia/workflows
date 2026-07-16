@@ -26,10 +26,10 @@ Perimetre lu: `README.md`, `nextflow.config`, `main.nf`, `workflows/titan.nf`, `
 
 ### P2 - Hygiene et ergonomie
 
-- Harmoniser indentation, espaces autour de `emit:`, `input:` et `output:`, fins de ligne et commentaires.
-- Preferer `path(...)` a `file(...)` dans les sorties DSL2 pour rester coherent avec Nextflow moderne.
-- Ajouter des `tag` plus informatifs aux processus qui fusionnent beaucoup de fichiers, par exemple nombre de GTFs.
-- Documenter les contrats de tuple de chaque module dans des commentaires courts ou dans des tests.
+- [x] Harmoniser indentation, espaces autour de `emit:`, `input:` et `output:`, fins de ligne et commentaires. Les fichiers Nextflow ont ete normalises et le validateur qualite bloque CRLF, trailing whitespace et `emit :`.
+- [x] Preferer `path(...)` a `file(...)` dans les sorties DSL2 pour rester coherent avec Nextflow moderne. Le validateur qualite bloque maintenant `file(...)` dans les blocs `output:`.
+- [x] Ajouter des `tag` plus informatifs aux processus qui fusionnent beaucoup de fichiers, par exemple nombre de GTFs. Les merges StringTie et gffcompare decrivent maintenant le type d'evidence fusionnee.
+- [x] Documenter les contrats de tuple de chaque module dans des commentaires courts ou dans des tests. Les contrats principaux RNA-seq/proteines/evidence sont documentes dans les subworkflows et verifies par la suite de tests.
 
 ## Audit fichier par fichier
 

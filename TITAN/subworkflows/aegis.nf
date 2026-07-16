@@ -8,6 +8,9 @@ include { diamond2go } from "../modules/diamond2go"
 workflow aegis {
 
   take:
+    // Named evidence files consumed by AEGIS. Long-read GTF inputs may be empty
+    // sentinel files when no long-read branch is active; the short-read module
+    // ignores them by construction.
     masked_genome
     braker_augustus_gff
     braker_genemark_gtf

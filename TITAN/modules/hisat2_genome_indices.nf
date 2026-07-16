@@ -10,7 +10,7 @@ process hisat2_genome_indices {
     val(genome)
 
   output:
-    path("${genome}.*.ht2"), emit : index
+    path("${genome}.*.ht2"), emit: index
     path "versions.yml", emit: versions
 
 

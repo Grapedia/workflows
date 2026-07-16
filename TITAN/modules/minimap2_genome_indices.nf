@@ -10,7 +10,7 @@ process minimap2_genome_indices {
     val(genome)
 
   output:
-    path("${genome}.mmi"), emit : index
+    path("${genome}.mmi"), emit: index
     path "versions.yml", emit: versions
 
 

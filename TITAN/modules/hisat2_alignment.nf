@@ -5,7 +5,7 @@ process hisat2_alignment {
   tag "HISAT2 on ${sample_ID} (${strand_type})"
   container params.container_hisat2
 
-  publishDir { 
+  publishDir {
     if (strand_type == "unstranded") {
       return "${params.output_dir}/intermediate_files/evidence_data/RNAseq_alignments/HISAT2/unstranded"
     } else if (strand_type in ["stranded_forward", "stranded_reverse"]) {

@@ -2,7 +2,7 @@
 process Stringtie_merging_short_reads_STAR {
   label 'process_merge'
 
-  tag "STAR/StringTie merging - short reads"
+  tag "STAR/StringTie merge: stranded and optional unstranded short-read GTFs"
   container params.container_stringtie
   publishDir "${params.output_dir}/tmp", mode: 'copy', enabled: params.publish_intermediates
   publishDir "${params.output_dir}", mode: 'copy', saveAs: { filename ->

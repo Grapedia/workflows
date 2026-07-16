@@ -4,7 +4,7 @@ process star_alignment {
 
   tag "STAR on ${sample_ID} (${strand_type})"
   container params.container_star
-  publishDir { 
+  publishDir {
     if (strand_type == "unstranded") {
       return "${params.output_dir}/intermediate_files/evidence_data/RNAseq_alignments/STAR/unstranded"
     } else if (strand_type in ["stranded_forward", "stranded_reverse"]) {

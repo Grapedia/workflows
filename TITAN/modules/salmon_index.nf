@@ -8,7 +8,7 @@ process salmon_index {
     path(cds_fasta)
 
   output:
-    path("salmon_index"), emit : index
+    path("salmon_index"), emit: index
     path "versions.yml", emit: versions
 
 

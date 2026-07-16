@@ -28,7 +28,15 @@ if re.search(r"(?m)^\s*params\.[A-Za-z0-9_]+\s*=", main):
 
 for module_path in sorted((ROOT / "modules").glob("*.nf")):
     text = module_path.read_text(encoding="utf-8")
+    if "\r" in text:
+        fail(f"{module_path.relative_to(ROOT)} contains CRLF line endings")
+    if re.search(r"(?m)[ \t]+$", text):
+        fail(f"{module_path.relative_to(ROOT)} contains trailing whitespace")
+    if re.search(r"emit\s+:", text):
+        fail(f"{module_path.relative_to(ROOT)} uses spaced emit syntax")
     output, script = module_blocks(text)
+    if re.search(r"(?m)^\s*file\s*\(", output):
+        fail(f"{module_path.relative_to(ROOT)} uses file(...) in an output block")
     if script and "set -euo pipefail" not in script:
         fail(f"{module_path.relative_to(ROOT)} script block is missing set -euo pipefail")
     if output and "versions.yml" not in output:
