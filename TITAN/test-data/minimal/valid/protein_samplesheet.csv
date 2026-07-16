@@ -1,2 +1,3 @@
 organism,filename
-Synthetic,test-data/minimal/valid/proteins.fa
+SyntheticCore,test-data/minimal/valid/proteins/synthetic_core.fa
+SyntheticRelated,test-data/minimal/valid/proteins/synthetic_related.fa

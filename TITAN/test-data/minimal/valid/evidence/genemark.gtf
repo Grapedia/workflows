@@ -1,0 +1,3 @@
+chrTest1	GeneMark-ETP	transcript	1	39	.	+	.	gene_id "genemark_gene1"; transcript_id "genemark_gene1.t1";
+chrTest1	GeneMark-ETP	exon	1	39	.	+	.	gene_id "genemark_gene1"; transcript_id "genemark_gene1.t1"; exon_number "1";
+chrTest1	GeneMark-ETP	CDS	1	39	.	+	0	gene_id "genemark_gene1"; transcript_id "genemark_gene1.t1";

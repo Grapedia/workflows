@@ -68,17 +68,17 @@ Statut : Fait
 Risque : Faible
 
 ### Objectif
-Fournir des fixtures FASTA/GFF3/proteines/samplesheets petites et documentees.
+Fournir un jeu de donnees synthetique, petit et versionne qui represente les familles d'entrees de TITAN: assemblies, annotation precedente pour Liftoff, RNA-seq single/paired/long, proteines, parametre EGAPx et evidences pre-calculees pour la branche Aegis.
 ### Constat
-`data_example/` contient surtout des fichiers vides ou placeholders, pas un dataset executif valide.
+`data_example/` contient surtout des fichiers vides ou placeholders et ne couvre pas les contrats d'entree reels. Le dataset minimal doit etre isole de ces donnees historiques et servir a valider parsing, chemins, samplesheets et futures executions stub sans dependance Slurm/conteneur.
 ### Fichiers concernes
-`test-data/minimal/`, `docs/development/audit.md`.
+`test-data/minimal/`, `scripts/validate_minimal_test_data.py`, `docs/development/audit.md`.
 ### Etapes d'implementation
-Creer genome synthetique, annotation GFF3 minimale valide, annotation invalide, proteines et samplesheets.
+Structurer `test-data/minimal/valid` avec assemblies FASTA, GFF3 de reference, RNA-seq FASTQ gzip single/paired/long, deux FASTA proteiques, samplesheets TITAN, `input_egapx.yaml` et fixtures d'evidences EDTA/Liftoff/BRAKER/StringTie/PsiCLASS/Minimap2. Conserver des cas invalides courts pour les validations negatives. Ajouter un validateur statique et regenerer les checksums.
 ### Tests
-Checksums et tests statiques FASTA/GFF3; futurs tests Nextflow.
+`python3 scripts/validate_minimal_test_data.py`; `sha256sum -c test-data/minimal/checksums.sha256`; `nextflow config -profile test`; `nextflow run main.nf -profile test --workflow aegis -ansi-log false`.
 ### Criteres d'acceptation
-Fixtures versionnees, petites et documentees. Checksums dedies encore a ajouter.
+Fixtures versionnees, petites, documentees et verifiees par checksums. Le samplesheet RNA-seq couvre `single`, `paired` et `long`; le samplesheet proteique couvre plusieurs sources; les evidences Aegis/Liftoff existent sous forme minimale pour tests futurs.
 ### Risques et retour arriere
 Risque faible; les donnees sont synthetiques et isolees.
 

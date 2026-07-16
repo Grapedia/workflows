@@ -1,0 +1,5 @@
+##gff-version 3
+chrTest1	AUGUSTUS	gene	1	39	0.90	+	.	ID=augustus_gene1
+chrTest1	AUGUSTUS	mRNA	1	39	0.90	+	.	ID=augustus_gene1.t1;Parent=augustus_gene1
+chrTest1	AUGUSTUS	exon	1	39	.	+	.	ID=augustus_gene1.t1.exon1;Parent=augustus_gene1.t1
+chrTest1	AUGUSTUS	CDS	1	39	.	+	0	ID=augustus_gene1.t1.cds1;Parent=augustus_gene1.t1

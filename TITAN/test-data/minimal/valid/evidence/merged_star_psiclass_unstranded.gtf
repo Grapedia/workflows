@@ -1,0 +1,2 @@
+chrTest2	PsiCLASS	transcript	1	18	.	-	.	gene_id "pc_gene2"; transcript_id "pc_gene2.t1";
+chrTest2	PsiCLASS	exon	1	18	.	-	.	gene_id "pc_gene2"; transcript_id "pc_gene2.t1"; exon_number "1";

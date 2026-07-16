@@ -1,0 +1,2 @@
+chrTest2	StringTie	transcript	1	18	1000	-	.	gene_id "st_un_alt_gene2"; transcript_id "st_un_alt_gene2.t1"; cov "4.0"; FPKM "2.0"; TPM "2.0";
+chrTest2	StringTie	exon	1	18	1000	-	.	gene_id "st_un_alt_gene2"; transcript_id "st_un_alt_gene2.t1"; exon_number "1"; cov "4.0";

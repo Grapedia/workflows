@@ -234,16 +234,26 @@ P2/P3:
 
 ## Jeux de donnees de test
 
-Decision initiale: creer un jeu synthetique minimal sous `test-data/minimal`, documente comme tel. Il sert d'abord a valider parsing FASTA/GFF3 et futurs tests statiques. Il ne pretend pas valider biologiquement EDTA, BRAKER3 ou Aegis en production.
+Decision P0-004: creer un jeu synthetique minimal sous `test-data/minimal`, documente comme tel. Il sert a valider les contrats d'entree TITAN, le parsing FASTA/GFF3/GTF/FASTQ, les samplesheets et les futurs tests stub. Il ne pretend pas valider biologiquement EDTA, BRAKER3, Liftoff, STAR, HISAT2, Minimap2 ou Aegis en production.
 
-Cas prevus:
+Cas couverts:
 
-* FASTA valide avec deux seqids;
-* GFF3 valide avec gene, mRNA, exon, CDS;
-* proteines minimales;
-* samplesheets minimalistes;
+* assemblies `reference.fa` et `target.fa` avec deux seqids;
+* annotation precedente `reference.gff3` valide avec gene, mRNA, exon, CDS;
+* RNA-seq FASTQ gzip: un single-end, une paire paired-end et un long-read;
+* samplesheet RNA-seq contenant `single`, `paired` et `long`;
+* deux sources proteiques et un samplesheet proteines multi-organismes;
+* parametre `input_egapx.yaml`;
+* evidences pre-calculees minimales: EDTA masked assembly, Liftoff GFF3, BRAKER/AUGUSTUS GFF3, GeneMark GTF, STAR/StringTie, STAR/PsiCLASS et Minimap2/StringTie;
 * GFF3 invalides: seqid absent, coordonnees invalides, Parent invalide;
 * FASTA vide.
+
+Validation:
+
+```bash
+python3 scripts/validate_minimal_test_data.py
+sha256sum -c test-data/minimal/checksums.sha256
+```
 
 Checksums actuels: `test-data/minimal/checksums.sha256`.
 

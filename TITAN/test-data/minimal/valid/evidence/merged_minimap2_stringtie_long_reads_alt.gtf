@@ -1,0 +1,2 @@
+chrTest1	StringTie	transcript	1	39	1000	+	.	gene_id "lr_alt_gene1"; transcript_id "lr_alt_gene1.t1"; cov "9.0"; FPKM "4.5"; TPM "4.5";
+chrTest1	StringTie	exon	1	39	1000	+	.	gene_id "lr_alt_gene1"; transcript_id "lr_alt_gene1.t1"; exon_number "1"; cov "9.0";
