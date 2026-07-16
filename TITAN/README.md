@@ -56,6 +56,40 @@ Aegis run are launched chromosome by chromosome: a for loop and sequential annot
 - **`paramfile_egapx`**: The input parameter file for NCBI/egapx annotation pipeline run.
   default: `"$projectDir/data/input_egapx.yaml"`
 
+### **Input contract inventory**
+
+Current static inventory from `main.nf`, `subworkflows/*.nf` and `modules/*.nf`:
+
+| Input | Parameter or channel | Expected content | Used by |
+| --- | --- | --- | --- |
+| Target assembly | `--new_assembly` | FASTA file for the genome to annotate | Liftoff, AGAT, STAR, HISAT2, Minimap2, EDTA, BRAKER3, Aegis |
+| Reference assembly | `--previous_assembly` | FASTA file matching the previous annotation | Liftoff |
+| Previous annotation | `--previous_annotations` | GFF3 annotation on the reference assembly | Liftoff, then AGAT CDS extraction |
+| RNA-seq samplesheet | `--RNAseq_samplesheet` | CSV with header `sample_ID,SRA_or_FASTQ,library_layout,read_type` | read preparation, fastp, Salmon, STAR, HISAT2, Minimap2 |
+| Protein samplesheet | `--protein_samplesheet` | CSV consumed by BRAKER3 and Aegis scripts; files are expected under the protein data directory mounted by the modules | BRAKER3, Aegis |
+| EGAPx parameter file | `--egapx_paramfile` | YAML parameter file for EGAPx | EGAPx module, currently not wired in `generate_evidence_data` |
+| Evidence list for Aegis-only runs | internal channel built when `--workflow aegis` | Key/file pairs for masked genome, BRAKER3, Liftoff, STAR/StringTie and GFFCompare outputs | Aegis subworkflow |
+| Biological options | `--EDTA`, `--use_long_reads`, `--PSICLASS_vd_option`, `--PSICLASS_c_option`, `--STAR_memory_per_job` | Runtime switches and tool options | Conditional branches and tool commands |
+
+`read_type` is split into `short` and `long` branches. Long-read modules are conditional on `use_long_reads`; Aegis and Diamond2GO are conditional on `EDTA=yes`.
+
+### **Output contract inventory**
+
+| Output family | Main files or patterns | Output location |
+| --- | --- | --- |
+| Liftoff annotation | `liftoff_previous_annotations.gff3`, `unmapped_features.txt` | `${output_dir}` |
+| CDS FASTA from annotation | `${genome}.CDS.fasta.gz` | `${output_dir}/intermediate_files/liftoff/gff3_to_cds_fasta` |
+| Salmon index and strand inference | `salmon_index/`, `${sample_ID}.strand_info.classified` | `${output_dir}/intermediate_files/salmon_index`, `${output_dir}/intermediate_files/salmon_strand` |
+| Prepared and trimmed reads | `*.trimmed.fastq.gz` | `${output_dir}/intermediate_files/evidence_data/RNAseq_data/trimmed_data` |
+| Genome indices | STAR `${genome}_index`, HISAT2 `${genome}.*.ht2`, Minimap2 `${genome}.mmi` | `${output_dir}/intermediate_files/evidence_data/*_databases` |
+| Alignments | STAR/HISAT2/Minimap2 sorted BAM files | `${output_dir}/intermediate_files/evidence_data/RNAseq_alignments` |
+| Transcript assemblies | per-sample `*_transcriptome.gtf`, `*_transcriptome.AltCommands.gtf`, `${sample_ID}_vote.gtf` | `${output_dir}/intermediate_files/evidence_data/transcriptomes` and `${output_dir}/intermediate_files/transcriptomes` |
+| Merged transcriptomes | `merged_transcriptomes.*.gtf`, `stranded_merged_output.combined.gtf`, optional `unstranded_merged_output.combined.gtf` | `${output_dir}`, `${output_dir}/tmp` and intermediate transcriptome directories |
+| EDTA | `*TElib.fa`, `*TEanno.gff3`, `*MAKER.masked` | `${output_dir}/tmp` |
+| BRAKER3 | `augustus.hints.gff3`, `genemark.gtf`, `genemark_supported.gtf`, `braker.gff3` | `${output_dir}` |
+| Aegis final annotation | `final_annotation.gff3`, `final_annotation_proteins_all.fasta`, `final_annotation_proteins_main.fasta` | `${output_dir}/aegis_outputs` |
+| Diamond2GO | `*-diamond*` | `${output_dir}/Diamond2GO_outputs` |
+
 ## **Example command-line to run**
 
 ```bash

@@ -24,13 +24,13 @@ Risque faible si la correction se limite au placement de logique dans `workflow`
 
 ## TITAN-P0-002 - Inventorier entrees, sorties et outils
 Priorite : P0
-Statut : En cours
+Statut : Fait
 Risque : Faible
 
 ### Objectif
 Obtenir un inventaire exploitable des outils, versions, conteneurs, entrees et sorties.
 ### Constat
-Les versions sont partiellement documentees dans `README.md`; plusieurs images utilisent `latest`.
+Les versions sont partiellement documentees dans `README.md`; plusieurs images utilisent `latest`. L'inventaire P0-002 est maintenant consolide dans `docs/development/audit.md` et resume dans `README.md`.
 ### Fichiers concernes
 `README.md`, `modules/*.nf`, `docs/development/audit.md`.
 ### Etapes d'implementation

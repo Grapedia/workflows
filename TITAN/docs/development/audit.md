@@ -122,6 +122,14 @@ Bonnes pratiques reutilisables: separation profils, fixtures minimales, validati
 
 ## Inventaire des outils et conteneurs
 
+Commande d'inspection statique utilisee pour P0-002:
+
+```bash
+rg -n "^(process|workflow|include|\\s*container|\\s*publishDir|\\s*input:|\\s*output:)" main.nf subworkflows modules nextflow.config conf
+for f in modules/*.nf; do awk '/^[[:space:]]*input:/{flag=1} /^[[:space:]]*script:|^[[:space:]]*shell:|^[[:space:]]*stub:/{flag=0} flag{print}' "$f"; done
+for f in modules/*.nf; do awk '/^[[:space:]]*output:/{flag=1} /^[[:space:]]*script:|^[[:space:]]*shell:|^[[:space:]]*stub:/{flag=0} flag{print}' "$f"; done
+```
+
 | Outil | Etape | Version actuelle | Version verrouillee | Module | Conteneur | Test | Version collectee |
 | --- | --- | --- | --- | --- | --- | --- | --- |
 | Aegis | Integration finale annotation | v2025_05_20 | Partielle | `aegis_short_reads`, `aegis_long_reads` | `avelt/aegis:v2025_05_20` | Non | Non |
@@ -143,6 +151,60 @@ Bonnes pratiques reutilisables: separation profils, fixtures minimales, validati
 | gffread | Conversion GTF/GFF3 | Incluse Aegis | A confirmer | `aegis_*` | `avelt/aegis:v2025_05_20` | Non | Non |
 | samtools | BAM | 1.9 documente selon images | Partiel | alignements | images combinees | Non | Non |
 | DIAMOND | Aegis/Diamond2GO/BRAKER3 | 2.1.9/2.1.11 selon docs | Partiel | `aegis_*`, `diamond2go`, `braker3` | images combinees | Non | Non |
+
+### Inventaire des entrees
+
+| Entree | Parametre/channel | Format attendu | Colonnes ou structure | Etapes consommatrices | Remarques |
+| --- | --- | --- | --- | --- | --- |
+| Assemblage cible | `params.new_assembly` | FASTA | fichier existant | Liftoff, AGAT, STAR, HISAT2, Minimap2, EDTA, BRAKER3, Aegis | Chemin separe en dossier + nom dans les modules. |
+| Assemblage precedent | `params.previous_assembly` | FASTA | fichier existant | Liftoff | Doit correspondre a `previous_annotations`. |
+| Annotation precedente | `params.previous_annotations` | GFF3 | fichier existant | Liftoff, puis AGAT | Source du transfert et de la FASTA CDS pour Salmon. |
+| Samplesheet RNA-seq | `params.RNAseq_samplesheet` | CSV avec header | `sample_ID`, `SRA_or_FASTQ`, `library_layout`, `read_type` | preparation reads, fastp, Salmon, STAR, HISAT2, Minimap2 | `read_type == short` alimente la branche courte; `read_type == long` alimente la branche longue. |
+| Samplesheet proteines | `params.protein_samplesheet` | CSV avec header | Structure consommee par les scripts BRAKER3/Aegis | BRAKER3, Aegis | Les modules montent aussi `${projectDir}/data/protein_data`; ce couplage reste a normaliser. |
+| Parametres EGAPx | `params.egapx_paramfile` | YAML | parametres EGAPx | module `egapx` | Module present mais include et appel commentes dans `generate_evidence_data`. |
+| Options biologiques | `params.EDTA`, `params.use_long_reads`, `params.PSICLASS_*`, `params.STAR_memory_per_job` | chaines, booleens, floats, entier bytes | valeurs scalaires | EDTA, branches long reads, PsiCLASS, STAR | `use_long_reads` est interprete differemment selon modules; a harmoniser. |
+| Entrees Aegis-only | channel `input_data` construit dans `main.nf` | liste de paires cle/fichier | cles `masked_genome.masked_genome`, `braker3_results.*`, `previous_annotations.*`, `merged_*`, `gffcompare_out.*` | sous-workflow `aegis` | En mode minimal `EDTA=no`, des fichiers `dev_null*` remplacent les sorties unstranded absentes. |
+
+### Inventaire des sorties par module
+
+| Module/process | Entrees principales | Sorties declarees | Publication actuelle | Consommateur principal |
+| --- | --- | --- | --- | --- |
+| `prepare_RNAseq_fastq_files_short` | tuples RNA-seq courts | tuples `sample_ID`, `SRA_or_FASTQ`, `library_layout` | workdir uniquement | `trimming_fastq` |
+| `prepare_RNAseq_fastq_files_long` | tuples RNA-seq longs | tuples `sample_ID`, `SRA_or_FASTQ`, `library_layout` | workdir uniquement | `minimap2_alignment` |
+| `trimming_fastq` | FASTQ/SRA courts prepares | `*.trimmed.fastq.gz` | `${output_dir}/intermediate_files/evidence_data/RNAseq_data/trimmed_data` | Salmon, STAR, HISAT2 |
+| `liftoff_annotations` | assemblage cible, assemblage precedent, GFF3 precedent | `liftoff_previous_annotations.gff3`, `unmapped_features.txt` | `${output_dir}` | AGAT, Aegis |
+| `agat_convert_gff3_to_cds_fasta` | assemblage cible, Liftoff GFF3 | `${genome}.CDS.fasta.gz` | `${output_dir}/intermediate_files/liftoff/gff3_to_cds_fasta` | Salmon index |
+| `salmon_index` | CDS FASTA | `salmon_index/` | `${output_dir}/intermediate_files/salmon_index` | Salmon strand inference |
+| `salmon_strand_inference` | reads trimmes, index Salmon | `${sample_ID}.strand_info.classified` | `${output_dir}/intermediate_files/salmon_strand` | STAR/HISAT2 channel enrichi avec strandedness |
+| `star_genome_indices` | assemblage cible | `${genome}_index` | `${output_dir}/intermediate_files/evidence_data/star_databases` | STAR alignment |
+| `star_alignment` | index STAR, reads, strandedness | `${sample_ID}_Aligned.sortedByCoord.out.bam` | `${output_dir}/intermediate_files/evidence_data/RNAseq_alignments/STAR/{stranded,unstranded}` | StringTie, PsiCLASS, BRAKER3 |
+| `hisat2_genome_indices` | assemblage cible | `${genome}.*.ht2` | `${output_dir}/intermediate_files/evidence_data/hisat2_databases` | HISAT2 alignment |
+| `hisat2_alignment` | index HISAT2, reads, strandedness | `${sample_ID}_Aligned.sort.bam` | `${output_dir}/intermediate_files/evidence_data/RNAseq_alignments/HISAT2/{stranded,unstranded}` | StringTie HISAT2 |
+| `minimap2_genome_indices` | assemblage cible | `${genome}.mmi` | `${output_dir}/intermediate_files/evidence_data/minimap2_databases` | Minimap2 alignment |
+| `minimap2_alignment` | index Minimap2, reads longs | `${sample_ID}_Aligned.sorted.bam` | `${output_dir}/intermediate_files/evidence_data/RNAseq_alignments/minimap2` | StringTie long reads, BRAKER3 long reads |
+| `assembly_transcriptome_star_stringtie` | BAM STAR | `*_transcriptome.gtf`, `*_transcriptome.AltCommands.gtf` | `${output_dir}/intermediate_files/evidence_data/transcriptomes/StringTie/short_reads/STAR/{stranded,unstranded}` | StringTie STAR merge |
+| `assembly_transcriptome_hisat2_stringtie` | BAM HISAT2 | `*_transcriptome.gtf`, `*_transcriptome.AltCommands.gtf` | `${output_dir}/intermediate_files/evidence_data/transcriptomes/StringTie/short_reads/HISAT2/{stranded,unstranded}` | StringTie HISAT2 merge |
+| `assembly_transcriptome_star_psiclass` | BAM STAR | `${sample_ID}_vote.gtf` | `${output_dir}/intermediate_files/transcriptomes/STAR_PsiCLASS/{stranded,unstranded}` | GFFCompare |
+| `assembly_transcriptome_minimap2_stringtie` | BAM Minimap2 | `*_transcriptome.gtf`, `*_transcriptome.AltCommands.gtf` | `${output_dir}/intermediate_files/evidence_data/transcriptomes/StringTie/long_reads` | StringTie long reads merge |
+| `Stringtie_merging_short_reads_STAR` | liste GTF STAR/StringTie | `merged_transcriptomes.STAR.short_reads.*.gtf` | `${output_dir}/tmp` plus copies script vers `${output_dir}` | Aegis |
+| `Stringtie_merging_short_reads_hisat2` | liste GTF HISAT2/StringTie | `*.gtf` | `${output_dir}` | Non utilise actuellement par Aegis |
+| `Stringtie_merging_long_reads` | liste GTF Minimap2/StringTie | `merged_transcriptomes.minimap2.long_reads.*.gtf` | `${output_dir}/tmp` plus copies script vers `${output_dir}` | Aegis long reads |
+| `gffcompare` | liste GTF PsiCLASS | `stranded_merged_output.combined.gtf`, optionnel `unstranded_merged_output.combined.gtf` | `${output_dir}/tmp` | Aegis |
+| `EDTA` | assemblage cible | `*TElib.fa`, `*TEanno.gff3`, `*MAKER.masked` | `${output_dir}/tmp` plus copies script vers `${output_dir}` | Aegis |
+| `braker3_prediction` | genome, proteines, BAM courts | `augustus.hints.gff3`, `genemark.gtf`, `genemark_supported.gtf`, `braker.gff3` | `${output_dir}` | Aegis |
+| `braker3_prediction_with_long_reads` | genome, proteines, BAM courts + longs | `augustus.hints.gff3`, `genemark.gtf`, `genemark_supported.gtf`, `braker.gff3` | `${output_dir}` | Aegis long reads |
+| `aegis_short_reads` | genome masque, BRAKER3, Liftoff, STAR/StringTie, GFFCompare | `final_annotation.gff3`, `final_annotation_proteins_all.fasta`, `final_annotation_proteins_main.fasta` | `${output_dir}/aegis_outputs` | Diamond2GO |
+| `aegis_long_reads` | idem short + StringTie long reads | `final_annotation.gff3`, `final_annotation_proteins_all.fasta`, `final_annotation_proteins_main.fasta` | `${output_dir}/aegis_outputs` | Diamond2GO |
+| `diamond2go` | proteines Aegis all/main | `*-diamond*` | `${output_dir}/Diamond2GO_outputs` | sortie finale fonctionnelle |
+| `egapx` | YAML EGAPx | `*` | `${output_dir}/egapx` | Non branche actuellement |
+
+Points de vigilance P0-002:
+
+* plusieurs modules publient via `publishDir` et copient aussi manuellement dans `${output_dir}`;
+* les images `latest` rendent l'inventaire de versions non reproductible sans validation externe;
+* aucune version n'est collectee dans un artefact de sortie;
+* les schemas reels de samplesheets ne sont pas valides avant construction des channels;
+* EGAPx est documente et le module existe, mais la branche est commentee dans le sous-workflow.
 
 ## Constats critiques
 
