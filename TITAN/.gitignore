@@ -6,3 +6,5 @@ work/
 .apptainer-cache/
 .apptainer-tmp/
 *.sif
+.egapx_cache/
+.egapx_runner/

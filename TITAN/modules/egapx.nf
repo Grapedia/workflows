@@ -27,14 +27,23 @@ process egapx {
     EGAPX_EXECUTOR="${params.egapx_executor}"
     EGAPX_DATA_VERSION="${params.egapx_data_version}"
     EGAPX_RUNNER_DIR="${params.egapx_runner_dir}"
+    EGAPX_LOCAL_CACHE_DIR="${params.egapx_local_cache_dir}"
 
-    mkdir -p egapx_runner egapx_work egapx_out egapx_local_cache
+    mkdir -p egapx_runner egapx_work egapx_out
 
     if [[ -n "\$EGAPX_RUNNER_DIR" && "\$EGAPX_RUNNER_DIR" != "false" ]]; then
       cp -R "\$EGAPX_RUNNER_DIR"/. egapx_runner/
     else
       curl -fsSL "https://github.com/ncbi/egapx/archive/refs/tags/\${EGAPX_REVISION}.tar.gz" \\
         | tar -xz --strip-components=1 -C egapx_runner
+    fi
+
+    if [[ -n "\$EGAPX_LOCAL_CACHE_DIR" && "\$EGAPX_LOCAL_CACHE_DIR" != "false" ]]; then
+      mkdir -p "\$EGAPX_LOCAL_CACHE_DIR"
+      local_cache="\$EGAPX_LOCAL_CACHE_DIR"
+    else
+      mkdir -p egapx_local_cache
+      local_cache="\$PWD/egapx_local_cache"
     fi
 
     printf "process.container = '%s'\\n" "\$EGAPX_CONTAINER" > egapx_runner/ui/assets/config/docker_image.config
@@ -45,7 +54,7 @@ process egapx {
       -e "\$EGAPX_EXECUTOR"
       -w "\$PWD/egapx_work"
       -o "\$PWD/egapx_out"
-      -lc "\$PWD/egapx_local_cache"
+      -lc "\$local_cache"
       -dv "\$EGAPX_DATA_VERSION"
     )
     echo "[\$DATE] Executing: \${CMD[*]}"

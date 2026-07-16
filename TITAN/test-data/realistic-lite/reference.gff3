@@ -1,0 +1,4 @@
+##gff-version 3
+chrSynthetic1	TITAN_fixture	gene	501	1100	.	+	.	ID=gene1;Name=synthetic_gene1
+chrSynthetic1	TITAN_fixture	mRNA	501	1100	.	+	.	ID=gene1.t1;Parent=gene1
+chrSynthetic1	TITAN_fixture	CDS	501	1100	.	+	0	ID=gene1.cds1;Parent=gene1.t1

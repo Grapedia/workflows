@@ -1,0 +1,4 @@
+sampleID,SRA_or_FASTQ,library_layout
+synthetic_single,FASTQ,single
+synthetic_paired,FASTQ,paired
+synthetic_long,FASTQ,long
