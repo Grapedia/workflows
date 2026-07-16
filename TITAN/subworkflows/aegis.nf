@@ -78,5 +78,6 @@ workflow aegis {
     aegis_gff            = has_long_reads_enabled ? aegis_long_reads.out.aegis_gff : aegis_short_reads.out.aegis_gff
     aegis_proteins_all   = has_long_reads_enabled ? aegis_long_reads.out.aegis_proteins_all : aegis_short_reads.out.aegis_proteins_all
     aegis_proteins_main  = has_long_reads_enabled ? aegis_long_reads.out.aegis_proteins_main : aegis_short_reads.out.aegis_proteins_main
+    aegis_versions       = has_long_reads_enabled ? aegis_long_reads.out.versions : aegis_short_reads.out.versions
     diamond2go_output    = diamond2go.out
 }

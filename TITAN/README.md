@@ -123,6 +123,7 @@ Required input file(s) not found:
 | Aegis final annotation | `final_annotation.gff3`, `final_annotation_proteins_all.fasta`, `final_annotation_proteins_main.fasta` | `${output_dir}/aegis_outputs` |
 | Diamond2GO | `*-diamond*` | `${output_dir}/Diamond2GO_outputs` |
 | EGAPx | `egapx.complete.genomic.gff3`, `egapx.complete.genomic.gtf`, `egapx.complete.proteins.faa`, `egapx.complete.cds.fna`, `egapx.complete.transcripts.fna`, `egapx.annotated_genome.asn`, `egapx_out/`, `versions.yml` | `${output_dir}/egapx` |
+| Provenance | `evidence_manifest.json`, `versions.yml` | `${output_dir}/provenance` |
 
 ## **Example command-line to run**
 

@@ -3,6 +3,7 @@ nextflow.enable.dsl = 2
 // Include subworkflows
 include { generate_evidence_data } from '../subworkflows/generate_evidence_data'
 include { aegis } from '../subworkflows/aegis'
+include { titan_provenance } from '../modules/titan_provenance'
 
 def isMissingParam(value) {
     return value == null || value == true || value == false || value.toString().trim() == '' || value.toString().trim().equalsIgnoreCase('true') || value.toString().trim().equalsIgnoreCase('false')
@@ -110,5 +111,31 @@ workflow TITAN {
         evidence_data.long_reads_default_gtf,
         evidence_data.long_reads_alt_gtf,
         has_long_reads
+    )
+
+    titan_provenance(
+        has_long_reads,
+        file(params.new_assembly),
+        file(params.previous_assembly),
+        file(params.previous_annotations),
+        file(params.RNAseq_samplesheet),
+        file(params.protein_samplesheet),
+        file(params.egapx_paramfile),
+        evidence_data.masked_genome,
+        evidence_data.liftoff_gff3,
+        evidence_data.egapx_gff3,
+        evidence_data.braker_augustus_gff3,
+        evidence_data.braker_genemark_gtf,
+        evidence_data.star_stringtie_stranded_default_gtf,
+        evidence_data.star_stringtie_stranded_alt_gtf,
+        evidence_data.star_psiclass_stranded_gtf,
+        evidence_data.star_psiclass_unstranded_gtf,
+        evidence_data.star_stringtie_unstranded_default_gtf,
+        evidence_data.star_stringtie_unstranded_alt_gtf,
+        evidence_data.long_reads_default_gtf,
+        evidence_data.long_reads_alt_gtf,
+        aegis.out.aegis_gff,
+        aegis.out.aegis_proteins_all,
+        aegis.out.aegis_proteins_main
     )
 }

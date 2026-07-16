@@ -111,11 +111,11 @@ TITAN annote un nouvel assemblage de genome en combinant:
 | Logs | Rapports structures | Echo dans scripts, logs implicites | Peu exploitable | Standardiser logs par process. |
 | Rapports | MultiQC, trace, timeline, DAG | DAG possible manuellement | Incomplet | Documenter `-with-*`. |
 | Documentation | README + docs | README utile mais incomplet | Manque exploitation | Ajouter docs dev/utilisateur. |
-| Reproductibilite | versions.yml, provenance | Versions dans README seulement | Non collecte | Ajouter collecte versions. |
-| Provenance | Manifestes et checksums | Peu de manifestes | Faible tracabilite | Ajouter manifestes inputs/outputs. |
+| Reproductibilite | versions.yml, provenance | Versions README + EGAPx/AEGIS/provenance | Partiel | Etendre versions aux modules restants. |
+| Provenance | Manifestes et checksums | `provenance/evidence_manifest.json` | Partiel | Etendre le manifeste aux outputs intermediaires si necessaire. |
 | Gestion erreurs | Statuts structures | Warnings et erreurs parfois non bloquants | Risque silencieux | Echec explicite sur invalides. |
 | Reprise | Tests `-resume` | Compatibilite non verifiee | Inconnu | Tester apres baseline. |
-| Outputs | Contrat documente | Sorties publiees et copies manuelles | Risque collision | Contrat outputs TITAN. |
+| Outputs | Contrat documente | Sorties publiques declarees + `saveAs` | Partiel | Stabiliser les modules restants sous le meme contrat. |
 | Versionnement | Changelog, version | Manifest version 1.0 | Minimal | Versionner pipeline et outils. |
 
 Bonnes pratiques reutilisables: separation profils, fixtures minimales, validation precoce, scripts testables, provenance, CI rapide, contrats de sorties. Elements specifiques RNA-seq non reutilisables directement: ENA accessions, matrices featureCounts/TPM/z-score, logique HISAT2 expression.
@@ -200,9 +200,9 @@ for f in modules/*.nf; do awk '/^[[:space:]]*output:/{flag=1} /^[[:space:]]*scri
 
 Points de vigilance P0-002:
 
-* plusieurs modules publient via `publishDir`; les copies manuelles `/outputdir` ont ete supprimees des merges StringTie et GFFCompare;
+* plusieurs modules publient via `publishDir`; les copies manuelles `/outputdir` ont ete supprimees des merges StringTie, GFFCompare et EDTA;
 * les images `latest` rendent l'inventaire de versions non reproductible sans validation externe;
-* aucune version n'est collectee dans un artefact de sortie;
+* EGAPx, AEGIS et TITAN provenance collectent un `versions.yml`; les autres modules restent a couvrir progressivement;
 * les chemins de samplesheets sont valides avant construction des channels depuis P0-005; le schema complet des colonnes reste a renforcer;
 * EGAPx est documente, obligatoire, expose des sorties nommees et son GFF3 est consomme par AEGIS.
 

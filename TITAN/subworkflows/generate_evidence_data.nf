@@ -126,8 +126,8 @@ workflow generate_evidence_data {
             hisat2_unstranded_alt_gtfs
         )
 
-        merged_long_reads_default_args_gff = Channel.empty()
-        merged_long_reads_alt_args_gff = Channel.empty()
+        merged_long_reads_default_args_gff = Channel.value([])
+        merged_long_reads_alt_args_gff = Channel.value([])
 
         // Process minimap2 alignments for long reads
         if (has_long_reads) {

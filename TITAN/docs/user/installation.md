@@ -263,6 +263,15 @@ versions.yml
 
 `egapx.complete.genomic.gff3` is passed to AEGIS as an additional annotation evidence during the final merge.
 
+TITAN also publishes provenance under `${output_dir}/provenance`:
+
+```text
+evidence_manifest.json
+versions.yml
+```
+
+`evidence_manifest.json` records the main inputs, AEGIS evidence files, final AEGIS outputs, file sizes and SHA-256 checksums.
+
 ## 8. Validate with the built-in test profile
 
 Before running production, verify the local workflow bootstrap:

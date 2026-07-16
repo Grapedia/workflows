@@ -19,7 +19,7 @@ Highest-risk findings:
 * EGAPx is now mandatory, uses the official `ncbi/egapx:0.5.2` image through the official `v0.5.2` runner, emits named outputs, and its GFF3 is consumed by AEGIS as an additional merge evidence.
 * P1-006 removed the highest-risk internal directory scans from evidence integration modules. StringTie merges, GFFCompare, BRAKER3, AGAT, Salmon and STAR/HISAT2/Minimap2 alignment stages now consume declared upstream files instead of rediscovering them from published directories.
 * Long-read processing is now detected from `RNAseq_samplesheet` rows where `library_layout` is `long`; the old `use_long_reads` flag is no longer part of the runtime contract.
-* Multiple modules copy files manually to `/outputdir` in addition to `publishDir`, creating hidden dependencies and duplicate output semantics.
+* P1-007 removed the remaining manual `/outputdir` publication from the core evidence path. Backward-compatible public names are now handled through declared outputs and `publishDir saveAs`.
 * Several processes use `containerOptions` mounts for Docker-specific paths. This fights Nextflow staging and weakens Apptainer/HPC portability.
 
 The recommended path is to stabilize contracts before changing scientific behavior:
@@ -29,7 +29,7 @@ The recommended path is to stabilize contracts before changing scientific behavi
 3. Done in P1-004: make Aegis consume process outputs directly, not files discovered in `output_dir`.
 4. Done in P1-004: move the required EDTA hard-masked genome from `output_dir` discovery to a typed Aegis input.
 5. Done in P1-005 and the follow-up AEGIS integration: replace broad EGAPx output capture with named EGAPx emits and pass `egapx_gff3` to `aegis merge`.
-6. Migrate modules to staged `path` inputs and named emits module by module.
+6. Done in P1-007 for provenance: publish `provenance/evidence_manifest.json` and `provenance/versions.yml`.
 
 ## Current topology
 
@@ -129,19 +129,19 @@ Recommendation:
 * continue defining the evidence bundle as named channels;
 * for future partial reruns, introduce an explicit `--evidence_manifest` rather than ad hoc filename discovery.
 
-### 3. EDTA is mandatory but still coupled to published filenames
+### 3. EDTA is mandatory and exposes its public masked-genome name declaratively
 
 Evidence:
 
 * TITAN now always runs EDTA.
 * `aegis` now always requires `masked_genome.masked_genome` and fails if it is missing.
 * `workflows/titan.nf` passes `evidence_data.masked_genome` directly to `aegis`.
-* `EDTA.nf` emits `*MAKER.masked` but also manually copies it to `/outputdir/assembly_masked.EDTA.fasta`.
+* `EDTA.nf` emits `*MAKER.masked` and publishes the backward-compatible `assembly_masked.EDTA.fasta` name through `publishDir saveAs`.
 
 Impact:
 
 * Aegis requirements are explicit and channel-based;
-* EDTA output naming depends on manual copy side effects.
+* EDTA output naming is now declared in Nextflow publication rules.
 
 Recommendation:
 
@@ -216,26 +216,24 @@ Recommendation:
 * pass normalized booleans or channels to subworkflows;
 * create explicit placeholder channels only for genuinely optional evidence, not required evidence.
 
-### 7. Outputs and provenance are not cleanly separated
+### 7. Outputs and provenance are now explicitly published
 
 Evidence:
 
-* EDTA, StringTie merging and GFFCompare copy public files manually to `/outputdir`.
-* `publishDir` also publishes process outputs.
-* output file names are sometimes command-dependent and sometimes manually renamed.
-* no `versions.yml`, input manifest or evidence manifest is emitted.
+* EDTA, StringTie merging and GFFCompare preserve historical public names with `publishDir saveAs`.
+* `modules/titan_provenance.nf` emits `evidence_manifest.json` with input, evidence and final-output checksums.
+* `modules/titan_provenance.nf` emits a workflow-level `versions.yml` for TITAN provenance, EGAPx and AEGIS versions.
 
 Impact:
 
-* public outputs are hard to document and validate;
-* reruns can see old outputs;
-* provenance cannot be audited automatically.
+* public outputs are easier to document and validate;
+* the final AEGIS evidence bundle can be audited after a run;
+* module-level versions still need broader coverage in later work.
 
 Recommendation:
 
-* publish from process outputs only;
-* emit an `evidence_manifest.json` for Aegis;
-* emit `versions.yml` per module or per workflow;
+* keep publishing from declared process outputs;
+* extend `versions.yml` collection to remaining tools as container versions are locked;
 * keep backward-compatible filenames through `publishDir saveAs` or stable process output names.
 
 ### 8. Profiles and resources are only partially normalized

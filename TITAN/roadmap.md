@@ -244,19 +244,19 @@ Risque eleve; proceder par familles de modules avec fixtures dediees.
 
 ## TITAN-P1-007 - Normaliser les outputs et la provenance
 Priorite : P1
-Statut : A faire
+Statut : Fait
 Risque : Moyen
 
 ### Objectif
 Rendre les sorties previsibles et collecter versions/manifestes.
 ### Constat
-Plusieurs modules copient manuellement vers `/outputdir` en plus de `publishDir`; aucun `versions.yml` ou manifeste d'evidences n'est produit.
+Les derniers outputs publics qui dependaient de copies manuelles vers `/outputdir` sont maintenant publies depuis des outputs declares. TITAN publie un manifeste d'evidences et un `versions.yml` de provenance sous `${output_dir}/provenance`.
 ### Fichiers concernes
 `modules/*.nf`, `scripts/`, `docs/`.
 ### Etapes d'implementation
 Publier uniquement des outputs declares, ajouter un `evidence_manifest.json`, ajouter des emits `versions`, conserver les noms historiques via `publishDir saveAs` si necessaire.
 ### Tests
-Verification presence des fichiers historiques et nouveaux manifestes.
+`nextflow config -profile test`; `python3 scripts/validate_minimal_test_data.py`; `nextflow run main.nf -profile test -stub-run -ansi-log false`; validation JSON de `${output_dir}/provenance/evidence_manifest.json`; verification presence des fichiers historiques et nouveaux manifestes.
 ### Criteres d'acceptation
 Pas de regression de noms publics; provenance lisible apres chaque run.
 ### Risques et retour arriere
