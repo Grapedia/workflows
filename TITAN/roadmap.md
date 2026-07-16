@@ -232,7 +232,7 @@ Faire utiliser aux modules leurs inputs declares au lieu de scanner `output_dir`
 ### Constat
 Les modules StringTie merge, GFFCompare, BRAKER3, read preparation, trimming, AGAT, Salmon, Minimap2, STAR et HISAT2 utilisaient des mounts ou scripts de recuperation de chemins qui contournaient les channels Nextflow. Ils consomment maintenant les fichiers declares par `path` quand ils dependent d'outputs internes.
 ### Fichiers concernes
-`modules/Stringtie_merging_*.nf`, `modules/gffcompare.nf`, `modules/braker3_prediction*.nf`, `modules/prepare_RNAseq_fastq_files_*.nf`, `modules/trimming_fastq.nf`, scripts `retrieve_*`.
+`modules/Stringtie_merging_*.nf`, `modules/gffcompare.nf`, `modules/braker3_prediction*.nf`, `modules/prepare_RNAseq_fastq_files_*.nf`, `modules/trimming_fastq.nf`; anciens scripts `retrieve_*` supprimes apres migration.
 ### Etapes d'implementation
 Migrer module par module vers des `path` inputs stages, remplacer les scripts de scan par des listes de fichiers passees en channels, conserver les chemins historiques uniquement en sortie publique. Les preuves unstranded optionnelles sont representees par des fichiers vides et ignorees par AEGIS si absentes.
 ### Tests

@@ -30,7 +30,7 @@ Sous-workflows:
 
 Modules detectes: 27 process Nextflow dans `modules/*.nf`.
 
-Scripts auxiliaires: wrappers StringTie/EDTA, scripts de recuperation de chemins et scripts Python d'analyse/filtrage. Les anciens scripts `scripts/Aegis1.py`, `scripts/Aegis2.sh` et `scripts/Aegis3.py` restent dans le depot mais ne sont plus le chemin TITAN principal; les modules AEGIS utilisent maintenant le CLI upstream.
+Scripts auxiliaires actifs: wrappers StringTie/EDTA, nettoyage FASTA proteique BRAKER3 et validation des fixtures minimales. Les anciens scripts AEGIS, scripts `retrieve_*` et scripts monoexons non references ont ete supprimes apres P1-006; les modules AEGIS utilisent le CLI upstream.
 
 Donnees exemple: `data_example/` contient des placeholders tres legers, majoritairement de taille 0; ce repertoire ne constitue pas un jeu de test executable fiable.
 
