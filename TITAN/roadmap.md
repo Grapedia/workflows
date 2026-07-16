@@ -224,21 +224,21 @@ EGAPx embarque son propre Nextflow et peut etre lourd; le module reste isole mai
 
 ## TITAN-P1-006 - Supprimer les scans de dossiers internes
 Priorite : P1
-Statut : A faire
+Statut : Fait
 Risque : Eleve
 
 ### Objectif
 Faire utiliser aux modules leurs inputs declares au lieu de scanner `output_dir`, `work` ou `data`.
 ### Constat
-Les modules StringTie merge, GFFCompare, BRAKER3, read preparation et Aegis utilisent des mounts et scripts de recuperation de chemins qui contournent les channels Nextflow.
+Les modules StringTie merge, GFFCompare, BRAKER3, read preparation, trimming, AGAT, Salmon, Minimap2, STAR et HISAT2 utilisaient des mounts ou scripts de recuperation de chemins qui contournaient les channels Nextflow. Ils consomment maintenant les fichiers declares par `path` quand ils dependent d'outputs internes.
 ### Fichiers concernes
 `modules/Stringtie_merging_*.nf`, `modules/gffcompare.nf`, `modules/braker3_prediction*.nf`, `modules/prepare_RNAseq_fastq_files_*.nf`, `modules/trimming_fastq.nf`, scripts `retrieve_*`.
 ### Etapes d'implementation
-Migrer module par module vers des `path` inputs stages, remplacer les scripts de scan par des listes de fichiers passees en channels, conserver les chemins historiques uniquement en sortie publique.
+Migrer module par module vers des `path` inputs stages, remplacer les scripts de scan par des listes de fichiers passees en channels, conserver les chemins historiques uniquement en sortie publique. Les preuves unstranded optionnelles sont representees par des fichiers vides et ignorees par AEGIS si absentes.
 ### Tests
-nf-test ou `-stub-run` par module, comparaison des noms de fichiers publies.
+`nextflow config -profile test`; `python3 scripts/validate_minimal_test_data.py`; `nextflow run main.nf -profile test -stub-run -ansi-log false`; verification des outputs publies AEGIS/EGAPx/StringTie/GFFCompare.
 ### Criteres d'acceptation
-Les process ne lisent plus d'inputs internes depuis `${params.output_dir}` ou `${projectDir}/data` sauf parametre explicite.
+Les process critiques ne lisent plus d'inputs internes depuis `${params.output_dir}`, `${projectDir}/work` ou `${projectDir}/data` pour retrouver les outputs amont. Les fichiers locaux RNA-seq restent lus via le parametre explicite `RNAseq_data_dir`.
 ### Risques et retour arriere
 Risque eleve; proceder par familles de modules avec fixtures dediees.
 

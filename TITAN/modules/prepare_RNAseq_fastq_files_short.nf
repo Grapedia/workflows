@@ -14,65 +14,59 @@ process prepare_RNAseq_fastq_files_short {
   tuple val(sample_ID), val(SRA_or_FASTQ), val(library_layout)
 
   output:
-  tuple val(sample_ID), val(SRA_or_FASTQ), val(library_layout), emit: prepared_fastqs
+  tuple val(sample_ID), val(SRA_or_FASTQ), val(library_layout), path("${sample_ID}*.fastq.gz"), emit: prepared_fastqs
 
   script:
   """
+  set -euo pipefail
   DATE=\$(date "+%Y-%m-%d %H:%M:%S")
-  #echo "[\$DATE] Running prepare_RNAseq_fastq_files_short on $sample_ID"
+  echo "[\$DATE] Preparing short RNA-seq files for $sample_ID"
 
   if [[ $SRA_or_FASTQ == "SRA" ]]
   then
     if [[ $library_layout == "paired" ]]
     then
-      if ls /RNAseq_data/${sample_ID}*.fastq.gz 1> /dev/null 2>&1
-      then
-        echo "[\$DATE] Sample $sample_ID already processed. Skipping."
-        continue
-      else
-        echo "[\$DATE] Downloading SRA sample: $sample_ID - paired-end sample"
-        prefetch --force all --max-size 100G -O /RNAseq_data/ $sample_ID
-        echo "[\$DATE] Converting .sra to FASTQ for $sample_ID"
-        fastq-dump --outdir /RNAseq_data/ --split-files $sample_ID
-        rm -R /RNAseq_data/$sample_ID
-        echo "[\$DATE] Compressing FASTQ files for $sample_ID"
-        gzip /RNAseq_data/${sample_ID}_1.fastq
-        gzip /RNAseq_data/${sample_ID}_2.fastq
-      fi
+      echo "[\$DATE] Downloading SRA paired-end sample: $sample_ID"
+      prefetch --force all --max-size 100G -O . $sample_ID
+      fastq-dump --outdir . --split-files $sample_ID
+      rm -rf "$sample_ID"
+      gzip ${sample_ID}_1.fastq ${sample_ID}_2.fastq
     elif [[ $library_layout == "single" ]]
     then
-      if ls /RNAseq_data/${sample_ID}.fastq.gz 1> /dev/null 2>&1
-      then
-        #echo "[\$DATE] Sample $sample_ID already processed. Skipping."
-        continue
-      else
-        echo "[\$DATE] Downloading SRA sample: $sample_ID - single-end sample"
-        prefetch --force all --max-size 100G -O /RNAseq_data/ $sample_ID
-        echo "[\$DATE] Converting .sra to FASTQ for $sample_ID"
-        fastq-dump --outdir /RNAseq_data/ $sample_ID
-        rm -R /RNAseq_data/$sample_ID
-        #echo "[\$DATE] Compressing FASTQ file for $sample_ID"
-        gzip /RNAseq_data/${sample_ID}.fastq
-      fi
+      echo "[\$DATE] Downloading SRA single-end sample: $sample_ID"
+      prefetch --force all --max-size 100G -O . $sample_ID
+      fastq-dump --outdir . $sample_ID
+      rm -rf "$sample_ID"
+      gzip ${sample_ID}.fastq
     else
-      echo "[\$DATE] WARNING : $library_layout is not equal to paired or single !"
+      echo "[\$DATE] ERROR: $library_layout is not equal to paired or single" >&2
+      exit 1
     fi
   elif [[ $SRA_or_FASTQ == "FASTQ" ]]
   then
-    if ls /RNAseq_data/$sample_ID*fastq.gz 1> /dev/null 2>&1
-    then
-      #echo "[\$DATE] FASTQ sample $sample_ID already exists. Skipping."
-      continue
+    if [[ $library_layout == "paired" ]]; then
+      cp /RNAseq_data/${sample_ID}_1.fastq.gz .
+      cp /RNAseq_data/${sample_ID}_2.fastq.gz .
+    elif [[ $library_layout == "single" ]]; then
+      cp /RNAseq_data/${sample_ID}.fastq.gz .
     else
-      echo "[\$DATE] WARNING: ${params.RNAseq_data_dir}/$sample_ID*fastq.gz does not exist!"
+      echo "[\$DATE] ERROR: $library_layout is not equal to paired or single" >&2
+      exit 1
     fi
   else
-    echo "[\$DATE] ERROR: \$SRA_or_FASTQ is not equal to SRA or FASTQ!"
+    echo "[\$DATE] ERROR: \$SRA_or_FASTQ is not equal to SRA or FASTQ" >&2
+    exit 1
   fi
   """
 
   stub:
   """
-  echo "Stub prepare short reads for ${sample_ID}"
+  if [[ $library_layout == "paired" ]]
+  then
+    printf "@stub/1\\nACGT\\n+\\n!!!!\\n" | gzip -c > ${sample_ID}_1.fastq.gz
+    printf "@stub/2\\nTGCA\\n+\\n!!!!\\n" | gzip -c > ${sample_ID}_2.fastq.gz
+  else
+    printf "@stub\\nACGT\\n+\\n!!!!\\n" | gzip -c > ${sample_ID}.fastq.gz
+  fi
   """
 }

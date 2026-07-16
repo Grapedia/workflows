@@ -17,7 +17,7 @@ Highest-risk findings:
 * Aegis consumes generated evidence directly through named channels, including the EDTA `masked_genome` output.
 * EDTA is now mandatory in TITAN. The hard-masked genome is passed to Aegis as a typed channel.
 * EGAPx is now mandatory, uses the official `ncbi/egapx:0.5.2` image through the official `v0.5.2` runner, emits named outputs, and its GFF3 is consumed by AEGIS as an additional merge evidence.
-* Many modules take `val()` inputs and then ignore them, reading from mounted `params.output_dir`, `projectDir/data/*` or helper scripts instead. This makes caching, resume and portability fragile.
+* P1-006 removed the highest-risk internal directory scans from evidence integration modules. StringTie merges, GFFCompare, BRAKER3, AGAT, Salmon and STAR/HISAT2/Minimap2 alignment stages now consume declared upstream files instead of rediscovering them from published directories.
 * Long-read processing is now detected from `RNAseq_samplesheet` rows where `library_layout` is `long`; the old `use_long_reads` flag is no longer part of the runtime contract.
 * Multiple modules copy files manually to `/outputdir` in addition to `publishDir`, creating hidden dependencies and duplicate output semantics.
 * Several processes use `containerOptions` mounts for Docker-specific paths. This fights Nextflow staging and weakens Apptainer/HPC portability.
@@ -169,25 +169,26 @@ Recommendation:
 
 * keep EGAPx as a named evidence input and document any future changes to merge priority explicitly.
 
-### 5. Module inputs are not consistently staged
+### 5. Module inputs are increasingly staged, but cleanup is not complete
 
 Evidence:
 
-* read preparation, trimming and long-read alignment now mount `params.RNAseq_data_dir`, but the scripts still infer FASTQ names from `sample_ID` instead of staging explicit `path` inputs from the samplesheet.
-* BRAKER3 mounts `${projectDir}/data/protein_data`, even though the current samplesheet can point to arbitrary fixture paths.
-* merge modules read from mounted output directories with helper scripts instead of consuming the GTF files passed in their input value.
-* `braker3_prediction` takes `val(bam_short)`, but then retrieves BAMs from `/alignments` by scanning directories.
+* `prepare_RNAseq_fastq_files_*` now materialize local/SRA reads in the workdir and emit staged read files.
+* `trimming_fastq`, `minimap2_alignment`, `salmon_index`, `salmon_strand_inference`, `agat_convert_gff3_to_cds_fasta`, `star_alignment` and `hisat2_alignment` consume declared `path` inputs.
+* StringTie merge modules and `gffcompare` receive explicit lists of staged GTF files from channel transformations.
+* BRAKER3 receives staged genome, protein FASTA files and BAM lists instead of scanning `/alignments` or `${projectDir}/data/protein_data`.
+* Local FASTQ/FASTA discovery is still convention-based through the explicit `RNAseq_data_dir` parameter and `sample_ID` naming.
 
 Impact:
 
-* Nextflow cannot track the real file dependencies;
-* modules are difficult to test with minimal fixtures;
-* moving to Apptainer or a different working directory is risky;
-* stale files in published output directories can affect new runs.
+* Nextflow can now track the main evidence dependencies through staged inputs;
+* stub tests exercise the same channel contracts used by AEGIS;
+* stale files in published output directories no longer satisfy StringTie/GFFCompare/BRAKER3 inputs;
+* RNA-seq local file naming still needs a future samplesheet schema upgrade if arbitrary file paths are required.
 
 Recommendation:
 
-* replace directory scans with staged `path` inputs;
+* continue replacing remaining directory conventions with staged `path` inputs;
 * carry sample metadata as maps or tuples;
 * make every process command use its declared inputs;
 * use `publishDir` only for public outputs, not as an internal data bus.
@@ -268,7 +269,7 @@ The safest order is contract-first:
 5. Done in P1-004: rewrite Aegis integration to consume named evidence directly.
 6. Done in P1-004: make EDTA hard-masked genome an explicit required Aegis input.
 7. Done in P1-005 and follow-up AEGIS integration: replace broad mandatory EGAPx results with named EGAPx evidence emits and connect `egapx_gff3` to AEGIS.
-8. Migrate modules away from mounted output directories and hidden scans.
+8. Done in P1-006 for the critical evidence path: migrate StringTie merges, GFFCompare, BRAKER3, AGAT, Salmon and STAR/HISAT2/Minimap2 alignment away from mounted output directories and hidden scans.
 9. Add `-stub-run` and nf-test coverage for critical subworkflows.
 10. Add CI once the contracts are stable.
 

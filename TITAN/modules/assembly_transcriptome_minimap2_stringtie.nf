@@ -11,8 +11,7 @@ process assembly_transcriptome_minimap2_stringtie {
     tuple val(sample_ID), path(bam_file)
 
   output:
-    tuple val(sample_ID), path("*_transcriptome.gtf"), emit: minimap2_stringtie_transcriptome_gtf
-    tuple val(sample_ID), path("*_transcriptome.AltCommands.gtf"), emit: minimap2_stringtie_alt_commands_gtf
+    tuple val(sample_ID), path("${sample_ID}_transcriptome.gtf"), path("${sample_ID}_transcriptome.AltCommands.gtf"), emit: minimap2_stringtie_transcriptomes
 
   script:
     """

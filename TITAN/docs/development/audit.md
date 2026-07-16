@@ -169,8 +169,8 @@ for f in modules/*.nf; do awk '/^[[:space:]]*output:/{flag=1} /^[[:space:]]*scri
 
 | Module/process | Entrees principales | Sorties declarees | Publication actuelle | Consommateur principal |
 | --- | --- | --- | --- | --- |
-| `prepare_RNAseq_fastq_files_short` | tuples RNA-seq courts | tuples `sample_ID`, `SRA_or_FASTQ`, `library_layout` | workdir uniquement | `trimming_fastq` |
-| `prepare_RNAseq_fastq_files_long` | tuples RNA-seq longs | tuples `sample_ID`, `SRA_or_FASTQ`, `library_layout` | workdir uniquement | `minimap2_alignment` |
+| `prepare_RNAseq_fastq_files_short` | tuples RNA-seq courts | tuples `sample_ID`, `SRA_or_FASTQ`, `library_layout`, FASTQ stages | workdir uniquement | `trimming_fastq` |
+| `prepare_RNAseq_fastq_files_long` | tuples RNA-seq longs | tuples `sample_ID`, `SRA_or_FASTQ`, `library_layout`, FASTQ/FASTA stages | workdir uniquement | `minimap2_alignment` |
 | `trimming_fastq` | FASTQ/SRA courts prepares | `*.trimmed.fastq.gz` | `${output_dir}/intermediate_files/evidence_data/RNAseq_data/trimmed_data` | Salmon, STAR, HISAT2 |
 | `liftoff_annotations` | assemblage cible, assemblage precedent, GFF3 precedent | `liftoff_previous_annotations.gff3`, `unmapped_features.txt` | `${output_dir}` | AGAT, Aegis |
 | `agat_convert_gff3_to_cds_fasta` | assemblage cible, Liftoff GFF3 | `${genome}.CDS.fasta.gz` | `${output_dir}/intermediate_files/liftoff/gff3_to_cds_fasta` | Salmon index |
@@ -182,14 +182,14 @@ for f in modules/*.nf; do awk '/^[[:space:]]*output:/{flag=1} /^[[:space:]]*scri
 | `hisat2_alignment` | index HISAT2, reads, strandedness | `${sample_ID}_Aligned.sort.bam` | `${output_dir}/intermediate_files/evidence_data/RNAseq_alignments/HISAT2/{stranded,unstranded}` | StringTie HISAT2 |
 | `minimap2_genome_indices` | assemblage cible | `${genome}.mmi` | `${output_dir}/intermediate_files/evidence_data/minimap2_databases` | Minimap2 alignment |
 | `minimap2_alignment` | index Minimap2, reads longs | `${sample_ID}_Aligned.sorted.bam` | `${output_dir}/intermediate_files/evidence_data/RNAseq_alignments/minimap2` | StringTie long reads, BRAKER3 long reads |
-| `assembly_transcriptome_star_stringtie` | BAM STAR | `*_transcriptome.gtf`, `*_transcriptome.AltCommands.gtf` | `${output_dir}/intermediate_files/evidence_data/transcriptomes/StringTie/short_reads/STAR/{stranded,unstranded}` | StringTie STAR merge |
-| `assembly_transcriptome_hisat2_stringtie` | BAM HISAT2 | `*_transcriptome.gtf`, `*_transcriptome.AltCommands.gtf` | `${output_dir}/intermediate_files/evidence_data/transcriptomes/StringTie/short_reads/HISAT2/{stranded,unstranded}` | StringTie HISAT2 merge |
+| `assembly_transcriptome_star_stringtie` | BAM STAR | tuple `sample_ID`, default GTF, alt GTF, `strand_type` | `${output_dir}/intermediate_files/evidence_data/transcriptomes/StringTie/short_reads/STAR/{stranded,unstranded}` | StringTie STAR merge |
+| `assembly_transcriptome_hisat2_stringtie` | BAM HISAT2 | tuple `sample_ID`, default GTF, alt GTF, `strand_type` | `${output_dir}/intermediate_files/evidence_data/transcriptomes/StringTie/short_reads/HISAT2/{stranded,unstranded}` | StringTie HISAT2 merge |
 | `assembly_transcriptome_star_psiclass` | BAM STAR | `${sample_ID}_vote.gtf` | `${output_dir}/intermediate_files/transcriptomes/STAR_PsiCLASS/{stranded,unstranded}` | GFFCompare |
-| `assembly_transcriptome_minimap2_stringtie` | BAM Minimap2 | `*_transcriptome.gtf`, `*_transcriptome.AltCommands.gtf` | `${output_dir}/intermediate_files/evidence_data/transcriptomes/StringTie/long_reads` | StringTie long reads merge |
-| `Stringtie_merging_short_reads_STAR` | liste GTF STAR/StringTie | `merged_transcriptomes.STAR.short_reads.*.gtf` | `${output_dir}/tmp` plus copies script vers `${output_dir}` | Aegis |
-| `Stringtie_merging_short_reads_hisat2` | liste GTF HISAT2/StringTie | `*.gtf` | `${output_dir}` | Non utilise actuellement par Aegis |
-| `Stringtie_merging_long_reads` | liste GTF Minimap2/StringTie | `merged_transcriptomes.minimap2.long_reads.*.gtf` | `${output_dir}/tmp` plus copies script vers `${output_dir}` | Aegis long reads |
-| `gffcompare` | liste GTF PsiCLASS | `stranded_merged_output.combined.gtf`, optionnel `unstranded_merged_output.combined.gtf` | `${output_dir}/tmp` | Aegis |
+| `assembly_transcriptome_minimap2_stringtie` | BAM Minimap2 | tuple `sample_ID`, default GTF, alt GTF | `${output_dir}/intermediate_files/evidence_data/transcriptomes/StringTie/long_reads` | StringTie long reads merge |
+| `Stringtie_merging_short_reads_STAR` | listes stagees de GTF STAR/StringTie par strandedness et mode default/alt | `merged_transcriptomes.STAR.short_reads.*.gtf` | `${output_dir}/tmp` et noms historiques sous `${output_dir}` via `publishDir saveAs` | Aegis |
+| `Stringtie_merging_short_reads_hisat2` | listes stagees de GTF HISAT2/StringTie par strandedness et mode default/alt | `*.gtf` | `${output_dir}` | Non utilise actuellement par Aegis |
+| `Stringtie_merging_long_reads` | listes stagees de GTF Minimap2/StringTie default/alt | `merged_transcriptomes.minimap2.long_reads.*.gtf` | `${output_dir}/tmp` et noms historiques sous `${output_dir}` via `publishDir saveAs` | Aegis long reads |
+| `gffcompare` | listes stagees de GTF PsiCLASS par strandedness | `stranded_merged_output.combined.gtf`, `unstranded_merged_output.combined.gtf` vide si absent | `${output_dir}/tmp` et noms historiques sous `${output_dir}` via `publishDir saveAs` | Aegis |
 | `EDTA` | assemblage cible | `*TElib.fa`, `*TEanno.gff3`, `*MAKER.masked` | `${output_dir}/tmp` plus copies script vers `${output_dir}` | Aegis |
 | `braker3_prediction` | genome, proteines, BAM courts | `augustus.hints.gff3`, `genemark.gtf`, `genemark_supported.gtf`, `braker.gff3` | `${output_dir}` | Aegis |
 | `braker3_prediction_with_long_reads` | genome, proteines, BAM courts + longs | `augustus.hints.gff3`, `genemark.gtf`, `genemark_supported.gtf`, `braker.gff3` | `${output_dir}` | Aegis long reads |
@@ -200,7 +200,7 @@ for f in modules/*.nf; do awk '/^[[:space:]]*output:/{flag=1} /^[[:space:]]*scri
 
 Points de vigilance P0-002:
 
-* plusieurs modules publient via `publishDir` et copient aussi manuellement dans `${output_dir}`;
+* plusieurs modules publient via `publishDir`; les copies manuelles `/outputdir` ont ete supprimees des merges StringTie et GFFCompare;
 * les images `latest` rendent l'inventaire de versions non reproductible sans validation externe;
 * aucune version n'est collectee dans un artefact de sortie;
 * les chemins de samplesheets sont valides avant construction des channels depuis P0-005; le schema complet des colonnes reste a renforcer;
@@ -224,8 +224,8 @@ P0:
 P1:
 
 * Nombreuses images `latest`.
-* `containerOptions` montent `projectDir/work`, `projectDir/data` ou `/outputdir`, ce qui fragilise Apptainer et `-resume`.
-* Certains scripts utilisent des chemins historiques, glob fragile, `ls`, backticks, `continue` hors boucle utile dans des scripts de process.
+* des `containerOptions` Docker-centriques restent dans certains modules hors P1-006, ce qui fragilise Apptainer et `-resume`.
+* les scans internes de dossiers publies ont ete retires des merges StringTie, GFFCompare, BRAKER3, AGAT, Salmon et des alignements STAR/HISAT2/Minimap2.
 * Telechargements SRA pendant le workflow avec `--max-size 100G`.
 * Versions non collectees dans les sorties.
 

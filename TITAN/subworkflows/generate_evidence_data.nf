@@ -57,8 +57,7 @@ workflow generate_evidence_data {
 
         // Convert GFF3 to CDS FASTA for Salmon strand inference
         gff_cds = agat_convert_gff3_to_cds_fasta(
-            file(params.new_assembly).getParent(),
-            file(params.new_assembly).getName(),
+            file(params.new_assembly),
             previous_annotations.liftoff_previous_annotations
         )
 
@@ -80,8 +79,8 @@ workflow generate_evidence_data {
         star_aligned = star_alignment(star_indices.index, salmon_output_processed)
 
         star_aligned.samples_aligned
+          .map { sample_ID, bam_file, strand_type -> bam_file }
           .collect()
-          .map { it[0] }
           .set{ concat_star_bams_BRAKER3 }
 
         // Process HISAT2 alignments
@@ -94,12 +93,38 @@ workflow generate_evidence_data {
         // Process hisat2 assemblies
         hisat2_assemblies_stringtie = assembly_transcriptome_hisat2_stringtie(hisat2_aligned.samples_aligned)
 
-        concat_hisat2_stringtie_for_merging = hisat2_assemblies_stringtie.hisat2_stringtie_transcriptome_gtf
-        .groupTuple()
-        .collect()
-        .map { it[0] }
+        hisat2_assemblies_stringtie.hisat2_stringtie_transcriptomes
+          .filter { sample_ID, default_gtf, alt_gtf, strand_type -> strand_type != 'unstranded' }
+          .map { sample_ID, default_gtf, alt_gtf, strand_type -> default_gtf }
+          .collect()
+          .set { hisat2_stranded_default_gtfs }
 
-        merged_hisat2_stringtie = Stringtie_merging_short_reads_hisat2(concat_hisat2_stringtie_for_merging)
+        hisat2_assemblies_stringtie.hisat2_stringtie_transcriptomes
+          .filter { sample_ID, default_gtf, alt_gtf, strand_type -> strand_type != 'unstranded' }
+          .map { sample_ID, default_gtf, alt_gtf, strand_type -> alt_gtf }
+          .collect()
+          .set { hisat2_stranded_alt_gtfs }
+
+        hisat2_assemblies_stringtie.hisat2_stringtie_transcriptomes
+          .filter { sample_ID, default_gtf, alt_gtf, strand_type -> strand_type == 'unstranded' }
+          .map { sample_ID, default_gtf, alt_gtf, strand_type -> default_gtf }
+          .collect()
+          .ifEmpty([])
+          .set { hisat2_unstranded_default_gtfs }
+
+        hisat2_assemblies_stringtie.hisat2_stringtie_transcriptomes
+          .filter { sample_ID, default_gtf, alt_gtf, strand_type -> strand_type == 'unstranded' }
+          .map { sample_ID, default_gtf, alt_gtf, strand_type -> alt_gtf }
+          .collect()
+          .ifEmpty([])
+          .set { hisat2_unstranded_alt_gtfs }
+
+        merged_hisat2_stringtie = Stringtie_merging_short_reads_hisat2(
+            hisat2_stranded_default_gtfs,
+            hisat2_stranded_alt_gtfs,
+            hisat2_unstranded_default_gtfs,
+            hisat2_unstranded_alt_gtfs
+        )
 
         merged_long_reads_default_args_gff = Channel.empty()
         merged_long_reads_alt_args_gff = Channel.empty()
@@ -116,19 +141,24 @@ workflow generate_evidence_data {
             minimap2_aligned = minimap2_alignment(minimap2_indices.index, long_reads_prepared.prepared_fastqs)
 
             minimap2_aligned.samples_aligned
+              .map { sample_ID, bam_file -> bam_file }
               .collect()
-              .map { it[0] }
               .set { concat_minimap2_bams_BRAKER3 }
 
             // Process long read assemblies
             long_reads_assemblies = assembly_transcriptome_minimap2_stringtie(minimap2_aligned.samples_aligned)
 
-            concat_minimap2_stringtie_for_merging = long_reads_assemblies.minimap2_stringtie_transcriptome_gtf
-            .groupTuple()
-            .collect()
-            .map { it[0] }
+            long_reads_assemblies.minimap2_stringtie_transcriptomes
+              .map { sample_ID, default_gtf, alt_gtf -> default_gtf }
+              .collect()
+              .set { minimap2_default_gtfs }
 
-            merged_long_reads = Stringtie_merging_long_reads(concat_minimap2_stringtie_for_merging)
+            long_reads_assemblies.minimap2_stringtie_transcriptomes
+              .map { sample_ID, default_gtf, alt_gtf -> alt_gtf }
+              .collect()
+              .set { minimap2_alt_gtfs }
+
+            merged_long_reads = Stringtie_merging_long_reads(minimap2_default_gtfs, minimap2_alt_gtfs)
             merged_long_reads_default_args_gff = merged_long_reads.default_args_gff
             merged_long_reads_alt_args_gff = merged_long_reads.alt_args_gff
         }
@@ -137,20 +167,55 @@ workflow generate_evidence_data {
         star_assemblies_stringtie = assembly_transcriptome_star_stringtie(star_aligned.samples_aligned)
         star_assemblies_psiclass = assembly_transcriptome_star_psiclass(star_aligned.samples_aligned)
 
-        concat_star_stringtie_for_merging = star_assemblies_stringtie.star_stringtie_transcriptome_gtf
-        .groupTuple()
-        .collect()
-        .map { it[0] }
+        star_assemblies_stringtie.star_stringtie_transcriptomes
+          .filter { sample_ID, default_gtf, alt_gtf, strand_type -> strand_type != 'unstranded' }
+          .map { sample_ID, default_gtf, alt_gtf, strand_type -> default_gtf }
+          .collect()
+          .set { star_stranded_default_gtfs }
+
+        star_assemblies_stringtie.star_stringtie_transcriptomes
+          .filter { sample_ID, default_gtf, alt_gtf, strand_type -> strand_type != 'unstranded' }
+          .map { sample_ID, default_gtf, alt_gtf, strand_type -> alt_gtf }
+          .collect()
+          .set { star_stranded_alt_gtfs }
+
+        star_assemblies_stringtie.star_stringtie_transcriptomes
+          .filter { sample_ID, default_gtf, alt_gtf, strand_type -> strand_type == 'unstranded' }
+          .map { sample_ID, default_gtf, alt_gtf, strand_type -> default_gtf }
+          .collect()
+          .ifEmpty([])
+          .set { star_unstranded_default_gtfs }
+
+        star_assemblies_stringtie.star_stringtie_transcriptomes
+          .filter { sample_ID, default_gtf, alt_gtf, strand_type -> strand_type == 'unstranded' }
+          .map { sample_ID, default_gtf, alt_gtf, strand_type -> alt_gtf }
+          .collect()
+          .ifEmpty([])
+          .set { star_unstranded_alt_gtfs }
 
         // Merge assemblies
-        merged_star_stringtie = Stringtie_merging_short_reads_STAR(concat_star_stringtie_for_merging)
+        merged_star_stringtie = Stringtie_merging_short_reads_STAR(
+            star_stranded_default_gtfs,
+            star_stranded_alt_gtfs,
+            star_unstranded_default_gtfs,
+            star_unstranded_alt_gtfs
+        )
 
-        concat_star_psiclass_for_merging = star_assemblies_psiclass.psiclass_assemblies
+        star_assemblies_psiclass.psiclass_assemblies
+          .filter { sample_ID, gtf_file, strand_type -> strand_type != 'unstranded' }
+          .map { sample_ID, gtf_file, strand_type -> gtf_file }
           .collect()
-          .map { it[0] }
+          .set { star_psiclass_stranded_gtfs }
+
+        star_assemblies_psiclass.psiclass_assemblies
+          .filter { sample_ID, gtf_file, strand_type -> strand_type == 'unstranded' }
+          .map { sample_ID, gtf_file, strand_type -> gtf_file }
+          .collect()
+          .ifEmpty([])
+          .set { star_psiclass_unstranded_gtfs }
 
         // GFFcompare to merge PsiCLASS transcriptomes
-        gffcompare_out = gffcompare(concat_star_psiclass_for_merging)
+        gffcompare_out = gffcompare(star_psiclass_stranded_gtfs, star_psiclass_unstranded_gtfs)
 
         // EDTA is mandatory: Aegis requires the hard-masked genome.
         edta_results = EDTA(
@@ -158,23 +223,27 @@ workflow generate_evidence_data {
             file(params.new_assembly).getName()
         )
 
+        protein_fastas = protein_list
+          .map { organism, filename -> file(filename) }
+          .collect()
+
+        clean_protein_script = file("${projectDir}/scripts/clean_protein_fasta_for_BRAKER3.py")
+
         // Run BRAKER3
         if (has_long_reads) {
             braker3_results = braker3_prediction_with_long_reads(
-                file(params.new_assembly).getParent(),
-                file(params.new_assembly).getName(),
-                file(params.protein_samplesheet).getParent(),
-                file(params.protein_samplesheet).getName(),
+                file(params.new_assembly),
+                protein_fastas,
                 concat_star_bams_BRAKER3,
-                concat_minimap2_bams_BRAKER3
+                concat_minimap2_bams_BRAKER3,
+                clean_protein_script
             )
         } else {
             braker3_results = braker3_prediction(
-                file(params.new_assembly).getParent(),
-                file(params.new_assembly).getName(),
-                file(params.protein_samplesheet).getParent(),
-                file(params.protein_samplesheet).getName(),
-                concat_star_bams_BRAKER3
+                file(params.new_assembly),
+                protein_fastas,
+                concat_star_bams_BRAKER3,
+                clean_protein_script
             )
         }
 

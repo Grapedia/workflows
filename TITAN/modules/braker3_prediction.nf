@@ -3,17 +3,15 @@ process braker3_prediction {
 
   tag "Executing BRAKER3/AUGUSTUS-Genemark prediction"
   container 'avelt/braker3:latest'
-  containerOptions "--volume ${protein_samplesheet_path}:/protein_samplesheet_path --volume ${projectDir}/scripts:/scripts --volume ${projectDir}/work:/work --volume ${projectDir}/data/protein_data:/protein_path --volume ${genome_path}:/genome_path --volume ${params.output_dir}/intermediate_files/evidence_data/RNAseq_alignments/:/alignments --volume ${projectDir}:/outdir:z"
   cpus 4
 
   publishDir "${params.output_dir}", mode: 'copy'
 
   input:
-    val(genome_path)
-    val(genome)
-    val(protein_samplesheet_path)
-    val(protein_samplesheet_filename)
-    val(bam_short)
+    path(genome)
+    path(protein_fastas)
+    path(bam_short)
+    path(clean_protein_script)
 
   output:
     path "augustus.hints.gff3", emit: augustus_gff
@@ -23,34 +21,17 @@ process braker3_prediction {
 
   script:
     """
+    set -euo pipefail
     DATE=\$(date "+%Y-%m-%d %H:%M:%S")
     echo "[\$DATE] Running BRAKER3/AUGUSTUS-Genemark prediction"
 
-    proteins=\$(/scripts/retrieve_proteins_for_braker.sh /protein_samplesheet_path/$protein_samplesheet_filename)
-    bam_stranded_path=\$(/scripts/retrieve_path_bam_braker3.sh /alignments/STAR/stranded)
-    bam_unstranded_path=\$(/scripts/retrieve_path_bam_braker3.sh /alignments/STAR/unstranded)
-
-    if [ -z "\${bam_unstranded_path}" ]; then
-        bam="\${bam_stranded_path}"
-    else
-        bam="\${bam_stranded_path},\${bam_unstranded_path}"
-    fi
+    bam=\$(printf '%s,' ${bam_short} | sed 's/,\$//')
 
     # Cleaned the protein fasta files for BRAKER3 -> simpler header and replace . and * by X
-    IFS=',' read -r -a protein_files <<< "\$proteins"
-
-    # Variable to store path to cleaned protein files
     cleaned_proteins=""
-
-    # For loop on each protein file
-    for file in "\${protein_files[@]}"; do
-        # Define the filename for the cleaned protein fasta file.
-        cleaned="\${file%.fasta}.cleaned.fasta"
-
-        # Launch the "clean" script
-        python3 /scripts/clean_protein_fasta_for_BRAKER3.py "\$file" "\$cleaned" "\${file%.fasta}"
-
-        # Add the cleaned filename to the cleaned variable
+    for file in ${protein_fastas}; do
+        cleaned="\$(basename "\${file%.*}").cleaned.fasta"
+        python3 ${clean_protein_script} "\$file" "\$cleaned" "\${file%.*}"
         if [[ -z "\$cleaned_proteins" ]]; then
             cleaned_proteins="\$cleaned"
         else
@@ -58,13 +39,13 @@ process braker3_prediction {
         fi
     done
 
-    CMD="/BRAKER-3.0.8/scripts/braker.pl --genome=/genome_path/$genome --bam=\${bam} \
+    CMD="/BRAKER-3.0.8/scripts/braker.pl --genome=${genome} --bam=\${bam} \
     --prot_seq=\${cleaned_proteins} \
     --threads=${task.cpus} --workingdir=\${PWD} --softmasking --gff3 \
     --PROTHINT_PATH=/ProtHint-2.6.0/bin/ --GENEMARK_PATH=/GeneMark-ETP --AUGUSTUS_CONFIG_PATH=/Augustus/config --TSEBRA_PATH=/TSEBRA/bin"
     echo "[\$DATE] Executing: \$CMD"
 
-    /BRAKER-3.0.8/scripts/braker.pl --genome=/genome_path/$genome --bam=\${bam} \
+    /BRAKER-3.0.8/scripts/braker.pl --genome=${genome} --bam=\${bam} \
     --prot_seq=\${cleaned_proteins} \
     --threads=${task.cpus} --workingdir=\${PWD} --softmasking --gff3 \
     --PROTHINT_PATH=/ProtHint-2.6.0/bin/ --GENEMARK_PATH=/GeneMark-ETP --AUGUSTUS_CONFIG_PATH=/Augustus/config --TSEBRA_PATH=/TSEBRA/bin
@@ -74,6 +55,7 @@ process braker3_prediction {
     cp Augustus/augustus.hints.gff3 .
     cp GeneMark-ETP/genemark.gtf .
     cp GeneMark-ETP/genemark_supported.gtf .
+    test -s braker.gff3
     """
 
   stub:

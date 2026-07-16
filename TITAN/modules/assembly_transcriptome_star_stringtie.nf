@@ -18,8 +18,7 @@ process assembly_transcriptome_star_stringtie {
     tuple val(sample_ID), path(bam_file), val(strand_type)
 
   output:
-    tuple val(sample_ID), path("*_transcriptome.gtf"), val(strand_type), emit: star_stringtie_transcriptome_gtf
-    tuple val(sample_ID), path("*_transcriptome.AltCommands.gtf"), val(strand_type), emit: star_stringtie_alt_commands_gtf
+    tuple val(sample_ID), path("${sample_ID}_transcriptome.gtf"), path("${sample_ID}_transcriptome.AltCommands.gtf"), val(strand_type), emit: star_stringtie_transcriptomes
 
   script:
     """

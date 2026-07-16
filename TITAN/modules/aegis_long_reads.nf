@@ -44,13 +44,13 @@ process aegis_long_reads {
       "${long_reads_alt_args}"
     )
 
-    if [[ "\$(basename "${gffcompare_unstranded}")" != dev_null* ]]; then
+    if [[ -s "${gffcompare_unstranded}" && "\$(basename "${gffcompare_unstranded}")" != dev_null* ]]; then
       merge_inputs+=("${gffcompare_unstranded}")
     fi
-    if [[ "\$(basename "${unstranded_default_args}")" != dev_null* ]]; then
+    if [[ -s "${unstranded_default_args}" && "\$(basename "${unstranded_default_args}")" != dev_null* ]]; then
       merge_inputs+=("${unstranded_default_args}")
     fi
-    if [[ "\$(basename "${unstranded_alt_args}")" != dev_null* ]]; then
+    if [[ -s "${unstranded_alt_args}" && "\$(basename "${unstranded_alt_args}")" != dev_null* ]]; then
       merge_inputs+=("${unstranded_alt_args}")
     fi
 

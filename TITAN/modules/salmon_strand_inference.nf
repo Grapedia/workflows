@@ -2,7 +2,6 @@ process salmon_strand_inference {
 
   tag "Executing salmon strand inference on $sample_ID"
   container 'quay.io/biocontainers/salmon:1.10.3--haf24da9_3'
-  containerOptions "--volume ${projectDir}/work:/work --volume ${projectDir}/scripts:/scripts"
   publishDir "${params.output_dir}/intermediate_files/salmon_strand/"
   cpus 4
 
@@ -18,18 +17,16 @@ process salmon_strand_inference {
     DATE=\$(date "+%Y-%m-%d %H:%M:%S")
     echo "[\$DATE] Running salmon strand inference on $sample_ID"
 
-    index_path=\$(/scripts/retrieve_path.sh $salmon_index)
-
     if [[ $library_layout == "paired" ]]
     then
-      CMD="salmon quant -i \${index_path} -l A -p ${task.cpus} -1 ${reads[0]} -2 ${reads[1]} -o ${sample_ID}_quant --validateMappings --skipQuant 2> ${sample_ID}.log"
+      CMD="salmon quant -i ${salmon_index} -l A -p ${task.cpus} -1 ${reads[0]} -2 ${reads[1]} -o ${sample_ID}_quant --validateMappings --skipQuant 2> ${sample_ID}.log"
       echo "[\$DATE] Executing: \$CMD"
-      salmon quant -i \${index_path} -l A -p ${task.cpus} -1 ${reads[0]} -2 ${reads[1]} -o ${sample_ID}_quant --validateMappings --skipQuant 2> ${sample_ID}.log
+      salmon quant -i ${salmon_index} -l A -p ${task.cpus} -1 ${reads[0]} -2 ${reads[1]} -o ${sample_ID}_quant --validateMappings --skipQuant 2> ${sample_ID}.log
     elif [[ $library_layout == "single" ]]
     then
-      CMD="salmon quant -i \${index_path} -l A -p ${task.cpus} -r ${reads} -o ${sample_ID}_quant --validateMappings --skipQuant 2> ${sample_ID}.log"
+      CMD="salmon quant -i ${salmon_index} -l A -p ${task.cpus} -r ${reads} -o ${sample_ID}_quant --validateMappings --skipQuant 2> ${sample_ID}.log"
       echo "[\$DATE] Executing: \$CMD"
-      salmon quant -i \${index_path} -l A -p ${task.cpus} -r ${reads} -o ${sample_ID}_quant --validateMappings --skipQuant 2> ${sample_ID}.log
+      salmon quant -i ${salmon_index} -l A -p ${task.cpus} -r ${reads} -o ${sample_ID}_quant --validateMappings --skipQuant 2> ${sample_ID}.log
     fi
 
     if grep 'Automatically detected most likely library type' ${sample_ID}.log > /dev/null
