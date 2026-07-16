@@ -84,21 +84,21 @@ Risque faible; les donnees sont synthetiques et isolees.
 
 ## TITAN-P0-005 - Controler les parametres obligatoires
 Priorite : P0
-Statut : A faire
+Statut : Fait
 Risque : Moyen
 
 ### Objectif
 Valider explicitement les parametres avant de construire les channels.
 ### Constat
-La validation actuelle est top-level et casse la compilation avec Nextflow 26.
+La validation est maintenant executee dans `workflow`, avant la construction des channels. Les parametres obligatoires, les fichiers d'entree absents et les noms de workflow invalides produisent des erreurs lisibles avant tout process lourd.
 ### Fichiers concernes
-`main.nf`, futurs scripts de validation.
+`main.nf`, `docs/development/audit.md`.
 ### Etapes d'implementation
-Deplacer la validation dans `workflow`, utiliser `Channel.fromPath(..., checkIfExists: true)` pour les branches concernees.
+Ajouter des helpers de validation dans `main.nf`, verifier les parametres obligatoires, verifier l'existence des fichiers d'entree et utiliser `Channel.fromPath(..., checkIfExists: true)` pour les samplesheets de la branche `generate_evidence_data`.
 ### Tests
-Cas nominal, parametre manquant, fichier absent.
+`nextflow config -profile test`; `nextflow run main.nf -profile test --workflow aegis -ansi-log false`; cas negatifs avec parametre vide, fichier absent et workflow invalide.
 ### Criteres d'acceptation
-Erreur lisible avant calcul lourd.
+Erreur lisible avant calcul lourd pour parametre manquant, fichier absent et workflow invalide.
 ### Risques et retour arriere
 Peut modifier le moment d'echec; documenter.
 

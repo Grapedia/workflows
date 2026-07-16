@@ -15,28 +15,55 @@ include { aegis } from './subworkflows/aegis'
 // Define the output directory for intermediate files
 params.workflow = params.workflow ?: "generate_evidence_data"  // default = "generate_evidence_data"
 
-workflow {
-    if (!params.output_dir || !params.egapx_paramfile || !params.RNAseq_samplesheet || !params.protein_samplesheet || !params.new_assembly || !params.previous_assembly || !params.previous_annotations) {
-        error "Missing required parameters. Please provide values for: output_dir, egapx_paramfile, RNAseq_samplesheet, protein_samplesheet, new_assembly, previous_assembly, previous_annotations"
+def isMissingParam(value) {
+    return value == null || value == true || value == false || value.toString().trim() == '' || value.toString().trim().equalsIgnoreCase('true') || value.toString().trim().equalsIgnoreCase('false')
+}
+
+def validateRequiredParams(requiredParams) {
+    def missingParams = requiredParams.findAll { paramName -> isMissingParam(params[paramName]) }
+    if (missingParams) {
+        def formattedParams = missingParams.collect { "--${it}" }.join(', ')
+        error "Missing required parameter(s): ${formattedParams}"
     }
+}
+
+def validateExistingInputFiles(requiredFiles) {
+    def missingFiles = requiredFiles.findAll { paramName -> !file(params[paramName]).exists() }
+    if (missingFiles) {
+        def formattedFiles = missingFiles.collect { paramName -> "--${paramName}: ${params[paramName]}" }.join('\n  ')
+        error "Required input file(s) not found:\n  ${formattedFiles}"
+    }
+}
+
+def validateWorkflowName() {
+    def allowedWorkflows = ['generate_evidence_data', 'aegis', 'all']
+    if (!allowedWorkflows.contains(params.workflow)) {
+        error "Invalid --workflow '${params.workflow}'. Allowed values: ${allowedWorkflows.join(', ')}"
+    }
+}
+
+workflow {
+    validateWorkflowName()
+    validateRequiredParams(['output_dir', 'egapx_paramfile', 'RNAseq_samplesheet', 'protein_samplesheet', 'new_assembly', 'previous_assembly', 'previous_annotations'])
+    validateExistingInputFiles(['egapx_paramfile', 'RNAseq_samplesheet', 'protein_samplesheet', 'new_assembly', 'previous_assembly', 'previous_annotations'])
 
     def use_long_reads_enabled = params.use_long_reads == true || params.use_long_reads == 'true' || params.use_long_reads == 'yes'
 
     // if the workflow parameter is equal to generate_evidence_data the first workflow is executed
     if (params.workflow == "generate_evidence_data") {
-        Channel.fromPath(file(params.RNAseq_samplesheet))
+        Channel.fromPath(params.RNAseq_samplesheet, checkIfExists: true)
            .splitCsv(header: true, sep: ',')
            .filter( ~/.*long.*/ )
            .map { row -> [ row.sampleID, row.SRA_or_FASTQ, row.library_layout ] }
            .set{ samples_list_long_reads }
 
-        Channel.fromPath(file(params.RNAseq_samplesheet))
+        Channel.fromPath(params.RNAseq_samplesheet, checkIfExists: true)
            .splitCsv(header: true, sep: ',')
            .filter( ~/.*single.*/ )
            .map { row -> [ row.sampleID, row.SRA_or_FASTQ, row.library_layout ] }
            .set{ samples_list_single_short_reads }
 
-        Channel.fromPath(file(params.RNAseq_samplesheet))
+        Channel.fromPath(params.RNAseq_samplesheet, checkIfExists: true)
            .splitCsv(header: true, sep: ',')
            .filter( ~/.*paired.*/ )
            .map { row -> [ row.sampleID, row.SRA_or_FASTQ, row.library_layout ] }
@@ -47,7 +74,7 @@ workflow {
             .concat(samples_list_paired_short_reads)
             .set { samples_list_short_reads }
 
-        Channel.fromPath(file(params.protein_samplesheet))
+        Channel.fromPath(params.protein_samplesheet, checkIfExists: true)
            .splitCsv(header: true, sep: ',')
            .map { row -> [ row.organism, row.filename ] }
            .set{ protein_list }
@@ -176,5 +203,8 @@ workflow {
       println "Files sent to Aegis : ${workflow_inputs_list}"
 
       aegis(workflow_inputs_list) // We send the list directly, not a Channel
+  }
+  else if (params.workflow == "all") {
+      error "Workflow mode 'all' is declared but not implemented yet. Use --workflow generate_evidence_data or --workflow aegis."
   }
 }

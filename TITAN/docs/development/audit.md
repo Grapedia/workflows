@@ -279,6 +279,31 @@ nextflow run main.nf -profile test --workflow aegis -ansi-log false -resume
 
 Limite: ce profil valide la resolution Nextflow et la branche minimale `aegis` avec `EDTA=no`. Il ne valide pas biologiquement les outils lourds ni les conteneurs.
 
+## Validation des parametres P0-005
+
+Decision: conserver la validation dans `main.nf`, a l'interieur du bloc `workflow`, pour eviter les effets de bord de code executable top-level avec Nextflow 26. Les controles couvrent:
+
+* parametres obligatoires vides ou passes comme flags sans valeur;
+* fichiers d'entree absents;
+* valeur `--workflow` invalide;
+* `Channel.fromPath(..., checkIfExists: true)` pour les samplesheets de la branche `generate_evidence_data`.
+
+Commandes validees:
+
+```bash
+nextflow config -profile test
+nextflow run main.nf -profile test --workflow aegis -ansi-log false
+nextflow run main.nf -profile test --workflow aegis --RNAseq_samplesheet '' -ansi-log false
+nextflow run main.nf -profile test --workflow aegis --previous_annotations test-data/minimal/valid/missing.gff3 -ansi-log false
+nextflow run main.nf -profile test --workflow nope -ansi-log false
+```
+
+Messages attendus verifies:
+
+* `Missing required parameter(s): --RNAseq_samplesheet`
+* `Required input file(s) not found`
+* `Invalid --workflow 'nope'`
+
 ## Strategie de modularisation
 
 Structure cible progressive:
