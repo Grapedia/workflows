@@ -3,7 +3,7 @@
 Date: 2026-07-16
 Branch: `codex/titan-hardening`
 
-This document summarizes the completed P0 work. It is a short operational guide; the detailed inventory and command log remain in `docs/development/audit.md`.
+This document summarizes the completed P0 work. It is a short operational guide; the detailed inventory and command log remain in `docs/development/audit.md`. The broader architecture audit and refactor target are in `docs/development/architecture-audit.md`.
 
 ## Scope
 

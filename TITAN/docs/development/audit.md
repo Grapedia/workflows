@@ -210,6 +210,7 @@ Points de vigilance P0-002:
 ## Constats critiques
 
 Synthese operationnelle P0: `docs/development/p0-hardening.md`.
+Audit architecture/refactor: `docs/development/architecture-audit.md`.
 
 P0:
 

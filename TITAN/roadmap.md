@@ -102,27 +102,167 @@ Erreur lisible avant calcul lourd pour parametre manquant, fichier absent et wor
 ### Risques et retour arriere
 Peut modifier le moment d'echec; documenter.
 
-## TITAN-P1-001 - Consolider l'architecture DSL2
+## TITAN-P0-006 - Auditer l'architecture Nextflow cible
+Priorite : P0
+Statut : Fait
+Risque : Faible
+
+### Objectif
+Identifier les defauts structurels qui rendent TITAN fragile avant d'ajouter de nouvelles fonctionnalites.
+### Constat
+L'audit confirme que le probleme principal est le contrat entre couches: `main.nf` orchestre trop, Aegis relit les fichiers publies dans `output_dir`, EDTA est optionnel alors qu'Aegis depend d'un genome masque, et EGAPx existe mais n'est pas branche.
+### Fichiers concernes
+`docs/development/architecture-audit.md`, `roadmap.md`.
+### Etapes d'implementation
+Inspecter `main.nf`, `subworkflows/*.nf`, `modules/*.nf`, `conf/*.config` et formaliser les risques et l'architecture cible.
+### Tests
+Audit statique par `rg`, lecture des modules critiques, `nextflow config -profile test`.
+### Criteres d'acceptation
+Document d'audit present avec constats, impacts, recommandations et ordre de migration.
+### Risques et retour arriere
+Aucun impact runtime.
+
+## TITAN-P1-001 - Clarifier les modes workflow et normaliser les booleens
 Priorite : P1
 Statut : A faire
 Risque : Moyen
 
 ### Objectif
-Separer workflow principal, sous-workflows et modules locaux avec contrats d'entree/sortie.
+Rendre les modes `generate_evidence_data`, `aegis` et futur `all` explicites et normaliser `EDTA`, `use_long_reads` et futurs flags EGAPx une seule fois.
 ### Constat
-Modules presents mais channels et listes Groovy restent fragiles.
+`main.nf` accepte `all` mais l'erreur ensuite; plusieurs modules utilisent encore `params.use_long_reads` directement, ce qui peut rendre une chaine `"false"` truthy.
 ### Fichiers concernes
-`main.nf`, `workflows/titan.nf`, `subworkflows/`, `modules/`.
+`main.nf`, futurs helpers de validation, `subworkflows/*.nf`, modules avec `when: params.use_long_reads`.
 ### Etapes d'implementation
-Introduire `workflows/titan.nf`, deplacer progressivement l'orchestration, documenter les tuples.
+Ajouter un bloc de normalisation de parametres, refuser `all` tant qu'il n'est pas implemente ou le brancher vraiment, passer les booleens normalises aux sous-workflows, remplacer les `when:` directs.
 ### Tests
-Compilation, tests de sous-workflows, `-resume`.
+`nextflow run main.nf -profile test --workflow aegis`; tests negatifs `--workflow all` si non implemente, `--use_long_reads false`, `--use_long_reads true`.
 ### Criteres d'acceptation
-`main.nf` devient un point d'entree leger.
+Chaque mode a un comportement documente et aucun module ne depend d'une chaine booleenne ambigue.
 ### Risques et retour arriere
-Migration par etapes seulement.
+Peut changer le comportement historique de configs qui passaient des chaines; documenter les alias conserves.
 
-## TITAN-P1-002 - Verrouiller les conteneurs critiques
+## TITAN-P1-002 - Introduire une architecture Nextflow standard
+Priorite : P1
+Statut : A faire
+Risque : Moyen
+
+### Objectif
+Faire de `main.nf` un point d'entree leger et deplacer l'orchestration vers une couche `workflows/` plus testable.
+### Constat
+`main.nf` valide les parametres, construit des channels, scanne `output_dir`, fabrique des placeholders et appelle les sous-workflows.
+### Fichiers concernes
+`main.nf`, `workflows/titan.nf`, `subworkflows/`, `docs/development/architecture-audit.md`.
+### Etapes d'implementation
+Creer `workflows/titan.nf`, y deplacer validation/orchestration, garder `main.nf` limite aux includes et a l'appel du workflow principal, conserver les noms publics de parametres.
+### Tests
+`nextflow config -profile test`; `nextflow run main.nf -profile test --workflow aegis -ansi-log false`; `-resume`.
+### Criteres d'acceptation
+`main.nf` ne contient plus de logique biologique ni de scan de fichiers; les tests P0 restent verts.
+### Risques et retour arriere
+Migration par etapes; commit dedie pour pouvoir revert facilement.
+
+## TITAN-P1-003 - Definir un contrat d'evidences nomme
+Priorite : P1
+Statut : A faire
+Risque : Eleve
+
+### Objectif
+Remplacer le channel mixte `[string_key, file]` et les listes Groovy par des emits nommes et documentes.
+### Constat
+`generate_evidence_data` melange toutes les evidences dans un seul channel cle/fichier; `aegis.nf` reconstruit des arrays et indexe `[0]`.
+### Fichiers concernes
+`subworkflows/generate_evidence_data.nf`, `subworkflows/aegis.nf`, `docs/development/architecture-audit.md`, tests.
+### Etapes d'implementation
+Emettre des channels nommes: Liftoff, EGAPx optionnel, EDTA masked genome, BRAKER/AUGUSTUS, GeneMark, STAR/StringTie, STAR/PsiCLASS, long reads optionnels. Documenter les evidences requises et optionnelles.
+### Tests
+Compilation, `-stub-run`, test de presence des emits, cas evidence requise absente.
+### Criteres d'acceptation
+Aegis consomme des channels nommes et echoue clairement si une evidence requise manque.
+### Risques et retour arriere
+Risque eleve car c'est le coeur du pipeline; ne pas changer les commandes scientifiques dans le meme commit.
+
+## TITAN-P1-004 - Refaire le lien EDTA -> Aegis
+Priorite : P1
+Statut : A faire
+Risque : Eleve
+
+### Objectif
+Modeliser explicitement le genome hard-masked requis par Aegis.
+### Constat
+EDTA est optionnel dans `generate_evidence_data`, mais Aegis ne peut produire l'annotation finale que si un genome masque existe. Actuellement `EDTA=no` peut terminer en succes en sautant Aegis.
+### Fichiers concernes
+`main.nf`, `subworkflows/generate_evidence_data.nf`, `subworkflows/aegis.nf`, `modules/EDTA.nf`, `modules/aegis_*.nf`.
+### Etapes d'implementation
+Introduire `run_edta` et `masked_assembly` en gardant `EDTA` comme alias temporaire; faire echouer Aegis si aucun genome masque n'est disponible; emettre le genome masque avec un nom stable sans copie manuelle vers `/outputdir`.
+### Tests
+Cas `run_edta=true`, cas `masked_assembly` fourni, cas Aegis sans genome masque qui echoue avec message clair, profil test conserve avec un mode skip explicite.
+### Criteres d'acceptation
+Aegis ne depend plus d'un fichier retrouve dans `output_dir`; son input hard-masked est explicite.
+### Risques et retour arriere
+Risque scientifique et UX; conserver compatibilite des anciens parametres pendant une version.
+
+## TITAN-P1-005 - Integrer EGAPx proprement
+Priorite : P1
+Statut : A faire
+Risque : Eleve
+
+### Objectif
+Brancher EGAPx comme source d'annotation optionnelle mais testable, et integrer son GFF3 au contrat d'evidences Aegis.
+### Constat
+`modules/egapx.nf` existe, mais l'include et l'appel sont commentes. Son input declare deux `path` alors que l'appel prevu passe un dossier et un nom; son output `path("*")` est trop large.
+### Fichiers concernes
+`modules/egapx.nf`, `subworkflows/generate_evidence_data.nf`, `subworkflows/aegis.nf`, `modules/aegis_*.nf`, `test-data/minimal/valid/evidence/`.
+### Etapes d'implementation
+Ajouter `run_egapx=false`, corriger le module pour prendre `path egapx_paramfile`, identifier et emettre les vrais outputs EGAPx, ajouter fixture/stub EGAPx, connecter `egapx_gff3` a l'evidence bundle, puis a Aegis si Aegis supporte cette source.
+### Tests
+`run_egapx=false` ne change rien; `run_egapx=true -stub-run` emet les sorties attendues; test d'integration Aegis avec fixture EGAPx.
+### Criteres d'acceptation
+EGAPx est activable par parametre, produit des emits nommes et ne casse pas les runs sans EGAPx.
+### Risques et retour arriere
+EGAPx embarque son propre Nextflow et peut etre lourd; commencer par stub/fixture et garder le flag desactive par defaut.
+
+## TITAN-P1-006 - Supprimer les scans de dossiers internes
+Priorite : P1
+Statut : A faire
+Risque : Eleve
+
+### Objectif
+Faire utiliser aux modules leurs inputs declares au lieu de scanner `output_dir`, `work` ou `data`.
+### Constat
+Les modules StringTie merge, GFFCompare, BRAKER3, read preparation et Aegis utilisent des mounts et scripts de recuperation de chemins qui contournent les channels Nextflow.
+### Fichiers concernes
+`modules/Stringtie_merging_*.nf`, `modules/gffcompare.nf`, `modules/braker3_prediction*.nf`, `modules/prepare_RNAseq_fastq_files_*.nf`, `modules/trimming_fastq.nf`, scripts `retrieve_*`.
+### Etapes d'implementation
+Migrer module par module vers des `path` inputs stages, remplacer les scripts de scan par des listes de fichiers passees en channels, conserver les chemins historiques uniquement en sortie publique.
+### Tests
+nf-test ou `-stub-run` par module, comparaison des noms de fichiers publies.
+### Criteres d'acceptation
+Les process ne lisent plus d'inputs internes depuis `${params.output_dir}` ou `${projectDir}/data` sauf parametre explicite.
+### Risques et retour arriere
+Risque eleve; proceder par familles de modules avec fixtures dediees.
+
+## TITAN-P1-007 - Normaliser les outputs et la provenance
+Priorite : P1
+Statut : A faire
+Risque : Moyen
+
+### Objectif
+Rendre les sorties previsibles et collecter versions/manifestes.
+### Constat
+Plusieurs modules copient manuellement vers `/outputdir` en plus de `publishDir`; aucun `versions.yml` ou manifeste d'evidences n'est produit.
+### Fichiers concernes
+`modules/*.nf`, `scripts/`, `docs/`.
+### Etapes d'implementation
+Publier uniquement des outputs declares, ajouter un `evidence_manifest.json`, ajouter des emits `versions`, conserver les noms historiques via `publishDir saveAs` si necessaire.
+### Tests
+Verification presence des fichiers historiques et nouveaux manifestes.
+### Criteres d'acceptation
+Pas de regression de noms publics; provenance lisible apres chaque run.
+### Risques et retour arriere
+Risque de rupture de scripts utilisateurs; maintenir une couche de compatibilite.
+
+## TITAN-P1-008 - Verrouiller les conteneurs critiques
 Priorite : P1
 Statut : A faire
 Risque : Moyen
@@ -134,15 +274,15 @@ BRAKER3, EDTA, Diamond2GO, GFFCompare, HISAT2, Minimap2, PsiCLASS et StringTie u
 ### Fichiers concernes
 `modules/*.nf`, `dockerfiles/`, documentation.
 ### Etapes d'implementation
-Verifier versions, licences, commandes et resultats avant chaque remplacement.
+Verifier versions, licences, commandes et resultats avant chaque remplacement; ne pas remplacer toutes les images dans un seul commit.
 ### Tests
 Test module par module avec petites donnees ou stub.
 ### Criteres d'acceptation
 Versions collectees et images documentees.
 ### Risques et retour arriere
-Risque scientifique; aucun remplacement global.
+Risque scientifique; remplacement progressif seulement.
 
-## TITAN-P1-003 - Ajouter profils local, apptainer et slurm
+## TITAN-P1-009 - Finaliser profils local, apptainer et slurm
 Priorite : P1
 Statut : En cours
 Risque : Moyen
@@ -150,39 +290,39 @@ Risque : Moyen
 ### Objectif
 Isoler Docker, Apptainer, Slurm et ressources locales.
 ### Constat
-Docker est active globalement; pas de configuration Slurm/Apptainer separee.
+Les profils existent et resolvent, mais de nombreux `containerOptions --volume` restent Docker-centriques et les ressources sont encore partiellement hardcodees dans les modules.
 ### Fichiers concernes
-`nextflow.config`, `conf/*.config`.
+`nextflow.config`, `conf/*.config`, `modules/*.nf`.
 ### Etapes d'implementation
-Ajouter includes par profil, ressources par labels, variables Slurm optionnelles.
+Valider Apptainer/Slurm avec un stub, retirer les mounts inutiles au profit du staging Nextflow, definir des labels par classe de process.
 ### Tests
-`nextflow config -profile local`; `test`; `slurm,apptainer,test`.
+`nextflow config -profile local`; `test`; `slurm,apptainer,test`; stub Apptainer si environnement disponible.
 ### Criteres d'acceptation
-Les profils resolvent sans soumission cluster.
+Les profils resolvent et les modules critiques ne dependent pas de mounts Docker evitables.
 ### Risques et retour arriere
-Risque de changement runtime si Docker global est modifie; conserver comportement standard initial.
+Risque HPC; ne pas changer simultanement profils et commandes scientifiques.
 
-## TITAN-P1-004 - Normaliser les outputs et la provenance
-Priorite : P1
+## TITAN-P2-001 - Ajouter schema et validation avancee des entrees
+Priorite : P2
 Statut : A faire
 Risque : Moyen
 
 ### Objectif
-Rendre les sorties previsibles et collecter versions/manifestes.
+Valider FASTA, GFF3, samplesheets, chemins proteiques, options et coherence seqid avant calcul lourd.
 ### Constat
-Plusieurs modules copient manuellement vers `/outputdir` en plus de `publishDir`.
+P0-005 valide presence des parametres et existence des fichiers, pas encore le schema complet ni la coherence biologique de base.
 ### Fichiers concernes
-`modules/*.nf`, `scripts/`, `docs/`.
+`scripts/validate_minimal_test_data.py`, futur `scripts/validate_inputs.py`, `test-data/minimal/invalid/`.
 ### Etapes d'implementation
-Centraliser publication via `publishDir`, emettre versions, conserver compatibilite des noms historiques.
+Ajouter validation CSV stricte, presence FASTQ/proteines, seqids GFF3/FASTA, coordonnees, Parent, options enum.
 ### Tests
-Verification presence des fichiers historiques et nouveaux manifestes.
+Fixtures invalides existantes plus nouveaux cas samplesheets.
 ### Criteres d'acceptation
-Pas de regression de noms publics.
+Chaque entree invalide echoue avant calcul lourd avec message actionnable.
 ### Risques et retour arriere
-Risque eleve si fait trop vite; proceder module par module.
+Risque de faux positifs sur donnees historiques; commencer en mode warning si necessaire.
 
-## TITAN-P2-001 - Mettre en place la strategie de tests
+## TITAN-P2-002 - Mettre en place la strategie de tests
 Priorite : P2
 Statut : A faire
 Risque : Moyen
@@ -194,33 +334,13 @@ Aucun repertoire `tests/` TITAN dedie.
 ### Fichiers concernes
 `tests/`, `scripts/run-tests.sh`, `nf-test.config`.
 ### Etapes d'implementation
-Commencer par checks config et tests de validation FASTA/GFF3; evaluer nf-test apres stabilisation des modules.
+Commencer par checks config et validations Python; ajouter nf-test apres stabilisation des contrats; couvrir les sous-workflows evidence et Aegis en stub.
 ### Tests
 Pytest ou Bash statique; nf-test module cible; `-stub-run`.
 ### Criteres d'acceptation
-Une commande unique de tests rapides existe.
+Une commande unique de tests rapides existe et tourne en local.
 ### Risques et retour arriere
 Risque de tests fragiles si les contrats ne sont pas d'abord clarifies.
-
-## TITAN-P2-002 - Ajouter tests negatifs d'entrees
-Priorite : P2
-Statut : A faire
-Risque : Faible
-
-### Objectif
-Verifier FASTA invalide, GFF3 invalide, seqid incompatible, coordonnees invalides et Parent invalide.
-### Constat
-Ces erreurs ne sont pas controlees explicitement.
-### Fichiers concernes
-`test-data/minimal/invalid/`, futur validateur.
-### Etapes d'implementation
-Creer fixtures invalides et assertions d'erreur lisible.
-### Tests
-Tests unitaires du validateur.
-### Criteres d'acceptation
-Chaque entree invalide echoue avant calcul lourd.
-### Risques et retour arriere
-Faible.
 
 ## TITAN-P2-003 - CI GitHub Actions rapide
 Priorite : P2
@@ -234,7 +354,7 @@ Pas de CI TITAN dediee detectee.
 ### Fichiers concernes
 `.github/workflows/titan-ci.yml`.
 ### Etapes d'implementation
-Installer Nextflow, lancer checks statiques et profil test/stub.
+Installer Nextflow, lancer checks statiques, validateur fixtures et profil test/stub.
 ### Tests
 Execution locale des commandes CI.
 ### Criteres d'acceptation
@@ -250,15 +370,15 @@ Risque : Faible
 ### Objectif
 README complet: quick start, entrees, sorties, profils, exemples, troubleshooting.
 ### Constat
-README utile mais incomplet sur tests, profils et limitations.
+README utile mais encore insuffisant pour expliquer les modes production, les evidences Aegis-only et les limites actuelles.
 ### Fichiers concernes
 `README.md`, `docs/`.
 ### Etapes d'implementation
-Documenter commandes historiques et nouvelles commandes test.
+Documenter modes workflow, contrats samplesheets, outputs publics, reprise Aegis via manifeste, EGAPx, EDTA/masked assembly et troubleshooting.
 ### Tests
 Verifier chaque commande documentee.
 ### Criteres d'acceptation
-Un nouvel utilisateur peut lancer un test local.
+Un nouvel utilisateur peut lancer un test local et comprendre comment preparer un run production.
 ### Risques et retour arriere
 Faible.
 
@@ -274,9 +394,9 @@ Ressources hardcodees dans modules et config globale `100GB/20 CPU`.
 ### Fichiers concernes
 `conf/base.config`, `modules/*.nf`.
 ### Etapes d'implementation
-Introduire labels (`process_low`, `process_alignment`, `process_prediction`, `process_merge`, `process_aegis`) et les appliquer progressivement.
+Introduire labels (`process_index`, `process_alignment`, `process_transcriptome`, `process_prediction`, `process_merge`, `process_aegis`, `process_low`) et les appliquer progressivement.
 ### Tests
-`nextflow config -flat`; test local.
+`nextflow config -flat`; test local; validation Slurm sur petit run/stub.
 ### Criteres d'acceptation
 Ressources adaptables sans modifier les modules.
 ### Risques et retour arriere

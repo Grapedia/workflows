@@ -154,7 +154,7 @@ python3 scripts/validate_minimal_test_data.py
 sha256sum -c test-data/minimal/checksums.sha256
 ```
 
-Development notes for the completed P0 hardening work are in `docs/development/p0-hardening.md`; the detailed audit and inventory are in `docs/development/audit.md`.
+Development notes for the completed P0 hardening work are in `docs/development/p0-hardening.md`; the detailed audit and inventory are in `docs/development/audit.md`; the architecture audit and refactor target are in `docs/development/architecture-audit.md`.
 
 ## Workflow DAG
 
