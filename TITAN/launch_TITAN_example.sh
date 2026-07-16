@@ -1,16 +1,192 @@
 #!/usr/bin/env bash
-# Exit immediately if a command exits with a non-zero status
-# Ensures AEGIS doesn't run if generate_evidence_data fails
-set -e
-# Navigate to the project workflow directory
-cd /home/avelt/data2/2025_benchmark_TITAN_AEGIS/Riesling/hap2/workflows/TITAN
-# Load required Nextflow module
-module load nextflow/24.04.3
-# Run the 'generate_evidence_data' workflow and generate its DAG
-nextflow run main.nf \
- -with-dag dag_evidence_data.png \
- --workflow generate_evidence_data
-# Run the 'aegis' workflow and generate its DAG
-#nextflow run main.nf \
-#  -with-dag dag_aegis.png \
-#  --workflow aegis
+set -Eeuo pipefail
+
+usage() {
+  cat <<'EOF'
+Usage:
+  ./launch_TITAN_example.sh [options] [-- extra_nextflow_options]
+
+Required inputs can be provided either as options or environment variables:
+  --output-dir PATH              TITAN_OUTPUT_DIR
+  --previous-assembly PATH       TITAN_PREVIOUS_ASSEMBLY
+  --new-assembly PATH            TITAN_NEW_ASSEMBLY
+  --previous-annotations PATH    TITAN_PREVIOUS_ANNOTATIONS
+  --rnaseq-samplesheet PATH      TITAN_RNASEQ_SAMPLESHEET
+  --rnaseq-data-dir PATH         TITAN_RNASEQ_DATA_DIR
+  --protein-samplesheet PATH     TITAN_PROTEIN_SAMPLESHEET
+  --egapx-paramfile PATH         TITAN_EGAPX_PARAMFILE
+
+Production-oriented options:
+  --profile NAME                 Nextflow profile(s), for example slurm,apptainer
+                                 Default: TITAN_PROFILE or slurm,apptainer
+  --work-dir PATH                Nextflow work directory
+                                 Default: TITAN_WORK_DIR or <output-dir>/work
+  --run-name NAME                Stable Nextflow run name and report prefix
+                                 Default: TITAN_RUN_NAME or titan_<timestamp>
+  --module NAME                  Environment module to load before running Nextflow
+                                 Default: TITAN_NEXTFLOW_MODULE or nextflow/24.04.3
+                                 Set to empty string to disable module loading.
+  --resume                       Add -resume
+  --force                        Allow writing into a non-empty output directory without --resume
+  --dry-run                      Print the command instead of executing it
+  -h, --help                     Show this help
+
+Notes:
+  TITAN has one public execution contract. Do not pass --workflow; evidence
+  generation and Aegis are always launched together.
+
+Example:
+  TITAN_OUTPUT_DIR=/scratch/project/titan/riesling_hap2 \
+  TITAN_PREVIOUS_ASSEMBLY=/data/ref/T2T_ref.fasta \
+  TITAN_NEW_ASSEMBLY=/data/assemblies/riesling.hap2.fa \
+  TITAN_PREVIOUS_ANNOTATIONS=/data/annotations/ref.gff3 \
+  TITAN_RNASEQ_SAMPLESHEET=/data/rnaseq/RNAseq_samplesheet.csv \
+  TITAN_RNASEQ_DATA_DIR=/data/rnaseq \
+  TITAN_PROTEIN_SAMPLESHEET=/data/proteins/samplesheet.csv \
+  TITAN_EGAPX_PARAMFILE=/data/input_egapx.yaml \
+  ./launch_TITAN_example.sh --profile slurm,apptainer --resume
+EOF
+}
+
+die() {
+  echo "ERROR: $*" >&2
+  exit 1
+}
+
+require_file() {
+  local label="$1"
+  local path="$2"
+  [[ -n "$path" ]] || die "${label} is required"
+  [[ -f "$path" ]] || die "${label} does not exist or is not a file: ${path}"
+}
+
+require_dir() {
+  local label="$1"
+  local path="$2"
+  [[ -n "$path" ]] || die "${label} is required"
+  [[ -d "$path" ]] || die "${label} does not exist or is not a directory: ${path}"
+}
+
+quote_cmd() {
+  printf '%q ' "$@"
+  printf '\n'
+}
+
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd -P)"
+PROJECT_DIR="${TITAN_PROJECT_DIR:-$SCRIPT_DIR}"
+
+PROFILE="${TITAN_PROFILE:-slurm,apptainer}"
+OUTPUT_DIR="${TITAN_OUTPUT_DIR:-}"
+PREVIOUS_ASSEMBLY="${TITAN_PREVIOUS_ASSEMBLY:-}"
+NEW_ASSEMBLY="${TITAN_NEW_ASSEMBLY:-}"
+PREVIOUS_ANNOTATIONS="${TITAN_PREVIOUS_ANNOTATIONS:-}"
+RNASEQ_SAMPLESHEET="${TITAN_RNASEQ_SAMPLESHEET:-}"
+RNASEQ_DATA_DIR="${TITAN_RNASEQ_DATA_DIR:-}"
+PROTEIN_SAMPLESHEET="${TITAN_PROTEIN_SAMPLESHEET:-}"
+EGAPX_PARAMFILE="${TITAN_EGAPX_PARAMFILE:-}"
+RUN_NAME="${TITAN_RUN_NAME:-titan_$(date +%Y%m%d_%H%M%S)}"
+NEXTFLOW_MODULE="${TITAN_NEXTFLOW_MODULE-nextflow/24.04.3}"
+WORK_DIR="${TITAN_WORK_DIR:-}"
+RESUME=false
+FORCE=false
+DRY_RUN=false
+EXTRA_NF_ARGS=()
+
+while [[ $# -gt 0 ]]; do
+  case "$1" in
+    --output-dir) OUTPUT_DIR="${2:-}"; shift 2 ;;
+    --previous-assembly) PREVIOUS_ASSEMBLY="${2:-}"; shift 2 ;;
+    --new-assembly) NEW_ASSEMBLY="${2:-}"; shift 2 ;;
+    --previous-annotations) PREVIOUS_ANNOTATIONS="${2:-}"; shift 2 ;;
+    --rnaseq-samplesheet) RNASEQ_SAMPLESHEET="${2:-}"; shift 2 ;;
+    --rnaseq-data-dir) RNASEQ_DATA_DIR="${2:-}"; shift 2 ;;
+    --protein-samplesheet) PROTEIN_SAMPLESHEET="${2:-}"; shift 2 ;;
+    --egapx-paramfile) EGAPX_PARAMFILE="${2:-}"; shift 2 ;;
+    --profile) PROFILE="${2:-}"; shift 2 ;;
+    --work-dir) WORK_DIR="${2:-}"; shift 2 ;;
+    --run-name) RUN_NAME="${2:-}"; shift 2 ;;
+    --module) NEXTFLOW_MODULE="${2:-}"; shift 2 ;;
+    --resume) RESUME=true; shift ;;
+    --force) FORCE=true; shift ;;
+    --dry-run) DRY_RUN=true; shift ;;
+    -h|--help) usage; exit 0 ;;
+    --workflow) die "--workflow is no longer supported. TITAN always runs the full pipeline." ;;
+    --) shift; EXTRA_NF_ARGS+=("$@"); break ;;
+    *) die "Unknown option: $1. Use --help." ;;
+  esac
+done
+
+[[ -d "$PROJECT_DIR" ]] || die "Project directory does not exist: ${PROJECT_DIR}"
+[[ -f "$PROJECT_DIR/main.nf" ]] || die "main.nf not found in project directory: ${PROJECT_DIR}"
+
+require_file "previous assembly" "$PREVIOUS_ASSEMBLY"
+require_file "new assembly" "$NEW_ASSEMBLY"
+require_file "previous annotations" "$PREVIOUS_ANNOTATIONS"
+require_file "RNA-seq samplesheet" "$RNASEQ_SAMPLESHEET"
+require_dir "RNA-seq data directory" "$RNASEQ_DATA_DIR"
+require_file "protein samplesheet" "$PROTEIN_SAMPLESHEET"
+require_file "EGAPx parameter file" "$EGAPX_PARAMFILE"
+[[ -n "$OUTPUT_DIR" ]] || die "output directory is required"
+[[ -n "$PROFILE" ]] || die "profile is required"
+[[ "$RUN_NAME" =~ ^[A-Za-z0-9_.-]+$ ]] || die "run name may only contain letters, numbers, dot, underscore and dash"
+
+mkdir -p "$OUTPUT_DIR"
+OUTPUT_DIR="$(cd "$OUTPUT_DIR" && pwd -P)"
+WORK_DIR="${WORK_DIR:-$OUTPUT_DIR/work}"
+REPORTS_DIR="$OUTPUT_DIR/nextflow_reports"
+
+if [[ "$RESUME" == false && "$FORCE" == false ]] && find "$OUTPUT_DIR" -mindepth 1 -maxdepth 1 | grep -q .; then
+  die "Output directory is not empty: ${OUTPUT_DIR}. Use --resume to continue or --force to start a new run there."
+fi
+
+mkdir -p "$WORK_DIR" "$REPORTS_DIR"
+
+if [[ -n "$NEXTFLOW_MODULE" ]] && command -v module >/dev/null 2>&1; then
+  module load "$NEXTFLOW_MODULE"
+fi
+
+command -v nextflow >/dev/null 2>&1 || die "nextflow is not available in PATH"
+
+cd "$PROJECT_DIR"
+
+cmd=(
+  nextflow run main.nf
+  -profile "$PROFILE"
+  -name "$RUN_NAME"
+  -work-dir "$WORK_DIR"
+  -with-report "$REPORTS_DIR/${RUN_NAME}.report.html"
+  -with-timeline "$REPORTS_DIR/${RUN_NAME}.timeline.html"
+  -with-trace "$REPORTS_DIR/${RUN_NAME}.trace.txt"
+  -with-dag "$REPORTS_DIR/${RUN_NAME}.dag.html"
+  -ansi-log false
+  --output_dir "$OUTPUT_DIR"
+  --previous_assembly "$PREVIOUS_ASSEMBLY"
+  --new_assembly "$NEW_ASSEMBLY"
+  --previous_annotations "$PREVIOUS_ANNOTATIONS"
+  --RNAseq_samplesheet "$RNASEQ_SAMPLESHEET"
+  --RNAseq_data_dir "$RNASEQ_DATA_DIR"
+  --protein_samplesheet "$PROTEIN_SAMPLESHEET"
+  --egapx_paramfile "$EGAPX_PARAMFILE"
+)
+
+if [[ "$RESUME" == true ]]; then
+  cmd+=(-resume)
+fi
+
+cmd+=("${EXTRA_NF_ARGS[@]}")
+
+echo "Project directory: $PROJECT_DIR"
+echo "Output directory:  $OUTPUT_DIR"
+echo "Work directory:    $WORK_DIR"
+echo "Reports directory: $REPORTS_DIR"
+echo "Profile:           $PROFILE"
+echo "Run name:          $RUN_NAME"
+echo
+echo "Command:"
+quote_cmd "${cmd[@]}"
+
+if [[ "$DRY_RUN" == true ]]; then
+  exit 0
+fi
+
+exec "${cmd[@]}"
