@@ -1,4 +1,4 @@
-FROM ncbi/egapx:0.3.2-alpha
+FROM ncbi/egapx@sha256:48671cc0364501240576ce0e692b1c386961463caab7aed6f27305e17e4672db
 
 # install basics
 RUN apt-get update && apt-get install -y bash \

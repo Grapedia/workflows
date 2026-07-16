@@ -1,7 +1,7 @@
 process EDTA {
 
   tag "Executing EDTA TE annotation on the following genome: $genome"
-  container 'avelt/edta:latest'
+  container params.container_edta
   containerOptions "--memory=50g --volume ${genome_path}:/genome_path --volume ${projectDir}/scripts/:/scripts"
   cpus params.edta_cpus
   publishDir "${params.output_dir}/tmp", mode: 'copy'

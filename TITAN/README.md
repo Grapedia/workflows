@@ -52,8 +52,8 @@ TITAN has one public execution contract: evidence generation and Aegis are alway
   default: `"5"`
 - **`egapx_cpus`**: CPU allocation for the EGAPx process.
   default: `"5"`
-- **`egapx_version` / `egapx_revision` / `egapx_container`**: EGAPx runner and container version. Defaults are `0.5.2`, `v0.5.2` and `ncbi/egapx:0.5.2`.
-- **`aegis_version` / `aegis_container`**: AEGIS CLI and container version. Defaults are `v0.3.25` and `tomsbiolab/aegis:latest`.
+- **`egapx_version` / `egapx_revision` / `egapx_container`**: EGAPx runner and container version. Defaults are `0.5.2`, `v0.5.2` and a digest-pinned `ncbi/egapx` image.
+- **`aegis_version` / `aegis_container`**: AEGIS CLI and container version. Defaults are `v0.3.25` and a digest-pinned `tomsbiolab/aegis` image.
 - **`PSICLASS_vd_option`**: For PSICLASS process, the minimum average coverage depth of a transcript to be reported (FLOAT). This option is used to reduce the number of false monoexon genes.
   default: `"5.0"`
 - **`PSICLASS_c_option`**: For PSICLASS process, only use the subexons with classifier score <= than the given number (FLOAT). This option is used to reduce the number of false monoexon genes.
@@ -168,7 +168,7 @@ Development notes for the completed P0 hardening work are in `docs/development/p
 Generates a **GFF3 file**, which is used by **Aegis** in the final step.
 
 ### **NCBI/egapx Annotations**
-Runs the **NCBI EGAPx** workflow from `egapx_paramfile` using the official EGAPx runner `v0.5.2` and official Docker image `ncbi/egapx:0.5.2`. TITAN publishes named EGAPx outputs under `${output_dir}/egapx`: GFF3, GTF, proteins, CDS, transcripts, ASN, full EGAPx output directory and `versions.yml`. The EGAPx GFF3 is passed to AEGIS as an additional annotation evidence.
+Runs the **NCBI EGAPx** workflow from `egapx_paramfile` using the official EGAPx runner `v0.5.2` and the digest-pinned official `ncbi/egapx` Docker image. TITAN publishes named EGAPx outputs under `${output_dir}/egapx`: GFF3, GTF, proteins, CDS, transcripts, ASN, full EGAPx output directory and `versions.yml`. The EGAPx GFF3 is passed to AEGIS as an additional annotation evidence.
 
 ### **StringTie Merging (Short Reads - HISAT2)**
 Generates **GTF file(s)**.  
@@ -241,11 +241,11 @@ Diamond2GO performs **functional gene annotation** based on the **final Aegis pr
 ### Aegis
 - Source from [GitHub](https://github.com/Tomsbiolab/aegis)
 - **Version**: v0.3.25 from the current Docker image label
-- **Docker image**: tomsbiolab/aegis:latest (dockerhub)
+- **Docker image**: `tomsbiolab/aegis@sha256:de88470b3fb4fbab3ff2d5fa0fb9fed36b55952d1e383d3fdb2f5a3a530d84e6`
 
 ### Agat
 - **Version**: 1.2.0
-- **Docker image**: quay.io/biocontainers/agat:1.2.0--pl5321hdfd78af_0
+- **Docker image**: `quay.io/biocontainers/agat@sha256:7ea8fa5a8428758cd87e3a5dcfaf277febdfcae95cd1fe473770abf8b928ec99`
 
 ### BRAKER3
 - **Version**: v3.0.8  
@@ -259,67 +259,67 @@ Diamond2GO performs **functional gene annotation** based on the **final Aegis pr
   - **diamond**: v2.1.9  
   - **cdbfasta**: Last version from [GitHub](https://github.com/gpertea/cdbfasta.git) (commit: `da8f5ba`)  
   - **TSEBRA**: Last version from [GitHub](https://github.com/Gaius-Augustus/TSEBRA) (commit: `c87ba3a`)
-- **Docker image**: avelt/braker3:latest (dockerhub)
+- **Docker image**: `avelt/braker3@sha256:e69a9aaaafa81e4da5b2bbb98ae120d873018ae40453630f60051ecd5f622c44`
 
 ### Diamond2GO
 - **Version**: Last version from [GitHub](https://github.com/rhysf/Diamond2GO.git) (commit: `57bb4cc`)
-- **Docker image**: avelt/diamond2go:latest (dockerhub)
+- **Docker image**: `avelt/diamond2go@sha256:40f1063307f98a2357d60b306bd7d79b6088591c1613e6552613da24002e8360`
 
 ### EDTA
 - **Version**: Last version from [GitHub](https://github.com/oushujun/EDTA.git)  
 - **Dependencies**:
   - **bedtools**: v2.30.0  
   - **samtools**: 1.9
-- **Docker image**: avelt/edta:latest (dockerhub)
+- **Docker image**: `avelt/edta@sha256:607529be8e85c5b13dbed44135b35a0791ff9f8df41d4ea71169d47179315044`
 
 ### egapx
 - **Version**: 0.5.2 [GitHub](https://github.com/ncbi/egapx)
 - **Dependencies**:
   - **Python**: 3.11+ for the EGAPx runner
   - **Nextflow**: v23.10.1+ for the nested EGAPx workflow
-- **Docker image**: ncbi/egapx:0.5.2 (dockerhub)
+- **Docker image**: `ncbi/egapx@sha256:bc657b232d93364d5f3b75ad3bfaf14b6267e46173672b609f26078d48a04298`
 
 ### fastp
 - **Version**: 0.23.2
-- **Docker image**: quay.io/biocontainers/fastp:0.23.2--hb7a2d85_2
+- **Docker image**: `quay.io/biocontainers/fastp@sha256:0bdf8d8254fc86dd9038551d68dbcb72562e65560b9ce0ea08c1329d2f8587b4`
 
 ### GFFCompare
 - **Version**: 0.12.6
-- **Docker image**: avelt/gffcompare:latest (dockerhub)
+- **Docker image**: `avelt/gffcompare@sha256:bd411c13352a2545641c8c34b701030b3977056696607e85b4e86c876d10a82c`
 
 ### HISAT2
 - **Version**: 2.2.1
-- **Docker image**: avelt/hisat2:latest (dockerhub)
+- **Docker image**: `avelt/hisat2@sha256:022933fd0d30fe9fdfd83c175f7e41d480608fe0264b59f2861babaf7050a722`
 
 ### Liftoff
 - **Version**: 1.5.1  
-- **Docker image**: quay.io/biocontainers/liftoff:1.5.1--py_0
+- **Docker image**: `quay.io/biocontainers/liftoff@sha256:460d5e82b0c59e8348633f3e0b9a19cf29f9227f7457e90bd7f1d1a2403b3555`
 
 ### Minimap2
 - **Version**: 2.28  
 - **Dependencies**:
   - **samtools**: 1.9
-- **Docker image**: avelt/minimap2_samtools:latest (dockerhub)
+- **Docker image**: `avelt/minimap2_samtools@sha256:70dcb87bb8021c90fc5eb660bbe1e6fc6bedadbf85c552c66704d27957b1f4ba`
 
 ### PsiCLASS
 - **Version**: 1.0.2  
-- **Docker image**: avelt/psiclass_samtools:latest (dockerhub)
+- **Docker image**: `avelt/psiclass_samtools@sha256:5cad8ecfd81293287bb6612ac8a6daaf17e626339016d326cf79615606acb285`
 
 ### sra-tools
 - **Version**: 3.1.1  
-- **Docker image**: quay.io/biocontainers/sra-tools:3.1.1--h4304569_0
+- **Docker image**: `quay.io/biocontainers/sra-tools@sha256:05de2c580cccc4c609ec7c645902563e5d5ffbd366662e1983cb152545ec7bc0`
 
 ### STAR
 - **Version**: 2.7.11b
-- **Docker image**: quay.io/biocontainers/star:2.7.11b--h43eeafb_2
+- **Docker image**: `quay.io/biocontainers/star@sha256:f5910f39a9f5bc171a51fe7400d33e7586cb353c47d759a7c190562322150067`
 
 ### Salmon
 - **Version**: 1.10.3
-- **Docker image**: quay.io/biocontainers/salmon:1.10.3--haf24da9_3
+- **Docker image**: `quay.io/biocontainers/salmon@sha256:71ffc3b4961971159a6a2327d55686fb499c43335644ea5623476a082e826fc0`
 
 ### StringTie
 - **Version**: 2.2.3  
-- **Docker image**: avelt/stringtie:latest (dockerhub)
+- **Docker image**: `avelt/stringtie@sha256:856395c26e0c36544ef5c66e24badcac4f68fd5fa51864a0f964a737250545bb`
 
 ## **📖 Reference**  
 

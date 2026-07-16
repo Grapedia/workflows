@@ -1,5 +1,5 @@
 # base image: Ubuntu
-FROM ubuntu:24.10
+FROM ubuntu@sha256:f995e05e8adc3292853cc37e6edda72351f8002ce7469a29322d19e01529cb9f
 
 # File Author / Maintainer
 MAINTAINER Amandine Velt <amandine.velt@inrae.fr>

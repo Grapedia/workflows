@@ -101,7 +101,7 @@ TITAN annote un nouvel assemblage de genome en combinant:
 | Validation entrees | Scripts Python testes | Validation minimale | Risque calcul lourd invalide | Ajouter validateur FASTA/GFF3/samplesheets. |
 | Modules | Process atomiques labels | Modules nombreux mais scripts/volumes couples | Fragile | Clarifier contrats et labels module par module. |
 | Sous-workflows | Fonctions coherentes | Deux sous-workflows biologiques | Base utile | Garder mais typer les emits. |
-| Dependances | Versions documentees et images | Mix BioContainers + images `latest` | Reproductibilite partielle | Verrouiller progressivement. |
+| Dependances | Versions documentees et images | Images runtime centralisees et digest-pinned | Partiel | Etendre les `versions.yml` module par module. |
 | Conteneurs | Apptainer profile | Docker active globalement | Inadapte cluster | Ajouter profil Apptainer et garder Docker optionnel. |
 | Profils | local/test/slurm/apptainer | Aucun profil explicite | Bloquant tests | Ajouter `conf/*.config`. |
 | Ressources | Labels centralises | CPU dans modules + config globale | Peu maintenable | Centraliser par labels. |
@@ -132,22 +132,22 @@ for f in modules/*.nf; do awk '/^[[:space:]]*output:/{flag=1} /^[[:space:]]*scri
 
 | Outil | Etape | Version actuelle | Version verrouillee | Module | Conteneur | Test | Version collectee |
 | --- | --- | --- | --- | --- | --- | --- | --- |
-| Aegis | Integration finale annotation | v0.3.25 image label | Partielle | `aegis_short_reads`, `aegis_long_reads` | `tomsbiolab/aegis:latest` | Stub + test CLI Docker | `versions.yml` |
-| AGAT | GFF3 vers CDS FASTA | 1.2.0 | Oui | `agat_convert_gff3_to_cds_fasta` | `quay.io/biocontainers/agat:1.2.0--pl5321hdfd78af_0` | Non | Non |
-| BRAKER3 | Prediction ab initio | v3.0.8 documente | Non, image latest | `braker3_prediction*` | `avelt/braker3:latest` | Non | Non |
-| Diamond2GO | Annotation fonctionnelle | commit documente | Non, image latest | `diamond2go` | `avelt/diamond2go:latest` | Non | Non |
-| EDTA | Masquage TE | GitHub latest documente | Non | `EDTA` | `avelt/edta:latest` | Non | Non |
-| EGAPx | Annotation NCBI | 0.5.2 | Oui | `egapx` | `ncbi/egapx:0.5.2` | Stub | `versions.yml` |
-| fastp | Trimming | 0.23.2 | Oui | `trimming_fastq` | `quay.io/biocontainers/fastp:0.23.2--hb7a2d85_2` | Non | Non |
-| GFFCompare | Fusion PsiCLASS | 0.12.6 | Non, image latest | `gffcompare` | `avelt/gffcompare:latest` | Non | Non |
-| HISAT2 | Index/alignment | 2.2.1 documente | Non, image latest | `hisat2_*` | `avelt/hisat2:latest` | Non | Non |
-| Liftoff | Transfert annotation | 1.5.1 | Oui | `liftoff_annotations` | `quay.io/biocontainers/liftoff:1.5.1--py_0` | Non | Non |
-| Minimap2 | Alignement long reads | 2.28 documente | Non, image latest | `minimap2_*` | `avelt/minimap2_samtools:latest` | Non | Non |
-| PsiCLASS | Assemblage transcriptome | 1.0.2 | Non, image latest | `assembly_transcriptome_star_psiclass` | `avelt/psiclass_samtools:latest` | Non | Non |
-| Salmon | Inference strandedness | 1.10.3 | Oui | `salmon_*` | `quay.io/biocontainers/salmon:1.10.3--haf24da9_3` | Non | Non |
-| sra-tools | SRA download | 3.1.1 | Oui | `prepare_RNAseq_fastq_files_*` | `quay.io/biocontainers/sra-tools:3.1.1--h4304569_0` | Non | Non |
-| STAR | Index/alignment | 2.7.11b | Oui | `star_*` | `quay.io/biocontainers/star:2.7.11b--h43eeafb_2` | Non | Non |
-| StringTie | Assemblage/fusion | 2.2.3 documente | Non, image latest | `assembly_transcriptome_*`, `Stringtie_merging_*` | `avelt/stringtie:latest` | Non | Non |
+| Aegis | Integration finale annotation | v0.3.25 image label | Digest-pinned | `aegis_short_reads`, `aegis_long_reads` | `params.container_aegis` | Stub + test CLI Docker | `versions.yml` |
+| AGAT | GFF3 vers CDS FASTA | 1.2.0 | Digest-pinned | `agat_convert_gff3_to_cds_fasta` | `params.container_agat` | Stub | Non |
+| BRAKER3 | Prediction ab initio | v3.0.8 documente | Digest-pinned | `braker3_prediction*` | `params.container_braker3` | Stub | Non |
+| Diamond2GO | Annotation fonctionnelle | commit documente | Digest-pinned | `diamond2go` | `params.container_diamond2go` | Stub | Non |
+| EDTA | Masquage TE | GitHub latest documente | Digest-pinned | `EDTA` | `params.container_edta` | Stub | Non |
+| EGAPx | Annotation NCBI | 0.5.2 | Digest-pinned | `egapx` | `params.container_egapx` | Stub | `versions.yml` |
+| fastp | Trimming | 0.23.2 | Digest-pinned | `trimming_fastq` | `params.container_fastp` | Stub | Non |
+| GFFCompare | Fusion PsiCLASS | 0.12.6 | Digest-pinned | `gffcompare` | `params.container_gffcompare` | Stub | Non |
+| HISAT2 | Index/alignment | 2.2.1 documente | Digest-pinned | `hisat2_*` | `params.container_hisat2` | Stub | Non |
+| Liftoff | Transfert annotation | 1.5.1 | Digest-pinned | `liftoff_annotations` | `params.container_liftoff` | Stub | Non |
+| Minimap2 | Alignement long reads | 2.28 documente | Digest-pinned | `minimap2_*` | `params.container_minimap2_samtools` | Stub | Non |
+| PsiCLASS | Assemblage transcriptome | 1.0.2 | Digest-pinned | `assembly_transcriptome_star_psiclass` | `params.container_psiclass_samtools` | Stub | Non |
+| Salmon | Inference strandedness | 1.10.3 | Digest-pinned | `salmon_*` | `params.container_salmon` | Stub | Non |
+| sra-tools | SRA download | 3.1.1 | Digest-pinned | `prepare_RNAseq_fastq_files_*` | `params.container_sra_tools` | Stub | Non |
+| STAR | Index/alignment | 2.7.11b | Digest-pinned | `star_*` | `params.container_star` | Stub | Non |
+| StringTie | Assemblage/fusion | 2.2.3 documente | Digest-pinned | `assembly_transcriptome_*`, `Stringtie_merging_*` | `params.container_stringtie` | Stub | Non |
 | gffread | Conversion GTF/GFF3 | Non requis par les modules AEGIS actuels | Non | n/a | n/a | n/a | n/a |
 | samtools | BAM | 1.9 documente selon images | Partiel | alignements | images combinees | Non | Non |
 | DIAMOND | Diamond2GO/BRAKER3 | 2.1.9/2.1.11 selon docs | Partiel | `diamond2go`, `braker3` | images combinees | Non | Non |
@@ -201,7 +201,7 @@ for f in modules/*.nf; do awk '/^[[:space:]]*output:/{flag=1} /^[[:space:]]*scri
 Points de vigilance P0-002:
 
 * plusieurs modules publient via `publishDir`; les copies manuelles `/outputdir` ont ete supprimees des merges StringTie, GFFCompare et EDTA;
-* les images `latest` rendent l'inventaire de versions non reproductible sans validation externe;
+* les images runtime sont centralisees dans `nextflow.config` et verrouillees par digest depuis P1-008;
 * EGAPx, AEGIS et TITAN provenance collectent un `versions.yml`; les autres modules restent a couvrir progressivement;
 * les chemins de samplesheets sont valides avant construction des channels depuis P0-005; le schema complet des colonnes reste a renforcer;
 * EGAPx est documente, obligatoire, expose des sorties nommees et son GFF3 est consomme par AEGIS.
@@ -223,7 +223,7 @@ P0:
 
 P1:
 
-* Nombreuses images `latest`.
+* Les conteneurs runtime et bases Dockerfile sont digest-pinned depuis P1-008.
 * des `containerOptions` Docker-centriques restent dans certains modules hors P1-006, ce qui fragilise Apptainer et `-resume`.
 * les scans internes de dossiers publies ont ete retires des merges StringTie, GFFCompare, BRAKER3, AGAT, Salmon et des alignements STAR/HISAT2/Minimap2.
 * Telechargements SRA pendant le workflow avec `--max-size 100G`.

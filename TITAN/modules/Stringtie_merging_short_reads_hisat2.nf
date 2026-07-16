@@ -2,7 +2,7 @@
 process Stringtie_merging_short_reads_hisat2 {
 
   tag "Hisat2/StringTie merging - short reads"
-  container 'avelt/stringtie:latest'
+  container params.container_stringtie
   publishDir "${params.output_dir}", mode: 'copy'
   cpus 4
 

@@ -2,7 +2,7 @@
 process braker3_prediction_with_long_reads {
 
   tag "Executing BRAKER3/AUGUSTUS-Genemark prediction"
-  container 'avelt/braker3:latest'
+  container params.container_braker3
   cpus 4
 
   publishDir "${params.output_dir}", mode: 'copy'

@@ -2,7 +2,7 @@
 process assembly_transcriptome_star_psiclass {
 
   tag "STAR/PsiCLASS - short reads - on ${sample_ID}"
-  container 'avelt/psiclass_samtools:latest'
+  container params.container_psiclass_samtools
   publishDir { 
     if (strand_type == "unstranded") {
       return "${params.output_dir}/intermediate_files/transcriptomes/STAR_PsiCLASS/unstranded"

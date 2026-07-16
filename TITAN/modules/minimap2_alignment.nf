@@ -2,7 +2,7 @@
 process minimap2_alignment {
 
   tag "Minimap2 on ${sample_ID}"
-  container 'avelt/minimap2_samtools:latest'
+  container params.container_minimap2_samtools
   publishDir "${params.output_dir}/intermediate_files/evidence_data/RNAseq_alignments/minimap2"
   cpus 4
 

@@ -101,7 +101,7 @@ Required input file(s) not found
 The P0 work intentionally avoids large architectural refactors. Remaining issues for P1 and later:
 
 * `workflows/titan.nf` still carries orchestration logic that should move progressively toward typed evidence contracts.
-* Several images still use `latest`.
+* Historical note: several images still used `latest` before P1-008. Runtime containers are now centralized in `nextflow.config` and digest-pinned.
 * EGAPx is mandatory in TITAN, emits named outputs, and `egapx_gff3` is consumed by AEGIS as an additional merge evidence.
 * The test profile validates channel/file contracts in stub mode; it does not run scientific containers or heavy tools.
 * There is no CI yet.

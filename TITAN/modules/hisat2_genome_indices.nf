@@ -2,7 +2,7 @@
 process hisat2_genome_indices {
 
   tag "HISAT2 indexes generation on $genome"
-  container 'avelt/hisat2:latest'
+  container params.container_hisat2
   containerOptions "--volume $genome_path:/genome_path"
   publishDir "${params.output_dir}/intermediate_files/evidence_data/hisat2_databases/"
   cpus 4

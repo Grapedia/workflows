@@ -2,7 +2,7 @@
 process star_alignment {
 
   tag "STAR on ${sample_ID} (${strand_type})"
-  container 'quay.io/biocontainers/star:2.7.11b--h43eeafb_2'
+  container params.container_star
   containerOptions "--memory=50g"
   publishDir { 
     if (strand_type == "unstranded") {

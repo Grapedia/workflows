@@ -16,7 +16,8 @@ Highest-risk findings:
 * P1-004 removed public partial workflow modes: TITAN now always runs evidence generation and Aegis in one graph.
 * Aegis consumes generated evidence directly through named channels, including the EDTA `masked_genome` output.
 * EDTA is now mandatory in TITAN. The hard-masked genome is passed to Aegis as a typed channel.
-* EGAPx is now mandatory, uses the official `ncbi/egapx:0.5.2` image through the official `v0.5.2` runner, emits named outputs, and its GFF3 is consumed by AEGIS as an additional merge evidence.
+* EGAPx is now mandatory, uses the official digest-pinned `ncbi/egapx` image through the official `v0.5.2` runner, emits named outputs, and its GFF3 is consumed by AEGIS as an additional merge evidence.
+* P1-008 centralizes runtime containers in `nextflow.config` and locks them with `image@sha256` digests.
 * P1-006 removed the highest-risk internal directory scans from evidence integration modules. StringTie merges, GFFCompare, BRAKER3, AGAT, Salmon and STAR/HISAT2/Minimap2 alignment stages now consume declared upstream files instead of rediscovering them from published directories.
 * Long-read processing is now detected from `RNAseq_samplesheet` rows where `library_layout` is `long`; the old `use_long_reads` flag is no longer part of the runtime contract.
 * P1-007 removed the remaining manual `/outputdir` publication from the core evidence path. Backward-compatible public names are now handled through declared outputs and `publishDir saveAs`.
@@ -154,7 +155,7 @@ Evidence:
 
 * `generate_evidence_data` now includes and calls `egapx(file(params.egapx_paramfile))` as an internal TITAN stage.
 * `modules/egapx.nf` declares `path egapx_paramfile`.
-* The module uses official EGAPx runner `v0.5.2` and official Docker image `ncbi/egapx:0.5.2`.
+* The module uses official EGAPx runner `v0.5.2` and the digest-pinned official `ncbi/egapx` Docker image.
 * The module emits named EGAPx outputs: GFF3, GTF, proteins, CDS, transcripts, ASN, full output directory and versions.
 * `workflows/titan.nf` passes `evidence_data.egapx_gff3` into `subworkflows/aegis.nf`.
 * `aegis_short_reads` and `aegis_long_reads` include EGAPx GFF3 in the `aegis merge` input list.

@@ -2,7 +2,7 @@
 process assembly_transcriptome_hisat2_stringtie {
 
   tag "Hisat2/StringTie - short reads on ${sample_ID}"
-  container 'avelt/stringtie:latest'
+  container params.container_stringtie
   containerOptions "--volume ${projectDir}/scripts/:/scripts --volume ${projectDir}/work:/work"
   publishDir { 
     if (strand_type == "unstranded") {

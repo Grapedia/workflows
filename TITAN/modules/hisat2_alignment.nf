@@ -2,7 +2,7 @@
 process hisat2_alignment {
 
   tag "HISAT2 on ${sample_ID} (${strand_type})"
-  container 'avelt/hisat2:latest'
+  container params.container_hisat2
 
   publishDir { 
     if (strand_type == "unstranded") {

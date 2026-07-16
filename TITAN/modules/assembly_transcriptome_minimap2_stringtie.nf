@@ -2,7 +2,7 @@
 process assembly_transcriptome_minimap2_stringtie {
 
   tag "Minimap2/StringTie - long reads"
-  container 'avelt/stringtie:latest'
+  container params.container_stringtie
   containerOptions "--volume ${projectDir}/scripts/:/scripts --volume ${projectDir}/work:/work"
   publishDir "${params.output_dir}/intermediate_files/evidence_data/transcriptomes/StringTie/long_reads"
   cpus 4

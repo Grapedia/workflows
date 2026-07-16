@@ -48,27 +48,24 @@ If you do not have SSH access configured for the GitHub remote, use the HTTPS UR
 
 ## 3. Container images
 
-TITAN process modules use container images declared in `modules/*.nf`. Pull at least the mandatory EGAPx and AEGIS images before a production run:
+TITAN process modules use digest-pinned container images declared in `nextflow.config` as `params.container_*`. Pull at least the mandatory EGAPx and AEGIS images before a production run:
 
 ```bash
-docker pull ncbi/egapx:0.5.2
-docker image inspect ncbi/egapx:0.5.2 --format '{{index .RepoDigests 0}}'
-docker pull tomsbiolab/aegis:latest
-docker image inspect tomsbiolab/aegis:latest --format '{{index .RepoDigests 0}}'
+docker pull ncbi/egapx@sha256:bc657b232d93364d5f3b75ad3bfaf14b6267e46173672b609f26078d48a04298
+docker pull tomsbiolab/aegis@sha256:de88470b3fb4fbab3ff2d5fa0fb9fed36b55952d1e383d3fdb2f5a3a530d84e6
 ```
 
-The expected image digests at the time of integration were:
+Validate the runtime container contract after edits:
 
-```text
-ncbi/egapx@sha256:bc657b232d93364d5f3b75ad3bfaf14b6267e46173672b609f26078d48a04298
-tomsbiolab/aegis@sha256:de88470b3fb4fbab3ff2d5fa0fb9fed36b55952d1e383d3fdb2f5a3a530d84e6
+```bash
+python3 scripts/validate_container_pins.py
 ```
 
 For Apptainer/Singularity environments, pre-pull the same Docker image if your cluster does not allow runtime image downloads:
 
 ```bash
-apptainer pull egapx_0.5.2.sif docker://ncbi/egapx:0.5.2
-apptainer pull aegis_latest.sif docker://tomsbiolab/aegis:latest
+apptainer pull egapx_0.5.2.sif docker://ncbi/egapx@sha256:bc657b232d93364d5f3b75ad3bfaf14b6267e46173672b609f26078d48a04298
+apptainer pull aegis_v0.3.25.sif docker://tomsbiolab/aegis@sha256:de88470b3fb4fbab3ff2d5fa0fb9fed36b55952d1e383d3fdb2f5a3a530d84e6
 ```
 
 EGAPx is a nested Nextflow workflow. The TITAN EGAPx process runs the official EGAPx runner `v0.5.2`, and that runner launches EGAPx tasks using `params.egapx_executor` and `params.egapx_container`.
@@ -78,11 +75,11 @@ Defaults:
 ```text
 egapx_version = 0.5.2
 egapx_revision = v0.5.2
-egapx_container = ncbi/egapx:0.5.2
+egapx_container = ncbi/egapx@sha256:bc657b232d93364d5f3b75ad3bfaf14b6267e46173672b609f26078d48a04298
 egapx_executor = docker
 egapx_data_version = current_1
 aegis_version = v0.3.25
-aegis_container = tomsbiolab/aegis:latest
+aegis_container = tomsbiolab/aegis@sha256:de88470b3fb4fbab3ff2d5fa0fb9fed36b55952d1e383d3fdb2f5a3a530d84e6
 ```
 
 AEGIS now uses the upstream CLI container and runs `aegis merge` followed by `aegis extract`. On HPC without Docker, set `--egapx_executor singularity` for nested EGAPx execution and make the AEGIS image available through your site container runtime.
@@ -334,8 +331,8 @@ Before launching a long run:
 
 * Confirm all paths in TITAN params and EGAPx YAML are absolute and visible on compute nodes.
 * Confirm the container runtime works on compute nodes.
-* Confirm EGAPx can pull or access `ncbi/egapx:0.5.2`.
-* Confirm AEGIS can pull or access `tomsbiolab/aegis:latest`.
+* Confirm EGAPx can pull or access the pinned `ncbi/egapx@sha256:...` image from `nextflow.config`.
+* Confirm AEGIS can pull or access the pinned `tomsbiolab/aegis@sha256:...` image from `nextflow.config`.
 * Confirm `python3 -c 'import yaml'` works in the environment that executes the EGAPx process.
 * Run a `-stub-run` after every config/profile edit.
 * Use `-resume` for restart after interrupted runs.

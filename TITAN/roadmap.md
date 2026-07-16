@@ -30,7 +30,7 @@ Risque : Faible
 ### Objectif
 Obtenir un inventaire exploitable des outils, versions, conteneurs, entrees et sorties.
 ### Constat
-Les versions sont partiellement documentees dans `README.md`; plusieurs images utilisent `latest`. L'inventaire P0-002 est maintenant consolide dans `docs/development/audit.md` et resume dans `README.md`.
+Les versions sont documentees dans `README.md` et les images runtime sont digest-pinned depuis P1-008. L'inventaire P0-002 est maintenant consolide dans `docs/development/audit.md` et resume dans `README.md`.
 ### Fichiers concernes
 `README.md`, `modules/*.nf`, `docs/development/audit.md`.
 ### Etapes d'implementation
@@ -210,13 +210,13 @@ Risque : Eleve
 ### Objectif
 Brancher EGAPx comme source d'annotation obligatoire et testable, puis integrer ses sorties nommees au contrat d'evidences TITAN.
 ### Constat
-`modules/egapx.nf` utilise maintenant le runner officiel EGAPx `v0.5.2`, pilote l'image Docker officielle `ncbi/egapx:0.5.2`, publie `${output_dir}/egapx` et emet des outputs nommes: GFF3, GTF, proteines, CDS, transcrits, ASN, repertoire complet et versions. Les sorties EGAPx sont typees dans `generate_evidence_data`; `egapx_gff3` est transmis a AEGIS et fusionne comme preuve d'annotation supplementaire.
+`modules/egapx.nf` utilise maintenant le runner officiel EGAPx `v0.5.2`, pilote l'image Docker officielle `ncbi/egapx` verrouillee par digest, publie `${output_dir}/egapx` et emet des outputs nommes: GFF3, GTF, proteines, CDS, transcrits, ASN, repertoire complet et versions. Les sorties EGAPx sont typees dans `generate_evidence_data`; `egapx_gff3` est transmis a AEGIS et fusionne comme preuve d'annotation supplementaire.
 ### Fichiers concernes
 `modules/egapx.nf`, `subworkflows/generate_evidence_data.nf`, `subworkflows/aegis.nf`, `modules/aegis_*.nf`, `test-data/minimal/valid/evidence/`.
 ### Etapes d'implementation
 Supprimer `run_egapx`, corriger le module pour prendre `path egapx_paramfile`, lancer EGAPx systematiquement, remplacer l'image custom par l'image NCBI versionnee, telecharger/executer le runner officiel versionne, ajouter un stub EGAPx complet, puis emettre les vrais outputs EGAPx (`egapx_gff3`, `egapx_gtf`, proteines, CDS, transcrits, ASN, repertoire complet, versions).
 ### Tests
-`docker pull ncbi/egapx:0.5.2`; `docker run --rm ncbi/egapx:0.5.2 python3 -c 'import yaml'`; `nextflow config -profile test`; `nextflow run main.nf -profile test -stub-run -ansi-log false`.
+`docker manifest inspect --verbose ncbi/egapx@sha256:bc657b232d93364d5f3b75ad3bfaf14b6267e46173672b609f26078d48a04298`; `nextflow config -profile test`; `nextflow run main.nf -profile test -stub-run -ansi-log false`.
 ### Criteres d'acceptation
 EGAPx n'est plus activable/desactivable par parametre, utilise une image officielle versionnee, produit des emits nommes et fournit un GFF3 consomme par AEGIS.
 ### Risques et retour arriere
@@ -264,23 +264,23 @@ Risque de rupture de scripts utilisateurs; maintenir une couche de compatibilite
 
 ## TITAN-P1-008 - Verrouiller les conteneurs critiques
 Priorite : P1
-Statut : A faire
+Statut : Fait
 Risque : Moyen
 
 ### Objectif
-Remplacer progressivement les tags `latest` par des tags versionnes compatibles.
+Remplacer les images runtime flottantes par des references digest-pinned et rendre le contrat testable.
 ### Constat
-BRAKER3, EDTA, Diamond2GO, GFFCompare, HISAT2, Minimap2, PsiCLASS et StringTie utilisent `latest`.
+Les modules actifs consomment maintenant des `params.container_*` centralises dans `nextflow.config`, tous verrouilles en `image@sha256`. Les `Dockerfile` locaux ont aussi des `FROM` verrouilles. La validation automatique refuse les `:latest` dans les fichiers runtime et les `FROM` non digestes.
 ### Fichiers concernes
-`modules/*.nf`, `dockerfiles/`, documentation.
+`nextflow.config`, `modules/*.nf`, `dockerfiles/`, `scripts/validate_container_pins.py`, documentation.
 ### Etapes d'implementation
-Verifier versions, licences, commandes et resultats avant chaque remplacement; ne pas remplacer toutes les images dans un seul commit.
+Centraliser les images, remplacer les `latest` par les digests de manifestes Docker/OCI, verrouiller les bases Dockerfile, documenter l'inventaire et ajouter un validateur.
 ### Tests
-Test module par module avec petites donnees ou stub.
+`python3 scripts/validate_container_pins.py`; `python3 scripts/validate_minimal_test_data.py`; `nextflow config -profile test`; `nextflow run main.nf -profile test -stub-run -ansi-log false`; validation registry des digests par `docker manifest inspect --verbose`.
 ### Criteres d'acceptation
-Versions collectees et images documentees.
+Plus aucun `latest` dans les modules/config runtime; les Dockerfiles sont digest-pinned; l'inventaire est documente dans `docs/development/container-locks.md`.
 ### Risques et retour arriere
-Risque scientifique; remplacement progressif seulement.
+Les images `avelt/*` restent des images historiques sans tags semantiques publies; le pin par digest preserve le contenu actuel mais ne remplace pas une future reconstruction versionnee propre.
 
 ## TITAN-P1-009 - Finaliser profils local, apptainer et slurm
 Priorite : P1

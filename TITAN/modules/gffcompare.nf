@@ -2,7 +2,7 @@
 process gffcompare {
 
   tag "gffcompare on STAR/PsiCLASS GTF to merge them"
-  container 'avelt/gffcompare:latest'
+  container params.container_gffcompare
   cpus 4
 
   publishDir "${params.output_dir}/tmp", mode: 'copy'

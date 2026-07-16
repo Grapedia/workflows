@@ -1,5 +1,5 @@
 # base image: Rocky linux
-FROM rockylinux:9
+FROM rockylinux@sha256:d644d203142cd5b54ad2a83a203e1dee68af2229f8fe32f52a30c6e1d3c3a9e0
 
 # File Author / Maintainer
 MAINTAINER Amandine Velt <amandine.velt@inrae.fr>

@@ -4,7 +4,7 @@
 
 process prepare_RNAseq_fastq_files_short {
   tag "prepare_RNAseq_fastq_files on $sample_ID"
-  container 'quay.io/biocontainers/sra-tools:3.1.1--h4304569_0'
+  container params.container_sra_tools
   containerOptions "--volume ${params.RNAseq_data_dir}:/RNAseq_data"
   debug true
   // Sometimes the SRA download encounters an error, so we retry the process until the download works.

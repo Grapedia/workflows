@@ -2,7 +2,7 @@
 process Stringtie_merging_long_reads {
 
   tag "StringTie merging - long reads"
-  container 'avelt/stringtie:latest'
+  container params.container_stringtie
   cpus 4
 
   publishDir "${params.output_dir}/tmp", mode: 'copy'

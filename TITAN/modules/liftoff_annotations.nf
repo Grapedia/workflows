@@ -7,7 +7,7 @@ process liftoff_annotations {
 
   cache 'deep'
   tag "Executing liftoff on the new assembly $genome"
-  container 'quay.io/biocontainers/liftoff:1.5.1--py_0'
+  container params.container_liftoff
   containerOptions "--volume $genome_path:/genome_path --volume $previous_assembly_path:/previous_assembly_path --volume $previous_annotations_path:/previous_annotations_path"
   cpus 4
 
