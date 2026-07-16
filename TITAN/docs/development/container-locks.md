@@ -55,6 +55,7 @@ P1-008 validation uses:
 
 ```bash
 python3 scripts/validate_container_pins.py
+python3 scripts/validate_profiles.py
 python3 scripts/validate_minimal_test_data.py
 nextflow config -profile test
 nextflow run main.nf -profile test -stub-run -ansi-log false

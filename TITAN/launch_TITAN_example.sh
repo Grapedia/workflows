@@ -67,6 +67,17 @@ require_dir() {
   [[ -d "$path" ]] || die "${label} does not exist or is not a directory: ${path}"
 }
 
+abs_path() {
+  local path="$1"
+  if [[ -d "$path" ]]; then
+    cd "$path" && pwd -P
+  else
+    local dir
+    dir="$(cd "$(dirname "$path")" && pwd -P)"
+    printf '%s/%s\n' "$dir" "$(basename "$path")"
+  fi
+}
+
 quote_cmd() {
   printf '%q ' "$@"
   printf '\n'
@@ -134,12 +145,24 @@ mkdir -p "$OUTPUT_DIR"
 OUTPUT_DIR="$(cd "$OUTPUT_DIR" && pwd -P)"
 WORK_DIR="${WORK_DIR:-$OUTPUT_DIR/work}"
 REPORTS_DIR="$OUTPUT_DIR/nextflow_reports"
+PREVIOUS_ASSEMBLY="$(abs_path "$PREVIOUS_ASSEMBLY")"
+NEW_ASSEMBLY="$(abs_path "$NEW_ASSEMBLY")"
+PREVIOUS_ANNOTATIONS="$(abs_path "$PREVIOUS_ANNOTATIONS")"
+RNASEQ_SAMPLESHEET="$(abs_path "$RNASEQ_SAMPLESHEET")"
+RNASEQ_DATA_DIR="$(abs_path "$RNASEQ_DATA_DIR")"
+PROTEIN_SAMPLESHEET="$(abs_path "$PROTEIN_SAMPLESHEET")"
+EGAPX_PARAMFILE="$(abs_path "$EGAPX_PARAMFILE")"
 
 if [[ "$RESUME" == false && "$FORCE" == false ]] && find "$OUTPUT_DIR" -mindepth 1 -maxdepth 1 | grep -q .; then
   die "Output directory is not empty: ${OUTPUT_DIR}. Use --resume to continue or --force to start a new run there."
 fi
 
 mkdir -p "$WORK_DIR" "$REPORTS_DIR"
+
+if [[ ",$PROFILE," == *",apptainer,"* ]]; then
+  export TITAN_APPTAINER_CACHEDIR="${TITAN_APPTAINER_CACHEDIR:-$OUTPUT_DIR/apptainer-cache}"
+  mkdir -p "$TITAN_APPTAINER_CACHEDIR"
+fi
 
 if [[ -n "$NEXTFLOW_MODULE" ]] && command -v module >/dev/null 2>&1; then
   module load "$NEXTFLOW_MODULE"
@@ -148,6 +171,9 @@ fi
 command -v nextflow >/dev/null 2>&1 || die "nextflow is not available in PATH"
 
 cd "$PROJECT_DIR"
+
+python3 scripts/validate_container_pins.py >/dev/null
+nextflow config -profile "$PROFILE" >/dev/null
 
 cmd=(
   nextflow run main.nf
@@ -181,6 +207,9 @@ echo "Work directory:    $WORK_DIR"
 echo "Reports directory: $REPORTS_DIR"
 echo "Profile:           $PROFILE"
 echo "Run name:          $RUN_NAME"
+if [[ "${TITAN_APPTAINER_CACHEDIR:-}" ]]; then
+  echo "Apptainer cache:   $TITAN_APPTAINER_CACHEDIR"
+fi
 echo
 echo "Command:"
 quote_cmd "${cmd[@]}"

@@ -144,10 +144,21 @@ TITAN includes a minimal local test profile for configuration and lightweight wo
 
 ```bash
 nextflow config -profile test
+python3 scripts/validate_profiles.py
 nextflow run main.nf -profile test -stub-run -ansi-log false
 ```
 
 The `test` profile uses synthetic fixtures under `test-data/minimal/valid`, `RNAseq_data_dir = test-data/minimal/valid/rnaseq`, and ignored transient directories `test-results/` and `test-work/`. `-stub-run` exercises the full graph, including mandatory EDTA/EGAPx, auto-detected long reads and direct EDTA-to-Aegis channel wiring, without running scientific containers.
+
+Production profiles are separated from the test profile:
+
+```bash
+nextflow config -profile local
+nextflow config -profile apptainer
+nextflow config -profile slurm,apptainer
+```
+
+Use `local` for a local Docker run, `apptainer` for a local Apptainer run, and `slurm,apptainer` for HPC production. For test-data resolution checks with HPC settings, use `test,slurm,apptainer` so the test input paths are applied before the Slurm/Apptainer runtime overrides.
 
 Validate the synthetic fixture set directly with:
 

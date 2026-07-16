@@ -53,6 +53,23 @@ def rejectDeprecatedWorkflowParam() {
     }
 }
 
+def rnaseqLocalFiles(row) {
+    def source = row.SRA_or_FASTQ?.toString()?.trim()?.toUpperCase()
+    def layout = row.library_layout?.toString()?.trim()?.toLowerCase()
+    def sampleID = row.sampleID?.toString()?.trim()
+
+    if (source == 'FASTQ' && layout == 'paired') {
+        return [file("${params.RNAseq_data_dir}/${sampleID}_1.fastq.gz"), file("${params.RNAseq_data_dir}/${sampleID}_2.fastq.gz")]
+    }
+    if (source == 'FASTQ' && layout in ['single', 'long']) {
+        return file("${params.RNAseq_data_dir}/${sampleID}.fastq.gz")
+    }
+    if (source == 'FASTA' && layout == 'long') {
+        return file("${params.RNAseq_data_dir}/${sampleID}.fasta")
+    }
+    return []
+}
+
 workflow TITAN {
     rejectDeprecatedWorkflowParam()
     validateRequiredParams(['output_dir', 'egapx_paramfile', 'RNAseq_samplesheet', 'protein_samplesheet', 'new_assembly', 'previous_assembly', 'previous_annotations'])
@@ -63,19 +80,19 @@ workflow TITAN {
     Channel.fromPath(params.RNAseq_samplesheet, checkIfExists: true)
        .splitCsv(header: true, sep: ',')
        .filter { row -> row.library_layout?.toString()?.trim()?.equalsIgnoreCase('long') }
-       .map { row -> [ row.sampleID, row.SRA_or_FASTQ, row.library_layout ] }
+       .map { row -> [ row.sampleID, row.SRA_or_FASTQ, row.library_layout, rnaseqLocalFiles(row) ] }
        .set{ samples_list_long_reads }
 
     Channel.fromPath(params.RNAseq_samplesheet, checkIfExists: true)
        .splitCsv(header: true, sep: ',')
        .filter { row -> row.library_layout?.toString()?.trim()?.equalsIgnoreCase('single') }
-       .map { row -> [ row.sampleID, row.SRA_or_FASTQ, row.library_layout ] }
+       .map { row -> [ row.sampleID, row.SRA_or_FASTQ, row.library_layout, rnaseqLocalFiles(row) ] }
        .set{ samples_list_single_short_reads }
 
     Channel.fromPath(params.RNAseq_samplesheet, checkIfExists: true)
        .splitCsv(header: true, sep: ',')
        .filter { row -> row.library_layout?.toString()?.trim()?.equalsIgnoreCase('paired') }
-       .map { row -> [ row.sampleID, row.SRA_or_FASTQ, row.library_layout ] }
+       .map { row -> [ row.sampleID, row.SRA_or_FASTQ, row.library_layout, rnaseqLocalFiles(row) ] }
        .set{ samples_list_paired_short_reads }
 
     samples_list_single_short_reads

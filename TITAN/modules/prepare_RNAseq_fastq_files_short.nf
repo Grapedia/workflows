@@ -5,16 +5,15 @@
 process prepare_RNAseq_fastq_files_short {
   tag "prepare_RNAseq_fastq_files on $sample_ID"
   container params.container_sra_tools
-  containerOptions "--volume ${params.RNAseq_data_dir}:/RNAseq_data"
   debug true
   // Sometimes the SRA download encounters an error, so we retry the process until the download works.
   errorStrategy 'retry'
 
   input:
-  tuple val(sample_ID), val(SRA_or_FASTQ), val(library_layout)
+  tuple val(sample_ID), val(SRA_or_FASTQ), val(library_layout), path(local_reads)
 
   output:
-  tuple val(sample_ID), val(SRA_or_FASTQ), val(library_layout), path("${sample_ID}*.fastq.gz"), emit: prepared_fastqs
+  tuple val(sample_ID), val(SRA_or_FASTQ), val(library_layout), path("${sample_ID}*.fastq.gz", includeInputs: true), emit: prepared_fastqs
 
   script:
   """
@@ -45,10 +44,10 @@ process prepare_RNAseq_fastq_files_short {
   elif [[ $SRA_or_FASTQ == "FASTQ" ]]
   then
     if [[ $library_layout == "paired" ]]; then
-      cp /RNAseq_data/${sample_ID}_1.fastq.gz .
-      cp /RNAseq_data/${sample_ID}_2.fastq.gz .
+      test -s ${sample_ID}_1.fastq.gz
+      test -s ${sample_ID}_2.fastq.gz
     elif [[ $library_layout == "single" ]]; then
-      cp /RNAseq_data/${sample_ID}.fastq.gz .
+      test -s ${sample_ID}.fastq.gz
     else
       echo "[\$DATE] ERROR: $library_layout is not equal to paired or single" >&2
       exit 1
@@ -61,6 +60,7 @@ process prepare_RNAseq_fastq_files_short {
 
   stub:
   """
+  rm -f ${sample_ID}*.fastq.gz
   if [[ $library_layout == "paired" ]]
   then
     printf "@stub/1\\nACGT\\n+\\n!!!!\\n" | gzip -c > ${sample_ID}_1.fastq.gz

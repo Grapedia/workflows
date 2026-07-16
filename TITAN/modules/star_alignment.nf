@@ -3,7 +3,6 @@ process star_alignment {
 
   tag "STAR on ${sample_ID} (${strand_type})"
   container params.container_star
-  containerOptions "--memory=50g"
   publishDir { 
     if (strand_type == "unstranded") {
       return "${params.output_dir}/intermediate_files/evidence_data/RNAseq_alignments/STAR/unstranded"

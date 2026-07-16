@@ -2,7 +2,6 @@ process EDTA {
 
   tag "Executing EDTA TE annotation on the following genome: $genome"
   container params.container_edta
-  containerOptions "--memory=50g --volume ${genome_path}:/genome_path --volume ${projectDir}/scripts/:/scripts"
   cpus params.edta_cpus
   publishDir "${params.output_dir}/tmp", mode: 'copy'
   publishDir "${params.output_dir}", mode: 'copy', saveAs: { filename ->
@@ -10,8 +9,9 @@ process EDTA {
   }
 
   input:
-    val(genome_path)
+    path(genome_fasta)
     val(genome)
+    path(edta_script)
 
   output:
     path("*TElib.fa"), emit : TElib_fasta
@@ -22,9 +22,9 @@ process EDTA {
     """
     DATE=\$(date "+%Y-%m-%d %H:%M:%S")
     echo "[\$DATE] Running EDTA on $genome"
-    CMD="/scripts/edta.sh -g /genome_path/$genome -n ${task.cpus}"
+    CMD="${edta_script} -g ${genome_fasta} -n ${task.cpus}"
     echo "[\$DATE] Executing: \$CMD"
-    /scripts/edta.sh -g /genome_path/$genome -n ${task.cpus}
+    ${edta_script} -g ${genome_fasta} -n ${task.cpus}
     """
 
   stub:

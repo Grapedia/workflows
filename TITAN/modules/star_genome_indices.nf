@@ -3,12 +3,11 @@ process star_genome_indices {
 
   tag "STAR genomeGenerate on $genome"
   container params.container_star
-  containerOptions "--volume $genome_path:/genome_path"
   publishDir "${params.output_dir}/intermediate_files/evidence_data/star_databases/"
   cpus 4
 
   input:
-    val(genome_path)
+    path(genome_fasta)
     val(genome)
 
   output:
@@ -18,9 +17,9 @@ process star_genome_indices {
     """
     DATE=\$(date "+%Y-%m-%d %H:%M:%S")
     echo "[\$DATE] Running STAR index creation on $genome"
-    CMD="STAR --runThreadN ${task.cpus} --runMode genomeGenerate --genomeDir ${genome}_index --genomeFastaFiles /genome_path/$genome"
+    CMD="STAR --runThreadN ${task.cpus} --runMode genomeGenerate --genomeDir ${genome}_index --genomeFastaFiles ${genome_fasta}"
     echo "[\$DATE] Executing: \$CMD"
-    STAR --runThreadN ${task.cpus} --runMode genomeGenerate --genomeDir ${genome}_index --genomeFastaFiles /genome_path/$genome
+    STAR --runThreadN ${task.cpus} --runMode genomeGenerate --genomeDir ${genome}_index --genomeFastaFiles ${genome_fasta}
     chmod -R 755 ${genome}_index
     """
 

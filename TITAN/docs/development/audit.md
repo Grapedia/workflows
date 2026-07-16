@@ -52,7 +52,7 @@ Le script historique contient un chemin absolu specifique a une machine: `/home/
 | Version Nextflow | `nextflow -version` | Succes | <1 s | Nextflow 26.04.3 disponible; TITAN declare 24.04.3. |
 | Configuration | `nextflow config` | Succes | ~2 s | Les parametres par defaut resolvent. |
 | Lancement minimal historique initial | `nextflow run main.nf --workflow aegis -ansi-log false` | Echec | ~3 s | Erreur de compilation DSL2: statements top-level melanges avec declarations. |
-| Profils locaux | `nextflow config -profile local >/dev/null && nextflow config -profile test >/dev/null && nextflow config -profile slurm,apptainer,test >/dev/null` | Succes | ~5 s | Verifie la resolution des profils ajoutes, sans soumission Slurm. |
+| Profils runtime | `python3 scripts/validate_profiles.py` | Succes | ~6 s | Verifie local, test, Apptainer et Slurm sans soumission Slurm. |
 | Lancement TITAN stub apres contrat unique | `nextflow run main.nf -profile test -stub-run -ansi-log false` | Succes | ~5 s | Compile et lance generation d'evidences puis Aegis dans le meme graphe. |
 | Profil test P0-003 | `nextflow config -profile test`; `python3 scripts/validate_minimal_test_data.py` | Succes | ~3 s | Profil local, sans Slurm ni Docker, pointe vers `test-data/minimal/valid`, ecrit dans `test-results/` et `test-work/`. |
 
@@ -218,13 +218,13 @@ P0:
 * Profil `test` local ajoute et valide: resolution de configuration et commande minimale TITAN sans Slurm, Docker ni donnees volumineuses.
 * Jeu de donnees synthetique minimal ajoute sous `test-data/minimal`, avec fixtures RNA-seq, proteines, Liftoff/Aegis et cas invalides.
 * Les chemins par defaut pointent vers `data/` absent du depot, alors que `data_example/` contient des placeholders.
-* Docker est active globalement; Apptainer n'est pas configure.
+* Profils `local`, `test`, `apptainer` et `slurm` explicites; Apptainer force EGAPx imbrique en `singularity`.
 * Aucune suite de tests TITAN detectee.
 
 P1:
 
 * Les conteneurs runtime et bases Dockerfile sont digest-pinned depuis P1-008.
-* des `containerOptions` Docker-centriques restent dans certains modules hors P1-006, ce qui fragilise Apptainer et `-resume`.
+* les `containerOptions` Docker-centriques ont ete retires des modules actifs depuis P1-009; les chemins genome, RNA-seq et scripts sont stages par Nextflow.
 * les scans internes de dossiers publies ont ete retires des merges StringTie, GFFCompare, BRAKER3, AGAT, Salmon et des alignements STAR/HISAT2/Minimap2.
 * Telechargements SRA pendant le workflow avec `--max-size 100G`.
 * Versions non collectees dans les sorties.
@@ -345,6 +345,6 @@ Ne pas tester Slurm reel dans GitHub Actions. Apptainer peut etre ajoute plus ta
 ## Limitations environnementales
 
 * Nextflow local est 26.04.3; le manifest TITAN declare 24.04.3.
-* Docker/Apptainer n'ont pas encore ete valides pour TITAN pendant cette passe.
+* Les profils Docker/Apptainer/Slurm resolvent localement; les runs Slurm/Apptainer reels restent a valider sur le cluster cible.
 * Aucune execution scientifique complete n'a ete lancee.
 * Les fixtures `data_example` existantes sont majoritairement vides.

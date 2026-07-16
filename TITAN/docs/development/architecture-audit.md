@@ -21,7 +21,7 @@ Highest-risk findings:
 * P1-006 removed the highest-risk internal directory scans from evidence integration modules. StringTie merges, GFFCompare, BRAKER3, AGAT, Salmon and STAR/HISAT2/Minimap2 alignment stages now consume declared upstream files instead of rediscovering them from published directories.
 * Long-read processing is now detected from `RNAseq_samplesheet` rows where `library_layout` is `long`; the old `use_long_reads` flag is no longer part of the runtime contract.
 * P1-007 removed the remaining manual `/outputdir` publication from the core evidence path. Backward-compatible public names are now handled through declared outputs and `publishDir saveAs`.
-* Several processes use `containerOptions` mounts for Docker-specific paths. This fights Nextflow staging and weakens Apptainer/HPC portability.
+* P1-009 removed Docker-specific `containerOptions` from active modules; genome, RNA-seq and helper scripts are now staged through `path` inputs for Docker/Apptainer/HPC portability.
 
 The recommended path is to stabilize contracts before changing scientific behavior:
 
@@ -249,7 +249,7 @@ Impact:
 
 * resource tuning requires code edits;
 * local tests and HPC runs can diverge;
-* some Docker `containerOptions` are not portable to Apptainer.
+* real Slurm/Apptainer execution still needs validation on the target cluster and shared cache filesystem.
 
 Recommendation:
 

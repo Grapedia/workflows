@@ -284,23 +284,23 @@ Les images `avelt/*` restent des images historiques sans tags semantiques publie
 
 ## TITAN-P1-009 - Finaliser profils local, apptainer et slurm
 Priorite : P1
-Statut : En cours
+Statut : Fait
 Risque : Moyen
 
 ### Objectif
 Isoler Docker, Apptainer, Slurm et ressources locales.
 ### Constat
-Les profils existent et resolvent, mais de nombreux `containerOptions --volume` restent Docker-centriques et les ressources sont encore partiellement hardcodees dans les modules.
+Les profils `local`, `test`, `apptainer` et `slurm` sont explicites. Les modules actifs ne declarent plus de `containerOptions`; les chemins genome, RNA-seq et scripts sont stages via `path`. Le profil `apptainer` force EGAPx imbrique en `singularity`, et `slurm` expose queue, compte, QOS, limite de soumission et taille de file.
 ### Fichiers concernes
-`nextflow.config`, `conf/*.config`, `modules/*.nf`.
+`nextflow.config`, `conf/*.config`, `modules/*.nf`, `workflows/titan.nf`, `subworkflows/generate_evidence_data.nf`, `launch_TITAN_example.sh`, `scripts/validate_profiles.py`.
 ### Etapes d'implementation
-Valider Apptainer/Slurm avec un stub, retirer les mounts inutiles au profit du staging Nextflow, definir des labels par classe de process.
+Retirer les mounts Docker au profit du staging Nextflow, separer les profils runtime, adapter EGAPx a Apptainer/Singularity, durcir le lanceur production et ajouter une validation statique des profils.
 ### Tests
-`nextflow config -profile local`; `test`; `slurm,apptainer,test`; stub Apptainer si environnement disponible.
+`python3 scripts/validate_profiles.py`; `nextflow config -profile local`; `nextflow config -profile apptainer`; `nextflow config -profile slurm,apptainer`; `nextflow config -profile test,slurm,apptainer`; `nextflow run main.nf -profile test -stub-run -ansi-log false`; variante stub sans long reads.
 ### Criteres d'acceptation
-Les profils resolvent et les modules critiques ne dependent pas de mounts Docker evitables.
+Les profils resolvent sans warnings critiques; les modules critiques ne dependent pas de mounts Docker evitables; le lanceur production prepare Apptainer et valide les contrats avant lancement.
 ### Risques et retour arriere
-Risque HPC; ne pas changer simultanement profils et commandes scientifiques.
+Risque HPC residuel: le vrai run Slurm/Apptainer doit etre valide sur le cluster cible avec cache Apptainer partage et images disponibles.
 
 ## TITAN-P2-001 - Ajouter schema et validation avancee des entrees
 Priorite : P2

@@ -5,16 +5,15 @@
 process prepare_RNAseq_fastq_files_long {
   tag "prepare_RNAseq_fastq_files on $sample_ID"
   container params.container_sra_tools
-  containerOptions "--volume ${params.RNAseq_data_dir}:/RNAseq_data"
   debug true
   // Sometimes the SRA download encounters an error, so we retry the process until the download works.
   errorStrategy 'retry'
 
   input:
-  tuple val(sample_ID), val(SRA_or_FASTQ), val(library_layout)
+  tuple val(sample_ID), val(SRA_or_FASTQ), val(library_layout), path(local_reads)
 
   output:
-  tuple val(sample_ID), val(SRA_or_FASTQ), val(library_layout), path("${sample_ID}*"), emit : prepared_fastqs
+  tuple val(sample_ID), val(SRA_or_FASTQ), val(library_layout), path("${sample_ID}*", includeInputs: true), emit : prepared_fastqs
 
   script:
   """
@@ -30,10 +29,10 @@ process prepare_RNAseq_fastq_files_long {
     gzip ${sample_ID}*.fastq
   elif [[ $SRA_or_FASTQ == "FASTQ" ]]
   then
-    cp /RNAseq_data/${sample_ID}.fastq.gz .
+    test -s ${sample_ID}.fastq.gz
   elif [[ $SRA_or_FASTQ == "FASTA" ]]
   then
-    cp /RNAseq_data/${sample_ID}.fasta .
+    test -s ${sample_ID}.fasta
   else
     echo "[\$DATE] ERROR: \$SRA_or_FASTQ is not equal to SRA, FASTQ or FASTA" >&2
     exit 1
@@ -42,6 +41,7 @@ process prepare_RNAseq_fastq_files_long {
 
   stub:
   """
+  rm -f ${sample_ID}*
   printf "@stub\\nACGT\\n+\\n!!!!\\n" | gzip -c > ${sample_ID}.fastq.gz
   """
 }

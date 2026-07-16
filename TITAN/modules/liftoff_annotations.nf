@@ -8,17 +8,16 @@ process liftoff_annotations {
   cache 'deep'
   tag "Executing liftoff on the new assembly $genome"
   container params.container_liftoff
-  containerOptions "--volume $genome_path:/genome_path --volume $previous_assembly_path:/previous_assembly_path --volume $previous_annotations_path:/previous_annotations_path"
   cpus 4
 
   publishDir "${params.output_dir}", mode: 'copy'
 
   input:
-    val(genome_path)
+    path(genome_fasta)
     val(genome)
-    val(previous_assembly_path)
+    path(previous_assembly_fasta)
     val(previous_assembly)
-    val(previous_annotations_path)
+    path(previous_annotations_gff3)
     val(previous_annotations)
 
   output:
@@ -30,10 +29,10 @@ process liftoff_annotations {
     DATE=\$(date "+%Y-%m-%d %H:%M:%S")
     echo "[\$DATE] Running liftoff on $genome"
 
-    CMD="liftoff -g /previous_annotations_path/$previous_annotations -o liftoff_previous_annotations.gff3 -u unmapped_features.txt /genome_path/$genome /previous_assembly_path/$previous_assembly"
+    CMD="liftoff -g ${previous_annotations_gff3} -o liftoff_previous_annotations.gff3 -u unmapped_features.txt ${genome_fasta} ${previous_assembly_fasta}"
 
     echo "[\$DATE] Executing: \$CMD"
-    liftoff -g /previous_annotations_path/$previous_annotations -o liftoff_previous_annotations.gff3 -u unmapped_features.txt /genome_path/$genome /previous_assembly_path/$previous_assembly
+    liftoff -g ${previous_annotations_gff3} -o liftoff_previous_annotations.gff3 -u unmapped_features.txt ${genome_fasta} ${previous_assembly_fasta}
 
     """
 

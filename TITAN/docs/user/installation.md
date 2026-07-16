@@ -59,6 +59,7 @@ Validate the runtime container contract after edits:
 
 ```bash
 python3 scripts/validate_container_pins.py
+python3 scripts/validate_profiles.py
 ```
 
 For Apptainer/Singularity environments, pre-pull the same Docker image if your cluster does not allow runtime image downloads:
@@ -68,7 +69,7 @@ apptainer pull egapx_0.5.2.sif docker://ncbi/egapx@sha256:bc657b232d93364d5f3b75
 apptainer pull aegis_v0.3.25.sif docker://tomsbiolab/aegis@sha256:de88470b3fb4fbab3ff2d5fa0fb9fed36b55952d1e383d3fdb2f5a3a530d84e6
 ```
 
-EGAPx is a nested Nextflow workflow. The TITAN EGAPx process runs the official EGAPx runner `v0.5.2`, and that runner launches EGAPx tasks using `params.egapx_executor` and `params.egapx_container`.
+EGAPx is a nested Nextflow workflow. The TITAN EGAPx process runs the official EGAPx runner `v0.5.2`, and that runner launches EGAPx tasks using `params.egapx_executor` and `params.egapx_container`. The `apptainer` profile sets `egapx_executor = singularity` for the nested EGAPx run.
 
 Defaults:
 
@@ -275,6 +276,8 @@ Before running production, verify the local workflow bootstrap:
 
 ```bash
 nextflow config -profile test
+python3 scripts/validate_container_pins.py
+python3 scripts/validate_profiles.py
 python3 scripts/validate_minimal_test_data.py
 nextflow run main.nf -profile test -stub-run -ansi-log false
 ```
@@ -301,6 +304,19 @@ The recommended entry point is `launch_TITAN_example.sh`, which validates inputs
 ```
 
 The script also accepts environment variables such as `TITAN_OUTPUT_DIR`, `TITAN_NEW_ASSEMBLY`, `TITAN_EGAPX_PARAMFILE`, and `TITAN_PROFILE`.
+
+`launch_TITAN_example.sh` resolves input paths to absolute paths, validates the container/profile contracts, and creates `TITAN_APPTAINER_CACHEDIR` automatically under the output directory when the selected profile includes `apptainer`.
+
+Profile conventions:
+
+```bash
+nextflow config -profile local
+nextflow config -profile apptainer
+nextflow config -profile slurm,apptainer
+nextflow config -profile test,slurm,apptainer
+```
+
+Use `test,slurm,apptainer` only for configuration resolution on the minimal fixtures. Production HPC runs should use `slurm,apptainer`.
 
 For a direct Nextflow command:
 
@@ -333,7 +349,7 @@ Before launching a long run:
 * Confirm the container runtime works on compute nodes.
 * Confirm EGAPx can pull or access the pinned `ncbi/egapx@sha256:...` image from `nextflow.config`.
 * Confirm AEGIS can pull or access the pinned `tomsbiolab/aegis@sha256:...` image from `nextflow.config`.
-* Confirm `python3 -c 'import yaml'` works in the environment that executes the EGAPx process.
+* Confirm `TITAN_APPTAINER_CACHEDIR` points to a writable shared filesystem when using `slurm,apptainer`.
 * Run a `-stub-run` after every config/profile edit.
 * Use `-resume` for restart after interrupted runs.
 * Keep `nextflow_reports/`, `trace.txt`, `timeline.html` and `.nextflow.log` with the run outputs.

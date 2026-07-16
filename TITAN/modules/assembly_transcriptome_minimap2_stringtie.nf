@@ -3,12 +3,13 @@ process assembly_transcriptome_minimap2_stringtie {
 
   tag "Minimap2/StringTie - long reads"
   container params.container_stringtie
-  containerOptions "--volume ${projectDir}/scripts/:/scripts --volume ${projectDir}/work:/work"
   publishDir "${params.output_dir}/intermediate_files/evidence_data/transcriptomes/StringTie/long_reads"
   cpus 4
 
   input:
     tuple val(sample_ID), path(bam_file)
+    path(stringtie_script)
+    path(stringtie_alt_script)
 
   output:
     tuple val(sample_ID), path("${sample_ID}_transcriptome.gtf"), path("${sample_ID}_transcriptome.AltCommands.gtf"), emit: minimap2_stringtie_transcriptomes
@@ -17,12 +18,12 @@ process assembly_transcriptome_minimap2_stringtie {
     """
     DATE=\$(date "+%Y-%m-%d %H:%M:%S")
     echo "[\$DATE] Running Minimap2/StringTie - long reads transcriptome assembly on $sample_ID"
-    CMD="/scripts/Stringtie.sh -t ${task.cpus} -o ${sample_ID}_transcriptome.gtf -b ${bam_file} -r long"
+    CMD="${stringtie_script} -t ${task.cpus} -o ${sample_ID}_transcriptome.gtf -b ${bam_file} -r long"
     echo "[\$DATE] Executing: \$CMD"
-    /scripts/Stringtie.sh -t ${task.cpus} -o ${sample_ID}_transcriptome.gtf -b ${bam_file} -r long
-    CMD="/scripts/Stringtie_AltCommands.sh -t ${task.cpus} -o ${sample_ID}_transcriptome.AltCommands.gtf -b ${bam_file} -r long"
+    ${stringtie_script} -t ${task.cpus} -o ${sample_ID}_transcriptome.gtf -b ${bam_file} -r long
+    CMD="${stringtie_alt_script} -t ${task.cpus} -o ${sample_ID}_transcriptome.AltCommands.gtf -b ${bam_file} -r long"
     echo "[\$DATE] Executing: \$CMD"
-    /scripts/Stringtie_AltCommands.sh -t ${task.cpus} -o ${sample_ID}_transcriptome.AltCommands.gtf -b ${bam_file} -r long
+    ${stringtie_alt_script} -t ${task.cpus} -o ${sample_ID}_transcriptome.AltCommands.gtf -b ${bam_file} -r long
     """
 
   stub:

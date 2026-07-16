@@ -3,12 +3,11 @@ process hisat2_genome_indices {
 
   tag "HISAT2 indexes generation on $genome"
   container params.container_hisat2
-  containerOptions "--volume $genome_path:/genome_path"
   publishDir "${params.output_dir}/intermediate_files/evidence_data/hisat2_databases/"
   cpus 4
 
   input:
-    val(genome_path)
+    path(genome_fasta)
     val(genome)
 
   output:
@@ -18,9 +17,9 @@ process hisat2_genome_indices {
     """
     DATE=\$(date "+%Y-%m-%d %H:%M:%S")
     echo "[\$DATE] Running HISAT2 index creation on $genome"
-    CMD="/hisat2-2.2.1/hisat2-build -p ${task.cpus} /genome_path/$genome $genome"
+    CMD="/hisat2-2.2.1/hisat2-build -p ${task.cpus} ${genome_fasta} $genome"
     echo "[\$DATE] Executing: \$CMD"
-    /hisat2-2.2.1/hisat2-build -p ${task.cpus} /genome_path/$genome $genome
+    /hisat2-2.2.1/hisat2-build -p ${task.cpus} ${genome_fasta} $genome
     chmod -R 755 ${genome}*
     """
 

@@ -35,6 +35,12 @@ workflow generate_evidence_data {
         has_long_reads
 
     main:
+        def new_assembly = file(params.new_assembly)
+        def previous_assembly = file(params.previous_assembly)
+        def previous_annotations_file = file(params.previous_annotations)
+        def edta_script = file("${projectDir}/scripts/edta.sh")
+        def stringtie_script = file("${projectDir}/scripts/Stringtie.sh")
+        def stringtie_alt_script = file("${projectDir}/scripts/Stringtie_AltCommands.sh")
 
         // Prepare RNAseq short reads for processing
         short_reads_prepared = prepare_RNAseq_fastq_files_short(samples_list_short_reads)
@@ -44,12 +50,12 @@ workflow generate_evidence_data {
 
         // Lift over previous annotations to new assembly
         previous_annotations = liftoff_annotations(
-            file(params.new_assembly).getParent(),
-            file(params.new_assembly).getName(),
-            file(params.previous_assembly).getParent(),
-            file(params.previous_assembly).getName(),
-            file(params.previous_annotations).getParent(),
-            file(params.previous_annotations).getName()
+            new_assembly,
+            new_assembly.getName(),
+            previous_assembly,
+            previous_assembly.getName(),
+            previous_annotations_file,
+            previous_annotations_file.getName()
         )
 
         // EGAPx annotation pipeline on new assembly
@@ -73,8 +79,8 @@ workflow generate_evidence_data {
 
         // Process STAR alignments
         star_indices = star_genome_indices(
-            file(params.new_assembly).getParent(),
-            file(params.new_assembly).getName()
+            new_assembly,
+            new_assembly.getName()
         )
         star_aligned = star_alignment(star_indices.index, salmon_output_processed)
 
@@ -85,13 +91,17 @@ workflow generate_evidence_data {
 
         // Process HISAT2 alignments
         hisat2_indices = hisat2_genome_indices(
-            file(params.new_assembly).getParent(),
-            file(params.new_assembly).getName()
+            new_assembly,
+            new_assembly.getName()
         )
         hisat2_aligned = hisat2_alignment(hisat2_indices.index, salmon_output_processed, file(params.new_assembly).getName())
 
         // Process hisat2 assemblies
-        hisat2_assemblies_stringtie = assembly_transcriptome_hisat2_stringtie(hisat2_aligned.samples_aligned)
+        hisat2_assemblies_stringtie = assembly_transcriptome_hisat2_stringtie(
+            hisat2_aligned.samples_aligned,
+            stringtie_script,
+            stringtie_alt_script
+        )
 
         hisat2_assemblies_stringtie.hisat2_stringtie_transcriptomes
           .filter { sample_ID, default_gtf, alt_gtf, strand_type -> strand_type != 'unstranded' }
@@ -135,8 +145,8 @@ workflow generate_evidence_data {
             long_reads_prepared = prepare_RNAseq_fastq_files_long(samples_list_long_reads)
 
             minimap2_indices = minimap2_genome_indices(
-                file(params.new_assembly).getParent(),
-                file(params.new_assembly).getName()
+                new_assembly,
+                new_assembly.getName()
             )
             minimap2_aligned = minimap2_alignment(minimap2_indices.index, long_reads_prepared.prepared_fastqs)
 
@@ -146,7 +156,11 @@ workflow generate_evidence_data {
               .set { concat_minimap2_bams_BRAKER3 }
 
             // Process long read assemblies
-            long_reads_assemblies = assembly_transcriptome_minimap2_stringtie(minimap2_aligned.samples_aligned)
+            long_reads_assemblies = assembly_transcriptome_minimap2_stringtie(
+                minimap2_aligned.samples_aligned,
+                stringtie_script,
+                stringtie_alt_script
+            )
 
             long_reads_assemblies.minimap2_stringtie_transcriptomes
               .map { sample_ID, default_gtf, alt_gtf -> default_gtf }
@@ -164,7 +178,11 @@ workflow generate_evidence_data {
         }
 
         // Process short read assemblies
-        star_assemblies_stringtie = assembly_transcriptome_star_stringtie(star_aligned.samples_aligned)
+        star_assemblies_stringtie = assembly_transcriptome_star_stringtie(
+            star_aligned.samples_aligned,
+            stringtie_script,
+            stringtie_alt_script
+        )
         star_assemblies_psiclass = assembly_transcriptome_star_psiclass(star_aligned.samples_aligned)
 
         star_assemblies_stringtie.star_stringtie_transcriptomes
@@ -219,8 +237,9 @@ workflow generate_evidence_data {
 
         // EDTA is mandatory: Aegis requires the hard-masked genome.
         edta_results = EDTA(
-            file(params.new_assembly).getParent(),
-            file(params.new_assembly).getName()
+            new_assembly,
+            new_assembly.getName(),
+            edta_script
         )
 
         protein_fastas = protein_list
