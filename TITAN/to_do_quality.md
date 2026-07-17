@@ -50,9 +50,9 @@ Perimetre lu: `README.md`, `nextflow.config`, `main.nf`, `workflows/titan.nf`, `
 ### `conf/base.config`
 
 - Bon point: ressources centralisees par labels.
-- A ameliorer: eviter `errorStrategy = 'finish'` global si certains processus ont besoin de retry controle. Definir les retries par label ou par process.
-- A ameliorer: ajouter `maxRetries`, `withName` pour les processus reseau (`prepare_RNAseq_*`, `egapx`) et eventuellement `scratch`/`stageInMode` selon HPC.
-- A ameliorer: revoir les labels inutilises (`process_medium`, `process_high`) ou les documenter.
+- [x] A ameliorer: eviter `errorStrategy = 'finish'` global si certains processus ont besoin de retry controle. Definir les retries par label ou par process. Le defaut global est `terminate`; les retries sont limites aux processus reseau.
+- [x] A ameliorer: ajouter `maxRetries`, `withName` pour les processus reseau (`prepare_RNAseq_*`, `egapx`) et eventuellement `scratch`/`stageInMode` selon HPC. Les selectors `withName` couvrent EGAPx et les downloads RNAseq; `scratch`/`stageInMode` reste a gerer par profil HPC site-specifique.
+- [x] A ameliorer: revoir les labels inutilises (`process_medium`, `process_high`) ou les documenter. Ces labels sont documentes comme reserves pour les futurs modules et overrides de site.
 
 ### `main.nf`
 
@@ -133,11 +133,11 @@ Perimetre lu: `README.md`, `nextflow.config`, `main.nf`, `workflows/titan.nf`, `
 
 ### `modules/prepare_RNAseq_fastq_files_short.nf`
 
-- Bon point: retries applicatifs pour les downloads ENA et `errorStrategy 'retry'`.
+- Bon point: retries applicatifs pour les downloads ENA; le retry process est maintenant pilote par `withName` dans `conf/base.config`.
 - A ameliorer: retirer `debug true` par defaut ou le rendre activable par parametre.
 - A ameliorer: la sortie `path("${sample_ID}*.fastq.gz", includeInputs: true)` est trop large. Emettre explicitement paired ou single, idealement avec un tuple `meta`.
 - A ameliorer: passer `download_sra_fastq.py` comme `path` input pour rendre la dependance visible dans la trace/cache.
-- A ameliorer: ajouter `maxRetries` controle dans la config pour ce process.
+- [x] A ameliorer: ajouter `maxRetries` controle dans la config pour ce process.
 - A ameliorer: ajouter `versions.yml`.
 
 ### `modules/prepare_RNAseq_fastq_files_long.nf`

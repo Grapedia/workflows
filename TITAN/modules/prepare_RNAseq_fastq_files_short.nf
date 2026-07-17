@@ -7,8 +7,6 @@ process prepare_RNAseq_fastq_files_short {
   tag "prepare_RNAseq_fastq_files on $sample_ID"
   container params.container_python
   debug true
-  // ENA downloads have script-level retries and keep a process retry as an outer safety net.
-  errorStrategy 'retry'
 
   input:
   tuple val(sample_ID), val(SRA_or_FASTQ), val(library_layout), path(local_reads)

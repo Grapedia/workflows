@@ -249,6 +249,8 @@ Resource policy is centralized in [conf/base.config](conf/base.config). Active m
 | `process_merge` | StringTie and GFFCompare merge steps |
 | `process_aegis` | AEGIS and final functional annotation |
 
+`process_medium` and `process_high` are reserved generic labels for future modules and site-specific profile overrides. Current workflow modules should prefer the domain-specific labels above.
+
 Override resources through `conf/base.config`, a profile config, or Nextflow process selectors. EDTA, EGAPx and Diamond2GO still honor `--edta_cpus`, `--egapx_cpus` and `--diamond2go_cpus` through `withName` selectors.
 
 ## Outputs
