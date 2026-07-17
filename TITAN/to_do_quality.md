@@ -229,9 +229,9 @@ Perimetre lu: `README.md`, `nextflow.config`, `main.nf`, `workflows/titan.nf`, `
 ### `modules/Stringtie_merging_short_reads_STAR.nf`
 
 - Bon point: sorties nommees et `set -euo pipefail`.
-- A ameliorer: `printf '%s\n' ${stranded_default_gtfs}` casse si un chemin contient espace et produit une ligne vide si liste vide. Construire les listes via une boucle bash sur `"$@"` est difficile dans Nextflow; mieux vaut generer les listes dans un petit script ou garantir les canaux non vides en amont.
-- A ameliorer: les outputs unstranded sont declares `optional: true`, mais le script cree toujours des fichiers vides. Choisir un seul contrat: optionnel absent ou fichier sentinelle vide.
-- A ameliorer: ajouter `versions.yml`.
+- [x] A ameliorer: `printf '%s\n' ${stranded_default_gtfs}` casse si un chemin contient espace et produit une ligne vide si liste vide. Construire les listes via une boucle bash sur `"$@"` est difficile dans Nextflow; mieux vaut generer les listes dans un petit script ou garantir les canaux non vides en amont.
+- [x] A ameliorer: les outputs unstranded sont declares `optional: true`, mais le script cree toujours des fichiers vides. Choisir un seul contrat: optionnel absent ou fichier sentinelle vide.
+- [x] A ameliorer: ajouter `versions.yml`.
 
 ### `modules/Stringtie_merging_short_reads_hisat2.nf`
 
