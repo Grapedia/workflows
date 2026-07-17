@@ -169,13 +169,13 @@ for f in modules/*.nf; do awk '/^[[:space:]]*output:/{flag=1} /^[[:space:]]*scri
 
 | Module/process | Entrees principales | Sorties declarees | Publication actuelle | Consommateur principal |
 | --- | --- | --- | --- | --- |
-| `prepare_RNAseq_fastq_files_short` | tuples RNA-seq courts | tuples `sample_ID`, `SRA_or_FASTQ`, `library_layout`, FASTQ stages | workdir uniquement | `trimming_fastq` |
+| `prepare_RNAseq_fastq_files_short` | tuples RNA-seq courts, script ENA | tuples `sample_ID`, `SRA_or_FASTQ`, `library_layout`, `prepared_1.fastq.gz`, `prepared_2.fastq.gz` | workdir uniquement | `trimming_fastq` |
 | `prepare_RNAseq_fastq_files_long` | tuples RNA-seq longs | tuples `sample_ID`, `SRA_or_FASTQ`, `library_layout`, FASTQ/FASTA stages | workdir uniquement | `minimap2_alignment` |
-| `trimming_fastq` | FASTQ/SRA courts prepares | `*.trimmed.fastq.gz` | `${output_dir}/intermediate_files/evidence_data/RNAseq_data/trimmed_data` | Salmon, STAR, HISAT2 |
+| `trimming_fastq` | FASTQ/SRA courts prepares | `${sample_ID}_1.trimmed.fastq.gz`, `${sample_ID}_2.trimmed.fastq.gz` | `${output_dir}/intermediate_files/evidence_data/RNAseq_data/trimmed_data` | Salmon, STAR, HISAT2 |
 | `liftoff_annotations` | assemblage cible, assemblage precedent, GFF3 precedent | `liftoff_previous_annotations.gff3`, `unmapped_features.txt` | `${output_dir}` | AGAT, Aegis |
 | `agat_convert_gff3_to_cds_fasta` | assemblage cible, Liftoff GFF3 | `${genome}.CDS.fasta.gz` | `${output_dir}/intermediate_files/liftoff/gff3_to_cds_fasta` | Salmon index |
 | `salmon_index` | CDS FASTA | `salmon_index/` | workdir/cache uniquement | Salmon strand inference |
-| `salmon_strand_inference` | reads trimmes, index Salmon | `${sample_ID}.strand_info.classified` | `${output_dir}/intermediate_files/salmon_strand` | STAR/HISAT2 channel enrichi avec strandedness |
+| `salmon_strand_inference` | reads trimmes, index Salmon | strand info en valeur, `${sample_ID}.strand_info.classified`, `${sample_ID}.log` | `${output_dir}/intermediate_files/salmon_strand` si intermediaires publies | STAR/HISAT2 channel enrichi avec strandedness |
 | `star_genome_indices` | assemblage cible | `${genome}_index` | `${output_dir}/intermediate_files/evidence_data/star_databases` | STAR alignment |
 | `star_alignment` | index STAR, reads, strandedness | `${sample_ID}_Aligned.sortedByCoord.out.bam` | `${output_dir}/intermediate_files/evidence_data/RNAseq_alignments/STAR/{stranded,unstranded}` | StringTie, PsiCLASS, BRAKER3 |
 | `hisat2_genome_indices` | assemblage cible | `${genome}.*.ht2` | `${output_dir}/intermediate_files/evidence_data/hisat2_databases` | HISAT2 alignment |

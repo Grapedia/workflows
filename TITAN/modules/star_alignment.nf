@@ -13,7 +13,7 @@ process star_alignment {
   }, mode: "copy", enabled: params.publish_intermediates
   input:
     path(star_database)
-    tuple val(sample_ID), val(library_layout), path(reads), val(strand_type)
+    tuple val(sample_ID), val(library_layout), path(read_1), path(read_2), val(strand_type)
     val(star_memory_per_job)
 
   output:
@@ -31,17 +31,17 @@ process star_alignment {
     if [[ $library_layout == "paired" ]]
     then
 
-      CMD="STAR --readFilesCommand zcat --genomeDir ${star_database} --runThreadN ${task.cpus} --readFilesIn ${reads[0]} ${reads[1]} --outFileNamePrefix ${sample_ID}_ --outSAMtype BAM SortedByCoordinate --outSAMunmapped Within --outSAMattributes Standard --outSAMstrandField intronMotif --limitBAMsortRAM ${star_memory_per_job}"
+      CMD="STAR --readFilesCommand zcat --genomeDir ${star_database} --runThreadN ${task.cpus} --readFilesIn ${read_1} ${read_2} --outFileNamePrefix ${sample_ID}_ --outSAMtype BAM SortedByCoordinate --outSAMunmapped Within --outSAMattributes Standard --outSAMstrandField intronMotif --limitBAMsortRAM ${star_memory_per_job}"
       echo "[\$DATE] Executing: \$CMD"
 
-      STAR --readFilesCommand zcat --genomeDir ${star_database} --runThreadN ${task.cpus} --readFilesIn ${reads[0]} ${reads[1]} --outFileNamePrefix ${sample_ID}_ --outSAMtype BAM SortedByCoordinate --outSAMunmapped Within --outSAMattributes Standard --outSAMstrandField intronMotif --limitBAMsortRAM ${star_memory_per_job}
+      STAR --readFilesCommand zcat --genomeDir ${star_database} --runThreadN ${task.cpus} --readFilesIn ${read_1} ${read_2} --outFileNamePrefix ${sample_ID}_ --outSAMtype BAM SortedByCoordinate --outSAMunmapped Within --outSAMattributes Standard --outSAMstrandField intronMotif --limitBAMsortRAM ${star_memory_per_job}
     elif [[ $library_layout == "single" ]]
     then
 
-      CMD="STAR --readFilesCommand zcat --genomeDir ${star_database} --runThreadN ${task.cpus} --readFilesIn ${reads} --outFileNamePrefix ${sample_ID}_ --outSAMtype BAM SortedByCoordinate --outSAMunmapped Within --outSAMattributes Standard --outSAMstrandField intronMotif --limitBAMsortRAM ${star_memory_per_job}"
+      CMD="STAR --readFilesCommand zcat --genomeDir ${star_database} --runThreadN ${task.cpus} --readFilesIn ${read_1} --outFileNamePrefix ${sample_ID}_ --outSAMtype BAM SortedByCoordinate --outSAMunmapped Within --outSAMattributes Standard --outSAMstrandField intronMotif --limitBAMsortRAM ${star_memory_per_job}"
       echo "[\$DATE] Executing: \$CMD"
 
-      STAR --readFilesCommand zcat --genomeDir ${star_database} --runThreadN ${task.cpus} --readFilesIn ${reads} --outFileNamePrefix ${sample_ID}_ --outSAMtype BAM SortedByCoordinate --outSAMunmapped Within --outSAMattributes Standard --outSAMstrandField intronMotif --limitBAMsortRAM ${star_memory_per_job}
+      STAR --readFilesCommand zcat --genomeDir ${star_database} --runThreadN ${task.cpus} --readFilesIn ${read_1} --outFileNamePrefix ${sample_ID}_ --outSAMtype BAM SortedByCoordinate --outSAMunmapped Within --outSAMattributes Standard --outSAMstrandField intronMotif --limitBAMsortRAM ${star_memory_per_job}
     fi
     printf '"%s":\n  container: "not_recorded"\n' "${task.process}" > versions.yml
     """

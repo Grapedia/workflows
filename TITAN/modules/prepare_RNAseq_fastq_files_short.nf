@@ -6,18 +6,18 @@ process prepare_RNAseq_fastq_files_short {
   label 'process_low'
   tag "prepare_RNAseq_fastq_files on $sample_ID"
   container params.container_python
-  debug true
 
   input:
   tuple val(sample_ID), val(SRA_or_FASTQ), val(library_layout), path(local_reads)
+  path(download_sra_fastq_script)
   val(ena_download_timeout_seconds)
   val(ena_max_download_attempts)
   val(ena_retry_wait_seconds)
   val(ena_verify_md5)
 
   output:
-  tuple val(sample_ID), val(SRA_or_FASTQ), val(library_layout), path("${sample_ID}*.fastq.gz", includeInputs: true), emit: prepared_fastqs
-    path "versions.yml", emit: versions
+  tuple val(sample_ID), val(SRA_or_FASTQ), val(library_layout), path("prepared_1.fastq.gz"), path("prepared_2.fastq.gz"), emit: prepared_fastqs
+  path "versions.yml", emit: versions
 
 
 
@@ -32,7 +32,7 @@ process prepare_RNAseq_fastq_files_short {
     if [[ $library_layout == "paired" ]]
     then
       echo "[\$DATE] Downloading SRA paired-end sample through ENA API: $sample_ID"
-      python3 ${projectDir}/scripts/download_sra_fastq.py \\
+      python3 ${download_sra_fastq_script} \\
         --accession $sample_ID \\
         --layout paired \\
         --outdir . \\
@@ -43,7 +43,7 @@ process prepare_RNAseq_fastq_files_short {
     elif [[ $library_layout == "single" ]]
     then
       echo "[\$DATE] Downloading SRA single-end sample through ENA API: $sample_ID"
-      python3 ${projectDir}/scripts/download_sra_fastq.py \\
+      python3 ${download_sra_fastq_script} \\
         --accession $sample_ID \\
         --layout single \\
         --outdir . \\
@@ -70,19 +70,33 @@ process prepare_RNAseq_fastq_files_short {
     echo "[\$DATE] ERROR: \$SRA_or_FASTQ is not equal to SRA or FASTQ" >&2
     exit 1
   fi
-    printf '"%s":\n  container: "not_recorded"\n' "${task.process}" > versions.yml
+
+  if [[ $library_layout == "paired" ]]; then
+    cp ${sample_ID}_1.fastq.gz prepared_1.fastq.gz
+    cp ${sample_ID}_2.fastq.gz prepared_2.fastq.gz
+  else
+    cp ${sample_ID}.fastq.gz prepared_1.fastq.gz
+    printf "" | gzip -c > prepared_2.fastq.gz
+  fi
+
+  python3 --version 2>&1 | sed 's/^/  python: "/; s/\$/"/' | {
+    printf '"%s":\\n' "${task.process}"
+    cat
+  } > versions.yml
   """
 
   stub:
   """
-  rm -f ${sample_ID}*.fastq.gz
+  set -euo pipefail
+
   if [[ $library_layout == "paired" ]]
   then
-    printf "@stub/1\\nACGT\\n+\\n!!!!\\n" | gzip -c > ${sample_ID}_1.fastq.gz
-    printf "@stub/2\\nTGCA\\n+\\n!!!!\\n" | gzip -c > ${sample_ID}_2.fastq.gz
+    printf "@stub/1\\nACGT\\n+\\n!!!!\\n" | gzip -c > prepared_1.fastq.gz
+    printf "@stub/2\\nTGCA\\n+\\n!!!!\\n" | gzip -c > prepared_2.fastq.gz
   else
-    printf "@stub\\nACGT\\n+\\n!!!!\\n" | gzip -c > ${sample_ID}.fastq.gz
+    printf "@stub\\nACGT\\n+\\n!!!!\\n" | gzip -c > prepared_1.fastq.gz
+    printf "" | gzip -c > prepared_2.fastq.gz
   fi
-    printf '"%s":\n  container: "not_recorded"\n' "${task.process}" > versions.yml
+  printf '"%s":\n  python: "stub"\n' "${task.process}" > versions.yml
   """
 }

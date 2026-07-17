@@ -59,6 +59,7 @@ workflow generate_evidence_data {
         stringtie_script
         stringtie_alt_script
         stringtie_transcriptome_script
+        download_sra_fastq_script
         clean_liftoff_gff3_script
         clean_protein_script
         empty_default_gtf
@@ -84,6 +85,7 @@ workflow generate_evidence_data {
         // Prepare RNAseq short reads for processing
         short_reads_prepared = prepare_RNAseq_fastq_files_short(
             samples_list_short_reads,
+            download_sra_fastq_script,
             ena_download_timeout_seconds,
             ena_max_download_attempts,
             ena_retry_wait_seconds,
@@ -115,13 +117,13 @@ workflow generate_evidence_data {
         )
 
         // Salmon index and strand inference.
-        // Emits tuple val(sample_ID), val(library_layout), path(reads), val(strand_type).
+        // Emits tuple val(sample_ID), val(library_layout), path(read_1), path(read_2), val(strand_type).
         salmon_index_result = salmon_index(gff_cds.cds_fasta)
         strand_inference = salmon_strand_inference(trimmed_reads.trimmed_reads, salmon_index_result.index)
 
-        // Salmon emits the inferred strand as a value and keeps the classification file as debug output.
-        salmon_output_processed = strand_inference.strand_inference_result.map { sample_ID, library_layout, reads, strand_info, strand_file ->
-            return [sample_ID, library_layout, reads, strand_info]
+        // Salmon emits the inferred strand as a value and keeps logs/classification as debug outputs.
+        salmon_output_processed = strand_inference.strand_inference_result.map { sample_ID, library_layout, read_1, read_2, strand_info ->
+            return [sample_ID, library_layout, read_1, read_2, strand_info]
         }
 
         // Process STAR alignments.

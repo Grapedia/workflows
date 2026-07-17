@@ -5,11 +5,13 @@ process salmon_strand_inference {
   container params.container_salmon
   publishDir "${params.output_dir}/intermediate_files/salmon_strand/", mode: "copy", enabled: params.publish_intermediates
   input:
-    tuple val(sample_ID), val(library_layout), path(reads)
+    tuple val(sample_ID), val(library_layout), path(read_1), path(read_2)
     path(salmon_index)
 
   output:
-    tuple val(sample_ID), val(library_layout), path(reads), env('STRAND_INFO'), path("${sample_ID}.strand_info.classified"), emit: strand_inference_result
+    tuple val(sample_ID), val(library_layout), path(read_1), path(read_2), env('STRAND_INFO'), emit: strand_inference_result
+    path("${sample_ID}.strand_info.classified"), emit: strand_classification
+    path("${sample_ID}.log"), emit: salmon_log
     path "versions.yml", emit: versions
 
 
@@ -20,16 +22,17 @@ process salmon_strand_inference {
     DATE=\$(date "+%Y-%m-%d %H:%M:%S")
     echo "[\$DATE] Running salmon strand inference on $sample_ID"
 
-    if [[ $library_layout == "paired" ]]
-    then
-      CMD="salmon quant -i ${salmon_index} -l A -p ${task.cpus} -1 ${reads[0]} -2 ${reads[1]} -o ${sample_ID}_quant --validateMappings --skipQuant 2> ${sample_ID}.log"
+    if [[ "${library_layout}" == "paired" ]]; then
+      CMD="salmon quant -i ${salmon_index} -l A -p ${task.cpus} -1 ${read_1} -2 ${read_2} -o ${sample_ID}_quant --validateMappings --skipQuant 2> ${sample_ID}.log"
       echo "[\$DATE] Executing: \$CMD"
-      salmon quant -i ${salmon_index} -l A -p ${task.cpus} -1 ${reads[0]} -2 ${reads[1]} -o ${sample_ID}_quant --validateMappings --skipQuant 2> ${sample_ID}.log
-    elif [[ $library_layout == "single" ]]
-    then
-      CMD="salmon quant -i ${salmon_index} -l A -p ${task.cpus} -r ${reads} -o ${sample_ID}_quant --validateMappings --skipQuant 2> ${sample_ID}.log"
+      salmon quant -i ${salmon_index} -l A -p ${task.cpus} -1 ${read_1} -2 ${read_2} -o ${sample_ID}_quant --validateMappings --skipQuant 2> ${sample_ID}.log
+    elif [[ "${library_layout}" == "single" ]]; then
+      CMD="salmon quant -i ${salmon_index} -l A -p ${task.cpus} -r ${read_1} -o ${sample_ID}_quant --validateMappings --skipQuant 2> ${sample_ID}.log"
       echo "[\$DATE] Executing: \$CMD"
-      salmon quant -i ${salmon_index} -l A -p ${task.cpus} -r ${reads} -o ${sample_ID}_quant --validateMappings --skipQuant 2> ${sample_ID}.log
+      salmon quant -i ${salmon_index} -l A -p ${task.cpus} -r ${read_1} -o ${sample_ID}_quant --validateMappings --skipQuant 2> ${sample_ID}.log
+    else
+      echo "ERROR: Unsupported library_layout '${library_layout}' for sample '${sample_ID}'. Expected 'single' or 'paired'." >&2
+      exit 1
     fi
 
     if grep 'Automatically detected most likely library type' ${sample_ID}.log > /dev/null
@@ -57,13 +60,19 @@ process salmon_strand_inference {
 
     echo "\$strand_info" > "${sample_ID}.strand_info.classified"
     export STRAND_INFO="\$strand_info"
-    printf '"%s":\n  container: "not_recorded"\n' "${task.process}" > versions.yml
+    salmon --version | sed 's/^/  salmon: "/; s/\$/"/' | {
+      printf '"%s":\\n' "${task.process}"
+      cat
+    } > versions.yml
     """
 
   stub:
     """
+    set -euo pipefail
+
     export STRAND_INFO="stranded_forward"
     echo "\$STRAND_INFO" > ${sample_ID}.strand_info.classified
-    printf '"%s":\n  container: "not_recorded"\n' "${task.process}" > versions.yml
+    printf "stub salmon log\\n" > ${sample_ID}.log
+    printf '"%s":\n  salmon: "stub"\n' "${task.process}" > versions.yml
     """
 }

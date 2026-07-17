@@ -123,6 +123,11 @@
       "minimum": 0,
       "description": "Wait time between ENA/SRA download retries."
     },
+    "ena_process_max_retries": {
+      "type": "integer",
+      "minimum": 0,
+      "description": "Maximum Nextflow process retries for ENA/SRA preparation tasks."
+    },
     "ena_verify_md5": {
       "type": "boolean",
       "description": "Verify ENA MD5 checksums when metadata provides them."

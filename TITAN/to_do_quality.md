@@ -125,20 +125,20 @@ Perimetre lu: `README.md`, `nextflow.config`, `main.nf`, `workflows/titan.nf`, `
 
 ### `modules/salmon_strand_inference.nf`
 
-- A ameliorer: ajouter `set -euo pipefail`.
-- A ameliorer: emettre directement `val(strand_info)` pour eviter une lecture de fichier dans le subworkflow.
-- A ameliorer: gerer explicitement les layouts inattendus avec `exit 1`; actuellement le script peut continuer sans log Salmon.
-- A ameliorer: ajouter `versions.yml`.
-- A ameliorer: publier logs Salmon ou les inclure comme output optionnel pour debug.
+- [x] A ameliorer: ajouter `set -euo pipefail`.
+- [x] A ameliorer: emettre directement `val(strand_info)` pour eviter une lecture de fichier dans le subworkflow.
+- [x] A ameliorer: gerer explicitement les layouts inattendus avec `exit 1`; actuellement le script peut continuer sans log Salmon.
+- [x] A ameliorer: ajouter `versions.yml`.
+- [x] A ameliorer: publier logs Salmon ou les inclure comme output optionnel pour debug.
 
 ### `modules/prepare_RNAseq_fastq_files_short.nf`
 
 - Bon point: retries applicatifs pour les downloads ENA; le retry process est maintenant pilote par `withName` dans `conf/base.config`.
-- A ameliorer: retirer `debug true` par defaut ou le rendre activable par parametre.
-- A ameliorer: la sortie `path("${sample_ID}*.fastq.gz", includeInputs: true)` est trop large. Emettre explicitement paired ou single, idealement avec un tuple `meta`.
-- A ameliorer: passer `download_sra_fastq.py` comme `path` input pour rendre la dependance visible dans la trace/cache.
+- [x] A ameliorer: retirer `debug true` par defaut ou le rendre activable par parametre.
+- [x] A ameliorer: la sortie `path("${sample_ID}*.fastq.gz", includeInputs: true)` est trop large. Emettre explicitement paired ou single, idealement avec un tuple `meta`.
+- [x] A ameliorer: passer `download_sra_fastq.py` comme `path` input pour rendre la dependance visible dans la trace/cache.
 - [x] A ameliorer: ajouter `maxRetries` controle dans la config pour ce process.
-- A ameliorer: ajouter `versions.yml`.
+- [x] A ameliorer: ajouter `versions.yml`.
 
 ### `modules/prepare_RNAseq_fastq_files_long.nf`
 

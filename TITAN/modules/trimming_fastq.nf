@@ -6,10 +6,10 @@ process trimming_fastq {
     container params.container_fastp
     publishDir "${params.output_dir}/intermediate_files/evidence_data/RNAseq_data/trimmed_data", mode: "copy", enabled: params.publish_intermediates
     input:
-      tuple val(sample_ID), val(SRA_or_FASTQ), val(library_layout), path(reads)
+      tuple val(sample_ID), val(SRA_or_FASTQ), val(library_layout), path(read_1), path(read_2)
 
     output:
-      tuple val(sample_ID), val(library_layout), path("${sample_ID}*.trimmed.fastq.gz"), emit: trimmed_reads
+      tuple val(sample_ID), val(library_layout), path("${sample_ID}_1.trimmed.fastq.gz"), path("${sample_ID}_2.trimmed.fastq.gz"), emit: trimmed_reads
     path "versions.yml", emit: versions
 
 
@@ -21,22 +21,23 @@ process trimming_fastq {
     echo "[\$DATE] Running fastp on $sample_ID"
     if [[ $library_layout == "paired" ]]
     then
-      CMD="fastp --thread ${task.cpus} -i ${reads[0]} -I ${reads[1]} \
+      CMD="fastp --thread ${task.cpus} -i ${read_1} -I ${read_2} \
       -o ${sample_ID}_1.trimmed.fastq.gz -O ${sample_ID}_2.trimmed.fastq.gz"
 
       echo "[\$DATE] Executing: \$CMD"
-      fastp --thread ${task.cpus} -i ${reads[0]} -I ${reads[1]} \
+      fastp --thread ${task.cpus} -i ${read_1} -I ${read_2} \
       -o ${sample_ID}_1.trimmed.fastq.gz -O ${sample_ID}_2.trimmed.fastq.gz
 
     elif [[ $library_layout == "single" ]]
     then
 
-      CMD="fastp --thread ${task.cpus} -i ${reads} \
-      -o ${sample_ID}.trimmed.fastq.gz"
+      CMD="fastp --thread ${task.cpus} -i ${read_1} \
+      -o ${sample_ID}_1.trimmed.fastq.gz"
 
       echo "[\$DATE] Executing: \$CMD"
-      fastp --thread ${task.cpus} -i ${reads} \
-      -o ${sample_ID}.trimmed.fastq.gz
+      fastp --thread ${task.cpus} -i ${read_1} \
+      -o ${sample_ID}_1.trimmed.fastq.gz
+      printf "" | gzip -c > ${sample_ID}_2.trimmed.fastq.gz
 
     else
       echo "[\$DATE] WARNING: \$library_layout is not equal to paired or single!"
@@ -53,6 +54,8 @@ process trimming_fastq {
       printf "@stub/2\\nTGCA\\n+\\n!!!!\\n" | gzip -c > ${sample_ID}_2.trimmed.fastq.gz
     else
       printf "@stub\\nACGT\\n+\\n!!!!\\n" | gzip -c > ${sample_ID}.trimmed.fastq.gz
+      mv ${sample_ID}.trimmed.fastq.gz ${sample_ID}_1.trimmed.fastq.gz
+      printf "" | gzip -c > ${sample_ID}_2.trimmed.fastq.gz
     fi
     printf '"%s":\n  container: "not_recorded"\n' "${task.process}" > versions.yml
     """
