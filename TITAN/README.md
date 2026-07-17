@@ -221,6 +221,12 @@ EGAPx performs its own masking. It receives the original target assembly from it
 
 EGAPx is a nested Nextflow run inside the TITAN `egapx` process. Its inner work directory is staged under the task work directory as `egapx_work`, its published outputs are copied from `egapx_out`, and its executor/container settings are controlled by `--egapx_executor` and `--container_egapx`. Debug nested failures from `egapx_out/nextflow` and the TITAN task `.command.*` files.
 
+## eggNOG-mapper
+
+eggNOG-mapper is an optional functional annotation step run on the AEGIS-derived protein FASTAs, in parallel with Diamond2GO. It is disabled by default (`--run_eggnog_mapper false`). To enable it, set `--run_eggnog_mapper true` and provide `--eggnog_data_dir /absolute/path/to/eggnog_data` pointing to a pre-downloaded eggNOG database directory; TITAN does not download the database itself. `--eggnog_mapper_sensmode` and `--eggnog_mapper_tax_scope` control `emapper.py` sensitivity and optional taxonomic scope.
+
+Fetch the database once with `scripts/download_eggnog_data.sh --data-dir /absolute/path/to/eggnog_data` (plain `curl`/`gunzip`/`tar`, no container or eggNOG-mapper installation needed). The script skips files that are already present, so re-running it is a no-op once the database is downloaded. Both launcher scripts can run this step for you with `--prepare-eggnog-data`, but only when that flag is passed; a plain launch never re-downloads or re-checks the database. See [docs/user/installation.md](docs/user/installation.md#8-eggnog-mapper-optional) for full details.
+
 ## Profiles
 
 | Profile | Purpose |
@@ -272,6 +278,7 @@ Main public output families:
 | EGAPx | `egapx.complete.genomic.gff3`, GTF, protein, CDS, transcript, ASN and `egapx_out/` | `${output_dir}/egapx` |
 | AEGIS | `final_annotation.gff3`, `final_annotation_proteins_all.fasta`, `final_annotation_proteins_main.fasta` | `${output_dir}/aegis_outputs` |
 | Diamond2GO | `final_annotation_proteins_all.diamond2go.tsv`, `final_annotation_proteins_main.diamond2go.tsv` | `${output_dir}/Diamond2GO_outputs` |
+| eggNOG-mapper | `final_annotation_proteins_all.emapper.annotations`, `final_annotation_proteins_main.emapper.annotations` | `${output_dir}/EggNOG_outputs` (only when `--run_eggnog_mapper true`) |
 | Provenance | `evidence_manifest.json`, `versions.yml` | `${output_dir}/provenance` |
 | Final validation | `final_annotation_validation.json`, `final_annotation_validation.txt` | `${output_dir}/validation` |
 | Reports | Nextflow report, timeline, trace and DAG | `${output_dir}/nextflow_reports` when using the launcher |
@@ -370,6 +377,7 @@ Final validation currently covers structural consistency: GFF3 format, coordinat
 * [AGAT](https://github.com/NBISweden/AGAT)
 * [BRAKER3](https://github.com/Gaius-Augustus/BRAKER)
 * [Diamond2GO](https://github.com/rhysf/Diamond2GO)
+* [eggNOG-mapper](https://github.com/eggnogdb/eggnog-mapper)
 * [EDTA](https://github.com/oushujun/EDTA)
 * [EGAPx](https://github.com/ncbi/egapx)
 * [fastp](https://github.com/OpenGene/fastp)

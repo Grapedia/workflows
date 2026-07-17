@@ -23,6 +23,7 @@ This checks:
 | AGAT | `container_agat` | `quay.io/biocontainers/agat@sha256:7ea8fa5a8428758cd87e3a5dcfaf277febdfcae95cd1fe473770abf8b928ec99` |
 | BRAKER3 | `container_braker3` | `avelt/braker3@sha256:e69a9aaaafa81e4da5b2bbb98ae120d873018ae40453630f60051ecd5f622c44` |
 | Diamond2GO | `container_diamond2go` | `avelt/diamond2go@sha256:40f1063307f98a2357d60b306bd7d79b6088591c1613e6552613da24002e8360` |
+| eggNOG-mapper | `container_eggnog_mapper` | `quay.io/biocontainers/eggnog-mapper@sha256:f70babaf681ff4b6b2fc8e8e76754bf989f01dd4910ca91f156c22aa88ea70d3` |
 | EDTA | `container_edta` | `quay.io/biocontainers/edta@sha256:793cbb17bc0569e01caa0c83ad8d1756a394c2ee47b3f512ad4077bc3e422579` |
 | EGAPx | `container_egapx` | `ncbi/egapx@sha256:bc657b232d93364d5f3b75ad3bfaf14b6267e46173672b609f26078d48a04298` |
 | fastp | `container_fastp` | `quay.io/biocontainers/fastp@sha256:0bdf8d8254fc86dd9038551d68dbcb72562e65560b9ce0ea08c1329d2f8587b4` |

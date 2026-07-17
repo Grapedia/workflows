@@ -13,17 +13,23 @@ EGAPX_CACHE_DIR="${TITAN_EGAPX_CACHE_DIR:-$PROJECT_DIR/.egapx_cache}"
 EGAPX_RUNNER_DIR="${TITAN_EGAPX_RUNNER_DIR:-$PROJECT_DIR/.egapx_runner}"
 EGAPX_REVISION="${TITAN_EGAPX_REVISION:-v0.5.2}"
 EGAPX_DATA_VERSION="${TITAN_EGAPX_DATA_VERSION:-egapxsupportdata_20251017}"
+PREPARE_EGGNOG_DATA="${TITAN_PREPARE_EGGNOG_DATA:-false}"
+EGGNOG_DATA_DIR="${TITAN_EGGNOG_DATA_DIR:-$PROJECT_DIR/.eggnog_data}"
 
 usage() {
   cat <<'EOF'
 Usage:
-  ./launch_TITAN_serveur_colmar.sh [--prepare-egapx-cache] [--dry-run] [-- no_more_nextflow_args]
+  ./launch_TITAN_serveur_colmar.sh [--prepare-egapx-cache] [--prepare-eggnog-data] [--dry-run] [-- no_more_nextflow_args]
 
 Environment overrides:
   TITAN_OUTPUT_DIR, TITAN_WORK_DIR, TITAN_RUN_NAME, TITAN_CONFIG_FILE,
-  TITAN_EGAPX_CACHE_DIR, TITAN_EGAPX_RUNNER_DIR, TITAN_PREPARE_EGAPX_CACHE.
+  TITAN_EGAPX_CACHE_DIR, TITAN_EGAPX_RUNNER_DIR, TITAN_PREPARE_EGAPX_CACHE,
+  TITAN_EGGNOG_DATA_DIR, TITAN_PREPARE_EGGNOG_DATA.
 
-Default production inputs are defined in data/slurm_apptainer.config.
+Default production inputs are defined in data/slurm_apptainer.config. To run
+eggNOG-mapper in production, set run_eggnog_mapper = true in that config file
+and pass --prepare-eggnog-data at least once to populate TITAN_EGGNOG_DATA_DIR
+(default <project-dir>/.eggnog_data).
 EOF
 }
 
@@ -42,6 +48,7 @@ EXTRA_NF_ARGS=()
 while [[ $# -gt 0 ]]; do
   case "$1" in
     --prepare-egapx-cache) PREPARE_EGAPX_CACHE=true; shift ;;
+    --prepare-eggnog-data) PREPARE_EGGNOG_DATA=true; shift ;;
     --dry-run) DRY_RUN=true; shift ;;
     -h|--help) usage; exit 0 ;;
     --) shift; EXTRA_NF_ARGS+=("$@"); break ;;
@@ -72,6 +79,7 @@ mkdir -p \
   "$WORK_DIR" \
   "$EGAPX_CACHE_DIR" \
   "$EGAPX_RUNNER_DIR" \
+  "$EGGNOG_DATA_DIR" \
   "$PROJECT_DIR/.apptainer-cache" \
   "$PROJECT_DIR/.apptainer-tmp" \
   "$PROJECT_DIR/.nextflow-home" \
@@ -135,6 +143,14 @@ if [[ "$PREPARE_EGAPX_CACHE" == true ]]; then
   prepare_egapx_cache
 fi
 
+prepare_eggnog_data() {
+  "$PROJECT_DIR/scripts/download_eggnog_data.sh" --data-dir "$EGGNOG_DATA_DIR"
+}
+
+if [[ "$PREPARE_EGGNOG_DATA" == true ]]; then
+  prepare_eggnog_data
+fi
+
 cmd=(
   nextflow -c "$CONFIG_FILE" run main.nf
   -profile "$PROFILE"
@@ -148,6 +164,7 @@ cmd=(
   -resume
   --egapx_runner_dir "$EGAPX_RUNNER_DIR"
   --egapx_local_cache_dir "$EGAPX_CACHE_DIR"
+  --eggnog_data_dir "$EGGNOG_DATA_DIR"
 )
 
 cmd+=("${EXTRA_NF_ARGS[@]}")
@@ -160,6 +177,7 @@ echo "Profile:           $PROFILE"
 echo "Run name:          $RUN_NAME"
 echo "Apptainer cache:   $APPTAINER_CACHEDIR"
 echo "EGAPx cache:       $EGAPX_CACHE_DIR"
+echo "eggNOG data dir:   $EGGNOG_DATA_DIR"
 echo
 echo "Command:"
 quote_cmd "${cmd[@]}"

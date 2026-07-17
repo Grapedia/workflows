@@ -37,6 +37,10 @@ BASE_ARGS = [
     "5.0",
     "--psiclass-c",
     "0.03",
+    "--run-eggnog-mapper",
+    "false",
+    "--eggnog-data-dir",
+    str(ROOT / "data" / "eggnog"),
 ]
 
 
@@ -146,6 +150,14 @@ def main():
             "bad EGAPx executor",
             replace_arg(BASE_ARGS, "--egapx-executor", "bad_executor"),
             "egapx_executor must be one of",
+        ),
+        (
+            "missing eggnog data dir",
+            [
+                *replace_arg(BASE_ARGS, "--run-eggnog-mapper", "true"),
+                *["--eggnog-data-dir", str(INVALID / "missing_eggnog_dir")],
+            ],
+            "eggnog_data_dir does not exist or is not a directory",
         ),
     ]
 

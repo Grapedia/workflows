@@ -3,6 +3,7 @@ nextflow.enable.dsl=2
 // Include various processing modules
 include { aegis_merge } from "../modules/aegis_merge"
 include { diamond2go } from "../modules/diamond2go"
+include { eggnog_mapper } from "../modules/eggnog_mapper"
 
 workflow aegis {
 
@@ -61,6 +62,17 @@ workflow aegis {
       merged_annotation.aegis_proteins_main
     )
 
+    // ----------------------------------------------------------------------------------------
+    //     eggNOG-mapper on the same AEGIS-derived proteins
+    // ----------------------------------------------------------------------------------------
+    // Always invoked, like diamond2go; the module itself emits placeholder
+    // outputs and skips emapper.py when params.run_eggnog_mapper is false.
+
+    eggnog_annotation = eggnog_mapper(
+      merged_annotation.aegis_proteins_all,
+      merged_annotation.aegis_proteins_main
+    )
+
   // Outputs
   emit:
     aegis_gff            = merged_annotation.aegis_gff
@@ -70,4 +82,7 @@ workflow aegis {
     diamond2go_all       = functional_annotation.proteins_all_diamond
     diamond2go_main      = functional_annotation.proteins_main_diamond
     diamond2go_versions  = functional_annotation.versions
+    eggnog_annotations_all  = eggnog_annotation.proteins_all_annotations
+    eggnog_annotations_main = eggnog_annotation.proteins_main_annotations
+    eggnog_versions         = eggnog_annotation.versions
 }

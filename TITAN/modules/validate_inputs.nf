@@ -21,6 +21,8 @@ process validate_inputs {
     val(egapx_data_version)
     val(aegis_version)
     val(aegis_container)
+    val(run_eggnog_mapper)
+    val(eggnog_data_dir)
 
   output:
     path "validated_inputs.ok", emit: ok
@@ -56,7 +58,9 @@ process validate_inputs {
       --egapx-paramfile "${egapx_paramfile_source}" \\
       --egapx-executor "${egapx_executor}" \\
       --psiclass-vd "${psiclass_vd}" \\
-      --psiclass-c "${psiclass_c}"
+      --psiclass-c "${psiclass_c}" \\
+      --run-eggnog-mapper "${run_eggnog_mapper}" \\
+      --eggnog-data-dir "${eggnog_data_dir}"
 
     touch validated_inputs.ok
     printf '"%s":\n  container: "not_recorded"\n' "${task.process}" > versions.yml
@@ -92,7 +96,9 @@ process validate_inputs {
       --egapx-paramfile "${egapx_paramfile_source}" \\
       --egapx-executor "${egapx_executor}" \\
       --psiclass-vd "${psiclass_vd}" \\
-      --psiclass-c "${psiclass_c}"
+      --psiclass-c "${psiclass_c}" \\
+      --run-eggnog-mapper "${run_eggnog_mapper}" \\
+      --eggnog-data-dir "${eggnog_data_dir}"
 
     touch validated_inputs.ok
     printf '"%s":\n  container: "not_recorded"\n' "${task.process}" > versions.yml

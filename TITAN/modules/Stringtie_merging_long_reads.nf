@@ -41,21 +41,26 @@ process Stringtie_merging_long_reads {
       : > "\${output_list}"
       while IFS= read -r -d '' gtf_file; do
         if [[ -s "\${gtf_file}" ]]; then
-          printf '%s\\n' "\${gtf_file}" >> "\${output_list}"
-          count=\$((count + 1))
+          if grep -qvE '^(#|\$)' "\${gtf_file}"; then
+            printf '%s\\n' "\${gtf_file}" >> "\${output_list}"
+            count=\$((count + 1))
+          fi
         fi
       done < <(find "\${input_dir}" -type f -name '*.gtf' -print0 | sort -z)
 
       if [[ "\${count}" -eq 0 ]]; then
-        echo "[\$DATE] ERROR: no non-empty GTF files found in \${input_dir}" >&2
-        exit 1
+        return 1
       fi
+      return 0
     }
 
-    write_nonempty_gtf_list default_gtfs default_gtfs.txt
-    write_nonempty_gtf_list alt_gtfs alt_gtfs.txt
-    stringtie --merge -o merged_transcriptomes.minimap2.long_reads.default_args.gtf default_gtfs.txt
-    stringtie --merge -o merged_transcriptomes.minimap2.long_reads.alt_args.gtf alt_gtfs.txt
+    if write_nonempty_gtf_list default_gtfs default_gtfs.txt && write_nonempty_gtf_list alt_gtfs alt_gtfs.txt; then
+      stringtie --merge -o merged_transcriptomes.minimap2.long_reads.default_args.gtf default_gtfs.txt
+      stringtie --merge -o merged_transcriptomes.minimap2.long_reads.alt_args.gtf alt_gtfs.txt
+    else
+      : > merged_transcriptomes.minimap2.long_reads.default_args.gtf
+      : > merged_transcriptomes.minimap2.long_reads.alt_args.gtf
+    fi
     {
       printf '"%s":\n' "${task.process}"
       stringtie --version 2>&1 | awk '{ printf "  stringtie: \\"%s\\"\\n", \$0 }'

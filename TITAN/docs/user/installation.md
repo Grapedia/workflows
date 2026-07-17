@@ -55,6 +55,12 @@ docker pull ncbi/egapx@sha256:bc657b232d93364d5f3b75ad3bfaf14b6267e46173672b609f
 docker pull tomsbiolab/aegis@sha256:de88470b3fb4fbab3ff2d5fa0fb9fed36b55952d1e383d3fdb2f5a3a530d84e6
 ```
 
+eggNOG-mapper is optional (see [section 8](#8-eggnog-mapper-optional)); pull it only if you plan to enable `--run_eggnog_mapper true`:
+
+```bash
+docker pull quay.io/biocontainers/eggnog-mapper@sha256:f70babaf681ff4b6b2fc8e8e76754bf989f01dd4910ca91f156c22aa88ea70d3
+```
+
 Validate the runtime container contract after edits:
 
 ```bash
@@ -369,7 +375,41 @@ final_annotation_validation.txt
 
 This validation checks final GFF3 structure, coordinates, seqids, Parent links, CDS phase and protein FASTA integrity. Critical errors fail the workflow.
 
-## 8. Validate with the built-in test profile
+## 8. eggNOG-mapper (optional)
+
+eggNOG-mapper adds orthology-based functional annotation on the AEGIS-derived protein FASTAs, alongside Diamond2GO. It is disabled by default (`run_eggnog_mapper = false`) because it needs an external, pre-downloaded eggNOG database that TITAN does not fetch on its own during a run.
+
+Download the database once with the bundled script:
+
+```bash
+scripts/download_eggnog_data.sh --data-dir /absolute/path/to/project/eggnog_data
+```
+
+This fetches `eggnog.db`, `eggnog_proteins.dmnd` and `eggnog.taxa.db` with plain `curl`/`gunzip`/`tar` from `http://eggnog5.embl.de/download/emapperdb-5.0.2` (data version compatible with eggNOG-mapper `2.1.15`, matching `container_eggnog_mapper`). No eggNOG-mapper installation or container runtime is required for this step. The `download_eggnog_data.py` script bundled inside the `eggnog-mapper:2.1.15` BioContainers image points at the retired host `eggnogdb.embl.de`, which no longer resolves, so this script fetches the same data version directly from the current host instead.
+
+Both launcher scripts can run this step automatically:
+
+```bash
+./launch_TITAN_example.sh --prepare-eggnog-data --enable-eggnog-mapper ... # plus the usual required options
+./launch_TITAN_serveur_colmar.sh --prepare-eggnog-data
+```
+
+`--prepare-eggnog-data` downloads the database into `TITAN_EGGNOG_DATA_DIR` (default `<project-dir>/.eggnog_data`) if it is not already there; `--enable-eggnog-mapper` (in `launch_TITAN_example.sh`) then passes `--run_eggnog_mapper true --eggnog_data_dir "$TITAN_EGGNOG_DATA_DIR"` to Nextflow. On the Colmar launcher, set `run_eggnog_mapper = true` directly in `data/slurm_apptainer.config` once the database has been downloaded.
+
+Defaults:
+
+```text
+run_eggnog_mapper = false
+eggnog_data_dir = false
+eggnog_mapper_cpus = 5
+eggnog_mapper_sensmode = sensitive
+eggnog_mapper_tax_scope = false
+container_eggnog_mapper = quay.io/biocontainers/eggnog-mapper@sha256:f70babaf681ff4b6b2fc8e8e76754bf989f01dd4910ca91f156c22aa88ea70d3
+```
+
+TITAN validates `--eggnog_data_dir` before heavy execution whenever `--run_eggnog_mapper true` is set, and fails fast if the directory is missing. Outputs are published under `${output_dir}/EggNOG_outputs`.
+
+## 9. Validate with the built-in test profile
 
 Before running production, verify the local workflow bootstrap:
 
@@ -379,7 +419,7 @@ scripts/run-tests.sh
 
 This validates input schemas, parameter wiring, profile resolution, container pinning, fixture integrity and channel contracts in stub mode. It does not validate biological output quality.
 
-## 9. Production launch
+## 10. Production launch
 
 The recommended entry point is `launch_TITAN_example.sh`, which validates inputs and generates Nextflow reports:
 
@@ -438,7 +478,7 @@ nextflow run main.nf \
 
 Do not pass `--workflow`; TITAN rejects it because partial public modes have been removed.
 
-## 10. Production checklist
+## 11. Production checklist
 
 Before launching a long run:
 
@@ -449,6 +489,7 @@ Before launching a long run:
 * Confirm the EGAPx cache contains the BUSCO lineage selected from the YAML `taxid` (for `taxid: 29760`, `busco_downloads/lineages/eudicots_odb10`).
 * Confirm EDTA can pull or access the pinned `quay.io/biocontainers/edta@sha256:...` image from `nextflow.config`.
 * Confirm AEGIS can pull or access the pinned `tomsbiolab/aegis@sha256:...` image from `nextflow.config`.
+* If enabling eggNOG-mapper, run `--prepare-eggnog-data` (or `scripts/download_eggnog_data.sh`) at least once and confirm `eggnog_data_dir` points to a populated database directory.
 * Confirm `TITAN_APPTAINER_CACHEDIR` points to a writable shared filesystem when using `slurm,apptainer`.
 * Run a `-stub-run` after every config/profile edit.
 * Use `-resume` for restart after interrupted runs.
@@ -456,7 +497,7 @@ Before launching a long run:
 
 For quick troubleshooting and the current limitations of stub tests, CI, SRA handling and cluster-specific Apptainer behavior, see the README sections `Troubleshooting` and `Limitations`.
 
-## 11. References
+## 12. References
 
 * EGAPx official repository and `v0.5.2` runner: <https://github.com/ncbi/egapx/tree/v0.5.2>
 * EGAPx input format and requirements: <https://github.com/ncbi/egapx/blob/v0.5.2/README.md>
@@ -464,3 +505,5 @@ For quick troubleshooting and the current limitations of stub tests, CI, SRA han
 * EDTA BioContainers image: <https://quay.io/repository/biocontainers/edta>
 * AEGIS repository and CLI documentation: <https://github.com/Tomsbiolab/aegis>
 * AEGIS Docker image: <https://hub.docker.com/r/tomsbiolab/aegis>
+* eggNOG-mapper repository and usage: <https://github.com/eggnogdb/eggnog-mapper>
+* eggNOG-mapper BioContainers image: <https://quay.io/repository/biocontainers/eggnog-mapper>

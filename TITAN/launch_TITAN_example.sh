@@ -32,6 +32,12 @@ Production-oriented options:
                                  Default: TITAN_EGAPX_CACHE_DIR or <project-dir>/.egapx_cache
   --egapx-runner-dir PATH        Local EGAPx runner source directory
                                  Default: TITAN_EGAPX_RUNNER_DIR or <project-dir>/.egapx_runner
+  --prepare-eggnog-data          Download the eggNOG-mapper database before launching TITAN
+                                 Default: TITAN_PREPARE_EGGNOG_DATA or false
+  --eggnog-data-dir PATH         Persistent eggNOG-mapper database directory
+                                 Default: TITAN_EGGNOG_DATA_DIR or <project-dir>/.eggnog_data
+  --enable-eggnog-mapper         Pass --run_eggnog_mapper true and --eggnog_data_dir to Nextflow
+                                 Default: TITAN_RUN_EGGNOG_MAPPER or false
   --resume                       Add -resume
   --force                        Allow writing into a non-empty output directory without --resume
   --dry-run                      Print the command instead of executing it
@@ -107,6 +113,9 @@ WORK_DIR="${TITAN_WORK_DIR:-}"
 PREPARE_EGAPX_CACHE="${TITAN_PREPARE_EGAPX_CACHE:-false}"
 EGAPX_CACHE_DIR="${TITAN_EGAPX_CACHE_DIR:-}"
 EGAPX_RUNNER_DIR="${TITAN_EGAPX_RUNNER_DIR:-}"
+PREPARE_EGGNOG_DATA="${TITAN_PREPARE_EGGNOG_DATA:-false}"
+EGGNOG_DATA_DIR="${TITAN_EGGNOG_DATA_DIR:-}"
+RUN_EGGNOG_MAPPER="${TITAN_RUN_EGGNOG_MAPPER:-false}"
 RESUME=false
 FORCE=false
 DRY_RUN=false
@@ -129,6 +138,9 @@ while [[ $# -gt 0 ]]; do
     --prepare-egapx-cache) PREPARE_EGAPX_CACHE=true; shift ;;
     --egapx-cache-dir) EGAPX_CACHE_DIR="${2:-}"; shift 2 ;;
     --egapx-runner-dir) EGAPX_RUNNER_DIR="${2:-}"; shift 2 ;;
+    --prepare-eggnog-data) PREPARE_EGGNOG_DATA=true; shift ;;
+    --eggnog-data-dir) EGGNOG_DATA_DIR="${2:-}"; shift 2 ;;
+    --enable-eggnog-mapper) RUN_EGGNOG_MAPPER=true; shift ;;
     --resume) RESUME=true; shift ;;
     --force) FORCE=true; shift ;;
     --dry-run) DRY_RUN=true; shift ;;
@@ -158,6 +170,7 @@ OUTPUT_DIR="$(cd "$OUTPUT_DIR" && pwd -P)"
 WORK_DIR="${WORK_DIR:-$OUTPUT_DIR/work}"
 EGAPX_CACHE_DIR="${EGAPX_CACHE_DIR:-$PROJECT_DIR/.egapx_cache}"
 EGAPX_RUNNER_DIR="${EGAPX_RUNNER_DIR:-$PROJECT_DIR/.egapx_runner}"
+EGGNOG_DATA_DIR="${EGGNOG_DATA_DIR:-$PROJECT_DIR/.eggnog_data}"
 REPORTS_DIR="$OUTPUT_DIR/nextflow_reports"
 PREVIOUS_ASSEMBLY="$(abs_path "$PREVIOUS_ASSEMBLY")"
 NEW_ASSEMBLY="$(abs_path "$NEW_ASSEMBLY")"
@@ -168,6 +181,8 @@ PROTEIN_SAMPLESHEET="$(abs_path "$PROTEIN_SAMPLESHEET")"
 EGAPX_PARAMFILE="$(abs_path "$EGAPX_PARAMFILE")"
 EGAPX_CACHE_DIR="$(abs_path "$EGAPX_CACHE_DIR")"
 EGAPX_RUNNER_DIR="$(abs_path "$EGAPX_RUNNER_DIR")"
+mkdir -p "$EGGNOG_DATA_DIR"
+EGGNOG_DATA_DIR="$(abs_path "$EGGNOG_DATA_DIR")"
 
 if [[ "$RESUME" == false && "$FORCE" == false ]] && find "$OUTPUT_DIR" -mindepth 1 -maxdepth 1 | grep -q .; then
   die "Output directory is not empty: ${OUTPUT_DIR}. Use --resume to continue or --force to start a new run there."
@@ -242,6 +257,14 @@ if [[ "$PREPARE_EGAPX_CACHE" == true ]]; then
   prepare_egapx_cache "$(config_value egapx_data_version)" "$(config_value egapx_revision)"
 fi
 
+prepare_eggnog_data() {
+  "$PROJECT_DIR/scripts/download_eggnog_data.sh" --data-dir "$EGGNOG_DATA_DIR"
+}
+
+if [[ "$PREPARE_EGGNOG_DATA" == true ]]; then
+  prepare_eggnog_data
+fi
+
 cmd=(
   nextflow run main.nf
   -profile "$PROFILE"
@@ -264,6 +287,10 @@ cmd=(
   --egapx_local_cache_dir "$EGAPX_CACHE_DIR"
 )
 
+if [[ "$RUN_EGGNOG_MAPPER" == true ]]; then
+  cmd+=(--run_eggnog_mapper true --eggnog_data_dir "$EGGNOG_DATA_DIR")
+fi
+
 if [[ "$RESUME" == true ]]; then
   cmd+=(-resume)
 fi
@@ -278,6 +305,9 @@ echo "Profile:           $PROFILE"
 echo "Run name:          $RUN_NAME"
 echo "EGAPx runner:      $EGAPX_RUNNER_DIR"
 echo "EGAPx cache:       $EGAPX_CACHE_DIR"
+if [[ "$RUN_EGGNOG_MAPPER" == true ]]; then
+  echo "eggNOG-mapper:     enabled, data dir $EGGNOG_DATA_DIR"
+fi
 if [[ "${TITAN_APPTAINER_CACHEDIR:-}" ]]; then
   echo "Apptainer cache:   $TITAN_APPTAINER_CACHEDIR"
 fi

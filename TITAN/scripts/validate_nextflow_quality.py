@@ -109,6 +109,7 @@ for required_param in [
     "egapx_paramfile",
     "container_egapx",
     "container_aegis",
+    "container_eggnog_mapper",
 ]:
     if required_param not in schema.get("properties", {}):
         fail(f"nextflow_schema.json is missing parameter: {required_param}")

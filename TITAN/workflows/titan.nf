@@ -124,7 +124,9 @@ workflow TITAN {
         params.container_egapx,
         params.egapx_data_version,
         params.aegis_version,
-        params.container_aegis
+        params.container_aegis,
+        params.run_eggnog_mapper,
+        params.eggnog_data_dir
     )
 
     new_assembly = input_validation.ok.map { file(params.new_assembly) }
@@ -256,6 +258,9 @@ workflow TITAN {
         evidence_data.braker_versions,
         aegis.out.aegis_versions,
         aegis.out.diamond2go_versions,
-        validate_final_annotation.out.versions
+        aegis.out.eggnog_versions,
+        validate_final_annotation.out.versions,
+        aegis.out.eggnog_annotations_all,
+        aegis.out.eggnog_annotations_main
     )
 }

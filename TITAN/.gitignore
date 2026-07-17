@@ -10,3 +10,6 @@ nxf-tmp.*
 *.sif
 .egapx_cache/
 .egapx_runner/
+.eggnog_data/
+__pycache__/
+*.pyc

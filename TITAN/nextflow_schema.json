@@ -76,6 +76,37 @@
       "minimum": 1,
       "description": "CPU override for Diamond2GO."
     },
+    "eggnog_mapper_cpus": {
+      "type": "integer",
+      "minimum": 1,
+      "description": "CPU override for eggNOG-mapper."
+    },
+    "run_eggnog_mapper": {
+      "type": "boolean",
+      "description": "Run eggNOG-mapper on the AEGIS-derived protein FASTAs."
+    },
+    "eggnog_data_dir": {
+      "$ref": "#/definitions/path_or_false",
+      "description": "Directory containing the external eggNOG-mapper database files. Required when run_eggnog_mapper is true."
+    },
+    "eggnog_mapper_sensmode": {
+      "type": "string",
+      "description": "Sensitivity mode passed to emapper.py."
+    },
+    "eggnog_mapper_tax_scope": {
+      "oneOf": [
+        {
+          "type": "boolean",
+          "enum": [
+            false
+          ]
+        },
+        {
+          "type": "string"
+        }
+      ],
+      "description": "Optional eggNOG taxonomic scope passed to emapper.py."
+    },
     "egapx_version": {
       "type": "string",
       "description": "EGAPx version recorded in provenance."
@@ -184,6 +215,9 @@
       "$ref": "#/definitions/container_digest"
     },
     "container_diamond2go": {
+      "$ref": "#/definitions/container_digest"
+    },
+    "container_eggnog_mapper": {
       "$ref": "#/definitions/container_digest"
     },
     "container_edta": {

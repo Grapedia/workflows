@@ -275,6 +275,7 @@ def validate_egapx_yaml(path):
 
 def validate_args(args):
     errors = []
+    run_eggnog_mapper = str(args.run_eggnog_mapper).lower() == "true"
     required_files = {
         "new assembly": args.new_assembly,
         "previous assembly": args.previous_assembly,
@@ -312,6 +313,11 @@ def validate_args(args):
 
     if args.egapx_executor not in EGAPX_EXECUTORS:
         errors.append(error(f"egapx_executor must be one of {sorted(EGAPX_EXECUTORS)}, got '{args.egapx_executor}'"))
+    if run_eggnog_mapper:
+        if not args.eggnog_data_dir or str(args.eggnog_data_dir).lower() == "false":
+            errors.append(error("eggnog_data_dir must be provided when run_eggnog_mapper is true"))
+        elif not args.eggnog_data_dir.exists() or not args.eggnog_data_dir.is_dir():
+            errors.append(error(f"eggnog_data_dir does not exist or is not a directory: {args.eggnog_data_dir}"))
     for label, value in {"PSICLASS_vd_option": args.psiclass_vd, "PSICLASS_c_option": args.psiclass_c}.items():
         try:
             float(value)
@@ -333,6 +339,8 @@ def build_parser():
     parser.add_argument("--egapx-executor", default="docker")
     parser.add_argument("--psiclass-vd", default="5.0")
     parser.add_argument("--psiclass-c", default="0.03")
+    parser.add_argument("--run-eggnog-mapper", default="false")
+    parser.add_argument("--eggnog-data-dir", type=Path, default=Path("false"))
     return parser
 
 

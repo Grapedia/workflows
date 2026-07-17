@@ -11,6 +11,7 @@ REQUIRED_PARAMS = {
     "container_aegis",
     "container_braker3",
     "container_diamond2go",
+    "container_eggnog_mapper",
     "container_edta",
     "container_egapx",
     "container_fastp",
