@@ -243,9 +243,9 @@ Perimetre lu: `README.md`, `nextflow.config`, `main.nf`, `workflows/titan.nf`, `
 ### `modules/Stringtie_merging_long_reads.nf`
 
 - Bon point: sorties nommees et `set -euo pipefail`.
-- A ameliorer: robustifier la generation des listes de GTFs comme pour STAR.
-- A ameliorer: ajouter `versions.yml`.
-- A ameliorer: verifier que l'extension `emit: default_args_gff` correspond au contenu GTF; renommer en `*_gtf`.
+- [x] A ameliorer: robustifier la generation des listes de GTFs comme pour STAR.
+- [x] A ameliorer: ajouter `versions.yml`.
+- [x] A ameliorer: verifier que l'extension `emit: default_args_gff` correspond au contenu GTF; renommer en `*_gtf`.
 
 ### `modules/gffcompare.nf`
 

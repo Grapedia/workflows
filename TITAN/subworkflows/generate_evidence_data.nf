@@ -171,8 +171,8 @@ workflow generate_evidence_data {
 
         if (!has_long_reads) {
             empty_long_reads = empty_long_read_evidence(empty_default_gtf, empty_alt_gtf)
-            merged_long_reads_default_args_gff = empty_long_reads.default_args_gff
-            merged_long_reads_alt_args_gff = empty_long_reads.alt_args_gff
+            merged_long_reads_default_args_gtf = empty_long_reads.default_args_gtf
+            merged_long_reads_alt_args_gtf = empty_long_reads.alt_args_gtf
         }
 
         // Process minimap2 alignments for long reads
@@ -217,8 +217,8 @@ workflow generate_evidence_data {
               .set { minimap2_alt_gtfs }
 
             merged_long_reads = Stringtie_merging_long_reads(minimap2_default_gtfs, minimap2_alt_gtfs)
-            merged_long_reads_default_args_gff = merged_long_reads.default_args_gff
-            merged_long_reads_alt_args_gff = merged_long_reads.alt_args_gff
+            merged_long_reads_default_args_gtf = merged_long_reads.default_args_gtf
+            merged_long_reads_alt_args_gtf = merged_long_reads.alt_args_gtf
         }
 
         // Process short read assemblies
@@ -312,6 +312,6 @@ workflow generate_evidence_data {
         hisat2_stringtie_unstranded_alt_gtf = merged_hisat2_stringtie.alt_args_unstranded
         star_psiclass_stranded_gtf = gffcompare_out.star_psiclass_stranded
         star_psiclass_unstranded_gtf = gffcompare_out.star_psiclass_unstranded
-        long_reads_default_gtf = merged_long_reads_default_args_gff
-        long_reads_alt_gtf = merged_long_reads_alt_args_gff
+        long_reads_default_gtf = merged_long_reads_default_args_gtf
+        long_reads_alt_gtf = merged_long_reads_alt_args_gtf
 }

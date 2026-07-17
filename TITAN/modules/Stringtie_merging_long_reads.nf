@@ -16,12 +16,12 @@ process Stringtie_merging_long_reads {
   }
 
   input:
-    path(default_gtfs)
-    path(alt_gtfs)
+    path(default_gtfs, stageAs: "default_gtfs/*")
+    path(alt_gtfs, stageAs: "alt_gtfs/*")
 
   output:
-    path "merged_transcriptomes.minimap2.long_reads.default_args.gtf", emit: default_args_gff
-    path "merged_transcriptomes.minimap2.long_reads.alt_args.gtf", emit: alt_args_gff
+    path "merged_transcriptomes.minimap2.long_reads.default_args.gtf", emit: default_args_gtf
+    path "merged_transcriptomes.minimap2.long_reads.alt_args.gtf", emit: alt_args_gtf
     path "versions.yml", emit: versions
 
 
@@ -31,17 +31,41 @@ process Stringtie_merging_long_reads {
     set -euo pipefail
     DATE=\$(date "+%Y-%m-%d %H:%M:%S")
     echo "[\$DATE] Running Minimap2/StringTie merging - long reads transcriptome assemblies"
-    printf '%s\\n' ${default_gtfs} > default_gtfs.txt
-    printf '%s\\n' ${alt_gtfs} > alt_gtfs.txt
+
+    write_nonempty_gtf_list() {
+      local input_dir="\$1"
+      local output_list="\$2"
+      local count=0
+
+      : > "\${output_list}"
+      while IFS= read -r -d '' gtf_file; do
+        if [[ -s "\${gtf_file}" ]]; then
+          printf '%s\\n' "\${gtf_file}" >> "\${output_list}"
+          count=\$((count + 1))
+        fi
+      done < <(find "\${input_dir}" -type f -name '*.gtf' -print0 | sort -z)
+
+      if [[ "\${count}" -eq 0 ]]; then
+        echo "[\$DATE] ERROR: no non-empty GTF files found in \${input_dir}" >&2
+        exit 1
+      fi
+    }
+
+    write_nonempty_gtf_list default_gtfs default_gtfs.txt
+    write_nonempty_gtf_list alt_gtfs alt_gtfs.txt
     stringtie --merge -o merged_transcriptomes.minimap2.long_reads.default_args.gtf default_gtfs.txt
     stringtie --merge -o merged_transcriptomes.minimap2.long_reads.alt_args.gtf alt_gtfs.txt
-    printf '"%s":\n  container: "not_recorded"\n' "${task.process}" > versions.yml
+    {
+      printf '"%s":\n' "${task.process}"
+      stringtie --version 2>&1 | awk '{ printf "  stringtie: \\"%s\\"\\n", \$0 }'
+    } > versions.yml
     """
 
   stub:
     """
-    printf "chr1\\tStringTie\\ttranscript\\t1\\t10\\t.\\t+\\t.\\tgene_id \\"long_merged_gene\\"; transcript_id \\"long_merged_tx\\";\\n" > merged_transcriptomes.minimap2.long_reads.default_args.gtf
-    printf "chr1\\tStringTie\\ttranscript\\t1\\t10\\t.\\t+\\t.\\tgene_id \\"long_merged_alt_gene\\"; transcript_id \\"long_merged_alt_tx\\";\\n" > merged_transcriptomes.minimap2.long_reads.alt_args.gtf
-    printf '"%s":\n  container: "not_recorded"\n' "${task.process}" > versions.yml
+    set -euo pipefail
+    : > merged_transcriptomes.minimap2.long_reads.default_args.gtf
+    : > merged_transcriptomes.minimap2.long_reads.alt_args.gtf
+    printf '"%s":\n  stringtie: "stub"\n' "${task.process}" > versions.yml
     """
 }
