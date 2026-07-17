@@ -26,6 +26,26 @@ include { Stringtie_merging_long_reads } from "../modules/Stringtie_merging_long
 include { EDTA } from "../modules/EDTA"
 include { braker3_prediction } from "../modules/braker3_prediction"
 include { braker3_prediction_with_long_reads } from "../modules/braker3_prediction_with_long_reads"
+include { normalize_protein_fastas } from "../modules/normalize_protein_fastas"
+include { empty_long_read_evidence } from "../modules/empty_long_read_evidence"
+
+def collectTranscriptGtfs(transcript_channel, String target_strand, Integer file_index, fallback_gtf = null) {
+    def collected = transcript_channel
+      .filter { row -> target_strand == 'stranded' ? row[3] != 'unstranded' : row[3] == 'unstranded' }
+      .map { row -> row[file_index] }
+      .collect()
+
+    return fallback_gtf == null ? collected : collected.ifEmpty(fallback_gtf)
+}
+
+def collectPsiclassGtfs(psiclass_channel, String target_strand, fallback_gtf = null) {
+    def collected = psiclass_channel
+      .filter { sample_ID, gtf_file, strand_type -> target_strand == 'stranded' ? strand_type != 'unstranded' : strand_type == 'unstranded' }
+      .map { sample_ID, gtf_file, strand_type -> gtf_file }
+      .collect()
+
+    return fallback_gtf == null ? collected : collected.ifEmpty(fallback_gtf)
+}
 
 workflow generate_evidence_data {
     take:
@@ -36,6 +56,21 @@ workflow generate_evidence_data {
         previous_annotations_file
         previous_annotations_name
         egapx_paramfile
+        edta_script
+        stringtie_script
+        stringtie_alt_script
+        stringtie_transcriptome_script
+        clean_protein_script
+        empty_default_gtf
+        empty_alt_gtf
+        empty_psiclass_gtf
+        ena_download_timeout_seconds
+        ena_max_download_attempts
+        ena_retry_wait_seconds
+        ena_verify_md5
+        psiclass_vd_option
+        psiclass_c_option
+        star_memory_per_job
         // RNA-seq tuples:
         //   long:  tuple val(sample_ID), val(SRA_or_FASTQ), val(library_layout), path(local_reads)
         //   short: tuple val(sample_ID), val(SRA_or_FASTQ), val(library_layout), path(local_reads)
@@ -46,22 +81,13 @@ workflow generate_evidence_data {
         has_long_reads
 
     main:
-        def edta_script = file("${projectDir}/scripts/edta.sh")
-        def stringtie_script = file("${projectDir}/scripts/Stringtie.sh")
-        def stringtie_alt_script = file("${projectDir}/scripts/Stringtie_AltCommands.sh")
-        def stringtie_transcriptome_script = file("${projectDir}/scripts/run_stringtie_transcriptome.sh")
-        def empty_gtf = file("${projectDir}/assets/empty.gtf")
-        def empty_default_gtf = file("${projectDir}/assets/empty_default.gtf")
-        def empty_alt_gtf = file("${projectDir}/assets/empty_alt.gtf")
-        def empty_psiclass_gtf = file("${projectDir}/assets/empty_psiclass.gtf")
-
         // Prepare RNAseq short reads for processing
         short_reads_prepared = prepare_RNAseq_fastq_files_short(
             samples_list_short_reads,
-            params.ena_download_timeout_seconds,
-            params.ena_max_download_attempts,
-            params.ena_retry_wait_seconds,
-            params.ena_verify_md5
+            ena_download_timeout_seconds,
+            ena_max_download_attempts,
+            ena_retry_wait_seconds,
+            ena_verify_md5
         )
 
         // Trim Illumina short reads
@@ -91,7 +117,7 @@ workflow generate_evidence_data {
         salmon_index_result = salmon_index(gff_cds.cds_fasta)
         strand_inference = salmon_strand_inference(trimmed_reads.trimmed_reads, salmon_index_result.index)
 
-        // Process strand inference results
+        // Salmon emits the inferred strand as a value and keeps the classification file as debug output.
         salmon_output_processed = strand_inference.strand_inference_result.map { sample_ID, library_layout, reads, strand_info, strand_file ->
             return [sample_ID, library_layout, reads, strand_info]
         }
@@ -102,7 +128,7 @@ workflow generate_evidence_data {
             new_assembly,
             new_assembly_name
         )
-        star_aligned = star_alignment(star_indices.index, salmon_output_processed, params.STAR_memory_per_job)
+        star_aligned = star_alignment(star_indices.index, salmon_output_processed, star_memory_per_job)
 
         star_aligned.samples_aligned
           .map { sample_ID, bam_file, strand_type -> bam_file }
@@ -124,31 +150,10 @@ workflow generate_evidence_data {
             stringtie_transcriptome_script
         )
 
-        hisat2_assemblies_stringtie.hisat2_stringtie_transcriptomes
-          .filter { sample_ID, default_gtf, alt_gtf, strand_type -> strand_type != 'unstranded' }
-          .map { sample_ID, default_gtf, alt_gtf, strand_type -> default_gtf }
-          .collect()
-          .set { hisat2_stranded_default_gtfs }
-
-        hisat2_assemblies_stringtie.hisat2_stringtie_transcriptomes
-          .filter { sample_ID, default_gtf, alt_gtf, strand_type -> strand_type != 'unstranded' }
-          .map { sample_ID, default_gtf, alt_gtf, strand_type -> alt_gtf }
-          .collect()
-          .set { hisat2_stranded_alt_gtfs }
-
-        hisat2_assemblies_stringtie.hisat2_stringtie_transcriptomes
-          .filter { sample_ID, default_gtf, alt_gtf, strand_type -> strand_type == 'unstranded' }
-          .map { sample_ID, default_gtf, alt_gtf, strand_type -> default_gtf }
-          .collect()
-          .ifEmpty(empty_default_gtf)
-          .set { hisat2_unstranded_default_gtfs }
-
-        hisat2_assemblies_stringtie.hisat2_stringtie_transcriptomes
-          .filter { sample_ID, default_gtf, alt_gtf, strand_type -> strand_type == 'unstranded' }
-          .map { sample_ID, default_gtf, alt_gtf, strand_type -> alt_gtf }
-          .collect()
-          .ifEmpty(empty_alt_gtf)
-          .set { hisat2_unstranded_alt_gtfs }
+        hisat2_stranded_default_gtfs = collectTranscriptGtfs(hisat2_assemblies_stringtie.hisat2_stringtie_transcriptomes, 'stranded', 1)
+        hisat2_stranded_alt_gtfs = collectTranscriptGtfs(hisat2_assemblies_stringtie.hisat2_stringtie_transcriptomes, 'stranded', 2)
+        hisat2_unstranded_default_gtfs = collectTranscriptGtfs(hisat2_assemblies_stringtie.hisat2_stringtie_transcriptomes, 'unstranded', 1, empty_default_gtf)
+        hisat2_unstranded_alt_gtfs = collectTranscriptGtfs(hisat2_assemblies_stringtie.hisat2_stringtie_transcriptomes, 'unstranded', 2, empty_alt_gtf)
 
         merged_hisat2_stringtie = Stringtie_merging_short_reads_hisat2(
             hisat2_stranded_default_gtfs,
@@ -157,18 +162,21 @@ workflow generate_evidence_data {
             hisat2_unstranded_alt_gtfs
         )
 
-        merged_long_reads_default_args_gff = Channel.value(empty_default_gtf)
-        merged_long_reads_alt_args_gff = Channel.value(empty_alt_gtf)
+        if (!has_long_reads) {
+            empty_long_reads = empty_long_read_evidence(empty_default_gtf, empty_alt_gtf)
+            merged_long_reads_default_args_gff = empty_long_reads.default_args_gff
+            merged_long_reads_alt_args_gff = empty_long_reads.alt_args_gff
+        }
 
         // Process minimap2 alignments for long reads
         if (has_long_reads) {
             // Prepare long reads (if any) for processing
             long_reads_prepared = prepare_RNAseq_fastq_files_long(
                 samples_list_long_reads,
-                params.ena_download_timeout_seconds,
-                params.ena_max_download_attempts,
-                params.ena_retry_wait_seconds,
-                params.ena_verify_md5
+                ena_download_timeout_seconds,
+                ena_max_download_attempts,
+                ena_retry_wait_seconds,
+                ena_verify_md5
             )
 
             minimap2_indices = minimap2_genome_indices(
@@ -214,35 +222,14 @@ workflow generate_evidence_data {
         )
         star_assemblies_psiclass = assembly_transcriptome_star_psiclass(
             star_aligned.samples_aligned,
-            params.PSICLASS_vd_option,
-            params.PSICLASS_c_option
+            psiclass_vd_option,
+            psiclass_c_option
         )
 
-        star_assemblies_stringtie.star_stringtie_transcriptomes
-          .filter { sample_ID, default_gtf, alt_gtf, strand_type -> strand_type != 'unstranded' }
-          .map { sample_ID, default_gtf, alt_gtf, strand_type -> default_gtf }
-          .collect()
-          .set { star_stranded_default_gtfs }
-
-        star_assemblies_stringtie.star_stringtie_transcriptomes
-          .filter { sample_ID, default_gtf, alt_gtf, strand_type -> strand_type != 'unstranded' }
-          .map { sample_ID, default_gtf, alt_gtf, strand_type -> alt_gtf }
-          .collect()
-          .set { star_stranded_alt_gtfs }
-
-        star_assemblies_stringtie.star_stringtie_transcriptomes
-          .filter { sample_ID, default_gtf, alt_gtf, strand_type -> strand_type == 'unstranded' }
-          .map { sample_ID, default_gtf, alt_gtf, strand_type -> default_gtf }
-          .collect()
-          .ifEmpty(empty_default_gtf)
-          .set { star_unstranded_default_gtfs }
-
-        star_assemblies_stringtie.star_stringtie_transcriptomes
-          .filter { sample_ID, default_gtf, alt_gtf, strand_type -> strand_type == 'unstranded' }
-          .map { sample_ID, default_gtf, alt_gtf, strand_type -> alt_gtf }
-          .collect()
-          .ifEmpty(empty_alt_gtf)
-          .set { star_unstranded_alt_gtfs }
+        star_stranded_default_gtfs = collectTranscriptGtfs(star_assemblies_stringtie.star_stringtie_transcriptomes, 'stranded', 1)
+        star_stranded_alt_gtfs = collectTranscriptGtfs(star_assemblies_stringtie.star_stringtie_transcriptomes, 'stranded', 2)
+        star_unstranded_default_gtfs = collectTranscriptGtfs(star_assemblies_stringtie.star_stringtie_transcriptomes, 'unstranded', 1, empty_default_gtf)
+        star_unstranded_alt_gtfs = collectTranscriptGtfs(star_assemblies_stringtie.star_stringtie_transcriptomes, 'unstranded', 2, empty_alt_gtf)
 
         // Merge assemblies
         merged_star_stringtie = Stringtie_merging_short_reads_STAR(
@@ -252,18 +239,8 @@ workflow generate_evidence_data {
             star_unstranded_alt_gtfs
         )
 
-        star_assemblies_psiclass.psiclass_assemblies
-          .filter { sample_ID, gtf_file, strand_type -> strand_type != 'unstranded' }
-          .map { sample_ID, gtf_file, strand_type -> gtf_file }
-          .collect()
-          .set { star_psiclass_stranded_gtfs }
-
-        star_assemblies_psiclass.psiclass_assemblies
-          .filter { sample_ID, gtf_file, strand_type -> strand_type == 'unstranded' }
-          .map { sample_ID, gtf_file, strand_type -> gtf_file }
-          .collect()
-          .ifEmpty(empty_psiclass_gtf)
-          .set { star_psiclass_unstranded_gtfs }
+        star_psiclass_stranded_gtfs = collectPsiclassGtfs(star_assemblies_psiclass.psiclass_assemblies, 'stranded')
+        star_psiclass_unstranded_gtfs = collectPsiclassGtfs(star_assemblies_psiclass.psiclass_assemblies, 'unstranded', empty_psiclass_gtf)
 
         // GFFcompare to merge PsiCLASS transcriptomes
         gffcompare_out = gffcompare(star_psiclass_stranded_gtfs, star_psiclass_unstranded_gtfs)
@@ -275,11 +252,13 @@ workflow generate_evidence_data {
             edta_script
         )
 
-        protein_fastas = protein_list
-          .map { organism, filename -> file(filename) }
+        normalized_proteins = normalize_protein_fastas(
+            protein_list.map { organism, filename -> [organism, file(filename)] }
+        )
+        protein_fastas = normalized_proteins.normalized_fastas
+          .map { organism, protein_fasta -> protein_fasta }
           .collect()
-
-        clean_protein_script = file("${projectDir}/scripts/clean_protein_fasta_for_BRAKER3.py")
+          .ifEmpty { error "protein_samplesheet must contain at least one protein FASTA" }
 
         // Run BRAKER3
         if (has_long_reads) {
@@ -319,6 +298,10 @@ workflow generate_evidence_data {
         star_stringtie_stranded_alt_gtf = merged_star_stringtie.alt_args_stranded
         star_stringtie_unstranded_default_gtf = merged_star_stringtie.default_args_unstranded
         star_stringtie_unstranded_alt_gtf = merged_star_stringtie.alt_args_unstranded
+        hisat2_stringtie_stranded_default_gtf = merged_hisat2_stringtie.default_args_stranded
+        hisat2_stringtie_stranded_alt_gtf = merged_hisat2_stringtie.alt_args_stranded
+        hisat2_stringtie_unstranded_default_gtf = merged_hisat2_stringtie.default_args_unstranded
+        hisat2_stringtie_unstranded_alt_gtf = merged_hisat2_stringtie.alt_args_unstranded
         star_psiclass_stranded_gtf = gffcompare_out.star_psiclass_stranded
         star_psiclass_unstranded_gtf = gffcompare_out.star_psiclass_unstranded
         long_reads_default_gtf = merged_long_reads_default_args_gff

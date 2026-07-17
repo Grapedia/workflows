@@ -72,13 +72,13 @@ Perimetre lu: `README.md`, `nextflow.config`, `main.nf`, `workflows/titan.nf`, `
 
 ### `subworkflows/generate_evidence_data.nf`
 
-- A ameliorer: le subworkflow depend fortement de `params` et `projectDir`; passer les fichiers, scripts et options en `take:`.
-- A ameliorer: `file(strand_file).text.trim()` dans une closure lit un fichier de sortie cote orchestration. Preferer que `salmon_strand_inference` emette directement `val(strand_type)` et conserve le fichier en output secondaire si besoin.
-- A ameliorer: les nombreux `collect()` bloquent jusqu'a la fin de la branche et peuvent masquer les canaux vides. Ajouter des tests pour les cas "aucun unstranded", "aucun long read", "un seul sample".
-- A ameliorer: `merged_hisat2_stringtie` est execute mais ses outputs ne sont pas emis ni utilises par AEGIS. Decider si HISAT2 est un output public, une evidence AEGIS manquante ou un calcul inutile.
-- A ameliorer: `Channel.value([])` pour les sorties long reads absentes est fragile avec les modules qui attendent `path`. Utiliser fichiers sentinelles crees par process ou structurer `aegis` pour ne pas prendre ces inputs en mode short.
-- A ameliorer: `protein_list.map { file(filename) }.collect()` devrait valider et normaliser les chemins avant BRAKER, avec un tuple stable et une erreur claire si liste vide.
-- A ameliorer: factoriser les blocs de filtrage stranded/unstranded repetes pour STAR, HISAT2, PsiCLASS.
+- [x] A ameliorer: le subworkflow depend fortement de `params` et `projectDir`; passer les fichiers, scripts et options en `take:`.
+- [x] A ameliorer: `file(strand_file).text.trim()` dans une closure lit un fichier de sortie cote orchestration. Preferer que `salmon_strand_inference` emette directement `val(strand_type)` et conserve le fichier en output secondaire si besoin.
+- [x] A ameliorer: les nombreux `collect()` bloquent jusqu'a la fin de la branche et peuvent masquer les canaux vides. Ajouter des tests pour les cas "aucun unstranded", "aucun long read", "un seul sample".
+- [x] A ameliorer: `merged_hisat2_stringtie` est execute mais ses outputs ne sont pas emis ni utilises par AEGIS. Decider si HISAT2 est un output public, une evidence AEGIS manquante ou un calcul inutile. Les outputs HISAT2 sont emis par le subworkflow et traces dans le manifeste; AEGIS reste alimente par STAR/PsiCLASS et long reads.
+- [x] A ameliorer: `Channel.value([])` pour les sorties long reads absentes est fragile avec les modules qui attendent `path`. Utiliser fichiers sentinelles crees par process ou structurer `aegis` pour ne pas prendre ces inputs en mode short.
+- [x] A ameliorer: `protein_list.map { file(filename) }.collect()` devrait valider et normaliser les chemins avant BRAKER, avec un tuple stable et une erreur claire si liste vide.
+- [x] A ameliorer: factoriser les blocs de filtrage stranded/unstranded repetes pour STAR, HISAT2, PsiCLASS.
 
 ### `subworkflows/aegis.nf`
 

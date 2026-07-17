@@ -89,6 +89,10 @@ for helper in ["run_aegis_merge.sh", "run_stringtie_transcriptome.sh"]:
 if not (ROOT / "docs" / "development" / "nextflow-dsl2-conventions.md").exists():
     fail("Nextflow DSL2 conventions document is missing")
 
+generate_evidence = (ROOT / "subworkflows" / "generate_evidence_data.nf").read_text(encoding="utf-8")
+if "params." in generate_evidence or "projectDir" in generate_evidence:
+    fail("subworkflows/generate_evidence_data.nf must receive runtime files and options through take:")
+
 schema_path = ROOT / "nextflow_schema.json"
 if not schema_path.exists():
     fail("nextflow_schema.json is missing")

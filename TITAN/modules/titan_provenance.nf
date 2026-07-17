@@ -23,6 +23,10 @@ process titan_provenance {
     path(star_psiclass_unstranded)
     path(star_stringtie_default_unstranded)
     path(star_stringtie_alt_unstranded)
+    path(hisat2_stringtie_default_stranded)
+    path(hisat2_stringtie_alt_stranded)
+    path(hisat2_stringtie_default_unstranded)
+    path(hisat2_stringtie_alt_unstranded)
     path(long_reads_default)
     path(long_reads_alt)
     path(aegis_gff)
@@ -96,6 +100,10 @@ manifest = {
         file_record("star_psiclass_unstranded", "${star_psiclass_unstranded}"),
         file_record("star_stringtie_default_unstranded", "${star_stringtie_default_unstranded}"),
         file_record("star_stringtie_alt_unstranded", "${star_stringtie_alt_unstranded}"),
+        file_record("hisat2_stringtie_default_stranded", "${hisat2_stringtie_default_stranded}"),
+        file_record("hisat2_stringtie_alt_stranded", "${hisat2_stringtie_alt_stranded}"),
+        file_record("hisat2_stringtie_default_unstranded", "${hisat2_stringtie_default_unstranded}"),
+        file_record("hisat2_stringtie_alt_unstranded", "${hisat2_stringtie_alt_unstranded}"),
     ] + records("long_reads_default", "${long_reads_default}") + records("long_reads_alt", "${long_reads_alt}"),
     "outputs": [
         file_record("aegis_gff", "${aegis_gff}"),
