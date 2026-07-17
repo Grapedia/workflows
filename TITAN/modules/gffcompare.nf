@@ -4,6 +4,7 @@ process gffcompare {
 
   tag "gffcompare STAR/PsiCLASS: stranded and optional unstranded GTFs"
   container params.container_gffcompare
+  stageInMode 'copy'
   publishDir "${params.output_dir}/tmp", mode: 'copy', enabled: params.publish_intermediates
   publishDir "${params.output_dir}", mode: 'copy', saveAs: { filename ->
     if (filename == 'stranded_merged_output.combined.gtf') {

@@ -129,6 +129,7 @@ mkdir -p \
   "${OUT_DIR}/rnaseq" \
   "${OUT_DIR}/proteins" \
   "${OUT_DIR}/egapx" \
+  "${OUT_DIR}/egapx_config" \
   "${OUT_DIR}/logs"
 
 echo "Creating realistic lite fixture in ${OUT_DIR}"
@@ -215,12 +216,101 @@ long_reads:
     - - ${OUT_DIR}/rnaseq/${LONG_SAMPLE}.fasta
 EOF
 
+cat > "${OUT_DIR}/egapx_config/process_resources.config" <<'EOF'
+params.threads = 7
+params.nodes = 1
+params.num_cpus_per_node = 8
+
+process {
+    memory = 56.GB
+    cpus = 7
+    ext.align_mem = '13'
+    time = 24.h
+    errorStrategy = 'retry'
+    maxRetries = 1
+
+    withLabel: 'long_job' {
+        time = 36.h
+    }
+    withLabel: 'small_mem' {
+        memory = 8.GB
+    }
+    withLabel: 'med_mem' {
+        memory = 32.GB
+    }
+    withLabel: 'large_mem' {
+        memory = 56.GB
+    }
+    withLabel: 'single_cpu' {
+        ext {
+            split_jobs = 1
+            threads = 1
+        }
+        cpus = 1
+    }
+    withLabel: 'multi_cpu' {
+        ext {
+            split_jobs = 1
+            threads = params.threads
+        }
+        cpus = params.threads
+    }
+    withLabel: 'multi_node' {
+        ext {
+            split_jobs = params.nodes
+            threads = params.threads
+        }
+        cpus = params.threads
+    }
+    withLabel: 'gpx_submitter' {
+        ext {
+            split_jobs = params.nodes
+            threads = 1
+        }
+        cpus = 1
+    }
+}
+EOF
+
+cat > "${OUT_DIR}/egapx_config/singularity.config" <<'EOF'
+includeConfig "./process_resources.config"
+
+singularity {
+    enabled = true
+    autoMounts = true
+    cacheDir = System.getenv('SINGULARITY_CACHEDIR') ?: System.getenv('APPTAINER_CACHEDIR') ?: './singularity-cache'
+    envWhitelist = 'APPTAINER_CACHEDIR,SINGULARITY_CACHEDIR,APPTAINER_TMPDIR,SINGULARITY_TMPDIR,PYTHONNOUSERSITE'
+}
+
+env {
+    APPTAINER_CACHEDIR = System.getenv('APPTAINER_CACHEDIR') ?: System.getenv('SINGULARITY_CACHEDIR') ?: './singularity-cache'
+    SINGULARITY_CACHEDIR = System.getenv('SINGULARITY_CACHEDIR') ?: System.getenv('APPTAINER_CACHEDIR') ?: './singularity-cache'
+    APPTAINER_TMPDIR = System.getenv('APPTAINER_TMPDIR') ?: System.getenv('SINGULARITY_TMPDIR') ?: './apptainer-tmp'
+    SINGULARITY_TMPDIR = System.getenv('SINGULARITY_TMPDIR') ?: System.getenv('APPTAINER_TMPDIR') ?: './apptainer-tmp'
+    PYTHONNOUSERSITE = '1'
+    DEBUGINFOD_URLS = '/dev/null'
+}
+
+process {
+    executor = 'local'
+    cache = 'lenient'
+}
+EOF
+
 cat > "${OUT_DIR}/real_slurm_apptainer.config" <<EOF
 env {
   APPTAINER_CACHEDIR = "\${projectDir}/.apptainer-cache"
   SINGULARITY_CACHEDIR = "\${projectDir}/.apptainer-cache"
   APPTAINER_TMPDIR = "\${projectDir}/.apptainer-tmp"
   SINGULARITY_TMPDIR = "\${projectDir}/.apptainer-tmp"
+}
+
+apptainer {
+  envWhitelist = 'APPTAINER_CACHEDIR,SINGULARITY_CACHEDIR,APPTAINER_TMPDIR,SINGULARITY_TMPDIR'
+}
+
+singularity {
+  envWhitelist = 'APPTAINER_CACHEDIR,SINGULARITY_CACHEDIR,APPTAINER_TMPDIR,SINGULARITY_TMPDIR'
 }
 
 params {
@@ -234,12 +324,17 @@ params {
   egapx_paramfile = "\${projectDir}/data_example/realistic-lite/egapx/input_egapx.yaml"
   edta_cpus = 8
   egapx_cpus = 8
+  egapx_python = "/trinity/shared/apps/python_3.12/bin/python3"
+  egapx_data_version = "egapxsupportdata_20251017"
+  egapx_config_dir = "\${projectDir}/data_example/realistic-lite/egapx_config"
   diamond2go_cpus = 4
   ena_retry_wait_seconds = 0
   publish_intermediates = true
+  slurm_export_env = "--export=ALL,APPTAINER_CACHEDIR=\${projectDir}/.apptainer-cache,SINGULARITY_CACHEDIR=\${projectDir}/.apptainer-cache,APPTAINER_TMPDIR=\${projectDir}/.apptainer-tmp,SINGULARITY_TMPDIR=\${projectDir}/.apptainer-tmp"
 }
 
 process {
+  clusterOptions = "--export=ALL,APPTAINER_CACHEDIR=\${projectDir}/.apptainer-cache,SINGULARITY_CACHEDIR=\${projectDir}/.apptainer-cache,APPTAINER_TMPDIR=\${projectDir}/.apptainer-tmp,SINGULARITY_TMPDIR=\${projectDir}/.apptainer-tmp"
   withLabel: process_low { cpus = 1; memory = 4.GB; time = 2.h }
   withLabel: process_medium { cpus = 4; memory = 16.GB; time = 6.h }
   withLabel: process_high { cpus = 8; memory = 48.GB; time = 24.h }

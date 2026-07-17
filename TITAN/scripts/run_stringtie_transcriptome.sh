@@ -16,10 +16,10 @@ alt_gtf="$7"
 
 date_stamp="$(date "+%Y-%m-%d %H:%M:%S")"
 
-cmd=("$stringtie_script" -t "$threads" -o "$default_gtf" -b "$bam_file" -r "$read_type")
+cmd=(bash "$stringtie_script" -t "$threads" -o "$default_gtf" -b "$bam_file" -r "$read_type")
 echo "[$date_stamp] Executing: ${cmd[*]}"
 "${cmd[@]}"
 
-cmd=("$alt_script" -t "$threads" -o "$alt_gtf" -b "$bam_file" -r "$read_type")
+cmd=(bash "$alt_script" -t "$threads" -o "$alt_gtf" -b "$bam_file" -r "$read_type")
 echo "[$date_stamp] Executing: ${cmd[*]}"
 "${cmd[@]}"

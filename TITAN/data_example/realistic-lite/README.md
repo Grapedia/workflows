@@ -12,6 +12,7 @@ Contents:
 - single short reads: `PolyA_Vitis02_S1.fastq.gz`
 - long reads: `PN40024_IsoSeq_chr01.fasta`
 - reduced protein evidence: `5000` records from each cleaned source FASTA
+- EGAPx nested Nextflow config: `egapx_config/singularity.config`
 
 Regenerate from the repository root with:
 
@@ -39,6 +40,7 @@ Run a cluster smoke test first with `-stub-run`, then remove `-stub-run` for
 the real end-to-end run:
 
 ```bash
+module load Java/17.0.13 nextflow/24.04.3 apptainer/1.4.0-rc.2 python/3.12
 nextflow -c data_example/realistic-lite/real_slurm_apptainer.config \
   run main.nf -profile slurm,apptainer -stub-run -ansi-log false
 ```

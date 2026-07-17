@@ -34,7 +34,7 @@ echo "[$date_stamp] Running AEGIS merge on ${mode} evidence"
 
 has_feature_records() {
   local file="$1"
-  awk 'NF && $0 !~ /^#/' "$file" | grep -q .
+  awk 'NF && $0 !~ /^#/ { found = 1; exit } END { exit found ? 0 : 1 }' "$file"
 }
 
 require_nonempty_evidence() {
@@ -119,15 +119,17 @@ fi
 printf "[%s] AEGIS merge inputs:\n" "$date_stamp"
 printf '  %s\n' "${merge_inputs[@]}"
 
-aegis merge -d aegis_merge -o "$output_prefix" "${merge_inputs[@]}"
+aegis_cmd=(/opt/conda/envs/bio_env/bin/python -m aegis)
+
+"${aegis_cmd[@]}" merge -d aegis_merge -o "$output_prefix" "${merge_inputs[@]}"
 if [[ ! -s "aegis_merge/${output_prefix}.gff3" ]]; then
   echo "AEGIS merge did not produce ${output_prefix}.gff3" >&2
   exit 1
 fi
 cp "aegis_merge/${output_prefix}.gff3" final_annotation.gff3
 
-aegis extract -f protein -m all -d aegis_proteins_all final_annotation.gff3 "$masked_genome"
-aegis extract -f protein -m main -d aegis_proteins_main final_annotation.gff3 "$masked_genome"
+"${aegis_cmd[@]}" extract -f protein -m all -d aegis_proteins_all final_annotation.gff3 "$masked_genome"
+"${aegis_cmd[@]}" extract -f protein -m main -d aegis_proteins_main final_annotation.gff3 "$masked_genome"
 
 all_proteins="$(find aegis_proteins_all -type f -name '*proteins*all*.fasta' -print -quit 2>/dev/null || true)"
 main_proteins="$(find aegis_proteins_main -type f -name '*proteins*main*.fasta' -print -quit 2>/dev/null || true)"

@@ -92,6 +92,10 @@
       ],
       "description": "Executor passed to the nested EGAPx runner."
     },
+    "egapx_python": {
+      "type": "string",
+      "description": "Python executable used by the host-side EGAPx runner."
+    },
     "egapx_data_version": {
       "type": "string",
       "description": "EGAPx data version passed to the nested EGAPx runner."
@@ -103,6 +107,10 @@
     "egapx_local_cache_dir": {
       "$ref": "#/definitions/path_or_false",
       "description": "Optional persistent EGAPx local cache directory."
+    },
+    "egapx_config_dir": {
+      "$ref": "#/definitions/path_or_false",
+      "description": "Optional EGAPx executor config directory passed to the nested EGAPx runner."
     },
     "aegis_version": {
       "type": "string",

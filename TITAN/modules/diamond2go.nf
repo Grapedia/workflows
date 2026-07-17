@@ -60,7 +60,7 @@ process diamond2go {
         mkdir -p "\$run_dir"
         cp "\$input_fasta" "\$run_dir/query.fasta"
         pushd "\$run_dir" >/dev/null
-        perl "\$D2GO_SCRIPT" -d "\$D2GO_DB" -q query.fasta -t protein -r "${task.cpus}"
+        perl "\$D2GO_SCRIPT" -d "\$D2GO_DB" -q query.fasta -t protein
         popd >/dev/null
 
         selected=\$(select_diamond2go_output "\$run_dir" "\$label")
@@ -72,6 +72,16 @@ process diamond2go {
     require_file "Diamond2GO database" "\$D2GO_DB"
     require_file "all proteins FASTA" "${proteins_file_all}"
     require_file "main proteins FASTA" "${proteins_file_main}"
+
+    diamond_binary=\$(command -v diamond)
+    mkdir -p diamond2go_bin
+    cat > diamond2go_bin/diamond <<'EOF'
+#!/usr/bin/env bash
+exec __DIAMOND_BINARY__ "\$@" --threads __DIAMOND_THREADS__
+EOF
+    sed -i "s#__DIAMOND_BINARY__#\${diamond_binary}#; s#__DIAMOND_THREADS__#${task.cpus}#" diamond2go_bin/diamond
+    chmod +x diamond2go_bin/diamond
+    export PATH="\$PWD/diamond2go_bin:\$PATH"
 
     run_diamond2go all "${proteins_file_all}" final_annotation_proteins_all.diamond2go.tsv
     run_diamond2go main "${proteins_file_main}" final_annotation_proteins_main.diamond2go.tsv

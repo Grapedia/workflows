@@ -27,11 +27,13 @@ process egapx {
     EGAPX_REVISION="${params.egapx_revision}"
     EGAPX_CONTAINER="${params.container_egapx}"
     EGAPX_EXECUTOR="${params.egapx_executor}"
+    EGAPX_PYTHON="${params.egapx_python}"
     EGAPX_DATA_VERSION="${params.egapx_data_version}"
     EGAPX_RUNNER_DIR="${params.egapx_runner_dir}"
     EGAPX_LOCAL_CACHE_DIR="${params.egapx_local_cache_dir}"
+    EGAPX_CONFIG_DIR="${params.egapx_config_dir}"
 
-    for required_command in python3 curl tar "\$EGAPX_EXECUTOR"; do
+    for required_command in "\$EGAPX_PYTHON" curl tar "\$EGAPX_EXECUTOR"; do
       if ! command -v "\$required_command" >/dev/null 2>&1; then
         echo "ERROR: EGAPx wrapper requires '\$required_command' on the host PATH because it launches a nested Nextflow workflow." >&2
         exit 1
@@ -60,7 +62,7 @@ process egapx {
     printf "process.container = '%s'\\n" "\$EGAPX_CONTAINER" > egapx_runner/ui/assets/config/docker_image.config
 
     CMD=(
-      python3 egapx_runner/ui/egapx.py
+      "\$EGAPX_PYTHON" egapx_runner/ui/egapx.py
       ${egapx_paramfile}
       -e "\$EGAPX_EXECUTOR"
       -w "\$PWD/egapx_work"
@@ -68,6 +70,13 @@ process egapx {
       -lc "\$local_cache"
       -dv "\$EGAPX_DATA_VERSION"
     )
+    if [[ -n "\$EGAPX_CONFIG_DIR" && "\$EGAPX_CONFIG_DIR" != "false" ]]; then
+      if [[ ! -d "\$EGAPX_CONFIG_DIR" ]]; then
+        echo "ERROR: EGAPx config directory does not exist: \$EGAPX_CONFIG_DIR" >&2
+        exit 1
+      fi
+      CMD+=(-c "\$EGAPX_CONFIG_DIR")
+    fi
     echo "[\$DATE] Executing: \${CMD[*]}"
     "\${CMD[@]}"
 

@@ -4,6 +4,7 @@ process Stringtie_merging_short_reads_STAR {
 
   tag "STAR/StringTie merge: stranded and optional unstranded short-read GTFs"
   container params.container_stringtie
+  stageInMode 'copy'
   publishDir "${params.output_dir}/tmp", mode: 'copy', enabled: params.publish_intermediates
   publishDir "${params.output_dir}", mode: 'copy', saveAs: { filename ->
     if (filename == 'merged_transcriptomes.STAR.short_reads.default_args.stranded.gtf') {

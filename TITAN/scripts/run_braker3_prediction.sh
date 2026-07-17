@@ -13,6 +13,8 @@ BRAKER_DIR="/BRAKER-3.0.8"
 PROTHINT_BIN="/ProtHint-2.6.0/bin"
 GENEMARK_DIR="/GeneMark-ETP"
 AUGUSTUS_CONFIG_DIR="/Augustus/config"
+AUGUSTUS_BIN_DIR="/Augustus/bin"
+AUGUSTUS_SCRIPTS_DIR="/Augustus/scripts"
 TSEBRA_BIN="/TSEBRA/bin"
 
 log() {
@@ -39,7 +41,7 @@ collect_files() {
         exit 1
     fi
 
-    find "$directory" -type f -name "$pattern" -print0 | sort -z | xargs -0 -r -n1 printf '%s\n' > "$output_list"
+    find -L "$directory" -type f -name "$pattern" -print0 | sort -z | xargs -0 -r -n1 printf '%s\n' > "$output_list"
     if [[ ! -s "$output_list" ]]; then
         log "ERROR: no ${description} found in ${directory} with pattern ${pattern}"
         exit 1
@@ -67,6 +69,8 @@ require_path "${BRAKER_DIR}/scripts/braker.pl" "BRAKER braker.pl script"
 require_path "${PROTHINT_BIN}" "ProtHint bin directory"
 require_path "${GENEMARK_DIR}" "GeneMark-ETP directory"
 require_path "${AUGUSTUS_CONFIG_DIR}" "AUGUSTUS config directory"
+require_path "${AUGUSTUS_BIN_DIR}" "AUGUSTUS bin directory"
+require_path "${AUGUSTUS_SCRIPTS_DIR}" "AUGUSTUS scripts directory"
 require_path "${TSEBRA_BIN}" "TSEBRA bin directory"
 require_path "${genome}" "genome FASTA"
 
@@ -107,6 +111,12 @@ log "Long-read BAM files: ${bam_long_count}"
 log "All BAM files: ${bam_all_count}"
 log "Cleaned protein FASTA files: ${protein_count}"
 
+WRITABLE_AUGUSTUS_CONFIG_DIR="${PWD}/augustus_config"
+rm -rf "${WRITABLE_AUGUSTUS_CONFIG_DIR}"
+cp -a "${AUGUSTUS_CONFIG_DIR}" "${WRITABLE_AUGUSTUS_CONFIG_DIR}"
+export AUGUSTUS_CONFIG_PATH="${WRITABLE_AUGUSTUS_CONFIG_DIR}"
+log "Using writable AUGUSTUS config: ${WRITABLE_AUGUSTUS_CONFIG_DIR}"
+
 braker_cmd=(
     "${BRAKER_DIR}/scripts/braker.pl"
     "--genome=${genome}"
@@ -118,7 +128,9 @@ braker_cmd=(
     "--gff3"
     "--PROTHINT_PATH=${PROTHINT_BIN}/"
     "--GENEMARK_PATH=${GENEMARK_DIR}"
-    "--AUGUSTUS_CONFIG_PATH=${AUGUSTUS_CONFIG_DIR}"
+    "--AUGUSTUS_CONFIG_PATH=${WRITABLE_AUGUSTUS_CONFIG_DIR}"
+    "--AUGUSTUS_BIN_PATH=${AUGUSTUS_BIN_DIR}"
+    "--AUGUSTUS_SCRIPTS_PATH=${AUGUSTUS_SCRIPTS_DIR}"
     "--TSEBRA_PATH=${TSEBRA_BIN}"
 )
 
@@ -138,7 +150,9 @@ copy_required_output "braker.gff3" "braker.gff3"
     printf '  braker: "3.0.8"\n'
     printf '  prothint: "2.6.0"\n'
     printf '  genemark_etp_path: "%s"\n' "${GENEMARK_DIR}"
-    printf '  augustus_config_path: "%s"\n' "${AUGUSTUS_CONFIG_DIR}"
+    printf '  augustus_config_path: "%s"\n' "${WRITABLE_AUGUSTUS_CONFIG_DIR}"
+    printf '  augustus_bin_path: "%s"\n' "${AUGUSTUS_BIN_DIR}"
+    printf '  augustus_scripts_path: "%s"\n' "${AUGUSTUS_SCRIPTS_DIR}"
     printf '  tsebra_path: "%s"\n' "${TSEBRA_BIN}"
     printf '  bam_short_count: "%s"\n' "${bam_short_count}"
     printf '  bam_long_count: "%s"\n' "${bam_long_count}"

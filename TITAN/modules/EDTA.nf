@@ -32,9 +32,9 @@ process EDTA {
     export PYTHONNOUSERSITE=1
     DATE=\$(date "+%Y-%m-%d %H:%M:%S")
     echo "[\$DATE] Running EDTA on $genome"
-    CMD="${edta_script} -g ${genome_fasta} -n ${task.cpus}"
+    CMD="bash ${edta_script} -g ${genome_fasta} -n ${task.cpus}"
     echo "[\$DATE] Executing: \$CMD"
-    ${edta_script} -g ${genome_fasta} -n ${task.cpus}
+    bash "${edta_script}" -g "${genome_fasta}" -n "${task.cpus}"
 
     copy_unique() {
       local pattern="\$1"
