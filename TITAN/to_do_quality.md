@@ -235,10 +235,10 @@ Perimetre lu: `README.md`, `nextflow.config`, `main.nf`, `workflows/titan.nf`, `
 
 ### `modules/Stringtie_merging_short_reads_hisat2.nf`
 
-- A ameliorer: output `file("*.gtf")` trop vague et sans `emit`. Nommer les quatre sorties comme pour STAR.
-- A ameliorer: ce module est actuellement execute mais ses resultats ne sont pas emis par le subworkflow. Clarifier son utilite.
-- A ameliorer: harmoniser les `publishDir` avec STAR et ajouter `saveAs` si outputs publics.
-- A ameliorer: ajouter `versions.yml`.
+- [x] A ameliorer: output `file("*.gtf")` trop vague et sans `emit`. Nommer les quatre sorties comme pour STAR.
+- [x] A ameliorer: ce module est actuellement execute mais ses resultats ne sont pas emis par le subworkflow. Clarifier son utilite.
+- [x] A ameliorer: harmoniser les `publishDir` avec STAR et ajouter `saveAs` si outputs publics.
+- [x] A ameliorer: ajouter `versions.yml`.
 
 ### `modules/Stringtie_merging_long_reads.nf`
 
