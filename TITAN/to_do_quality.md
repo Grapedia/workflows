@@ -173,10 +173,10 @@ Perimetre lu: `README.md`, `nextflow.config`, `main.nf`, `workflows/titan.nf`, `
 
 ### `modules/hisat2_genome_indices.nf`
 
-- A ameliorer: ajouter `set -euo pipefail`.
-- A ameliorer: emettre l'index sous forme de repertoire fixe plutot qu'un glob `path("${genome}.*.ht2")`; c'est plus facile a stage et a passer a l'alignement.
-- A ameliorer: eviter `chmod -R 755 ${genome}*` trop large.
-- A ameliorer: ajouter `versions.yml`.
+- [x] A ameliorer: ajouter `set -euo pipefail`.
+- [x] A ameliorer: emettre l'index sous forme de repertoire fixe plutot qu'un glob `path("${genome}.*.ht2")`; c'est plus facile a stage et a passer a l'alignement.
+- [x] A ameliorer: eviter `chmod -R 755 ${genome}*` trop large.
+- [x] A ameliorer: ajouter `versions.yml`.
 
 ### `modules/hisat2_alignment.nf`
 

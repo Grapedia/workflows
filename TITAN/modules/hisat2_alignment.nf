@@ -28,35 +28,37 @@ process hisat2_alignment {
     set -euo pipefail
     DATE=\$(date "+%Y-%m-%d %H:%M:%S")
     echo "[\$DATE] Running HISAT2 alignment on $sample_ID"
+    HISAT2_INDEX="${hisat2_databases}/${genome}"
+
     if [[ $library_layout == "paired" ]]
     then
       if [[ "${strand_type}" == "unstranded" ]]; then
-        CMD="/hisat2-2.2.1/hisat2 -p ${task.cpus} -x ${genome} -1 ${read_1} -2 ${read_2} | samtools sort -o ${sample_ID}_Aligned.sort.bam -"
+        CMD="/hisat2-2.2.1/hisat2 -p ${task.cpus} -x \${HISAT2_INDEX} -1 ${read_1} -2 ${read_2} | samtools sort -o ${sample_ID}_Aligned.sort.bam -"
         echo "[\$DATE] Executing: \$CMD"
-        /hisat2-2.2.1/hisat2 -p ${task.cpus} -x ${genome} -1 ${read_1} -2 ${read_2} | samtools sort -o ${sample_ID}_Aligned.sort.bam -
+        /hisat2-2.2.1/hisat2 -p ${task.cpus} -x "\${HISAT2_INDEX}" -1 ${read_1} -2 ${read_2} | samtools sort -o ${sample_ID}_Aligned.sort.bam -
       elif [[ "${strand_type}" == "stranded_forward" ]]; then
-        CMD="/hisat2-2.2.1/hisat2 -p ${task.cpus} -x ${genome} --rna-strandness FR -1 ${read_1} -2 ${read_2} | samtools sort -o ${sample_ID}_Aligned.sort.bam -"
+        CMD="/hisat2-2.2.1/hisat2 -p ${task.cpus} -x \${HISAT2_INDEX} --rna-strandness FR -1 ${read_1} -2 ${read_2} | samtools sort -o ${sample_ID}_Aligned.sort.bam -"
         echo "[\$DATE] Executing: \$CMD"
-        /hisat2-2.2.1/hisat2 -p ${task.cpus} -x ${genome} --rna-strandness FR -1 ${read_1} -2 ${read_2} | samtools sort -o ${sample_ID}_Aligned.sort.bam -
+        /hisat2-2.2.1/hisat2 -p ${task.cpus} -x "\${HISAT2_INDEX}" --rna-strandness FR -1 ${read_1} -2 ${read_2} | samtools sort -o ${sample_ID}_Aligned.sort.bam -
       elif [[ "${strand_type}" == "stranded_reverse" ]]; then
-        CMD="/hisat2-2.2.1/hisat2 -p ${task.cpus} -x ${genome} --rna-strandness RF -1 ${read_1} -2 ${read_2} | samtools sort -o ${sample_ID}_Aligned.sort.bam -"
+        CMD="/hisat2-2.2.1/hisat2 -p ${task.cpus} -x \${HISAT2_INDEX} --rna-strandness RF -1 ${read_1} -2 ${read_2} | samtools sort -o ${sample_ID}_Aligned.sort.bam -"
         echo "[\$DATE] Executing: \$CMD"
-        /hisat2-2.2.1/hisat2 -p ${task.cpus} -x ${genome} --rna-strandness RF -1 ${read_1} -2 ${read_2} | samtools sort -o ${sample_ID}_Aligned.sort.bam -
+        /hisat2-2.2.1/hisat2 -p ${task.cpus} -x "\${HISAT2_INDEX}" --rna-strandness RF -1 ${read_1} -2 ${read_2} | samtools sort -o ${sample_ID}_Aligned.sort.bam -
       fi
     elif [[ $library_layout == "single" ]]
     then
       if [[ "${strand_type}" == "unstranded" ]]; then
-        CMD="/hisat2-2.2.1/hisat2 -p ${task.cpus} -x ${genome} -U ${read_1} | samtools sort -o ${sample_ID}_Aligned.sort.bam -"
+        CMD="/hisat2-2.2.1/hisat2 -p ${task.cpus} -x \${HISAT2_INDEX} -U ${read_1} | samtools sort -o ${sample_ID}_Aligned.sort.bam -"
         echo "[\$DATE] Executing: \$CMD"
-        /hisat2-2.2.1/hisat2 -p ${task.cpus} -x ${genome} -U ${read_1} | samtools sort -o ${sample_ID}_Aligned.sort.bam -
+        /hisat2-2.2.1/hisat2 -p ${task.cpus} -x "\${HISAT2_INDEX}" -U ${read_1} | samtools sort -o ${sample_ID}_Aligned.sort.bam -
       elif [[ "${strand_type}" == "stranded_forward" ]]; then
-        CMD="/hisat2-2.2.1/hisat2 -p ${task.cpus} -x ${genome} --rna-strandness FR -U ${read_1} | samtools sort -o ${sample_ID}_Aligned.sort.bam -"
+        CMD="/hisat2-2.2.1/hisat2 -p ${task.cpus} -x \${HISAT2_INDEX} --rna-strandness FR -U ${read_1} | samtools sort -o ${sample_ID}_Aligned.sort.bam -"
         echo "[\$DATE] Executing: \$CMD"
-        /hisat2-2.2.1/hisat2 -p ${task.cpus} -x ${genome} --rna-strandness FR -U ${read_1} | samtools sort -o ${sample_ID}_Aligned.sort.bam -
+        /hisat2-2.2.1/hisat2 -p ${task.cpus} -x "\${HISAT2_INDEX}" --rna-strandness FR -U ${read_1} | samtools sort -o ${sample_ID}_Aligned.sort.bam -
       elif [[ "${strand_type}" == "stranded_reverse" ]]; then
-        CMD="/hisat2-2.2.1/hisat2 -p ${task.cpus} -x ${genome} --rna-strandness RF -U ${read_1} | samtools sort -o ${sample_ID}_Aligned.sort.bam -"
+        CMD="/hisat2-2.2.1/hisat2 -p ${task.cpus} -x \${HISAT2_INDEX} --rna-strandness RF -U ${read_1} | samtools sort -o ${sample_ID}_Aligned.sort.bam -"
         echo "[\$DATE] Executing: \$CMD"
-        /hisat2-2.2.1/hisat2 -p ${task.cpus} -x ${genome} --rna-strandness RF -U ${read_1} | samtools sort -o ${sample_ID}_Aligned.sort.bam -
+        /hisat2-2.2.1/hisat2 -p ${task.cpus} -x "\${HISAT2_INDEX}" --rna-strandness RF -U ${read_1} | samtools sort -o ${sample_ID}_Aligned.sort.bam -
       fi
     fi
     printf '"%s":\n  container: "not_recorded"\n' "${task.process}" > versions.yml
