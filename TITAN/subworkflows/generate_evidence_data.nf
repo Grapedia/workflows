@@ -29,6 +29,13 @@ include { braker3_prediction_with_long_reads } from "../modules/braker3_predicti
 
 workflow generate_evidence_data {
     take:
+        new_assembly
+        new_assembly_name
+        previous_assembly
+        previous_assembly_name
+        previous_annotations_file
+        previous_annotations_name
+        egapx_paramfile
         // RNA-seq tuples:
         //   long:  tuple val(sample_ID), val(SRA_or_FASTQ), val(library_layout), path(local_reads)
         //   short: tuple val(sample_ID), val(SRA_or_FASTQ), val(library_layout), path(local_reads)
@@ -39,9 +46,6 @@ workflow generate_evidence_data {
         has_long_reads
 
     main:
-        def new_assembly = file(params.new_assembly)
-        def previous_assembly = file(params.previous_assembly)
-        def previous_annotations_file = file(params.previous_annotations)
         def edta_script = file("${projectDir}/scripts/edta.sh")
         def stringtie_script = file("${projectDir}/scripts/Stringtie.sh")
         def stringtie_alt_script = file("${projectDir}/scripts/Stringtie_AltCommands.sh")
@@ -66,19 +70,19 @@ workflow generate_evidence_data {
         // Lift over previous annotations to new assembly
         previous_annotations = liftoff_annotations(
             new_assembly,
-            new_assembly.getName(),
+            new_assembly_name,
             previous_assembly,
-            previous_assembly.getName(),
+            previous_assembly_name,
             previous_annotations_file,
-            previous_annotations_file.getName()
+            previous_annotations_name
         )
 
         // EGAPx annotation pipeline on new assembly
-        egapx_annotations = egapx(file(params.egapx_paramfile))
+        egapx_annotations = egapx(egapx_paramfile)
 
         // Convert GFF3 to CDS FASTA for Salmon strand inference
         gff_cds = agat_convert_gff3_to_cds_fasta(
-            file(params.new_assembly),
+            new_assembly,
             previous_annotations.liftoff_previous_annotations
         )
 
@@ -96,7 +100,7 @@ workflow generate_evidence_data {
         // Emits tuple val(sample_ID), path(bam_file), val(strand_type).
         star_indices = star_genome_indices(
             new_assembly,
-            new_assembly.getName()
+            new_assembly_name
         )
         star_aligned = star_alignment(star_indices.index, salmon_output_processed, params.STAR_memory_per_job)
 
@@ -108,9 +112,9 @@ workflow generate_evidence_data {
         // Process HISAT2 alignments
         hisat2_indices = hisat2_genome_indices(
             new_assembly,
-            new_assembly.getName()
+            new_assembly_name
         )
-        hisat2_aligned = hisat2_alignment(hisat2_indices.index, salmon_output_processed, file(params.new_assembly).getName())
+        hisat2_aligned = hisat2_alignment(hisat2_indices.index, salmon_output_processed, new_assembly_name)
 
         // Process hisat2 assemblies
         hisat2_assemblies_stringtie = assembly_transcriptome_hisat2_stringtie(
@@ -169,7 +173,7 @@ workflow generate_evidence_data {
 
             minimap2_indices = minimap2_genome_indices(
                 new_assembly,
-                new_assembly.getName()
+                new_assembly_name
             )
             minimap2_aligned = minimap2_alignment(minimap2_indices.index, long_reads_prepared.prepared_fastqs)
 
@@ -267,7 +271,7 @@ workflow generate_evidence_data {
         // EDTA is mandatory: Aegis requires the hard-masked genome.
         edta_results = EDTA(
             new_assembly,
-            new_assembly.getName(),
+            new_assembly_name,
             edta_script
         )
 
@@ -280,7 +284,7 @@ workflow generate_evidence_data {
         // Run BRAKER3
         if (has_long_reads) {
             braker3_results = braker3_prediction_with_long_reads(
-                file(params.new_assembly),
+                new_assembly,
                 protein_fastas,
                 concat_star_bams_BRAKER3,
                 concat_minimap2_bams_BRAKER3,
@@ -288,7 +292,7 @@ workflow generate_evidence_data {
             )
         } else {
             braker3_results = braker3_prediction(
-                file(params.new_assembly),
+                new_assembly,
                 protein_fastas,
                 concat_star_bams_BRAKER3,
                 clean_protein_script

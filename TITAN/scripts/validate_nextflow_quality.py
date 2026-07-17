@@ -72,6 +72,8 @@ for nextflow_path in [
     *sorted((ROOT / "modules").glob("*.nf")),
 ]:
     text = nextflow_path.read_text(encoding="utf-8")
+    if "command.execute()" in text:
+        fail(f"{nextflow_path.relative_to(ROOT)} runs local commands from workflow Groovy code")
     if ".ifEmpty([])" in text or "Channel.value([])" in text:
         fail(f"{nextflow_path.relative_to(ROOT)} uses an untyped empty list channel")
     if re.search(r"file\s*\([^)]*\)\.text", text):

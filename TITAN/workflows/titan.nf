@@ -5,6 +5,7 @@ include { generate_evidence_data } from '../subworkflows/generate_evidence_data'
 include { aegis } from '../subworkflows/aegis'
 include { titan_provenance } from '../modules/titan_provenance'
 include { validate_final_annotation } from '../modules/validate_final_annotation'
+include { validate_inputs } from '../modules/validate_inputs'
 
 def isMissingParam(value) {
     return value == null || value == true || value == false || value.toString().trim() == '' || value.toString().trim().equalsIgnoreCase('true') || value.toString().trim().equalsIgnoreCase('false')
@@ -26,30 +27,32 @@ def validateExistingInputFiles(requiredFiles) {
     }
 }
 
-def validateInputSchema() {
-    def command = [
-        'python3',
-        "${projectDir}/scripts/validate_inputs.py",
-        '--project-dir', projectDir.toString(),
-        '--new-assembly', params.new_assembly.toString(),
-        '--previous-assembly', params.previous_assembly.toString(),
-        '--previous-annotations', params.previous_annotations.toString(),
-        '--rnaseq-samplesheet', params.RNAseq_samplesheet.toString(),
-        '--rnaseq-data-dir', params.RNAseq_data_dir.toString(),
-        '--protein-samplesheet', params.protein_samplesheet.toString(),
-        '--egapx-paramfile', params.egapx_paramfile.toString(),
-        '--egapx-executor', params.egapx_executor.toString(),
-        '--psiclass-vd', params.PSICLASS_vd_option.toString(),
-        '--psiclass-c', params.PSICLASS_c_option.toString()
-    ]
-    def process = command.execute()
-    def stdout = new StringBuffer()
-    def stderr = new StringBuffer()
-    process.waitForProcessOutput(stdout, stderr)
-    if (process.exitValue() != 0) {
-        error stderr.toString().trim()
+def parseCsvLine(String line) {
+    def cells = []
+    def cell = new StringBuilder()
+    boolean quoted = false
+    boolean skipNext = false
+    line.toList().eachWithIndex { current, i ->
+        if (skipNext) {
+            skipNext = false
+            return
+        }
+        if (current == '"') {
+            if (quoted && i + 1 < line.length() && line.charAt(i + 1) == '"') {
+                cell.append('"')
+                skipNext = true
+            } else {
+                quoted = !quoted
+            }
+        } else if (current == ',' && !quoted) {
+            cells << cell.toString().trim()
+            cell = new StringBuilder()
+        } else {
+            cell.append(current)
+        }
     }
-    println stdout.toString().trim()
+    cells << cell.toString().trim()
+    return cells
 }
 
 def samplesheetHasLongReads(samplesheetPath) {
@@ -62,14 +65,14 @@ def samplesheetHasLongReads(samplesheetPath) {
         return false
     }
 
-    def header = rows[0].split(',', -1).collect { it.trim() }
+    def header = parseCsvLine(rows[0])
     def layoutIndex = header.indexOf('library_layout')
     if (layoutIndex < 0) {
         error "RNA-seq samplesheet must contain a 'library_layout' column"
     }
 
     return rows.drop(1).any { row ->
-        def columns = row.split(',', -1).collect { it.trim() }
+        def columns = parseCsvLine(row)
         columns.size() > layoutIndex && columns[layoutIndex].equalsIgnoreCase('long')
     }
 }
@@ -89,10 +92,10 @@ def rnaseqLocalFiles(row) {
         return [file("${params.RNAseq_data_dir}/${sampleID}_1.fastq.gz"), file("${params.RNAseq_data_dir}/${sampleID}_2.fastq.gz")]
     }
     if (source == 'FASTQ' && layout in ['single', 'long']) {
-        return file("${params.RNAseq_data_dir}/${sampleID}.fastq.gz")
+        return [file("${params.RNAseq_data_dir}/${sampleID}.fastq.gz")]
     }
     if (source == 'FASTA' && layout == 'long') {
-        return file("${params.RNAseq_data_dir}/${sampleID}.fasta")
+        return [file("${params.RNAseq_data_dir}/${sampleID}.fasta")]
     }
     return []
 }
@@ -101,38 +104,63 @@ workflow TITAN {
     rejectDeprecatedWorkflowParam()
     validateRequiredParams(['output_dir', 'egapx_paramfile', 'RNAseq_samplesheet', 'RNAseq_data_dir', 'protein_samplesheet', 'new_assembly', 'previous_assembly', 'previous_annotations'])
     validateExistingInputFiles(['egapx_paramfile', 'RNAseq_samplesheet', 'protein_samplesheet', 'new_assembly', 'previous_assembly', 'previous_annotations'])
-    validateInputSchema()
     def has_long_reads = samplesheetHasLongReads(params.RNAseq_samplesheet)
     println "Long-read RNA-seq detected from samplesheet: ${has_long_reads}"
 
-    Channel.fromPath(params.RNAseq_samplesheet, checkIfExists: true)
-       .splitCsv(header: true, sep: ',')
-       .filter { row -> row.library_layout?.toString()?.trim()?.equalsIgnoreCase('long') }
-       .map { row -> [ row.sampleID, row.SRA_or_FASTQ, row.library_layout, rnaseqLocalFiles(row) ] }
-       .set{ samples_list_long_reads }
+    input_validation = validate_inputs(
+        file(params.new_assembly),
+        file(params.previous_assembly),
+        file(params.previous_annotations),
+        file(params.RNAseq_samplesheet),
+        params.RNAseq_data_dir,
+        file(params.protein_samplesheet),
+        file(params.egapx_paramfile),
+        params.egapx_paramfile,
+        params.egapx_executor,
+        params.PSICLASS_vd_option,
+        params.PSICLASS_c_option,
+        params.egapx_version,
+        params.egapx_revision,
+        params.container_egapx,
+        params.egapx_data_version,
+        params.aegis_version,
+        params.container_aegis
+    )
 
-    Channel.fromPath(params.RNAseq_samplesheet, checkIfExists: true)
-       .splitCsv(header: true, sep: ',')
-       .filter { row -> row.library_layout?.toString()?.trim()?.equalsIgnoreCase('single') }
-       .map { row -> [ row.sampleID, row.SRA_or_FASTQ, row.library_layout, rnaseqLocalFiles(row) ] }
-       .set{ samples_list_single_short_reads }
+    new_assembly = input_validation.ok.map { file(params.new_assembly) }
+    previous_assembly = input_validation.ok.map { file(params.previous_assembly) }
+    previous_annotations = input_validation.ok.map { file(params.previous_annotations) }
+    rnaseq_samplesheet = input_validation.ok.map { file(params.RNAseq_samplesheet) }
+    protein_samplesheet = input_validation.ok.map { file(params.protein_samplesheet) }
+    egapx_paramfile = input_validation.ok.map { file(params.egapx_paramfile) }
 
-    Channel.fromPath(params.RNAseq_samplesheet, checkIfExists: true)
+    rnaseq_rows = rnaseq_samplesheet
        .splitCsv(header: true, sep: ',')
-       .filter { row -> row.library_layout?.toString()?.trim()?.equalsIgnoreCase('paired') }
        .map { row -> [ row.sampleID, row.SRA_or_FASTQ, row.library_layout, rnaseqLocalFiles(row) ] }
-       .set{ samples_list_paired_short_reads }
 
-    samples_list_single_short_reads
-        .concat(samples_list_paired_short_reads)
+    samples_list_long_reads = rnaseq_rows
+        .filter { sample_ID, SRA_or_FASTQ, library_layout, local_reads -> library_layout?.toString()?.trim()?.equalsIgnoreCase('long') }
+
+    rnaseq_rows
+        .filter { sample_ID, SRA_or_FASTQ, library_layout, local_reads -> library_layout?.toString()?.trim()?.equalsIgnoreCase('single') }
+        .concat(
+            rnaseq_rows.filter { sample_ID, SRA_or_FASTQ, library_layout, local_reads -> library_layout?.toString()?.trim()?.equalsIgnoreCase('paired') }
+        )
         .set { samples_list_short_reads }
 
-    Channel.fromPath(params.protein_samplesheet, checkIfExists: true)
+    protein_samplesheet
        .splitCsv(header: true, sep: ',')
        .map { row -> [ row.organism, row.filename ] }
        .set{ protein_list }
 
     evidence_data = generate_evidence_data(
+        new_assembly,
+        file(params.new_assembly).getName(),
+        previous_assembly,
+        file(params.previous_assembly).getName(),
+        previous_annotations,
+        file(params.previous_annotations).getName(),
+        egapx_paramfile,
         samples_list_long_reads,
         samples_list_short_reads,
         protein_list,
@@ -167,12 +195,12 @@ workflow TITAN {
 
     titan_provenance(
         has_long_reads,
-        file(params.new_assembly),
-        file(params.previous_assembly),
-        file(params.previous_annotations),
-        file(params.RNAseq_samplesheet),
-        file(params.protein_samplesheet),
-        file(params.egapx_paramfile),
+        new_assembly,
+        previous_assembly,
+        previous_annotations,
+        rnaseq_samplesheet,
+        protein_samplesheet,
+        egapx_paramfile,
         evidence_data.masked_genome,
         evidence_data.liftoff_gff3,
         evidence_data.egapx_gff3,

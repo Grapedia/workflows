@@ -63,12 +63,12 @@ Perimetre lu: `README.md`, `nextflow.config`, `main.nf`, `workflows/titan.nf`, `
 ### `workflows/titan.nf`
 
 - Bon point: validation d'entrees avant lancement des etapes lourdes.
-- A ameliorer: remplacer `command.execute()` pour `scripts/validate_inputs.py` par un process Nextflow dedie ou une validation launcher. Executer un process local dans le workflow echappe au modele Nextflow, aux containers, a la trace et a la portabilite.
-- A ameliorer: parser le CSV avec une seule source de canaux, puis brancher en `long`, `single`, `paired`; actuellement le samplesheet est relu trois fois.
-- A ameliorer: `rnaseqLocalFiles()` retourne parfois liste, parfois fichier, parfois liste vide. Normaliser le tuple, par exemple `[meta, reads]` avec `reads` toujours liste.
-- A ameliorer: `samplesheetHasLongReads()` parse le CSV manuellement avec `split(',')`; cela casse les champs quotes. Reutiliser le validateur Python ou `splitCsv`.
-- A ameliorer: passer les fichiers principaux (`new_assembly`, `previous_assembly`, etc.) explicitement au subworkflow au lieu de relire `params` dans `generate_evidence_data`.
-- A ameliorer: ajouter un process de validation final des parametres EGAPx/AEGIS si ces parametres restent runtime.
+- [x] A ameliorer: remplacer `command.execute()` pour `scripts/validate_inputs.py` par un process Nextflow dedie ou une validation launcher. Executer un process local dans le workflow echappe au modele Nextflow, aux containers, a la trace et a la portabilite. La validation est maintenant le process `validate_inputs`.
+- [x] A ameliorer: parser le CSV avec une seule source de canaux, puis brancher en `long`, `single`, `paired`; actuellement le samplesheet est relu trois fois. `rnaseq_rows` est maintenant la source unique, derivee par filtres.
+- [x] A ameliorer: `rnaseqLocalFiles()` retourne parfois liste, parfois fichier, parfois liste vide. Normaliser le tuple, par exemple `[meta, reads]` avec `reads` toujours liste.
+- [x] A ameliorer: `samplesheetHasLongReads()` parse le CSV manuellement avec `split(',')`; cela casse les champs quotes. La detection compile-time utilise un parseur quote-aware; les canaux runtime utilisent `splitCsv`.
+- [x] A ameliorer: passer les fichiers principaux (`new_assembly`, `previous_assembly`, etc.) explicitement au subworkflow au lieu de relire `params` dans `generate_evidence_data`.
+- [x] A ameliorer: ajouter un process de validation final des parametres EGAPx/AEGIS si ces parametres restent runtime.
 
 ### `subworkflows/generate_evidence_data.nf`
 
