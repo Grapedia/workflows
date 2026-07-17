@@ -171,7 +171,7 @@ for f in modules/*.nf; do awk '/^[[:space:]]*output:/{flag=1} /^[[:space:]]*scri
 | --- | --- | --- | --- | --- |
 | `prepare_RNAseq_fastq_files_short` | tuples RNA-seq courts, script ENA | tuples `sample_ID`, `SRA_or_FASTQ`, `library_layout`, `prepared_1.fastq.gz`, `prepared_2.fastq.gz` | workdir uniquement | `trimming_fastq` |
 | `prepare_RNAseq_fastq_files_long` | tuples RNA-seq longs, script ENA | tuples `sample_ID`, `SRA_or_FASTQ`, `library_layout`, `read_format`, `long_read_input.fastq.gz`, `long_read_input.fasta` | workdir uniquement | `minimap2_alignment` |
-| `trimming_fastq` | FASTQ/SRA courts prepares | `${sample_ID}_1.trimmed.fastq.gz`, `${sample_ID}_2.trimmed.fastq.gz` | `${output_dir}/intermediate_files/evidence_data/RNAseq_data/trimmed_data` | Salmon, STAR, HISAT2 |
+| `trimming_fastq` | FASTQ/SRA courts prepares | `${sample_ID}_1.trimmed.fastq.gz`, `${sample_ID}_2.trimmed.fastq.gz`, rapports fastp JSON/HTML | `${output_dir}/intermediate_files/evidence_data/RNAseq_data/trimmed_data` | Salmon, STAR, HISAT2 |
 | `liftoff_annotations` | assemblage cible, assemblage precedent, GFF3 precedent | `liftoff_previous_annotations.gff3`, `unmapped_features.txt` | `${output_dir}` | AGAT, Aegis |
 | `agat_convert_gff3_to_cds_fasta` | assemblage cible, Liftoff GFF3 | `${genome}.CDS.fasta.gz` | `${output_dir}/intermediate_files/liftoff/gff3_to_cds_fasta` | Salmon index |
 | `salmon_index` | CDS FASTA | `salmon_index/` | workdir/cache uniquement | Salmon strand inference |

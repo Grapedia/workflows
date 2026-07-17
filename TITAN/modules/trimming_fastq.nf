@@ -10,7 +10,9 @@ process trimming_fastq {
 
     output:
       tuple val(sample_ID), val(library_layout), path("${sample_ID}_1.trimmed.fastq.gz"), path("${sample_ID}_2.trimmed.fastq.gz"), emit: trimmed_reads
-    path "versions.yml", emit: versions
+      path("${sample_ID}.fastp.json"), emit: fastp_json
+      path("${sample_ID}.fastp.html"), emit: fastp_html
+      path "versions.yml", emit: versions
 
 
 
@@ -22,32 +24,41 @@ process trimming_fastq {
     if [[ $library_layout == "paired" ]]
     then
       CMD="fastp --thread ${task.cpus} -i ${read_1} -I ${read_2} \
-      -o ${sample_ID}_1.trimmed.fastq.gz -O ${sample_ID}_2.trimmed.fastq.gz"
+      -o ${sample_ID}_1.trimmed.fastq.gz -O ${sample_ID}_2.trimmed.fastq.gz \
+      --json ${sample_ID}.fastp.json --html ${sample_ID}.fastp.html"
 
       echo "[\$DATE] Executing: \$CMD"
       fastp --thread ${task.cpus} -i ${read_1} -I ${read_2} \
-      -o ${sample_ID}_1.trimmed.fastq.gz -O ${sample_ID}_2.trimmed.fastq.gz
+      -o ${sample_ID}_1.trimmed.fastq.gz -O ${sample_ID}_2.trimmed.fastq.gz \
+      --json ${sample_ID}.fastp.json --html ${sample_ID}.fastp.html
 
     elif [[ $library_layout == "single" ]]
     then
 
       CMD="fastp --thread ${task.cpus} -i ${read_1} \
-      -o ${sample_ID}_1.trimmed.fastq.gz"
+      -o ${sample_ID}_1.trimmed.fastq.gz \
+      --json ${sample_ID}.fastp.json --html ${sample_ID}.fastp.html"
 
       echo "[\$DATE] Executing: \$CMD"
       fastp --thread ${task.cpus} -i ${read_1} \
-      -o ${sample_ID}_1.trimmed.fastq.gz
+      -o ${sample_ID}_1.trimmed.fastq.gz \
+      --json ${sample_ID}.fastp.json --html ${sample_ID}.fastp.html
       printf "" | gzip -c > ${sample_ID}_2.trimmed.fastq.gz
 
     else
-      echo "[\$DATE] WARNING: \$library_layout is not equal to paired or single!"
+      echo "[\$DATE] ERROR: library_layout must be 'paired' or 'single', got '$library_layout'" >&2
       exit 1
     fi
-    printf '"%s":\n  container: "not_recorded"\n' "${task.process}" > versions.yml
+    fastp --version 2>&1 | sed 's/^/  fastp: "/; s/\$/"/' | {
+      printf '"%s":\\n' "${task.process}"
+      cat
+    } > versions.yml
     """
 
     stub:
     """
+    set -euo pipefail
+
     if [[ $library_layout == "paired" ]]
     then
       printf "@stub/1\\nACGT\\n+\\n!!!!\\n" | gzip -c > ${sample_ID}_1.trimmed.fastq.gz
@@ -57,6 +68,8 @@ process trimming_fastq {
       mv ${sample_ID}.trimmed.fastq.gz ${sample_ID}_1.trimmed.fastq.gz
       printf "" | gzip -c > ${sample_ID}_2.trimmed.fastq.gz
     fi
-    printf '"%s":\n  container: "not_recorded"\n' "${task.process}" > versions.yml
+    printf '{"summary":"stub"}\\n' > ${sample_ID}.fastp.json
+    printf '<html><body>stub</body></html>\\n' > ${sample_ID}.fastp.html
+    printf '"%s":\n  fastp: "stub"\n' "${task.process}" > versions.yml
     """
 }

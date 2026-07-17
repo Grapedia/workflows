@@ -150,11 +150,11 @@ Perimetre lu: `README.md`, `nextflow.config`, `main.nf`, `workflows/titan.nf`, `
 
 ### `modules/trimming_fastq.nf`
 
-- A ameliorer: ajouter `set -euo pipefail`.
-- A ameliorer: pour layout inconnu, echouer au lieu de seulement afficher un warning, sinon l'output attendu manquera avec une erreur moins claire.
-- A ameliorer: remplacer `file("*.trimmed.fastq.gz")` par sorties explicites single/paired.
-- A ameliorer: ajouter les rapports fastp JSON/HTML comme outputs optionnels publies.
-- A ameliorer: ajouter `versions.yml`.
+- [x] A ameliorer: ajouter `set -euo pipefail`.
+- [x] A ameliorer: pour layout inconnu, echouer au lieu de seulement afficher un warning, sinon l'output attendu manquera avec une erreur moins claire.
+- [x] A ameliorer: remplacer `file("*.trimmed.fastq.gz")` par sorties explicites single/paired.
+- [x] A ameliorer: ajouter les rapports fastp JSON/HTML comme outputs optionnels publies.
+- [x] A ameliorer: ajouter `versions.yml`.
 
 ### `modules/star_genome_indices.nf`
 
