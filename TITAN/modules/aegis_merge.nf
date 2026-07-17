@@ -3,7 +3,18 @@ process aegis_merge {
   tag "AEGIS merge of ${aegis_mode} evidence"
 
   container "${params.container_aegis}"
-  publishDir "${params.output_dir}/aegis_outputs", mode: 'copy'
+  publishDir "${params.output_dir}/aegis_outputs", mode: 'copy', saveAs: { filename ->
+    if (filename in ['final_annotation.gff3', 'final_annotation_proteins_all.fasta', 'final_annotation_proteins_main.fasta', 'versions.yml']) {
+      return filename
+    }
+    return null
+  }
+  publishDir "${params.output_dir}/intermediate_files/aegis", mode: 'copy', enabled: params.publish_intermediates, saveAs: { filename ->
+    if (filename in ['aegis_merge', 'aegis_proteins_all', 'aegis_proteins_main', 'aegis_inputs.tsv', 'aegis_merge.log']) {
+      return filename
+    }
+    return null
+  }
 
   input:
     val(aegis_mode)
@@ -26,6 +37,11 @@ process aegis_merge {
     path "final_annotation.gff3", emit: aegis_gff
     path "final_annotation_proteins_all.fasta", emit: aegis_proteins_all
     path "final_annotation_proteins_main.fasta", emit: aegis_proteins_main
+    path "aegis_inputs.tsv", emit: input_manifest
+    path "aegis_merge.log", emit: debug_log
+    path "aegis_merge", optional: true, emit: aegis_merge_dir
+    path "aegis_proteins_all", optional: true, emit: aegis_proteins_all_dir
+    path "aegis_proteins_main", optional: true, emit: aegis_proteins_main_dir
     path "versions.yml", emit: versions
 
   script:
@@ -49,7 +65,7 @@ process aegis_merge {
       ${long_reads_alt_args} \\
       ${gffcompare_unstranded} \\
       ${unstranded_default_args} \\
-      ${unstranded_alt_args}
+      ${unstranded_alt_args} 2>&1 | tee aegis_merge.log
     """
 
   stub:
@@ -61,6 +77,8 @@ process aegis_merge {
     printf "##gff-version 3\\n%s\\tAegis\\tgene\\t1\\t%s\\t.\\t+\\t.\\tID=aegis_stub_gene\\n%s\\tAegis\\tmRNA\\t1\\t%s\\t.\\t+\\t.\\tID=aegis_stub_tx;Parent=aegis_stub_gene\\n%s\\tAegis\\tCDS\\t1\\t%s\\t.\\t+\\t0\\tID=aegis_stub_cds;Parent=aegis_stub_tx\\n" "\$seqid" "\$end" "\$seqid" "\$end" "\$seqid" "\$end" > final_annotation.gff3
     printf ">aegis_stub_protein\\nM\\n" > final_annotation_proteins_all.fasta
     printf ">aegis_stub_protein\\nM\\n" > final_annotation_proteins_main.fasta
+    printf "name\\tpath\\trequired\\tincluded\\tsize_bytes\\n" > aegis_inputs.tsv
+    printf "Stub AEGIS merge\\n" > aegis_merge.log
     printf '"%s":\\n  aegis: "%s"\\n  aegis_container: "%s"\\n' \\
       "${task.process}" "${params.aegis_version}" "${params.container_aegis}" > versions.yml
     """

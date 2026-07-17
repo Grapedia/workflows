@@ -285,7 +285,7 @@ Intermediate and debug outputs:
 | RNA-seq preparation and trimming | staged/downloaded FASTQ, trimmed FASTQ, Salmon strand logs/index | `${output_dir}/intermediate_files` | `--publish_intermediates` |
 | Genome indexes and alignments | STAR, HISAT2 and Minimap2 indexes; STAR/HISAT2/Minimap2 BAMs | `${output_dir}/intermediate_files/evidence_data` | `--publish_intermediates` |
 | Per-sample transcriptomes | StringTie and PsiCLASS per-sample GTFs | `${output_dir}/intermediate_files` | `--publish_intermediates` |
-| Tool scratch summaries | EDTA TE library/annotation files and GFFCompare scratch copies | `${output_dir}/tmp` | `--publish_intermediates` |
+| Tool scratch summaries | EDTA TE library/annotation files, GFFCompare scratch copies, BRAKER3 logs and AEGIS merge/extract directories | `${output_dir}/tmp` and `${output_dir}/intermediate_files` | `--publish_intermediates` |
 
 `--publish_intermediates true` is the default for backward compatibility and debugging. Set `--publish_intermediates false` to keep these artifacts in the Nextflow work directory while still publishing public outputs.
 

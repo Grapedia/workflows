@@ -274,8 +274,8 @@ Perimetre lu: `README.md`, `nextflow.config`, `main.nf`, `workflows/titan.nf`, `
 - Bon point: `set -euo pipefail`, verification des FASTA proteines produites, `versions.yml`.
 - [x] A ameliorer: le script de merge est presque duplique avec `aegis_long_reads`; factoriser.
 - [x] A ameliorer: les checks `basename != dev_null*` suggerent un ancien contrat de sentinelle. Remplacer par un contrat explicite de fichiers optionnels/vides.
-- A ameliorer: ajouter une validation des inputs obligatoires non vides avant `aegis merge`.
-- A ameliorer: inclure le repertoire AEGIS complet comme output optionnel si utile au debug, ou documenter qu'il reste dans `work/`.
+- [x] A ameliorer: ajouter une validation des inputs obligatoires non vides avant `aegis merge`.
+- [x] A ameliorer: inclure le repertoire AEGIS complet comme output optionnel si utile au debug, ou documenter qu'il reste dans `work/`.
 - [x] A ameliorer: factoriser la liste `merge_inputs` pour eviter divergence entre mode short et mode short+long.
 
 ### `modules/diamond2go.nf`
