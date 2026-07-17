@@ -177,6 +177,7 @@ workflow generate_evidence_data {
             // Prepare long reads (if any) for processing
             long_reads_prepared = prepare_RNAseq_fastq_files_long(
                 samples_list_long_reads,
+                download_sra_fastq_script,
                 ena_download_timeout_seconds,
                 ena_max_download_attempts,
                 ena_retry_wait_seconds,

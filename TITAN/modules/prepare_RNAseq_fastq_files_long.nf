@@ -6,18 +6,18 @@ process prepare_RNAseq_fastq_files_long {
   label 'process_low'
   tag "prepare_RNAseq_fastq_files on $sample_ID"
   container params.container_python
-  debug true
 
   input:
   tuple val(sample_ID), val(SRA_or_FASTQ), val(library_layout), path(local_reads)
+  path(download_sra_fastq_script)
   val(ena_download_timeout_seconds)
   val(ena_max_download_attempts)
   val(ena_retry_wait_seconds)
   val(ena_verify_md5)
 
   output:
-  tuple val(sample_ID), val(SRA_or_FASTQ), val(library_layout), path("long_read_input.*"), emit: prepared_fastqs
-    path "versions.yml", emit: versions
+  tuple val(sample_ID), val(SRA_or_FASTQ), val(library_layout), env('READ_FORMAT'), path("long_read_input.fastq.gz"), path("long_read_input.fasta"), emit: prepared_fastqs
+  path "versions.yml", emit: versions
 
 
 
@@ -30,7 +30,7 @@ process prepare_RNAseq_fastq_files_long {
   if [[ $SRA_or_FASTQ == "SRA" ]]
   then
     echo "[\$DATE] Downloading SRA long-read sample through ENA API: $sample_ID"
-    python3 ${projectDir}/scripts/download_sra_fastq.py \\
+    python3 ${download_sra_fastq_script} \\
       --accession $sample_ID \\
       --layout long \\
       --outdir . \\
@@ -51,22 +51,35 @@ process prepare_RNAseq_fastq_files_long {
 
   if [[ -s ${sample_ID}.fastq.gz ]]; then
     cp ${sample_ID}.fastq.gz long_read_input.fastq.gz
+    : > long_read_input.fasta
+    export READ_FORMAT="fastq"
   elif compgen -G "${sample_ID}*.fastq.gz" > /dev/null; then
     first_fastq=\$(compgen -G "${sample_ID}*.fastq.gz" | sort | head -n 1)
     cp "\$first_fastq" long_read_input.fastq.gz
+    : > long_read_input.fasta
+    export READ_FORMAT="fastq"
   elif [[ -s ${sample_ID}.fasta ]]; then
     cp ${sample_ID}.fasta long_read_input.fasta
+    printf "" | gzip -c > long_read_input.fastq.gz
+    export READ_FORMAT="fasta"
   else
     echo "[\$DATE] ERROR: no prepared long-read FASTQ/FASTA found for $sample_ID" >&2
     exit 1
   fi
-    printf '"%s":\n  container: "not_recorded"\n' "${task.process}" > versions.yml
+
+  python3 --version 2>&1 | sed 's/^/  python: "/; s/\$/"/' | {
+    printf '"%s":\\n' "${task.process}"
+    cat
+  } > versions.yml
   """
 
   stub:
   """
-  rm -f ${sample_ID}*
+  set -euo pipefail
+
   printf "@stub\\nACGT\\n+\\n!!!!\\n" | gzip -c > long_read_input.fastq.gz
-  printf '"%s":\n  container: "not_recorded"\n' "${task.process}" > versions.yml
+  : > long_read_input.fasta
+  export READ_FORMAT="fastq"
+  printf '"%s":\n  python: "stub"\n' "${task.process}" > versions.yml
   """
 }

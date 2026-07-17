@@ -170,7 +170,7 @@ for f in modules/*.nf; do awk '/^[[:space:]]*output:/{flag=1} /^[[:space:]]*scri
 | Module/process | Entrees principales | Sorties declarees | Publication actuelle | Consommateur principal |
 | --- | --- | --- | --- | --- |
 | `prepare_RNAseq_fastq_files_short` | tuples RNA-seq courts, script ENA | tuples `sample_ID`, `SRA_or_FASTQ`, `library_layout`, `prepared_1.fastq.gz`, `prepared_2.fastq.gz` | workdir uniquement | `trimming_fastq` |
-| `prepare_RNAseq_fastq_files_long` | tuples RNA-seq longs | tuples `sample_ID`, `SRA_or_FASTQ`, `library_layout`, FASTQ/FASTA stages | workdir uniquement | `minimap2_alignment` |
+| `prepare_RNAseq_fastq_files_long` | tuples RNA-seq longs, script ENA | tuples `sample_ID`, `SRA_or_FASTQ`, `library_layout`, `read_format`, `long_read_input.fastq.gz`, `long_read_input.fasta` | workdir uniquement | `minimap2_alignment` |
 | `trimming_fastq` | FASTQ/SRA courts prepares | `${sample_ID}_1.trimmed.fastq.gz`, `${sample_ID}_2.trimmed.fastq.gz` | `${output_dir}/intermediate_files/evidence_data/RNAseq_data/trimmed_data` | Salmon, STAR, HISAT2 |
 | `liftoff_annotations` | assemblage cible, assemblage precedent, GFF3 precedent | `liftoff_previous_annotations.gff3`, `unmapped_features.txt` | `${output_dir}` | AGAT, Aegis |
 | `agat_convert_gff3_to_cds_fasta` | assemblage cible, Liftoff GFF3 | `${genome}.CDS.fasta.gz` | `${output_dir}/intermediate_files/liftoff/gff3_to_cds_fasta` | Salmon index |
@@ -181,7 +181,7 @@ for f in modules/*.nf; do awk '/^[[:space:]]*output:/{flag=1} /^[[:space:]]*scri
 | `hisat2_genome_indices` | assemblage cible | `${genome}.*.ht2` | `${output_dir}/intermediate_files/evidence_data/hisat2_databases` | HISAT2 alignment |
 | `hisat2_alignment` | index HISAT2, reads, strandedness | `${sample_ID}_Aligned.sort.bam` | `${output_dir}/intermediate_files/evidence_data/RNAseq_alignments/HISAT2/{stranded,unstranded}` | StringTie HISAT2 |
 | `minimap2_genome_indices` | assemblage cible | `${genome}.mmi` | `${output_dir}/intermediate_files/evidence_data/minimap2_databases` | Minimap2 alignment |
-| `minimap2_alignment` | index Minimap2, reads longs | `${sample_ID}_Aligned.sorted.bam` | `${output_dir}/intermediate_files/evidence_data/RNAseq_alignments/minimap2` | StringTie long reads, BRAKER3 long reads |
+| `minimap2_alignment` | index Minimap2, reads longs, format FASTQ/FASTA | `${sample_ID}_Aligned.sorted.bam` | `${output_dir}/intermediate_files/evidence_data/RNAseq_alignments/minimap2` | StringTie long reads, BRAKER3 long reads |
 | `assembly_transcriptome_star_stringtie` | BAM STAR | tuple `sample_ID`, default GTF, alt GTF, `strand_type` | `${output_dir}/intermediate_files/evidence_data/transcriptomes/StringTie/short_reads/STAR/{stranded,unstranded}` | StringTie STAR merge |
 | `assembly_transcriptome_hisat2_stringtie` | BAM HISAT2 | tuple `sample_ID`, default GTF, alt GTF, `strand_type` | `${output_dir}/intermediate_files/evidence_data/transcriptomes/StringTie/short_reads/HISAT2/{stranded,unstranded}` | StringTie HISAT2 merge |
 | `assembly_transcriptome_star_psiclass` | BAM STAR | `${sample_ID}_vote.gtf` | `${output_dir}/intermediate_files/transcriptomes/STAR_PsiCLASS/{stranded,unstranded}` | GFFCompare |

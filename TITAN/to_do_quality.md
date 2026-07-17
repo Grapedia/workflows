@@ -142,11 +142,11 @@ Perimetre lu: `README.md`, `nextflow.config`, `main.nf`, `workflows/titan.nf`, `
 
 ### `modules/prepare_RNAseq_fastq_files_long.nf`
 
-- A ameliorer: retirer `debug true` par defaut.
-- A ameliorer: `path("${sample_ID}*", includeInputs: true)` peut capturer FASTA, FASTQ, fichiers temporaires ou logs. Emettre une sortie normalisee.
-- A ameliorer: gerer separement FASTA et FASTQ dans le tuple de sortie pour que minimap2 sache le type sans inferer par nom.
-- A ameliorer: passer `download_sra_fastq.py` comme input.
-- A ameliorer: ajouter `versions.yml`.
+- [x] A ameliorer: retirer `debug true` par defaut.
+- [x] A ameliorer: `path("${sample_ID}*", includeInputs: true)` peut capturer FASTA, FASTQ, fichiers temporaires ou logs. Emettre une sortie normalisee.
+- [x] A ameliorer: gerer separement FASTA et FASTQ dans le tuple de sortie pour que minimap2 sache le type sans inferer par nom.
+- [x] A ameliorer: passer `download_sra_fastq.py` comme input.
+- [x] A ameliorer: ajouter `versions.yml`.
 
 ### `modules/trimming_fastq.nf`
 
