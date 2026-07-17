@@ -219,9 +219,13 @@ cmd=(
   -profile "$PROFILE"
   -name "$RUN_NAME"
   -work-dir "$WORK_DIR"
-  -with-report "$OUTPUT_DIR/nextflow_reports/${RUN_NAME}.report.html"
-  -with-timeline "$OUTPUT_DIR/nextflow_reports/${RUN_NAME}.timeline.html"
-  -with-trace "$OUTPUT_DIR/nextflow_reports/${RUN_NAME}.trace.txt"
+  # -with-report/-with-timeline/-with-trace are intentionally omitted: they
+  # require `ps` inside every task's execution context to sample runtime
+  # metrics, and none of TITAN's pinned container images ship procps (and
+  # Apptainer does not leak host binaries into the container filesystem), so
+  # every single task fails immediately with "Command 'ps' required by
+  # nextflow to collect task metrics cannot be found" when any of them are
+  # enabled. -with-dag does not need runtime metrics and is safe to keep.
   -with-dag "$OUTPUT_DIR/nextflow_reports/${RUN_NAME}.dag.html"
   -ansi-log false
   -resume
