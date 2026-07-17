@@ -180,11 +180,11 @@ Perimetre lu: `README.md`, `nextflow.config`, `main.nf`, `workflows/titan.nf`, `
 
 ### `modules/hisat2_alignment.nf`
 
-- A ameliorer: ajouter `set -euo pipefail` avec `pipefail`, indispensable car `hisat2 | samtools sort` peut masquer un echec d'alignement.
-- A ameliorer: gerer explicitement les layouts et strand types inconnus avec `exit 1`.
-- A ameliorer: indexer le BAM si reutilise par d'autres outils.
-- A ameliorer: pour single-end strandness, verifier que `FR/RF` est biologiquement correct pour HISAT2; les options single-end attendues sont souvent `F` ou `R`.
-- A ameliorer: ajouter `versions.yml`.
+- [x] A ameliorer: ajouter `set -euo pipefail` avec `pipefail`, indispensable car `hisat2 | samtools sort` peut masquer un echec d'alignement.
+- [x] A ameliorer: gerer explicitement les layouts et strand types inconnus avec `exit 1`.
+- [x] A ameliorer: indexer le BAM si reutilise par d'autres outils.
+- [x] A ameliorer: pour single-end strandness, verifier que `FR/RF` est biologiquement correct pour HISAT2; les options single-end attendues sont souvent `F` ou `R`.
+- [x] A ameliorer: ajouter `versions.yml`.
 
 ### `modules/minimap2_genome_indices.nf`
 

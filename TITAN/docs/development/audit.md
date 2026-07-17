@@ -179,7 +179,7 @@ for f in modules/*.nf; do awk '/^[[:space:]]*output:/{flag=1} /^[[:space:]]*scri
 | `star_genome_indices` | assemblage cible | `${genome}_index` | `${output_dir}/intermediate_files/evidence_data/star_databases` | STAR alignment |
 | `star_alignment` | index STAR, reads, strandedness | `${sample_ID}_Aligned.sortedByCoord.out.bam` | `${output_dir}/intermediate_files/evidence_data/RNAseq_alignments/STAR/{stranded,unstranded}` | StringTie, PsiCLASS, BRAKER3 |
 | `hisat2_genome_indices` | assemblage cible | `hisat2_index/` | `${output_dir}/intermediate_files/evidence_data/hisat2_databases` | HISAT2 alignment |
-| `hisat2_alignment` | index HISAT2, reads, strandedness | `${sample_ID}_Aligned.sort.bam` | `${output_dir}/intermediate_files/evidence_data/RNAseq_alignments/HISAT2/{stranded,unstranded}` | StringTie HISAT2 |
+| `hisat2_alignment` | index HISAT2, reads, strandedness | `${sample_ID}_Aligned.sort.bam`, `${sample_ID}_Aligned.sort.bam.bai` | `${output_dir}/intermediate_files/evidence_data/RNAseq_alignments/HISAT2/{stranded,unstranded}` | StringTie HISAT2 |
 | `minimap2_genome_indices` | assemblage cible | `${genome}.mmi` | `${output_dir}/intermediate_files/evidence_data/minimap2_databases` | Minimap2 alignment |
 | `minimap2_alignment` | index Minimap2, reads longs, format FASTQ/FASTA | `${sample_ID}_Aligned.sorted.bam` | `${output_dir}/intermediate_files/evidence_data/RNAseq_alignments/minimap2` | StringTie long reads, BRAKER3 long reads |
 | `assembly_transcriptome_star_stringtie` | BAM STAR | tuple `sample_ID`, default GTF, alt GTF, `strand_type` | `${output_dir}/intermediate_files/evidence_data/transcriptomes/StringTie/short_reads/STAR/{stranded,unstranded}` | StringTie STAR merge |
