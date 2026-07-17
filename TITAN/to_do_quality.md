@@ -216,7 +216,7 @@ Perimetre lu: `README.md`, `nextflow.config`, `main.nf`, `workflows/titan.nf`, `
 
 - [x] A ameliorer: ajouter `set -euo pipefail`.
 - [x] A ameliorer: ajouter `versions.yml`.
-- A ameliorer: verifier si les options StringTie long reads sont adaptees a FASTA et FASTQ SRA de maniere uniforme.
+- [x] A ameliorer: verifier si les options StringTie long reads sont adaptees a FASTA et FASTQ SRA de maniere uniforme.
 
 ### `modules/assembly_transcriptome_star_psiclass.nf`
 

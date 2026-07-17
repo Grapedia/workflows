@@ -23,17 +23,20 @@ process assembly_transcriptome_minimap2_stringtie {
     DATE=\$(date "+%Y-%m-%d %H:%M:%S")
     DEFAULT_GTF="${sample_ID}_transcriptome.gtf"
     ALT_GTF="${sample_ID}_transcriptome.AltCommands.gtf"
+    READ_TYPE="long"
     echo "[\$DATE] Running Minimap2/StringTie - long reads transcriptome assembly on $sample_ID"
     bash ${stringtie_transcriptome_script} \\
       ${stringtie_script} \\
       ${stringtie_alt_script} \\
       ${task.cpus} \\
       ${bam_file} \\
-      long \\
+      "\${READ_TYPE}" \\
       "\${DEFAULT_GTF}" \\
       "\${ALT_GTF}"
     {
       printf '"%s":\n' "${task.process}"
+      printf '  stringtie_read_mode: "%s"\n' "\${READ_TYPE}"
+      printf '  stringtie_input_contract: "minimap2_coordinate_sorted_bam"\n'
       stringtie --version 2>&1 | awk '{ printf "  stringtie: \\"%s\\"\\n", \$0 }'
       sha256sum ${stringtie_script} | awk '{ printf "  stringtie_script_sha256: \\"%s\\"\\n", \$1 }'
       sha256sum ${stringtie_alt_script} | awk '{ printf "  stringtie_alt_script_sha256: \\"%s\\"\\n", \$1 }'
@@ -46,6 +49,6 @@ process assembly_transcriptome_minimap2_stringtie {
     set -euo pipefail
     printf "chr1\\tStringTie\\ttranscript\\t1\\t10\\t.\\t+\\t.\\tgene_id \\"${sample_ID}_long_gene\\"; transcript_id \\"${sample_ID}_long_tx\\";\\n" > ${sample_ID}_transcriptome.gtf
     printf "chr1\\tStringTie\\ttranscript\\t1\\t10\\t.\\t+\\t.\\tgene_id \\"${sample_ID}_long_gene_alt\\"; transcript_id \\"${sample_ID}_long_tx_alt\\";\\n" > ${sample_ID}_transcriptome.AltCommands.gtf
-    printf '"%s":\n  stringtie: "stub"\n  stringtie_script_sha256: "stub"\n  stringtie_alt_script_sha256: "stub"\n  stringtie_transcriptome_script_sha256: "stub"\n' "${task.process}" > versions.yml
+    printf '"%s":\n  stringtie_read_mode: "long"\n  stringtie_input_contract: "minimap2_coordinate_sorted_bam"\n  stringtie: "stub"\n  stringtie_script_sha256: "stub"\n  stringtie_alt_script_sha256: "stub"\n  stringtie_transcriptome_script_sha256: "stub"\n' "${task.process}" > versions.yml
     """
 }
