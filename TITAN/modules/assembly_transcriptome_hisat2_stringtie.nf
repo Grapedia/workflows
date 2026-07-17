@@ -2,7 +2,7 @@
 process assembly_transcriptome_hisat2_stringtie {
   label 'process_transcriptome'
 
-  tag "Hisat2/StringTie - short reads on ${sample_ID}"
+  tag "HISAT2/StringTie - short reads on ${sample_ID}"
   container params.container_stringtie
   publishDir {
     if (strand_type == "unstranded") {
@@ -29,7 +29,7 @@ process assembly_transcriptome_hisat2_stringtie {
     DATE=\$(date "+%Y-%m-%d %H:%M:%S")
     DEFAULT_GTF="${sample_ID}_transcriptome.gtf"
     ALT_GTF="${sample_ID}_transcriptome.AltCommands.gtf"
-    echo "[\$DATE] Running transcriptome assembly with StringTie on HISAT2 $sample_ID"
+    echo "[\$DATE] Running HISAT2/StringTie transcriptome assembly on $sample_ID"
     bash ${stringtie_transcriptome_script} \\
       ${stringtie_script} \\
       ${stringtie_alt_script} \\

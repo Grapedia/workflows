@@ -210,7 +210,7 @@ Perimetre lu: `README.md`, `nextflow.config`, `main.nf`, `workflows/titan.nf`, `
 ### `modules/assembly_transcriptome_hisat2_stringtie.nf`
 
 - [x] A ameliorer: memes points que le module STAR/StringTie: `set -euo pipefail`, `versions.yml`, factorisation.
-- A ameliorer: harmoniser le tag et les chemins publies avec STAR pour faciliter la comparaison.
+- [x] A ameliorer: harmoniser le tag et les chemins publies avec STAR pour faciliter la comparaison.
 
 ### `modules/assembly_transcriptome_minimap2_stringtie.nf`
 
