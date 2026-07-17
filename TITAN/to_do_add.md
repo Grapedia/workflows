@@ -6,23 +6,12 @@ Objectif: proposer des outils d'annotation structurale ou fonctionnelle a integr
 
 ## Sources principales consultees
 
-- BRAKER3: https://github.com/Gaius-Augustus/BRAKER
-- PASA: https://github.com/PASApipeline/PASApipeline/blob/master/docs/index.asciidoc
 - Mikado: https://mikado.readthedocs.io/
-- EVidenceModeler: https://github.com/EVidenceModeler/EVidenceModeler
-- AUGUSTUS RNA-seq hints: https://augustus.gobics.de/binaries/readme.rnaseq.html
-- GeneMark: https://exon.gatech.edu/
 - Helixer: https://github.com/usadellab/Helixer
-- TSEBRA: https://github.com/Gaius-Augustus/TSEBRA
 - eggNOG-mapper: https://github.com/eggnogdb/eggnog-mapper et https://github.com/eggnogdb/eggnog-mapper/blob/main/USAGE.md
-- Scallop: https://github.com/Kingsford-Group/scallop
-- Scallop2: https://github.com/Shao-Group/scallop2
 - TransDecoder: https://github.com/TransDecoder/TransDecoder
-- Miniprot: https://github.com/lh3/miniprot
 - FLAIR: https://github.com/BrooksLabUCSC/flair
-- TALON: https://github.com/mortazavilab/TALON
 - SQANTI3: https://github.com/ConesaLab/SQANTI3
-- StringTie: https://github.com/gpertea/stringtie
 
 Les tags BioContainers ci-dessous ont ete verifies via l'API Quay le 2026-07-16. Avant implementation, pinner les images par digest comme le reste du projet.
 
@@ -31,14 +20,10 @@ Les tags BioContainers ci-dessous ont ete verifies via l'API Quay le 2026-07-16.
 ### Regle pour les annotations additionnelles
 
 - Nouveau dossier public: `${params.output_dir}/additional_annotations/<tool>/`.
-- Ne pas connecter ces sorties a `subworkflows/aegis.nf` au premier ajout.
+- Connecter ces sorties a `subworkflows/aegis.nf` quand validé.
 - Ajouter une provenance dediee dans `titan_provenance` ou un nouveau process `additional_annotations_provenance`.
 - Chaque module doit emettre `versions.yml`.
 - Chaque outil doit avoir un parametre `params.run_<tool> = false` par defaut, sauf eggNOG-mapper qui peut etre active par defaut si la base eggNOG locale est disponible.
-
-### Pourquoi ne pas tout envoyer directement a AEGIS
-
-AEGIS est deja le merge final du contrat public. Ajouter plusieurs predicteurs sans calibration de poids ou controle de redondance risque d'augmenter les faux positifs. Les nouveaux outils doivent d'abord produire des jeux d'annotations comparables, publies et valides separement. Ensuite seulement, ajouter un parametre explicite du type `--include_extra_evidence_in_aegis`.
 
 ## P0 - Annotation fonctionnelle apres AEGIS
 
@@ -83,36 +68,9 @@ emapper.py \
 
 ## P1 - Annotations RNA-seq additionnelles sans merge AEGIS
 
-### `modules/scallop2_assembly.nf`
-
-- But: ajouter un assembleur transcriptomique reference-guided alternatif a StringTie/PsiCLASS pour short reads.
-- Pourquoi: Scallop2 est optimise pour RNA-seq paired-/multiple-end; il donne une evidence transcriptomique independante utile pour comparaison.
-- Position: apres `star_alignment` ou `hisat2_alignment`, par echantillon.
-- Input: `tuple val(sample_ID), path(bam_file), val(strand_type)`.
-- Output public: `${params.output_dir}/additional_annotations/scallop2/`.
-- Image candidate: `quay.io/biocontainers/scallop2:1.1.2--h5ca1c30_8`.
-- Parametres:
-  - `params.run_scallop2 = false`
-  - `params.container_scallop2`
-- Commande type:
-
-```bash
-scallop2 \
-  -i ${bam_file} \
-  -o ${sample_ID}.scallop2.gtf \
-  --min_transcript_coverage 1
-```
-
-- Sorties:
-  - `tuple val(sample_ID), path("${sample_ID}.scallop2.gtf"), val(strand_type), emit: scallop2_gtf`
-- Integration adaptee:
-  - Ajouter un merge dedie `modules/scallop2_merge.nf` avec `stringtie --merge` ou `gffcompare` selon le besoin.
-  - Publier le GTF merged comme `merged_scallop2_short_reads.gtf`.
-  - Ne pas transmettre a AEGIS au depart.
-
 ### `modules/mikado_prepare.nf`, `modules/mikado_serialise.nf`, `modules/mikado_pick.nf`
 
-- But: selectionner les meilleurs transcrits parmi StringTie, PsiCLASS, Scallop2 et long-read GTFs.
+- But: selectionner les meilleurs transcrits parmi StringTie, PsiCLASS et long-read GTFs.
 - Pourquoi: Mikado consolide plusieurs assemblies transcriptomiques et selectionne des modeles par locus; c'est plus adapte qu'un simple merge de GTFs pour produire une annotation RNA-seq candidate.
 - Position: apres les merges STAR/StringTie, STAR/PsiCLASS, long reads et Scallop2.
 - Inputs:
@@ -293,72 +251,6 @@ Helixer.py \
   - Pour plantes, tester explicitement le modele land plant sur les fixtures realistes.
   - GPU peut accelerer fortement, mais ne doit pas etre obligatoire pour le profil `test`.
 
-## P2 - Outils utiles mais a integrer apres les P0/P1
-
-### `modules/pasa_alignment_assembly.nf`
-
-- But: construire une annotation transcriptome-based a partir des assemblies RNA-seq.
-- Pourquoi: PASA peut generer une annotation genome/transcriptome et mettre a jour des structures de genes; tres utile mais lourd.
-- Image candidate: `quay.io/biocontainers/pasa:2.5.3--h9948957_2`.
-- Commande type:
-
-```bash
-Launch_PASA_pipeline.pl \
-  -c alignAssembly.config \
-  -C \
-  -R \
-  -g ${genome} \
-  -t transcripts.fasta \
-  --ALIGNERS gmap,minimap2 \
-  --CPU ${task.cpus}
-```
-
-- Position recommandee: apres Mikado/TransDecoder, en option avancee.
-- Raison de P2: dependance base SQLite/MySQL, configuration lourde, temps de calcul important et besoin de tests specifiques.
-
-### `modules/miniprot_annotation.nf`
-
-- But: annotation structurale par alignement proteine-genome avec splicing/frameshift.
-- Pourquoi: complement homology-based rapide aux predictions RNA-seq/ab initio, notamment avec proteines proches.
-- Image candidate: `quay.io/biocontainers/miniprot:0.18--h577a1d6_0`.
-- Commandes types:
-
-```bash
-miniprot -t ${task.cpus} -d target.mpi ${genome}
-miniprot -t ${task.cpus} --gff target.mpi proteins.faa > miniprot.gff3
-```
-
-- Position: branche proteines, independante d'AEGIS.
-- Raison de P2: le projet a deja Liftoff et BRAKER3 avec proteines; miniprot est utile mais moins prioritaire que eggNOG/Mikado/Helixer.
-
-### `modules/tsebra_post_braker.nf`
-
-- But: selectionner/filtrer les transcrits BRAKER selon support d'evidence.
-- Pourquoi: TSEBRA est concu pour selectionner des predictions BRAKER supportees par evidence.
-- Image candidate: utiliser le container BRAKER actuel si TSEBRA y est present, sinon `quay.io/biocontainers/tsebra` a verifier.
-- Position: apres BRAKER3.
-- Raison de P2: BRAKER3 produit deja un set combine; ajouter TSEBRA doit etre justifie par un test qualite.
-
-## Outils non recommandes pour integration immediate
-
-### EVidenceModeler
-
-- Decision: ne pas integrer maintenant.
-- Raison: le depot officiel indique que le projet n'est plus activement maintenu depuis 2024. TITAN a deja AEGIS comme merge final; ajouter EVM creerait un deuxieme merge concurrent.
-- Usage possible: benchmark externe seulement, dans `additional_annotations/evm_benchmark/`, pas dans le graphe standard.
-
-### AUGUSTUS standalone et GeneMark standalone
-
-- Decision: ne pas integrer comme modules separes au depart.
-- Raison: BRAKER3 exploite deja GeneMark-ETP et AUGUSTUS avec RNA-seq/proteines. Des modules standalone augmenteraient la maintenance sans gain evident.
-- Exception: ajouter plus tard un module `augustus_hints_prediction` si un besoin scientifique exige de tester des hints ou configs specifiques.
-
-### TALON
-
-- Decision: ne pas prioriser.
-- Raison: TALON est tres interessant pour catalogues long-read multi-samples, mais impose une logique base de donnees et tracking d'isoformes plus lourde que FLAIR/SQANTI3.
-- Revoir apres integration FLAIR + SQANTI3.
-
 ## Changements de configuration a prevoir
 
 Ajouter dans `nextflow.config` apres validation:
@@ -369,9 +261,6 @@ params {
   eggnog_data_dir = false
   eggnog_mapper_cpus = 8
   container_eggnog_mapper = "quay.io/biocontainers/eggnog-mapper:2.1.15--pyhdfd78af_0"
-
-  run_scallop2 = false
-  container_scallop2 = "quay.io/biocontainers/scallop2:1.1.2--h5ca1c30_8"
 
   run_mikado = false
   container_mikado = "quay.io/biocontainers/mikado:2.3.4--py310h8ea774a_2"
@@ -406,8 +295,6 @@ process {
 ## Ordre d'implementation recommande
 
 1. Ajouter `eggnog_mapper` apres AEGIS et Diamond2GO, avec test stub et validation de `--eggnog_data_dir`.
-2. Ajouter `scallop2_assembly` comme evidence RNA-seq publiee separement.
-3. Ajouter `mikado_prepare/serialise/pick` et `transdecoder` pour produire une annotation RNA-seq candidate complete.
-4. Ajouter `flair_isoforms` puis `sqanti3_qc` pour exploiter les long reads au-dela de StringTie.
-5. Ajouter `helixer_prediction` comme prediction ab initio orthogonale.
-6. Evaluer quantitativement ces outputs contre AEGIS avec BUSCO/OMArk/AGAT stats avant de permettre leur inclusion optionnelle dans le merge AEGIS.
+2. Ajouter `mikado_prepare/serialise/pick` et `transdecoder` pour produire une annotation RNA-seq candidate complete.
+3. Ajouter `flair_isoforms` puis `sqanti3_qc` pour exploiter les long reads au-dela de StringTie.
+4. Ajouter `helixer_prediction` comme prediction ab initio orthogonale.
