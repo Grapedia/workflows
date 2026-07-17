@@ -280,11 +280,11 @@ Perimetre lu: `README.md`, `nextflow.config`, `main.nf`, `workflows/titan.nf`, `
 
 ### `modules/diamond2go.nf`
 
-- A ameliorer: ajouter `set -euo pipefail`.
+- [x] A ameliorer: ajouter `set -euo pipefail`.
 - [x] A ameliorer: output `path("*-diamond*")` trop vague et sans `emit`. Nommer les resultats all/main.
-- A ameliorer: ajouter `versions.yml`.
-- A ameliorer: utiliser `${task.cpus}` si Diamond2GO/DIAMOND le supporte; sinon documenter pourquoi `diamond2go_cpus` ne change que la ressource reservee.
-- A ameliorer: verifier que les deux commandes ne s'ecrasent pas si Diamond2GO produit des noms bases sur le repertoire plutot que sur la query.
+- [x] A ameliorer: ajouter `versions.yml`.
+- [x] A ameliorer: utiliser `${task.cpus}` si Diamond2GO/DIAMOND le supporte; sinon documenter pourquoi `diamond2go_cpus` ne change que la ressource reservee.
+- [x] A ameliorer: verifier que les deux commandes ne s'ecrasent pas si Diamond2GO produit des noms bases sur le repertoire plutot que sur la query.
 
 ### `modules/validate_final_annotation.nf`
 

@@ -135,7 +135,7 @@ for f in modules/*.nf; do awk '/^[[:space:]]*output:/{flag=1} /^[[:space:]]*scri
 | Aegis | Integration finale annotation | v0.3.25 image label | Digest-pinned | `aegis_short_reads`, `aegis_long_reads` | `params.container_aegis` | Stub + test CLI Docker | `versions.yml` |
 | AGAT | GFF3 vers CDS FASTA | 1.2.0 | Digest-pinned | `agat_convert_gff3_to_cds_fasta` | `params.container_agat` | Stub | Non |
 | BRAKER3 | Prediction ab initio | v3.0.8 documente | Digest-pinned | `braker3_prediction*` | `params.container_braker3` | Stub | `versions.yml` |
-| Diamond2GO | Annotation fonctionnelle | commit documente | Digest-pinned | `diamond2go` | `params.container_diamond2go` | Stub | Non |
+| Diamond2GO | Annotation fonctionnelle | commit documente | Digest-pinned | `diamond2go` | `params.container_diamond2go` | Stub | `versions.yml` |
 | EDTA | Masquage TE | GitHub latest documente | Digest-pinned | `EDTA` | `params.container_edta` | Stub | Non |
 | EGAPx | Annotation NCBI | 0.5.2 | Digest-pinned | `egapx` | `params.container_egapx` | Stub | `versions.yml` |
 | fastp | Trimming | 0.23.2 | Digest-pinned | `trimming_fastq` | `params.container_fastp` | Stub | Non |
@@ -194,7 +194,7 @@ for f in modules/*.nf; do awk '/^[[:space:]]*output:/{flag=1} /^[[:space:]]*scri
 | `braker3_prediction` | genome, proteines, BAM courts | `augustus.hints.gff3`, `genemark.gtf`, `genemark_supported.gtf`, `braker.gff3`, `versions.yml`; logs et manifeste sous `intermediate_files/braker3` si `publish_intermediates` | `${output_dir}` | Aegis |
 | `braker3_prediction_with_long_reads` | genome, proteines, BAM courts + longs | `augustus.hints.gff3`, `genemark.gtf`, `genemark_supported.gtf`, `braker.gff3`, `versions.yml`; logs et manifeste sous `intermediate_files/braker3` si `publish_intermediates` | `${output_dir}` | Aegis long reads |
 | `aegis_merge` | genome masque, Liftoff, EGAPx GFF3, BRAKER3, STAR/StringTie, GFFCompare, StringTie long reads si mode long | `final_annotation.gff3`, `final_annotation_proteins_all.fasta`, `final_annotation_proteins_main.fasta`, `versions.yml`; `aegis_inputs.tsv`, logs et dossiers AEGIS sous `intermediate_files/aegis` si `publish_intermediates` | `${output_dir}/aegis_outputs` | Diamond2GO |
-| `diamond2go` | proteines Aegis all/main | `*-diamond*` | `${output_dir}/Diamond2GO_outputs` | sortie finale fonctionnelle |
+| `diamond2go` | proteines Aegis all/main | `final_annotation_proteins_all.diamond2go.tsv`, `final_annotation_proteins_main.diamond2go.tsv`, `versions.yml` | `${output_dir}/Diamond2GO_outputs` | sortie finale fonctionnelle |
 | `egapx` | YAML EGAPx | `egapx.complete.genomic.gff3`, `egapx.complete.genomic.gtf`, `egapx.complete.proteins.faa`, `egapx.complete.cds.fna`, `egapx.complete.transcripts.fna`, `egapx.annotated_genome.asn`, `egapx_out/`, `versions.yml` | `${output_dir}/egapx` | Evidence generation; le GFF3 est transmis a `aegis merge` |
 
 Points de vigilance P0-002:
