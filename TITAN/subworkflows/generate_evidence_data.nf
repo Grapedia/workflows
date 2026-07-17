@@ -62,6 +62,7 @@ workflow generate_evidence_data {
         download_sra_fastq_script
         clean_liftoff_gff3_script
         clean_protein_script
+        braker3_runner_script
         empty_default_gtf
         empty_alt_gtf
         empty_psiclass_gtf
@@ -261,7 +262,8 @@ workflow generate_evidence_data {
         )
 
         normalized_proteins = normalize_protein_fastas(
-            protein_list.map { organism, filename -> [organism, file(filename)] }
+            protein_list.map { organism, filename -> [organism, file(filename)] },
+            clean_protein_script
         )
         protein_fastas = normalized_proteins.normalized_fastas
           .map { organism, protein_fasta -> protein_fasta }
@@ -275,14 +277,14 @@ workflow generate_evidence_data {
                 protein_fastas,
                 concat_star_bams_BRAKER3,
                 concat_minimap2_bams_BRAKER3,
-                clean_protein_script
+                braker3_runner_script
             )
         } else {
             braker3_results = braker3_prediction(
                 new_assembly,
                 protein_fastas,
                 concat_star_bams_BRAKER3,
-                clean_protein_script
+                braker3_runner_script
             )
         }
 

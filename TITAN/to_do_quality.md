@@ -265,7 +265,7 @@ Perimetre lu: `README.md`, `nextflow.config`, `main.nf`, `workflows/titan.nf`, `
 
 ### `modules/braker3_prediction_with_long_reads.nf`
 
-- A ameliorer: factoriser avec `braker3_prediction.nf`; seule la construction de la liste BAM change.
+- [x] A ameliorer: factoriser avec `braker3_prediction.nf`; seule la construction de la liste BAM change.
 - [x] A ameliorer: memes points: `versions.yml`, robustesse des listes, validation BAM/proteines, documentation des chemins internes.
 - [x] A ameliorer: nommer clairement `bam_short`, `bam_long`, `bam_all` dans logs/provenance.
 

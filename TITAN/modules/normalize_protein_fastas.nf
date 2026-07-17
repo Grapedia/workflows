@@ -5,6 +5,7 @@ process normalize_protein_fastas {
 
   input:
     tuple val(organism), path(protein_fasta)
+    path(clean_protein_script)
 
   output:
     tuple val(organism), path("protein_*.fa"), emit: normalized_fastas
@@ -15,8 +16,9 @@ process normalize_protein_fastas {
     set -euo pipefail
     test -s "${protein_fasta}"
     safe_name=\$(printf '%s' "${organism}" | tr -c 'A-Za-z0-9_.-' '_')
-    cp "${protein_fasta}" "protein_\${safe_name}.fa"
-    printf '"%s":\n  container: "not_recorded"\n' "${task.process}" > versions.yml
+    python3 "${clean_protein_script}" "${protein_fasta}" "protein_\${safe_name}.fa" "\${safe_name}"
+    test -s "protein_\${safe_name}.fa"
+    printf '"%s":\n  container: "%s"\n  cleaner: "clean_protein_fasta_for_BRAKER3.py"\n' "${task.process}" "${task.container}" > versions.yml
     """
 
   stub:

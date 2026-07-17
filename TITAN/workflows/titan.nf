@@ -166,6 +166,7 @@ workflow TITAN {
         file("${projectDir}/scripts/download_sra_fastq.py"),
         file("${projectDir}/scripts/clean_liftoff_gff3_for_agat.py"),
         file("${projectDir}/scripts/clean_protein_fasta_for_BRAKER3.py"),
+        file("${projectDir}/scripts/run_braker3_prediction.sh"),
         file("${projectDir}/assets/empty_default.gtf"),
         file("${projectDir}/assets/empty_alt.gtf"),
         file("${projectDir}/assets/empty_psiclass.gtf"),
