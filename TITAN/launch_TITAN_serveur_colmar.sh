@@ -15,7 +15,16 @@
 # e.g. `sbatch --time=14-00:00:00 launch_TITAN_serveur_colmar.sh` instead.
 set -Eeuo pipefail
 
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd -P)"
+
+# Under sbatch, Slurm copies this script into a per-job spool directory before
+# running it, so ${BASH_SOURCE[0]} no longer points at the real script
+# location; SLURM_SUBMIT_DIR (the cwd at `sbatch` time) is the reliable path
+# in that case. Fall back to BASH_SOURCE-based detection for direct/local runs.
+if [[ -n "${SLURM_SUBMIT_DIR:-}" ]]; then
+  SCRIPT_DIR="$SLURM_SUBMIT_DIR"
+else
+  SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd -P)"
+fi
 PROJECT_DIR="${TITAN_PROJECT_DIR:-$SCRIPT_DIR}"
 RUN_NAME="${TITAN_RUN_NAME:-PN40024_T2T_prod_$(date +%Y%m%d_%H%M%S)}"
 OUTPUT_DIR="${TITAN_OUTPUT_DIR:-$PROJECT_DIR/data/titan_prod_out}"
