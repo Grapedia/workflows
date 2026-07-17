@@ -273,6 +273,69 @@ Important EGAPx notes:
 * For strict offline reproducibility, pre-stage the EGAPx runner matching `egapx_revision` and set `--egapx_runner_dir`; otherwise TITAN downloads that pinned GitHub revision inside the task.
 * Nested EGAPx work and logs live under the task work directory in `egapx_work` and under published `egapx_out/nextflow`; the outer TITAN process only stages the final named EGAPx outputs.
 
+### EGAPx support cache and BUSCO lineage
+
+EGAPx can run online, but production HPC runs are more reproducible when its support data are pre-staged in a local cache and passed to TITAN with `--egapx_local_cache_dir`.
+
+EGAPx has two cache download modes:
+
+```bash
+# Download the complete EGAPx support manifest for the selected data version.
+python3 ui/egapx.py input_egapx.yaml -dl -lc /path/to/egapx_cache -dv current_1
+
+# Download support data needed by this input YAML, including SRA inputs if any
+# are listed as accessions, and the BUSCO lineage chosen from taxid.
+python3 ui/egapx.py input_egapx.yaml -dn -lc /path/to/egapx_cache -dv current_1
+```
+
+`-dn` is preferred when preparing a cache for a single production species. It uses the YAML `taxid` to choose the closest protein set, HMM parameters, orthology reference and BUSCO lineage. It is not limited to one literal `<taxid>.params` file: EGAPx also needs common support files such as taxonomy, scoring rules, reference sets and the selected BUSCO lineage.
+
+For `taxid: 29760` (`Vitis vinifera`), the current EGAPx runner selected the BUSCO lineage `eudicots_odb10`. A valid cache therefore contains a directory like:
+
+```text
+egapx_cache/
+  busco_downloads/lineages/eudicots_odb10/
+  gnomon/
+  misc/
+  ortholog_references/
+  reference_sets/
+  target_proteins/
+  taxonomy/
+```
+
+If the lineage is missing, EGAPx fails before launching its nested workflow and prints a command similar to:
+
+```bash
+python3 ui/egapx.py input_egapx.yaml -lc /path/to/egapx_cache -dl
+```
+
+For smaller species-specific caches, use `-dn` instead of the suggested broad `-dl` command:
+
+```bash
+python3 ui/egapx.py input_egapx.yaml -lc /path/to/egapx_cache -dn -dv egapxsupportdata_20251017
+```
+
+Record the data version printed by EGAPx, for example `egapxsupportdata_20251017`, and pass it back to TITAN with `--egapx_data_version` for reproducible reruns.
+
+### EGAPx executor config
+
+EGAPx creates an `egapx_config/` directory the first time it is run with a new executor and asks the user to edit it. TITAN can pass a prepared directory with `--egapx_config_dir`.
+
+For the realistic-lite Slurm/Apptainer fixture, TITAN includes:
+
+```text
+data_example/realistic-lite/egapx_config/
+  singularity.config
+  process_resources.config
+```
+
+That config runs EGAPx's nested Nextflow locally inside the outer TITAN Slurm job while using Apptainer/Singularity containers. This avoids nested Slurm submission for the small fixture. For full production, either:
+
+* keep this single-node nested EGAPx model and allocate enough CPUs, memory and walltime to the outer TITAN `egapx` process; or
+* create a site-specific EGAPx executor config from the official EGAPx examples if you want EGAPx itself to submit nested cluster jobs.
+
+On this cluster, use `apptainer/1.4.0-rc.2` for production validation; `apptainer/1.4.0` showed a session-directory failure on compute nodes during testing.
+
 TITAN publishes EGAPx outputs under `${output_dir}/egapx`, including:
 
 ```text
@@ -382,6 +445,8 @@ Before launching a long run:
 * Confirm all paths in TITAN params and EGAPx YAML are absolute and visible on compute nodes.
 * Confirm the container runtime works on compute nodes.
 * Confirm EGAPx can pull or access the pinned `ncbi/egapx@sha256:...` image from `nextflow.config`.
+* Pre-stage the EGAPx runner and support cache for reproducibility, then pass `--egapx_runner_dir`, `--egapx_local_cache_dir`, `--egapx_config_dir` and a fixed `--egapx_data_version`.
+* Confirm the EGAPx cache contains the BUSCO lineage selected from the YAML `taxid` (for `taxid: 29760`, `busco_downloads/lineages/eudicots_odb10`).
 * Confirm EDTA can pull or access the pinned `quay.io/biocontainers/edta@sha256:...` image from `nextflow.config`.
 * Confirm AEGIS can pull or access the pinned `tomsbiolab/aegis@sha256:...` image from `nextflow.config`.
 * Confirm `TITAN_APPTAINER_CACHEDIR` points to a writable shared filesystem when using `slurm,apptainer`.

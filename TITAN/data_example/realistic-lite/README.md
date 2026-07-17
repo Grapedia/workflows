@@ -44,3 +44,16 @@ module load Java/17.0.13 nextflow/24.04.3 apptainer/1.4.0-rc.2 python/3.12
 nextflow -c data_example/realistic-lite/real_slurm_apptainer.config \
   run main.nf -profile slurm,apptainer -stub-run -ansi-log false
 ```
+
+The realistic-lite EGAPx config uses `egapx_config/singularity.config` for the
+nested EGAPx Nextflow run and expects a local EGAPx support cache. For the
+fixture taxid (`29760`, grape), EGAPx selected the BUSCO lineage
+`eudicots_odb10`; prepare it with:
+
+```bash
+python3 .egapx_runner/ui/egapx.py \
+  data_example/realistic-lite/egapx/input_egapx.yaml \
+  -lc "$PWD/.egapx_cache" \
+  -dn \
+  -dv egapxsupportdata_20251017
+```
