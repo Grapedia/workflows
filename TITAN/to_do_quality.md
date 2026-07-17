@@ -82,9 +82,9 @@ Perimetre lu: `README.md`, `nextflow.config`, `main.nf`, `workflows/titan.nf`, `
 
 ### `subworkflows/aegis.nf`
 
-- A ameliorer: la branche conditionnelle appelle soit `aegis_long_reads`, soit `aegis_short_reads`, mais l'`emit` reference les deux symboles dans une expression ternaire. Cela peut devenir fragile selon evaluation DSL2. Preferer definir des canaux intermediaires communs dans chaque branche.
-- A ameliorer: `diamond2go.out` est emis sans nommage precis; le module `diamond2go` devrait avoir des outputs nommes.
-- A ameliorer: factoriser les modules AEGIS short/long pour eviter deux scripts presque identiques.
+- [x] A ameliorer: la branche conditionnelle appelle soit `aegis_long_reads`, soit `aegis_short_reads`, mais l'`emit` reference les deux symboles dans une expression ternaire. Cela peut devenir fragile selon evaluation DSL2. Preferer definir des canaux intermediaires communs dans chaque branche.
+- [x] A ameliorer: `diamond2go.out` est emis sans nommage precis; le module `diamond2go` devrait avoir des outputs nommes.
+- [x] A ameliorer: factoriser les modules AEGIS short/long pour eviter deux scripts presque identiques.
 
 ### `modules/EDTA.nf`
 
@@ -269,24 +269,19 @@ Perimetre lu: `README.md`, `nextflow.config`, `main.nf`, `workflows/titan.nf`, `
 - A ameliorer: memes points: `versions.yml`, robustesse des listes, validation BAM/proteines, documentation des chemins internes.
 - A ameliorer: nommer clairement `bam_short`, `bam_long`, `bam_all` dans logs/provenance.
 
-### `modules/aegis_short_reads.nf`
+### `modules/aegis_merge.nf`
 
 - Bon point: `set -euo pipefail`, verification des FASTA proteines produites, `versions.yml`.
-- A ameliorer: le script de merge est presque duplique avec `aegis_long_reads`; factoriser.
-- A ameliorer: les checks `basename != dev_null*` suggerent un ancien contrat de sentinelle. Remplacer par un contrat explicite de fichiers optionnels/vides.
+- [x] A ameliorer: le script de merge est presque duplique avec `aegis_long_reads`; factoriser.
+- [x] A ameliorer: les checks `basename != dev_null*` suggerent un ancien contrat de sentinelle. Remplacer par un contrat explicite de fichiers optionnels/vides.
 - A ameliorer: ajouter une validation des inputs obligatoires non vides avant `aegis merge`.
 - A ameliorer: inclure le repertoire AEGIS complet comme output optionnel si utile au debug, ou documenter qu'il reste dans `work/`.
-
-### `modules/aegis_long_reads.nf`
-
-- A ameliorer: memes points que `aegis_short_reads.nf`.
-- A ameliorer: valider que les deux GTF long reads sont non vides avant merge.
-- A ameliorer: factoriser la liste `merge_inputs` pour eviter divergence avec le module short.
+- [x] A ameliorer: factoriser la liste `merge_inputs` pour eviter divergence entre mode short et mode short+long.
 
 ### `modules/diamond2go.nf`
 
 - A ameliorer: ajouter `set -euo pipefail`.
-- A ameliorer: output `path("*-diamond*")` trop vague et sans `emit`. Nommer les resultats all/main.
+- [x] A ameliorer: output `path("*-diamond*")` trop vague et sans `emit`. Nommer les resultats all/main.
 - A ameliorer: ajouter `versions.yml`.
 - A ameliorer: utiliser `${task.cpus}` si Diamond2GO/DIAMOND le supporte; sinon documenter pourquoi `diamond2go_cpus` ne change que la ressource reservee.
 - A ameliorer: verifier que les deux commandes ne s'ecrasent pas si Diamond2GO produit des noms bases sur le repertoire plutot que sur la query.

@@ -1,10 +1,12 @@
-process aegis_long_reads {
+process aegis_merge {
   label 'process_aegis'
-  tag "AEGIS merge of short- and long-read evidence"
+  tag "AEGIS merge of ${aegis_mode} evidence"
 
   container "${params.container_aegis}"
   publishDir "${params.output_dir}/aegis_outputs", mode: 'copy'
+
   input:
+    val(aegis_mode)
     path(edta_masked_genome)
     path(augustus_gff)
     path(genemark_gtf)
@@ -31,7 +33,7 @@ process aegis_long_reads {
     set -euo pipefail
     export NXF_TASK_PROCESS="${task.process}"
     bash ${aegis_merge_script} \\
-      short_and_long_reads \\
+      ${aegis_mode} \\
       ${edta_masked_genome} \\
       ${params.aegis_version} \\
       ${params.container_aegis} \\
@@ -52,6 +54,7 @@ process aegis_long_reads {
 
   stub:
     """
+    set -euo pipefail
     seqid=\$(awk '/^>/ {print substr(\$1, 2); exit}' ${edta_masked_genome})
     length=\$(awk 'BEGIN{n=0} !/^>/ {n += length(\$0)} END{print n}' ${edta_masked_genome})
     end=\$(( length < 9 ? length : 9 ))
