@@ -53,6 +53,21 @@ For production, prepare inputs and run through the launcher:
 
 The launcher resolves paths, checks profile/container contracts, validates inputs and writes Nextflow reports under `${output_dir}/nextflow_reports`.
 
+## Developer Quality Contract
+
+TITAN uses Nextflow DSL2 modules and subworkflows with a stable public graph. Development changes should preserve these contracts:
+
+* Modules should keep workflow logic local to `input:`, `output:`, `script:` and `stub:` blocks. Domain options should be passed as `val` or `path` inputs instead of being read directly from `params`; `params` remains acceptable for containers, labels and publish locations.
+* Existing process names are kept stable to avoid breaking `withName` selectors, traces and resume behavior. New processes should use lower snake case matching the module filename, as documented in [docs/development/nextflow-dsl2-conventions.md](docs/development/nextflow-dsl2-conventions.md).
+* Every process must use an explicit label from the resource policy in [conf/base.config](conf/base.config).
+* Process outputs should be named with `emit:` and should use `path(...)` for files. Avoid broad output globs that can capture temporary files.
+* Every process should emit `versions.yml`. For tools where a reliable runtime `--version` command is not available, record at least the process identity and configured container/tool version.
+* Shell scripts in modules must use `set -euo pipefail`. Complex repeated shell workflows should live under `scripts/` and be passed into modules as `path` inputs.
+* Workflow closures must not read task output files with `file(...).text`; emit values from the producing process or move parsing into a process/script.
+* Keep `scripts/run-tests.sh` passing. Add focused tests or static checks when changing tuple contracts, module outputs, labels, publication behavior or shared helper scripts.
+
+`nf-test` specs are the preferred direction for future module-level tests once contracts are stable. Until then, TITAN uses Python/static checks plus the full `test` profile stub run in `scripts/run-tests.sh`.
+
 ## Requirements
 
 Use Linux or an HPC environment with:
@@ -237,20 +252,33 @@ Override resources through `conf/base.config`, a profile config, or Nextflow pro
 
 ## Outputs
 
+TITAN separates public outputs from intermediate/debug artifacts. Public outputs are part of the user-facing contract and should remain stable unless a migration is documented.
+
 Main public output families:
 
 | Output family | Main files | Location |
 | --- | --- | --- |
 | Liftoff | `liftoff_previous_annotations.gff3`, `unmapped_features.txt` | `${output_dir}` |
-| EDTA | hard-masked assembly and TE files | `${output_dir}/tmp` |
+| EDTA | `assembly_masked.EDTA.fasta` | `${output_dir}` |
 | BRAKER3 | `augustus.hints.gff3`, `genemark.gtf`, `braker.gff3` | `${output_dir}` |
-| Transcript evidence | merged STAR/StringTie, STAR/PsiCLASS and optional long-read GTFs | `${output_dir}` and intermediate transcriptome directories |
+| Transcript evidence | merged STAR/StringTie, STAR/PsiCLASS and optional Minimap2/StringTie long-read GTFs | `${output_dir}` |
 | EGAPx | `egapx.complete.genomic.gff3`, GTF, protein, CDS, transcript, ASN and `egapx_out/` | `${output_dir}/egapx` |
 | AEGIS | `final_annotation.gff3`, `final_annotation_proteins_all.fasta`, `final_annotation_proteins_main.fasta` | `${output_dir}/aegis_outputs` |
 | Diamond2GO | Diamond2GO annotation outputs | `${output_dir}/Diamond2GO_outputs` |
 | Provenance | `evidence_manifest.json`, `versions.yml` | `${output_dir}/provenance` |
 | Final validation | `final_annotation_validation.json`, `final_annotation_validation.txt` | `${output_dir}/validation` |
 | Reports | Nextflow report, timeline, trace and DAG | `${output_dir}/nextflow_reports` when using the launcher |
+
+Intermediate and debug outputs:
+
+| Output family | Main files | Location | Publication control |
+| --- | --- | --- | --- |
+| RNA-seq preparation and trimming | staged/downloaded FASTQ, trimmed FASTQ, Salmon strand logs/index | `${output_dir}/intermediate_files` | `--publish_intermediates` |
+| Genome indexes and alignments | STAR, HISAT2 and Minimap2 indexes; STAR/HISAT2/Minimap2 BAMs | `${output_dir}/intermediate_files/evidence_data` | `--publish_intermediates` |
+| Per-sample transcriptomes | StringTie and PsiCLASS per-sample GTFs | `${output_dir}/intermediate_files` | `--publish_intermediates` |
+| Tool scratch summaries | EDTA TE library/annotation files and GFFCompare scratch copies | `${output_dir}/tmp` | `--publish_intermediates` |
+
+`--publish_intermediates true` is the default for backward compatibility and debugging. Set `--publish_intermediates false` to keep these artifacts in the Nextflow work directory while still publishing public outputs.
 
 `evidence_manifest.json` records main inputs, AEGIS evidence files, final AEGIS outputs, sizes and SHA-256 checksums. It is the current provenance record and the planned basis for more formal resume/reuse behavior in future work.
 

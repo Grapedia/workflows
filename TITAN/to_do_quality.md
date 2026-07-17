@@ -36,8 +36,8 @@ Perimetre lu: `README.md`, `nextflow.config`, `main.nf`, `workflows/titan.nf`, `
 ### `README.md`
 
 - Le contrat actuel est clair: graphe unique complet, modes partiels supprimes, validation en amont.
-- A ameliorer: ajouter une section "Developer quality contract" listant les conventions DSL2 attendues: modules sans logique globale, sorties nommees, `versions.yml`, tests `nf-test`, labels obligatoires.
-- A ameliorer: indiquer quels outputs sont publics et quels outputs sont seulement des intermediaires. Cela aidera a rationaliser les `publishDir`.
+- [x] A ameliorer: ajouter une section "Developer quality contract" listant les conventions DSL2 attendues: modules sans logique globale, sorties nommees, `versions.yml`, tests `nf-test`, labels obligatoires.
+- [x] A ameliorer: indiquer quels outputs sont publics et quels outputs sont seulement des intermediaires. Cela aidera a rationaliser les `publishDir`.
 
 ### `nextflow.config`
 
