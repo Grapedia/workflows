@@ -188,9 +188,9 @@ Perimetre lu: `README.md`, `nextflow.config`, `main.nf`, `workflows/titan.nf`, `
 
 ### `modules/minimap2_genome_indices.nf`
 
-- A ameliorer: ajouter `set -euo pipefail`.
-- A ameliorer: ajouter `versions.yml`.
-- A ameliorer: publier l'index seulement si necessaire aux utilisateurs.
+- [x] A ameliorer: ajouter `set -euo pipefail`.
+- [x] A ameliorer: ajouter `versions.yml`.
+- [x] A ameliorer: publier l'index seulement si necessaire aux utilisateurs.
 
 ### `modules/minimap2_alignment.nf`
 

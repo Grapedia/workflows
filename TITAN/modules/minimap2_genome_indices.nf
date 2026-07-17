@@ -4,7 +4,6 @@ process minimap2_genome_indices {
 
   tag "Minimap2 genome indices on ${genome}"
   container params.container_minimap2_samtools
-  publishDir "${params.output_dir}/intermediate_files/evidence_data/minimap2_databases/", mode: "copy", enabled: params.publish_intermediates
   input:
     path(genome_fasta)
     val(genome)
@@ -23,12 +22,16 @@ process minimap2_genome_indices {
     CMD="minimap2 -d ${genome}.mmi ${genome_fasta}"
     echo "[\$DATE] Executing: \$CMD"
     minimap2 -d ${genome}.mmi ${genome_fasta}
-    printf '"%s":\n  container: "not_recorded"\n' "${task.process}" > versions.yml
+    {
+      printf '"%s":\n' "${task.process}"
+      minimap2 --version | awk '{ printf "  minimap2: \\"%s\\"\\n", \$0 }'
+    } > versions.yml
     """
 
   stub:
     """
+    set -euo pipefail
     printf "stub minimap2 index\\n" > ${genome}.mmi
-    printf '"%s":\n  container: "not_recorded"\n' "${task.process}" > versions.yml
+    printf '"%s":\n  minimap2: "stub"\n' "${task.process}" > versions.yml
     """
 }
