@@ -296,11 +296,11 @@ Perimetre lu: `README.md`, `nextflow.config`, `main.nf`, `workflows/titan.nf`, `
 ### `modules/titan_provenance.nf`
 
 - Bon point: manifest JSON avec tailles et SHA-256.
-- A ameliorer: ajouter `container params.container_python`.
-- A ameliorer: passer la configuration a la provenance via inputs explicites plutot que interpoler beaucoup de `params`.
-- A ameliorer: `records()` split sur espaces, ce qui casse les chemins contenant espaces et les listes Nextflow rendues en chaine. Preferer fournir un fichier liste ou serializer les chemins en JSON avant le process.
-- A ameliorer: ajouter au manifest les versions de tous les modules une fois `versions.yml` generalise.
-- A ameliorer: inclure `workflow.revision`, `workflow.commitId`, `workflow.nextflow.version`, profils actifs et ligne de commande si disponible.
+- [x] A ameliorer: ajouter `container params.container_python`.
+- [x] A ameliorer: passer la configuration a la provenance via inputs explicites plutot que interpoler beaucoup de `params`.
+- [x] A ameliorer: `records()` split sur espaces, ce qui casse les chemins contenant espaces et les listes Nextflow rendues en chaine. Preferer fournir un fichier liste ou serializer les chemins en JSON avant le process.
+- [x] A ameliorer: ajouter au manifest les versions de tous les modules une fois `versions.yml` generalise.
+- [x] A ameliorer: inclure `workflow.revision`, `workflow.commitId`, `workflow.nextflow.version`, profils actifs et ligne de commande si disponible.
 
 ## Plan de refactor recommande
 

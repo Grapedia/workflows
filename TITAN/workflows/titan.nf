@@ -213,6 +213,18 @@ workflow TITAN {
 
     titan_provenance(
         has_long_reads,
+        params.output_dir,
+        params.egapx_version,
+        params.egapx_revision,
+        params.container_egapx,
+        params.egapx_data_version,
+        params.aegis_version,
+        params.container_aegis,
+        workflow.revision ?: '',
+        workflow.commitId ?: '',
+        workflow.nextflow.version ?: '',
+        workflow.profile ?: '',
+        workflow.commandLine ?: '',
         new_assembly,
         previous_assembly,
         previous_annotations,
@@ -238,6 +250,12 @@ workflow TITAN {
         evidence_data.long_reads_alt_gtf,
         aegis.out.aegis_gff,
         aegis.out.aegis_proteins_all,
-        aegis.out.aegis_proteins_main
+        aegis.out.aegis_proteins_main,
+        evidence_data.edta_versions,
+        evidence_data.egapx_versions,
+        evidence_data.braker_versions,
+        aegis.out.aegis_versions,
+        aegis.out.diamond2go_versions,
+        validate_final_annotation.out.versions
     )
 }

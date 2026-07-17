@@ -298,12 +298,14 @@ workflow generate_evidence_data {
         egapx_annotated_genome_asn = egapx_annotations.annotated_genome_asn
         egapx_output_dir = egapx_annotations.output_dir
         egapx_versions = egapx_annotations.versions
+        edta_versions = edta_results.versions
         liftoff_gff3 = previous_annotations.liftoff_previous_annotations
         liftoff_unmapped_features = previous_annotations.unmapped_features
         braker_augustus_gff3 = braker3_results.augustus_gff
         braker_genemark_gtf = braker3_results.genemark_gtf
         braker_genemark_supported_gtf = braker3_results.genemark_supported_gtf
         braker_gff3 = braker3_results.braker_gff
+        braker_versions = braker3_results.versions
         star_stringtie_stranded_default_gtf = merged_star_stringtie.default_args_stranded
         star_stringtie_stranded_alt_gtf = merged_star_stringtie.alt_args_stranded
         star_stringtie_unstranded_default_gtf = merged_star_stringtie.default_args_unstranded

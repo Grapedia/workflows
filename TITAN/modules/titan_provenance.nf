@@ -2,10 +2,23 @@ process titan_provenance {
   label 'process_low'
   tag "TITAN evidence manifest"
 
+  container params.container_python
   publishDir "${params.output_dir}/provenance", mode: 'copy'
 
   input:
     val(has_long_reads)
+    val(output_dir)
+    val(egapx_version)
+    val(egapx_revision)
+    val(egapx_container)
+    val(egapx_data_version)
+    val(aegis_version)
+    val(aegis_container)
+    val(workflow_revision)
+    val(workflow_commit_id)
+    val(workflow_nextflow_version)
+    val(workflow_profile)
+    val(workflow_command_line)
     path(new_assembly)
     path(previous_assembly)
     path(previous_annotations)
@@ -32,6 +45,12 @@ process titan_provenance {
     path(aegis_gff)
     path(aegis_proteins_all)
     path(aegis_proteins_main)
+    path(edta_versions, stageAs: "module_versions/edta_versions.yml")
+    path(egapx_versions, stageAs: "module_versions/egapx_versions.yml")
+    path(braker_versions, stageAs: "module_versions/braker_versions.yml")
+    path(aegis_versions, stageAs: "module_versions/aegis_versions.yml")
+    path(diamond2go_versions, stageAs: "module_versions/diamond2go_versions.yml")
+    path(final_validation_versions, stageAs: "module_versions/final_validation_versions.yml")
 
   output:
     path "evidence_manifest.json", emit: evidence_manifest
@@ -39,6 +58,7 @@ process titan_provenance {
 
   script:
     """
+set -euo pipefail
 python3 - <<'PY'
 import hashlib
 import json
@@ -63,22 +83,25 @@ def file_record(label, path):
         "sha256": h.hexdigest(),
     }
 
-def records(label, value):
-    paths = [item for item in str(value).split() if item]
-    return [file_record(label, item) for item in paths]
-
 manifest = {
     "schema_version": "titan.evidence_manifest.v1",
     "workflow": "TITAN",
     "has_long_reads": str("${has_long_reads}").lower() == "true",
+    "workflow_metadata": {
+        "revision": "${workflow_revision}",
+        "commit_id": "${workflow_commit_id}",
+        "nextflow_version": "${workflow_nextflow_version}",
+        "profile": "${workflow_profile}",
+        "command_line": "${workflow_command_line}",
+    },
     "params": {
-        "output_dir": "${params.output_dir}",
-        "egapx_version": "${params.egapx_version}",
-        "egapx_revision": "${params.egapx_revision}",
-        "egapx_container": "${params.container_egapx}",
-        "egapx_data_version": "${params.egapx_data_version}",
-        "aegis_version": "${params.aegis_version}",
-        "aegis_container": "${params.container_aegis}",
+        "output_dir": "${output_dir}",
+        "egapx_version": "${egapx_version}",
+        "egapx_revision": "${egapx_revision}",
+        "egapx_container": "${egapx_container}",
+        "egapx_data_version": "${egapx_data_version}",
+        "aegis_version": "${aegis_version}",
+        "aegis_container": "${aegis_container}",
     },
     "inputs": [
         file_record("new_assembly", "${new_assembly}"),
@@ -104,11 +127,21 @@ manifest = {
         file_record("hisat2_stringtie_alt_stranded", "${hisat2_stringtie_alt_stranded}"),
         file_record("hisat2_stringtie_default_unstranded", "${hisat2_stringtie_default_unstranded}"),
         file_record("hisat2_stringtie_alt_unstranded", "${hisat2_stringtie_alt_unstranded}"),
-    ] + records("long_reads_default", "${long_reads_default}") + records("long_reads_alt", "${long_reads_alt}"),
+        file_record("long_reads_default", "${long_reads_default}"),
+        file_record("long_reads_alt", "${long_reads_alt}"),
+    ],
     "outputs": [
         file_record("aegis_gff", "${aegis_gff}"),
         file_record("aegis_proteins_all", "${aegis_proteins_all}"),
         file_record("aegis_proteins_main", "${aegis_proteins_main}"),
+    ],
+    "module_versions": [
+        file_record("edta_versions", "${edta_versions}"),
+        file_record("egapx_versions", "${egapx_versions}"),
+        file_record("braker_versions", "${braker_versions}"),
+        file_record("aegis_versions", "${aegis_versions}"),
+        file_record("diamond2go_versions", "${diamond2go_versions}"),
+        file_record("final_validation_versions", "${final_validation_versions}"),
     ],
 }
 
@@ -119,11 +152,15 @@ with open("evidence_manifest.json", "w", encoding="utf-8") as handle:
 with open("versions.yml", "w", encoding="utf-8") as handle:
     handle.write('"TITAN:provenance":\\n')
     handle.write('  titan_manifest_schema: "titan.evidence_manifest.v1"\\n')
-    handle.write('  egapx: "${params.egapx_version}"\\n')
-    handle.write('  egapx_runner_revision: "${params.egapx_revision}"\\n')
-    handle.write('  egapx_container: "${params.container_egapx}"\\n')
-    handle.write('  aegis: "${params.aegis_version}"\\n')
-    handle.write('  aegis_container: "${params.container_aegis}"\\n')
+    handle.write('  container: "${task.container}"\\n')
+    handle.write('  nextflow_version: "${workflow_nextflow_version}"\\n')
+    handle.write('  workflow_revision: "${workflow_revision}"\\n')
+    handle.write('  workflow_commit_id: "${workflow_commit_id}"\\n')
+    handle.write('  egapx: "${egapx_version}"\\n')
+    handle.write('  egapx_runner_revision: "${egapx_revision}"\\n')
+    handle.write('  egapx_container: "${egapx_container}"\\n')
+    handle.write('  aegis: "${aegis_version}"\\n')
+    handle.write('  aegis_container: "${aegis_container}"\\n')
 PY
     """
 }
