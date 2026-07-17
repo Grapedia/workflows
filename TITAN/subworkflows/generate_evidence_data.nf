@@ -72,6 +72,8 @@ workflow generate_evidence_data {
         psiclass_vd_option
         psiclass_c_option
         star_memory_per_job
+        star_genome_sa_index_nbases
+        star_sjdb_gtf_file
         // RNA-seq tuples:
         //   long:  tuple val(sample_ID), val(SRA_or_FASTQ), val(library_layout), path(local_reads)
         //   short: tuple val(sample_ID), val(SRA_or_FASTQ), val(library_layout), path(local_reads)
@@ -130,7 +132,9 @@ workflow generate_evidence_data {
         // Emits tuple val(sample_ID), path(bam_file), val(strand_type).
         star_indices = star_genome_indices(
             new_assembly,
-            new_assembly_name
+            new_assembly_name,
+            star_genome_sa_index_nbases,
+            star_sjdb_gtf_file
         )
         star_aligned = star_alignment(star_indices.index, salmon_output_processed, star_memory_per_job)
 

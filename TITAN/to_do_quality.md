@@ -158,10 +158,10 @@ Perimetre lu: `README.md`, `nextflow.config`, `main.nf`, `workflows/titan.nf`, `
 
 ### `modules/star_genome_indices.nf`
 
-- A ameliorer: ajouter `set -euo pipefail`.
-- A ameliorer: eviter `chmod -R 755` si non necessaire; cela modifie tout l'index et peut couter cher.
-- A ameliorer: ajouter `versions.yml`.
-- A ameliorer: verifier les parametres STAR importants (`genomeSAindexNbases`, annotation GTF optionnelle) pour petits genomes/tests.
+- [x] A ameliorer: ajouter `set -euo pipefail`.
+- [x] A ameliorer: eviter `chmod -R 755` si non necessaire; cela modifie tout l'index et peut couter cher.
+- [x] A ameliorer: ajouter `versions.yml`.
+- [x] A ameliorer: verifier les parametres STAR importants (`genomeSAindexNbases`, annotation GTF optionnelle) pour petits genomes/tests.
 
 ### `modules/star_alignment.nf`
 

@@ -147,6 +147,30 @@
       "minimum": 1,
       "description": "STAR --limitBAMsortRAM value."
     },
+    "STAR_genomeSAindexNbases": {
+      "oneOf": [
+        {
+          "type": "boolean"
+        },
+        {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 14
+        }
+      ],
+      "description": "STAR --genomeSAindexNbases. Use false to derive it from genome size."
+    },
+    "STAR_sjdbGTFfile": {
+      "oneOf": [
+        {
+          "type": "boolean"
+        },
+        {
+          "type": "string"
+        }
+      ],
+      "description": "Optional GTF file passed to STAR genomeGenerate with --sjdbGTFfile, or false to disable."
+    },
     "container_agat": {
       "$ref": "#/definitions/container_digest"
     },
