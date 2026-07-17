@@ -174,6 +174,10 @@
       "type": "string",
       "description": "AEGIS version recorded in provenance."
     },
+    "aegis_gene_id_prefix": {
+      "type": "string",
+      "description": "Gene ID prefix applied by 'aegis rename' when building the final merged annotation (e.g. Vitvi)."
+    },
     "ena_download_timeout_seconds": {
       "type": "integer",
       "minimum": 1,

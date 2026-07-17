@@ -102,7 +102,7 @@ aegis_version = v0.3.25
 container_aegis = tomsbiolab/aegis@sha256:de88470b3fb4fbab3ff2d5fa0fb9fed36b55952d1e383d3fdb2f5a3a530d84e6
 ```
 
-AEGIS now uses the upstream CLI container and runs `aegis merge` followed by `aegis extract`. On HPC without Docker, set `--egapx_executor singularity` for nested EGAPx execution and make the AEGIS image available through your site container runtime. Legacy `--egapx_container` and `--aegis_container` overrides are still accepted, but new runs should use `--container_egapx` and `--container_aegis`.
+AEGIS now uses the upstream CLI container and runs `aegis merge`, then `aegis rename` (gene/transcript/CDS/exon IDs regenerated under the `--aegis_gene_id_prefix` scheme, default `Vitvi`, with an old-to-new correspondences TSV), then `aegis tidy` (`--standard-features`, e.g. normalizing `pseudotranscript` to `mRNA`), and finally `aegis extract`. On HPC without Docker, set `--egapx_executor singularity` for nested EGAPx execution and make the AEGIS image available through your site container runtime. Legacy `--egapx_container` and `--aegis_container` overrides are still accepted, but new runs should use `--container_egapx` and `--container_aegis`.
 
 ## 4. Required input files
 
@@ -411,7 +411,7 @@ TITAN validates `--eggnog_data_dir` before heavy execution whenever `--run_eggno
 
 ## 9. Helixer (optional)
 
-Helixer is an ab initio/deep-learning gene predictor run directly on the EDTA soft-masked genome (`edta.MAKER.masked`), independent of the AEGIS merge — its GFF3 is published separately under `additional_annotations/` and never merged into `final_annotation.gff3`. It is disabled by default (`run_helixer = false`).
+Helixer is an ab initio/deep-learning gene predictor run directly on the EDTA soft-masked genome (`edta.MAKER.masked`). Its GFF3 is published separately under `additional_annotations/`, and is also passed to AEGIS as optional evidence: when `run_helixer = true` it is merged into `final_annotation.gff3` alongside the other named evidence channels (renamed under the same `--aegis_gene_id_prefix` scheme as the rest of the merged annotation). It is disabled by default (`run_helixer = false`).
 
 Helixer's official container only ships CUDA-bundled images; there is no separate CPU-only tag. This is not a problem: TensorFlow falls back to CPU automatically whenever no GPU is passed through to the container, so the same image is used for both CPU and GPU runs. GPU/CPU selection is a container-runtime flag, not a `Helixer.py` option — TITAN sets `containerOptions` per profile (`--nv` for Apptainer/Singularity, `--gpus all` for Docker) only when `--helixer_use_gpu true` is set, and only actually helps if a GPU is visible on the node.
 

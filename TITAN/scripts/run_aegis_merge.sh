@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-if [[ $# -ne 18 ]]; then
-  echo "Usage: run_aegis_merge.sh <mode> <masked_genome> <aegis_version> <aegis_container> <output_prefix> <liftoff_gff3> <augustus_gff3> <genemark_gtf> <egapx_gff3> <star_stringtie_stranded_default_gtf> <star_stringtie_stranded_alt_gtf> <star_psiclass_stranded_gtf> <long_reads_default_gtf> <long_reads_alt_gtf> <star_psiclass_unstranded_gtf> <star_stringtie_unstranded_default_gtf> <star_stringtie_unstranded_alt_gtf> <helixer_gff3>" >&2
+if [[ $# -ne 19 ]]; then
+  echo "Usage: run_aegis_merge.sh <mode> <masked_genome> <aegis_version> <aegis_container> <output_prefix> <liftoff_gff3> <augustus_gff3> <genemark_gtf> <egapx_gff3> <star_stringtie_stranded_default_gtf> <star_stringtie_stranded_alt_gtf> <star_psiclass_stranded_gtf> <long_reads_default_gtf> <long_reads_alt_gtf> <star_psiclass_unstranded_gtf> <star_stringtie_unstranded_default_gtf> <star_stringtie_unstranded_alt_gtf> <helixer_gff3> <gene_id_prefix>" >&2
   exit 2
 fi
 
@@ -24,6 +24,7 @@ star_psiclass_unstranded_gtf="${15}"
 star_stringtie_unstranded_default_gtf="${16}"
 star_stringtie_unstranded_alt_gtf="${17}"
 helixer_gff3="${18}"
+gene_id_prefix="${19}"
 
 if [[ "$mode" != "short_reads" && "$mode" != "short_and_long_reads" ]]; then
   echo "AEGIS mode must be 'short_reads' or 'short_and_long_reads', got: $mode" >&2
@@ -123,13 +124,38 @@ printf '  %s\n' "${merge_inputs[@]}"
 
 aegis_cmd=(/opt/conda/envs/bio_env/bin/python -m aegis)
 
+echo "[$date_stamp] AEGIS merge"
 "${aegis_cmd[@]}" merge -d aegis_merge -o "$output_prefix" "${merge_inputs[@]}"
 if [[ ! -s "aegis_merge/${output_prefix}.gff3" ]]; then
   echo "AEGIS merge did not produce ${output_prefix}.gff3" >&2
   exit 1
 fi
-cp "aegis_merge/${output_prefix}.gff3" final_annotation.gff3
 
+echo "[$date_stamp] AEGIS rename (prefix: ${gene_id_prefix})"
+"${aegis_cmd[@]}" rename \
+  -a "$output_prefix" \
+  -d aegis_rename \
+  --prefix "$gene_id_prefix" \
+  --gene-id-correspondences \
+  "aegis_merge/${output_prefix}.gff3"
+if [[ ! -s "aegis_rename/${output_prefix}_renamed.gff3" ]]; then
+  echo "AEGIS rename did not produce ${output_prefix}_renamed.gff3" >&2
+  exit 1
+fi
+
+echo "[$date_stamp] AEGIS tidy"
+"${aegis_cmd[@]}" tidy \
+  -a "${output_prefix}_renamed" \
+  -d aegis_tidy \
+  --standard-features \
+  "aegis_rename/${output_prefix}_renamed.gff3"
+if [[ ! -s "aegis_tidy/${output_prefix}_renamed_tidy.gff3" ]]; then
+  echo "AEGIS tidy did not produce ${output_prefix}_renamed_tidy.gff3" >&2
+  exit 1
+fi
+cp "aegis_tidy/${output_prefix}_renamed_tidy.gff3" final_annotation.gff3
+
+echo "[$date_stamp] AEGIS extract"
 "${aegis_cmd[@]}" extract -f protein -m all -d aegis_proteins_all final_annotation.gff3 "$masked_genome"
 "${aegis_cmd[@]}" extract -f protein -m main -d aegis_proteins_main final_annotation.gff3 "$masked_genome"
 
@@ -152,5 +178,5 @@ test -s final_annotation.gff3
 test -s final_annotation_proteins_all.fasta
 test -s final_annotation_proteins_main.fasta
 
-printf '"%s":\n  aegis: "%s"\n  aegis_container: "%s"\n  mode: "%s"\n  evidence_count: "%s"\n' \
-  "${NXF_TASK_PROCESS:-aegis}" "$aegis_version" "$aegis_container" "$mode" "${#merge_inputs[@]}" > versions.yml
+printf '"%s":\n  aegis: "%s"\n  aegis_container: "%s"\n  mode: "%s"\n  evidence_count: "%s"\n  gene_id_prefix: "%s"\n' \
+  "${NXF_TASK_PROCESS:-aegis}" "$aegis_version" "$aegis_container" "$mode" "${#merge_inputs[@]}" "$gene_id_prefix" > versions.yml

@@ -10,7 +10,7 @@ process aegis_merge {
     return null
   }
   publishDir "${params.output_dir}/intermediate_files/aegis", mode: 'copy', enabled: params.publish_intermediates, saveAs: { filename ->
-    if (filename in ['aegis_merge', 'aegis_proteins_all', 'aegis_proteins_main', 'aegis_inputs.tsv', 'aegis_merge.log']) {
+    if (filename in ['aegis_merge', 'aegis_rename', 'aegis_tidy', 'aegis_proteins_all', 'aegis_proteins_main', 'aegis_inputs.tsv', 'aegis_merge.log']) {
       return filename
     }
     return null
@@ -41,6 +41,8 @@ process aegis_merge {
     path "aegis_inputs.tsv", emit: input_manifest
     path "aegis_merge.log", emit: debug_log
     path "aegis_merge", optional: true, emit: aegis_merge_dir
+    path "aegis_rename", optional: true, emit: aegis_rename_dir
+    path "aegis_tidy", optional: true, emit: aegis_tidy_dir
     path "aegis_proteins_all", optional: true, emit: aegis_proteins_all_dir
     path "aegis_proteins_main", optional: true, emit: aegis_proteins_main_dir
     path "versions.yml", emit: versions
@@ -67,7 +69,8 @@ process aegis_merge {
       ${gffcompare_unstranded} \\
       ${unstranded_default_args} \\
       ${unstranded_alt_args} \\
-      ${helixer_gff3} 2>&1 | tee aegis_merge.log
+      ${helixer_gff3} \\
+      ${params.aegis_gene_id_prefix} 2>&1 | tee aegis_merge.log
     """
 
   stub:

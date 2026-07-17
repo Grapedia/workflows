@@ -17,7 +17,7 @@ Mandatory steps:
 * EGAPx runs from `--egapx_paramfile` and contributes an additional GFF3 evidence.
 * STAR/StringTie, STAR/PsiCLASS, HISAT2/StringTie and optional Minimap2/StringTie generate transcript evidence.
 * BRAKER3 produces AUGUSTUS and GeneMark evidence.
-* AEGIS merges named evidence channels and extracts final protein FASTA files.
+* AEGIS merges named evidence channels, renames gene/transcript IDs to the canonical `Vitvi...` scheme, tidies feature naming, then extracts final protein FASTA files.
 * Diamond2GO annotates the final AEGIS protein sets.
 
 Long-read processing is automatic when `RNAseq_samplesheet` contains at least one row with `library_layout=long`.
@@ -229,7 +229,7 @@ Fetch the database once with `scripts/download_eggnog_data.sh --data-dir /absolu
 
 ## Helixer
 
-Helixer is an optional ab initio/deep-learning gene predictor run directly on the EDTA soft-masked genome, independent of the AEGIS merge (its output is published separately, not merged into `final_annotation.gff3`). It is disabled by default (`--run_helixer false`). To enable it, set `--run_helixer true`, `--helixer_model_dir /absolute/path/to/helixer_models` (a directory populated by `scripts/download_helixer_model.sh`) and optionally `--helixer_model` (`vertebrate`, `land_plant`, `fungi` or `invertebrate`; default `land_plant`).
+Helixer is an optional ab initio/deep-learning gene predictor run directly on the EDTA soft-masked genome. Its GFF3 is published separately under `additional_annotations/` and is also passed to AEGIS as optional evidence, merged into `final_annotation.gff3` alongside the other named evidence channels when present. It is disabled by default (`--run_helixer false`). To enable it, set `--run_helixer true`, `--helixer_model_dir /absolute/path/to/helixer_models` (a directory populated by `scripts/download_helixer_model.sh`) and optionally `--helixer_model` (`vertebrate`, `land_plant`, `fungi` or `invertebrate`; default `land_plant`).
 
 Helixer runs on CPU by default. Set `--helixer_use_gpu true` to request a GPU (Apptainer `--nv` / Docker `--gpus all`, configured per profile); this requires a GPU actually visible on the executing node, and TensorFlow silently falls back to CPU otherwise.
 
@@ -301,7 +301,7 @@ Intermediate and debug outputs:
 | RNA-seq preparation and trimming | staged/downloaded FASTQ, trimmed FASTQ, Salmon strand logs/index | `${output_dir}/intermediate_files` | `--publish_intermediates` |
 | Genome indexes and alignments | STAR, HISAT2 and Minimap2 indexes; STAR/HISAT2/Minimap2 BAMs | `${output_dir}/intermediate_files/evidence_data` | `--publish_intermediates` |
 | Per-sample transcriptomes | StringTie and PsiCLASS per-sample GTFs | `${output_dir}/intermediate_files` | `--publish_intermediates` |
-| Tool scratch summaries | EDTA TE library/annotation files, GFFCompare scratch copies, BRAKER3 logs and AEGIS merge/extract directories | `${output_dir}/tmp` and `${output_dir}/intermediate_files` | `--publish_intermediates` |
+| Tool scratch summaries | EDTA TE library/annotation files, GFFCompare scratch copies, BRAKER3 logs and AEGIS merge/rename/tidy/extract directories | `${output_dir}/tmp` and `${output_dir}/intermediate_files` | `--publish_intermediates` |
 
 `--publish_intermediates true` is the default for backward compatibility and debugging. Set `--publish_intermediates false` to keep these artifacts in the Nextflow work directory while still publishing public outputs.
 
