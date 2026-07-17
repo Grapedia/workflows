@@ -23,6 +23,9 @@ process validate_inputs {
     val(aegis_container)
     val(run_eggnog_mapper)
     val(eggnog_data_dir)
+    val(run_helixer)
+    val(helixer_model_dir)
+    val(helixer_model)
 
   output:
     path "validated_inputs.ok", emit: ok
@@ -60,7 +63,10 @@ process validate_inputs {
       --psiclass-vd "${psiclass_vd}" \\
       --psiclass-c "${psiclass_c}" \\
       --run-eggnog-mapper "${run_eggnog_mapper}" \\
-      --eggnog-data-dir "${eggnog_data_dir}"
+      --eggnog-data-dir "${eggnog_data_dir}" \\
+      --run-helixer "${run_helixer}" \\
+      --helixer-model-dir "${helixer_model_dir}" \\
+      --helixer-model "${helixer_model}"
 
     touch validated_inputs.ok
     printf '"%s":\n  container: "not_recorded"\n' "${task.process}" > versions.yml
@@ -98,7 +104,10 @@ process validate_inputs {
       --psiclass-vd "${psiclass_vd}" \\
       --psiclass-c "${psiclass_c}" \\
       --run-eggnog-mapper "${run_eggnog_mapper}" \\
-      --eggnog-data-dir "${eggnog_data_dir}"
+      --eggnog-data-dir "${eggnog_data_dir}" \\
+      --run-helixer "${run_helixer}" \\
+      --helixer-model-dir "${helixer_model_dir}" \\
+      --helixer-model "${helixer_model}"
 
     touch validated_inputs.ok
     printf '"%s":\n  container: "not_recorded"\n' "${task.process}" > versions.yml

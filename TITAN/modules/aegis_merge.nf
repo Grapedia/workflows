@@ -31,6 +31,7 @@ process aegis_merge {
     path(gffcompare_unstranded)
     path(unstranded_default_args)
     path(unstranded_alt_args)
+    path(helixer_gff3)
     path(aegis_merge_script)
 
   output:
@@ -65,7 +66,8 @@ process aegis_merge {
       ${long_reads_alt_args} \\
       ${gffcompare_unstranded} \\
       ${unstranded_default_args} \\
-      ${unstranded_alt_args} 2>&1 | tee aegis_merge.log
+      ${unstranded_alt_args} \\
+      ${helixer_gff3} 2>&1 | tee aegis_merge.log
     """
 
   stub:

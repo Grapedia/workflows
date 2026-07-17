@@ -42,6 +42,7 @@ process titan_provenance {
     path(hisat2_stringtie_alt_unstranded)
     path(long_reads_default)
     path(long_reads_alt)
+    path(helixer_gff3)
     path(aegis_gff)
     path(aegis_proteins_all)
     path(aegis_proteins_main)
@@ -132,6 +133,7 @@ manifest = {
         file_record("hisat2_stringtie_alt_unstranded", "${hisat2_stringtie_alt_unstranded}"),
         file_record("long_reads_default", "${long_reads_default}"),
         file_record("long_reads_alt", "${long_reads_alt}"),
+        file_record("helixer_gff3", "${helixer_gff3}"),
     ],
     "outputs": [
         file_record("aegis_gff", "${aegis_gff}"),
@@ -169,6 +171,8 @@ with open("versions.yml", "w", encoding="utf-8") as handle:
     handle.write('  aegis_container: "${aegis_container}"\\n')
     handle.write('  eggnog_mapper: "${params.run_eggnog_mapper}"\\n')
     handle.write('  eggnog_data_dir: "${params.eggnog_data_dir}"\\n')
+    handle.write('  helixer: "${params.run_helixer}"\\n')
+    handle.write('  helixer_model: "${params.helixer_model}"\\n')
 PY
     """
 }

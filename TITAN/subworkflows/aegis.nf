@@ -25,6 +25,8 @@ workflow aegis {
     long_reads_default
     long_reads_alt
     has_long_reads
+    // Optional: Helixer ab initio GFF3, empty when run_helixer is false.
+    helixer_gff3
 
   main:
 
@@ -50,6 +52,7 @@ workflow aegis {
       star_psiclass_unstranded,
       star_stringtie_default_unstranded,
       star_stringtie_alt_unstranded,
+      helixer_gff3,
       aegis_merge_script
     )
 

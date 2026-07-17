@@ -38,6 +38,16 @@ Production-oriented options:
                                  Default: TITAN_EGGNOG_DATA_DIR or <project-dir>/.eggnog_data
   --enable-eggnog-mapper         Pass --run_eggnog_mapper true and --eggnog_data_dir to Nextflow
                                  Default: TITAN_RUN_EGGNOG_MAPPER or false
+  --prepare-helixer-model        Download the Helixer lineage model before launching TITAN
+                                 Default: TITAN_PREPARE_HELIXER_MODEL or false
+  --helixer-model-dir PATH       Persistent Helixer model directory
+                                 Default: TITAN_HELIXER_MODEL_DIR or <project-dir>/.helixer_models
+  --helixer-lineage NAME         Helixer lineage to fetch/use: vertebrate, land_plant, fungi or invertebrate
+                                 Default: TITAN_HELIXER_LINEAGE or land_plant
+  --enable-helixer               Pass --run_helixer true, --helixer_model_dir and --helixer_model to Nextflow
+                                 Default: TITAN_RUN_HELIXER or false
+  --enable-helixer-gpu           Pass --helixer_use_gpu true to Nextflow (requires a GPU visible on the node)
+                                 Default: TITAN_HELIXER_USE_GPU or false
   --resume                       Add -resume
   --force                        Allow writing into a non-empty output directory without --resume
   --dry-run                      Print the command instead of executing it
@@ -116,6 +126,11 @@ EGAPX_RUNNER_DIR="${TITAN_EGAPX_RUNNER_DIR:-}"
 PREPARE_EGGNOG_DATA="${TITAN_PREPARE_EGGNOG_DATA:-false}"
 EGGNOG_DATA_DIR="${TITAN_EGGNOG_DATA_DIR:-}"
 RUN_EGGNOG_MAPPER="${TITAN_RUN_EGGNOG_MAPPER:-false}"
+PREPARE_HELIXER_MODEL="${TITAN_PREPARE_HELIXER_MODEL:-false}"
+HELIXER_MODEL_DIR="${TITAN_HELIXER_MODEL_DIR:-}"
+HELIXER_LINEAGE="${TITAN_HELIXER_LINEAGE:-land_plant}"
+RUN_HELIXER="${TITAN_RUN_HELIXER:-false}"
+HELIXER_USE_GPU="${TITAN_HELIXER_USE_GPU:-false}"
 RESUME=false
 FORCE=false
 DRY_RUN=false
@@ -141,6 +156,11 @@ while [[ $# -gt 0 ]]; do
     --prepare-eggnog-data) PREPARE_EGGNOG_DATA=true; shift ;;
     --eggnog-data-dir) EGGNOG_DATA_DIR="${2:-}"; shift 2 ;;
     --enable-eggnog-mapper) RUN_EGGNOG_MAPPER=true; shift ;;
+    --prepare-helixer-model) PREPARE_HELIXER_MODEL=true; shift ;;
+    --helixer-model-dir) HELIXER_MODEL_DIR="${2:-}"; shift 2 ;;
+    --helixer-lineage) HELIXER_LINEAGE="${2:-}"; shift 2 ;;
+    --enable-helixer) RUN_HELIXER=true; shift ;;
+    --enable-helixer-gpu) HELIXER_USE_GPU=true; shift ;;
     --resume) RESUME=true; shift ;;
     --force) FORCE=true; shift ;;
     --dry-run) DRY_RUN=true; shift ;;
@@ -171,6 +191,7 @@ WORK_DIR="${WORK_DIR:-$OUTPUT_DIR/work}"
 EGAPX_CACHE_DIR="${EGAPX_CACHE_DIR:-$PROJECT_DIR/.egapx_cache}"
 EGAPX_RUNNER_DIR="${EGAPX_RUNNER_DIR:-$PROJECT_DIR/.egapx_runner}"
 EGGNOG_DATA_DIR="${EGGNOG_DATA_DIR:-$PROJECT_DIR/.eggnog_data}"
+HELIXER_MODEL_DIR="${HELIXER_MODEL_DIR:-$PROJECT_DIR/.helixer_models}"
 REPORTS_DIR="$OUTPUT_DIR/nextflow_reports"
 PREVIOUS_ASSEMBLY="$(abs_path "$PREVIOUS_ASSEMBLY")"
 NEW_ASSEMBLY="$(abs_path "$NEW_ASSEMBLY")"
@@ -183,6 +204,8 @@ EGAPX_CACHE_DIR="$(abs_path "$EGAPX_CACHE_DIR")"
 EGAPX_RUNNER_DIR="$(abs_path "$EGAPX_RUNNER_DIR")"
 mkdir -p "$EGGNOG_DATA_DIR"
 EGGNOG_DATA_DIR="$(abs_path "$EGGNOG_DATA_DIR")"
+mkdir -p "$HELIXER_MODEL_DIR"
+HELIXER_MODEL_DIR="$(abs_path "$HELIXER_MODEL_DIR")"
 
 if [[ "$RESUME" == false && "$FORCE" == false ]] && find "$OUTPUT_DIR" -mindepth 1 -maxdepth 1 | grep -q .; then
   die "Output directory is not empty: ${OUTPUT_DIR}. Use --resume to continue or --force to start a new run there."
@@ -265,6 +288,18 @@ if [[ "$PREPARE_EGGNOG_DATA" == true ]]; then
   prepare_eggnog_data
 fi
 
+prepare_helixer_model() {
+  local container="$1"
+  "$PROJECT_DIR/scripts/download_helixer_model.sh" \
+    --model-dir "$HELIXER_MODEL_DIR" \
+    --container "$container" \
+    --lineage "$HELIXER_LINEAGE"
+}
+
+if [[ "$PREPARE_HELIXER_MODEL" == true ]]; then
+  prepare_helixer_model "$(config_value container_helixer)"
+fi
+
 cmd=(
   nextflow run main.nf
   -profile "$PROFILE"
@@ -291,6 +326,13 @@ if [[ "$RUN_EGGNOG_MAPPER" == true ]]; then
   cmd+=(--run_eggnog_mapper true --eggnog_data_dir "$EGGNOG_DATA_DIR")
 fi
 
+if [[ "$RUN_HELIXER" == true ]]; then
+  cmd+=(--run_helixer true --helixer_model_dir "$HELIXER_MODEL_DIR" --helixer_model "$HELIXER_LINEAGE")
+  if [[ "$HELIXER_USE_GPU" == true ]]; then
+    cmd+=(--helixer_use_gpu true)
+  fi
+fi
+
 if [[ "$RESUME" == true ]]; then
   cmd+=(-resume)
 fi
@@ -307,6 +349,9 @@ echo "EGAPx runner:      $EGAPX_RUNNER_DIR"
 echo "EGAPx cache:       $EGAPX_CACHE_DIR"
 if [[ "$RUN_EGGNOG_MAPPER" == true ]]; then
   echo "eggNOG-mapper:     enabled, data dir $EGGNOG_DATA_DIR"
+fi
+if [[ "$RUN_HELIXER" == true ]]; then
+  echo "Helixer:           enabled, lineage $HELIXER_LINEAGE, model dir $HELIXER_MODEL_DIR, gpu $HELIXER_USE_GPU"
 fi
 if [[ "${TITAN_APPTAINER_CACHEDIR:-}" ]]; then
   echo "Apptainer cache:   $TITAN_APPTAINER_CACHEDIR"

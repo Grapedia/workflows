@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-if [[ $# -ne 17 ]]; then
-  echo "Usage: run_aegis_merge.sh <mode> <masked_genome> <aegis_version> <aegis_container> <output_prefix> <liftoff_gff3> <augustus_gff3> <genemark_gtf> <egapx_gff3> <star_stringtie_stranded_default_gtf> <star_stringtie_stranded_alt_gtf> <star_psiclass_stranded_gtf> <long_reads_default_gtf> <long_reads_alt_gtf> <star_psiclass_unstranded_gtf> <star_stringtie_unstranded_default_gtf> <star_stringtie_unstranded_alt_gtf>" >&2
+if [[ $# -ne 18 ]]; then
+  echo "Usage: run_aegis_merge.sh <mode> <masked_genome> <aegis_version> <aegis_container> <output_prefix> <liftoff_gff3> <augustus_gff3> <genemark_gtf> <egapx_gff3> <star_stringtie_stranded_default_gtf> <star_stringtie_stranded_alt_gtf> <star_psiclass_stranded_gtf> <long_reads_default_gtf> <long_reads_alt_gtf> <star_psiclass_unstranded_gtf> <star_stringtie_unstranded_default_gtf> <star_stringtie_unstranded_alt_gtf> <helixer_gff3>" >&2
   exit 2
 fi
 
@@ -23,6 +23,7 @@ long_reads_alt_gtf="${14}"
 star_psiclass_unstranded_gtf="${15}"
 star_stringtie_unstranded_default_gtf="${16}"
 star_stringtie_unstranded_alt_gtf="${17}"
+helixer_gff3="${18}"
 
 if [[ "$mode" != "short_reads" && "$mode" != "short_and_long_reads" ]]; then
   echo "AEGIS mode must be 'short_reads' or 'short_and_long_reads', got: $mode" >&2
@@ -110,6 +111,7 @@ fi
 include_optional_evidence "star_psiclass_unstranded_gtf" "$star_psiclass_unstranded_gtf"
 include_optional_evidence "star_stringtie_unstranded_default_gtf" "$star_stringtie_unstranded_default_gtf"
 include_optional_evidence "star_stringtie_unstranded_alt_gtf" "$star_stringtie_unstranded_alt_gtf"
+include_optional_evidence "helixer_gff3" "$helixer_gff3"
 
 if [[ "${#merge_inputs[@]}" -eq 0 ]]; then
   echo "No non-empty AEGIS evidence files were provided" >&2

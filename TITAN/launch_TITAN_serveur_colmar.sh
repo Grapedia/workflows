@@ -15,21 +15,30 @@ EGAPX_REVISION="${TITAN_EGAPX_REVISION:-v0.5.2}"
 EGAPX_DATA_VERSION="${TITAN_EGAPX_DATA_VERSION:-egapxsupportdata_20251017}"
 PREPARE_EGGNOG_DATA="${TITAN_PREPARE_EGGNOG_DATA:-false}"
 EGGNOG_DATA_DIR="${TITAN_EGGNOG_DATA_DIR:-$PROJECT_DIR/.eggnog_data}"
+PREPARE_HELIXER_MODEL="${TITAN_PREPARE_HELIXER_MODEL:-false}"
+HELIXER_MODEL_DIR="${TITAN_HELIXER_MODEL_DIR:-$PROJECT_DIR/.helixer_models}"
+HELIXER_LINEAGE="${TITAN_HELIXER_LINEAGE:-land_plant}"
 
 usage() {
   cat <<'EOF'
 Usage:
-  ./launch_TITAN_serveur_colmar.sh [--prepare-egapx-cache] [--prepare-eggnog-data] [--dry-run] [-- no_more_nextflow_args]
+  ./launch_TITAN_serveur_colmar.sh [--prepare-egapx-cache] [--prepare-eggnog-data] [--prepare-helixer-model] [--dry-run] [-- no_more_nextflow_args]
 
 Environment overrides:
   TITAN_OUTPUT_DIR, TITAN_WORK_DIR, TITAN_RUN_NAME, TITAN_CONFIG_FILE,
   TITAN_EGAPX_CACHE_DIR, TITAN_EGAPX_RUNNER_DIR, TITAN_PREPARE_EGAPX_CACHE,
-  TITAN_EGGNOG_DATA_DIR, TITAN_PREPARE_EGGNOG_DATA.
+  TITAN_EGGNOG_DATA_DIR, TITAN_PREPARE_EGGNOG_DATA,
+  TITAN_HELIXER_MODEL_DIR, TITAN_HELIXER_LINEAGE, TITAN_PREPARE_HELIXER_MODEL.
 
 Default production inputs are defined in data/slurm_apptainer.config. To run
 eggNOG-mapper in production, set run_eggnog_mapper = true in that config file
 and pass --prepare-eggnog-data at least once to populate TITAN_EGGNOG_DATA_DIR
 (default <project-dir>/.eggnog_data).
+
+To run Helixer in production, set run_helixer = true (and optionally
+helixer_use_gpu = true, only if a GPU is available on the node) in that
+config file, and pass --prepare-helixer-model at least once to populate
+TITAN_HELIXER_MODEL_DIR (default <project-dir>/.helixer_models).
 EOF
 }
 
@@ -49,6 +58,7 @@ while [[ $# -gt 0 ]]; do
   case "$1" in
     --prepare-egapx-cache) PREPARE_EGAPX_CACHE=true; shift ;;
     --prepare-eggnog-data) PREPARE_EGGNOG_DATA=true; shift ;;
+    --prepare-helixer-model) PREPARE_HELIXER_MODEL=true; shift ;;
     --dry-run) DRY_RUN=true; shift ;;
     -h|--help) usage; exit 0 ;;
     --) shift; EXTRA_NF_ARGS+=("$@"); break ;;
@@ -80,6 +90,7 @@ mkdir -p \
   "$EGAPX_CACHE_DIR" \
   "$EGAPX_RUNNER_DIR" \
   "$EGGNOG_DATA_DIR" \
+  "$HELIXER_MODEL_DIR" \
   "$PROJECT_DIR/.apptainer-cache" \
   "$PROJECT_DIR/.apptainer-tmp" \
   "$PROJECT_DIR/.nextflow-home" \
@@ -151,6 +162,17 @@ if [[ "$PREPARE_EGGNOG_DATA" == true ]]; then
   prepare_eggnog_data
 fi
 
+prepare_helixer_model() {
+  "$PROJECT_DIR/scripts/download_helixer_model.sh" \
+    --model-dir "$HELIXER_MODEL_DIR" \
+    --container "$(config_value container_helixer)" \
+    --lineage "$HELIXER_LINEAGE"
+}
+
+if [[ "$PREPARE_HELIXER_MODEL" == true ]]; then
+  prepare_helixer_model
+fi
+
 cmd=(
   nextflow -c "$CONFIG_FILE" run main.nf
   -profile "$PROFILE"
@@ -165,6 +187,8 @@ cmd=(
   --egapx_runner_dir "$EGAPX_RUNNER_DIR"
   --egapx_local_cache_dir "$EGAPX_CACHE_DIR"
   --eggnog_data_dir "$EGGNOG_DATA_DIR"
+  --helixer_model_dir "$HELIXER_MODEL_DIR"
+  --helixer_model "$HELIXER_LINEAGE"
 )
 
 cmd+=("${EXTRA_NF_ARGS[@]}")
@@ -178,6 +202,7 @@ echo "Run name:          $RUN_NAME"
 echo "Apptainer cache:   $APPTAINER_CACHEDIR"
 echo "EGAPx cache:       $EGAPX_CACHE_DIR"
 echo "eggNOG data dir:   $EGGNOG_DATA_DIR"
+echo "Helixer model dir: $HELIXER_MODEL_DIR (lineage: $HELIXER_LINEAGE)"
 echo
 echo "Command:"
 quote_cmd "${cmd[@]}"

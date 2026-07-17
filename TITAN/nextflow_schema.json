@@ -107,6 +107,33 @@
       ],
       "description": "Optional eggNOG taxonomic scope passed to emapper.py."
     },
+    "helixer_cpus": {
+      "type": "integer",
+      "minimum": 1,
+      "description": "CPU override for Helixer."
+    },
+    "run_helixer": {
+      "type": "boolean",
+      "description": "Run Helixer ab initio gene prediction on the EDTA soft-masked genome, independent of the AEGIS merge."
+    },
+    "helixer_model_dir": {
+      "$ref": "#/definitions/path_or_false",
+      "description": "Directory containing pre-fetched Helixer models (via scripts/download_helixer_model.sh). Required when run_helixer is true."
+    },
+    "helixer_model": {
+      "type": "string",
+      "enum": [
+        "vertebrate",
+        "land_plant",
+        "fungi",
+        "invertebrate"
+      ],
+      "description": "Helixer lineage model to use for prediction."
+    },
+    "helixer_use_gpu": {
+      "type": "boolean",
+      "description": "Pass --nv to the Helixer container to use a GPU. Requires a GPU visible on the executing node; CPU is used otherwise."
+    },
     "egapx_version": {
       "type": "string",
       "description": "EGAPx version recorded in provenance."
@@ -218,6 +245,9 @@
       "$ref": "#/definitions/container_digest"
     },
     "container_eggnog_mapper": {
+      "$ref": "#/definitions/container_digest"
+    },
+    "container_helixer": {
       "$ref": "#/definitions/container_digest"
     },
     "container_edta": {

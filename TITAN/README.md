@@ -227,6 +227,14 @@ eggNOG-mapper is an optional functional annotation step run on the AEGIS-derived
 
 Fetch the database once with `scripts/download_eggnog_data.sh --data-dir /absolute/path/to/eggnog_data` (plain `curl`/`gunzip`/`tar`, no container or eggNOG-mapper installation needed). The script skips files that are already present, so re-running it is a no-op once the database is downloaded. Both launcher scripts can run this step for you with `--prepare-eggnog-data`, but only when that flag is passed; a plain launch never re-downloads or re-checks the database. See [docs/user/installation.md](docs/user/installation.md#8-eggnog-mapper-optional) for full details.
 
+## Helixer
+
+Helixer is an optional ab initio/deep-learning gene predictor run directly on the EDTA soft-masked genome, independent of the AEGIS merge (its output is published separately, not merged into `final_annotation.gff3`). It is disabled by default (`--run_helixer false`). To enable it, set `--run_helixer true`, `--helixer_model_dir /absolute/path/to/helixer_models` (a directory populated by `scripts/download_helixer_model.sh`) and optionally `--helixer_model` (`vertebrate`, `land_plant`, `fungi` or `invertebrate`; default `land_plant`).
+
+Helixer runs on CPU by default. Set `--helixer_use_gpu true` to request a GPU (Apptainer `--nv` / Docker `--gpus all`, configured per profile); this requires a GPU actually visible on the executing node, and TensorFlow silently falls back to CPU otherwise.
+
+Fetch a lineage model once with `scripts/download_helixer_model.sh --model-dir /absolute/path/to/helixer_models --container <container_helixer> --lineage land_plant`. Helixer's own `Helixer.py` does not auto-download models and fails fast with a clear error if the model is missing; the download script also pre-creates the directories Helixer itself expects to already exist. It skips the fetch if the model is already present. Both launcher scripts can run this step with `--prepare-helixer-model` (`launch_TITAN_example.sh`) or by passing `run_helixer = true` in `data/slurm_apptainer.config` plus `--prepare-helixer-model` (`launch_TITAN_serveur_colmar.sh`). See [docs/user/installation.md](docs/user/installation.md#9-helixer-optional) for full details.
+
 ## Profiles
 
 | Profile | Purpose |
@@ -279,7 +287,8 @@ Main public output families:
 | AEGIS | `final_annotation.gff3`, `final_annotation_proteins_all.fasta`, `final_annotation_proteins_main.fasta` | `${output_dir}/aegis_outputs` |
 | Diamond2GO | `final_annotation_proteins_all.diamond2go.tsv`, `final_annotation_proteins_main.diamond2go.tsv` | `${output_dir}/Diamond2GO_outputs` |
 | eggNOG-mapper | `final_annotation_proteins_all.emapper.annotations`, `final_annotation_proteins_main.emapper.annotations` | `${output_dir}/EggNOG_outputs` (only when `--run_eggnog_mapper true`) |
-| Provenance | `evidence_manifest.json`, `versions.yml` | `${output_dir}/provenance` |
+| Helixer | `helixer.gff3` | `${output_dir}/additional_annotations/helixer` (only when `--run_helixer true`), not merged into AEGIS |
+| Provenance | `evidence_manifest.json`, `additional_annotations_manifest.json`, `versions.yml` | `${output_dir}/provenance` |
 | Final validation | `final_annotation_validation.json`, `final_annotation_validation.txt` | `${output_dir}/validation` |
 | Reports | Nextflow report, timeline, trace and DAG | `${output_dir}/nextflow_reports` when using the launcher |
 
@@ -382,6 +391,7 @@ Final validation currently covers structural consistency: GFF3 format, coordinat
 * [EGAPx](https://github.com/ncbi/egapx)
 * [fastp](https://github.com/OpenGene/fastp)
 * [GFFCompare](https://ccb.jhu.edu/software/stringtie/gffcompare.shtml)
+* [Helixer](https://github.com/weberlab-hhu/Helixer)
 * [HISAT2](https://daehwankimlab.github.io/hisat2/)
 * [Liftoff](https://github.com/agshumate/Liftoff)
 * [Minimap2](https://github.com/lh3/minimap2)

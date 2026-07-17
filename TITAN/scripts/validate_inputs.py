@@ -276,6 +276,7 @@ def validate_egapx_yaml(path):
 def validate_args(args):
     errors = []
     run_eggnog_mapper = str(args.run_eggnog_mapper).lower() == "true"
+    run_helixer = str(args.run_helixer).lower() == "true"
     required_files = {
         "new assembly": args.new_assembly,
         "previous assembly": args.previous_assembly,
@@ -318,6 +319,15 @@ def validate_args(args):
             errors.append(error("eggnog_data_dir must be provided when run_eggnog_mapper is true"))
         elif not args.eggnog_data_dir.exists() or not args.eggnog_data_dir.is_dir():
             errors.append(error(f"eggnog_data_dir does not exist or is not a directory: {args.eggnog_data_dir}"))
+    if run_helixer:
+        if not args.helixer_model_dir or str(args.helixer_model_dir).lower() == "false":
+            errors.append(error("helixer_model_dir must be provided when run_helixer is true"))
+        elif not args.helixer_model_dir.exists() or not args.helixer_model_dir.is_dir():
+            errors.append(error(f"helixer_model_dir does not exist or is not a directory: {args.helixer_model_dir}"))
+        elif not (args.helixer_model_dir / args.helixer_model).is_dir():
+            errors.append(error(
+                f"no pre-fetched Helixer model for lineage '{args.helixer_model}' in {args.helixer_model_dir}"
+            ))
     for label, value in {"PSICLASS_vd_option": args.psiclass_vd, "PSICLASS_c_option": args.psiclass_c}.items():
         try:
             float(value)
@@ -341,6 +351,9 @@ def build_parser():
     parser.add_argument("--psiclass-c", default="0.03")
     parser.add_argument("--run-eggnog-mapper", default="false")
     parser.add_argument("--eggnog-data-dir", type=Path, default=Path("false"))
+    parser.add_argument("--run-helixer", default="false")
+    parser.add_argument("--helixer-model-dir", type=Path, default=Path("false"))
+    parser.add_argument("--helixer-model", default="land_plant")
     return parser
 
 

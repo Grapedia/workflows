@@ -6,6 +6,8 @@ include { aegis } from '../subworkflows/aegis'
 include { titan_provenance } from '../modules/titan_provenance'
 include { validate_final_annotation } from '../modules/validate_final_annotation'
 include { validate_inputs } from '../modules/validate_inputs'
+include { helixer_prediction } from '../modules/helixer_prediction'
+include { additional_annotations_provenance } from '../modules/additional_annotations_provenance'
 
 def isMissingParam(value) {
     return value == null || value == true || value == false || value.toString().trim() == '' || value.toString().trim().equalsIgnoreCase('true') || value.toString().trim().equalsIgnoreCase('false')
@@ -126,7 +128,10 @@ workflow TITAN {
         params.aegis_version,
         params.container_aegis,
         params.run_eggnog_mapper,
-        params.eggnog_data_dir
+        params.eggnog_data_dir,
+        params.run_helixer,
+        params.helixer_model_dir,
+        params.helixer_model
     )
 
     new_assembly = input_validation.ok.map { file(params.new_assembly) }
@@ -186,6 +191,20 @@ workflow TITAN {
         has_long_reads
     )
 
+    // ----------------------------------------------------------------------------------------
+    //     Helixer ab initio prediction, independent of AEGIS evidence generation
+    // ----------------------------------------------------------------------------------------
+
+    helixer_results = helixer_prediction(evidence_data.masked_genome)
+
+    additional_annotations_provenance(
+        workflow.revision ?: '',
+        workflow.commitId ?: '',
+        workflow.commandLine ?: '',
+        helixer_results.gff3,
+        helixer_results.versions
+    )
+
     println "Running Aegis from generated named evidence; EDTA masked genome is passed as a direct channel input."
 
     aegis(
@@ -202,7 +221,8 @@ workflow TITAN {
         evidence_data.star_stringtie_unstranded_alt_gtf,
         evidence_data.long_reads_default_gtf,
         evidence_data.long_reads_alt_gtf,
-        has_long_reads
+        has_long_reads,
+        helixer_results.gff3
     )
 
     validate_final_annotation(
@@ -250,6 +270,7 @@ workflow TITAN {
         evidence_data.hisat2_stringtie_unstranded_alt_gtf,
         evidence_data.long_reads_default_gtf,
         evidence_data.long_reads_alt_gtf,
+        helixer_results.gff3,
         aegis.out.aegis_gff,
         aegis.out.aegis_proteins_all,
         aegis.out.aegis_proteins_main,

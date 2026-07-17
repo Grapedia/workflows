@@ -11,8 +11,8 @@ process eggnog_mapper {
       'final_annotation_proteins_main.emapper.seed_orthologs',
       'final_annotation_proteins_all.emapper.orthologs',
       'final_annotation_proteins_main.emapper.orthologs',
-      'final_annotation_proteins_all.xlsx',
-      'final_annotation_proteins_main.xlsx',
+      'final_annotation_proteins_all.emapper.annotations.xlsx',
+      'final_annotation_proteins_main.emapper.annotations.xlsx',
       'versions.yml'
     ]) {
       return filename
@@ -31,8 +31,8 @@ process eggnog_mapper {
     path "final_annotation_proteins_main.emapper.seed_orthologs", emit: proteins_main_seed_orthologs
     path "final_annotation_proteins_all.emapper.orthologs", emit: proteins_all_orthologs
     path "final_annotation_proteins_main.emapper.orthologs", emit: proteins_main_orthologs
-    path "final_annotation_proteins_all.xlsx", emit: proteins_all_xlsx
-    path "final_annotation_proteins_main.xlsx", emit: proteins_main_xlsx
+    path "final_annotation_proteins_all.emapper.annotations.xlsx", emit: proteins_all_xlsx
+    path "final_annotation_proteins_main.emapper.annotations.xlsx", emit: proteins_main_xlsx
     path "versions.yml", emit: versions
 
   script:
@@ -55,8 +55,8 @@ process eggnog_mapper {
         touch final_annotation_proteins_main.emapper.seed_orthologs
         touch final_annotation_proteins_all.emapper.orthologs
         touch final_annotation_proteins_main.emapper.orthologs
-        touch final_annotation_proteins_all.xlsx
-        touch final_annotation_proteins_main.xlsx
+        touch final_annotation_proteins_all.emapper.annotations.xlsx
+        touch final_annotation_proteins_main.emapper.annotations.xlsx
         printf '"%s":\n  eggnog_mapper: "skipped"\n  sensmode: "%s"\n  container: "%s"\n' \
             "${task.process}" "${params.eggnog_mapper_sensmode}" "${task.container}" > versions.yml
         exit 0
@@ -94,8 +94,8 @@ process eggnog_mapper {
     touch final_annotation_proteins_main.emapper.seed_orthologs
     touch final_annotation_proteins_all.emapper.orthologs
     touch final_annotation_proteins_main.emapper.orthologs
-    touch final_annotation_proteins_all.xlsx
-    touch final_annotation_proteins_main.xlsx
+    touch final_annotation_proteins_all.emapper.annotations.xlsx
+    touch final_annotation_proteins_main.emapper.annotations.xlsx
     printf '"%s":\n  eggnog_mapper: "stub"\n  container: "%s"\n' "${task.process}" "${task.container}" > versions.yml
     """
 }

@@ -13,3 +13,4 @@ nxf-tmp.*
 .eggnog_data/
 __pycache__/
 *.pyc
+.helixer_models/

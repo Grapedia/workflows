@@ -41,6 +41,12 @@ BASE_ARGS = [
     "false",
     "--eggnog-data-dir",
     str(ROOT / "data" / "eggnog"),
+    "--run-helixer",
+    "false",
+    "--helixer-model-dir",
+    str(ROOT / "data" / "helixer"),
+    "--helixer-model",
+    "land_plant",
 ]
 
 
@@ -158,6 +164,23 @@ def main():
                 *["--eggnog-data-dir", str(INVALID / "missing_eggnog_dir")],
             ],
             "eggnog_data_dir does not exist or is not a directory",
+        ),
+        (
+            "missing helixer model dir",
+            [
+                *replace_arg(BASE_ARGS, "--run-helixer", "true"),
+                *["--helixer-model-dir", str(INVALID / "missing_helixer_dir")],
+            ],
+            "helixer_model_dir does not exist or is not a directory",
+        ),
+        (
+            "missing helixer lineage model",
+            [
+                *replace_arg(BASE_ARGS, "--run-helixer", "true"),
+                *["--helixer-model-dir", str(VALID)],
+                *["--helixer-model", "fungi"],
+            ],
+            "no pre-fetched Helixer model for lineage 'fungi'",
         ),
     ]
 

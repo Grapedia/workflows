@@ -409,7 +409,44 @@ container_eggnog_mapper = quay.io/biocontainers/eggnog-mapper@sha256:f70babaf681
 
 TITAN validates `--eggnog_data_dir` before heavy execution whenever `--run_eggnog_mapper true` is set, and fails fast if the directory is missing. Outputs are published under `${output_dir}/EggNOG_outputs`.
 
-## 9. Validate with the built-in test profile
+## 9. Helixer (optional)
+
+Helixer is an ab initio/deep-learning gene predictor run directly on the EDTA soft-masked genome (`edta.MAKER.masked`), independent of the AEGIS merge — its GFF3 is published separately under `additional_annotations/` and never merged into `final_annotation.gff3`. It is disabled by default (`run_helixer = false`).
+
+Helixer's official container only ships CUDA-bundled images; there is no separate CPU-only tag. This is not a problem: TensorFlow falls back to CPU automatically whenever no GPU is passed through to the container, so the same image is used for both CPU and GPU runs. GPU/CPU selection is a container-runtime flag, not a `Helixer.py` option — TITAN sets `containerOptions` per profile (`--nv` for Apptainer/Singularity, `--gpus all` for Docker) only when `--helixer_use_gpu true` is set, and only actually helps if a GPU is visible on the node.
+
+Helixer's own `Helixer.py` does **not** auto-download its lineage model and fails fast with a clear error if it is missing (`Cannot continue without a model, either download models with fetch_helixer_models.py or set --model-filepath`). Fetch a model once with the bundled script, which runs the container's own `fetch_helixer_models.py`:
+
+```bash
+scripts/download_helixer_model.sh \
+  --model-dir /absolute/path/to/project/helixer_models \
+  --container docker.io/gglyptodon/helixer-docker@sha256:e2294eb2c282c35b919933daa0d6c145b635bfac8b717dbff88e88accbde4303 \
+  --lineage land_plant
+```
+
+This populates `<model-dir>/<lineage>/*.h5`. The script skips the fetch if a model is already present, so re-running it is a no-op. Both launcher scripts can run this step automatically:
+
+```bash
+./launch_TITAN_example.sh --prepare-helixer-model --enable-helixer ... # plus the usual required options
+./launch_TITAN_serveur_colmar.sh --prepare-helixer-model
+```
+
+`--prepare-helixer-model` downloads the model into `TITAN_HELIXER_MODEL_DIR` (default `<project-dir>/.helixer_models`) if it is not already there; `--enable-helixer` (in `launch_TITAN_example.sh`) then passes `--run_helixer true --helixer_model_dir "$TITAN_HELIXER_MODEL_DIR" --helixer_model "$TITAN_HELIXER_LINEAGE"` to Nextflow, and `--enable-helixer-gpu` additionally passes `--helixer_use_gpu true`. On the Colmar launcher, set `run_helixer = true` (and optionally `helixer_use_gpu = true`) directly in `data/slurm_apptainer.config` once the model has been downloaded.
+
+Defaults:
+
+```text
+run_helixer = false
+helixer_model_dir = false
+helixer_model = land_plant
+helixer_use_gpu = false
+helixer_cpus = 5
+container_helixer = docker.io/gglyptodon/helixer-docker@sha256:e2294eb2c282c35b919933daa0d6c145b635bfac8b717dbff88e88accbde4303
+```
+
+TITAN validates `--helixer_model_dir` and the presence of the requested `--helixer_model` lineage subdirectory before heavy execution whenever `--run_helixer true` is set, and fails fast otherwise. Outputs are published under `${output_dir}/additional_annotations/helixer`, and a dedicated `additional_annotations_manifest.json` is written under `${output_dir}/provenance` alongside the main `evidence_manifest.json`.
+
+## 10. Validate with the built-in test profile
 
 Before running production, verify the local workflow bootstrap:
 
@@ -419,7 +456,7 @@ scripts/run-tests.sh
 
 This validates input schemas, parameter wiring, profile resolution, container pinning, fixture integrity and channel contracts in stub mode. It does not validate biological output quality.
 
-## 10. Production launch
+## 11. Production launch
 
 The recommended entry point is `launch_TITAN_example.sh`, which validates inputs and generates Nextflow reports:
 
@@ -478,7 +515,7 @@ nextflow run main.nf \
 
 Do not pass `--workflow`; TITAN rejects it because partial public modes have been removed.
 
-## 11. Production checklist
+## 12. Production checklist
 
 Before launching a long run:
 
@@ -490,6 +527,7 @@ Before launching a long run:
 * Confirm EDTA can pull or access the pinned `quay.io/biocontainers/edta@sha256:...` image from `nextflow.config`.
 * Confirm AEGIS can pull or access the pinned `tomsbiolab/aegis@sha256:...` image from `nextflow.config`.
 * If enabling eggNOG-mapper, run `--prepare-eggnog-data` (or `scripts/download_eggnog_data.sh`) at least once and confirm `eggnog_data_dir` points to a populated database directory.
+* If enabling Helixer, run `--prepare-helixer-model` (or `scripts/download_helixer_model.sh`) at least once and confirm `helixer_model_dir` contains the requested lineage; only set `helixer_use_gpu = true` if a GPU is actually visible on the node running that process.
 * Confirm `TITAN_APPTAINER_CACHEDIR` points to a writable shared filesystem when using `slurm,apptainer`.
 * Run a `-stub-run` after every config/profile edit.
 * Use `-resume` for restart after interrupted runs.
@@ -497,7 +535,7 @@ Before launching a long run:
 
 For quick troubleshooting and the current limitations of stub tests, CI, SRA handling and cluster-specific Apptainer behavior, see the README sections `Troubleshooting` and `Limitations`.
 
-## 12. References
+## 13. References
 
 * EGAPx official repository and `v0.5.2` runner: <https://github.com/ncbi/egapx/tree/v0.5.2>
 * EGAPx input format and requirements: <https://github.com/ncbi/egapx/blob/v0.5.2/README.md>
@@ -507,3 +545,5 @@ For quick troubleshooting and the current limitations of stub tests, CI, SRA han
 * AEGIS Docker image: <https://hub.docker.com/r/tomsbiolab/aegis>
 * eggNOG-mapper repository and usage: <https://github.com/eggnogdb/eggnog-mapper>
 * eggNOG-mapper BioContainers image: <https://quay.io/repository/biocontainers/eggnog-mapper>
+* Helixer repository and usage: <https://github.com/weberlab-hhu/Helixer>
+* Helixer Docker image: <https://hub.docker.com/r/gglyptodon/helixer-docker>
