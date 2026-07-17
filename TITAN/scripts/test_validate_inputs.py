@@ -2,6 +2,7 @@
 import subprocess
 import sys
 import tempfile
+import gzip
 from pathlib import Path
 
 
@@ -69,6 +70,27 @@ def main():
         print("ERROR: valid fixture command failed", file=sys.stderr)
         print(valid.stdout + valid.stderr, file=sys.stderr)
         return 1
+
+    with tempfile.TemporaryDirectory(dir=INVALID) as temp_dir:
+        temp_path = Path(temp_dir)
+        fastq = "@sample.1 1 length=4\nACGT\n+sample.1 1 length=4\nIIII\n"
+        with gzip.open(temp_path / "plus_header_1.fastq.gz", "wt") as handle:
+            handle.write(fastq)
+        with gzip.open(temp_path / "plus_header_2.fastq.gz", "wt") as handle:
+            handle.write(fastq)
+        samplesheet = temp_path / "rnaseq_plus_header.csv"
+        samplesheet.write_text("sampleID,SRA_or_FASTQ,library_layout\nplus_header,FASTQ,paired\n")
+        plus_header = run(
+            replace_arg(
+                replace_arg(BASE_ARGS, "--rnaseq-samplesheet", samplesheet),
+                "--rnaseq-data-dir",
+                temp_path,
+            )
+        )
+        if plus_header.returncode != 0:
+            print("ERROR: FASTQ plus-line headers should be accepted", file=sys.stderr)
+            print(plus_header.stdout + plus_header.stderr, file=sys.stderr)
+            failures += 1
 
     with tempfile.NamedTemporaryFile("w", suffix=".csv", dir=INVALID) as handle:
         handle.write("sampleID,SRA_or_FASTQ,library_layout\nnot_a_run,SRA,single\n")

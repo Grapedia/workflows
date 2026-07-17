@@ -1,0 +1,171 @@
+#!/usr/bin/env bash
+set -Eeuo pipefail
+
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd -P)"
+PROJECT_DIR="${TITAN_PROJECT_DIR:-$SCRIPT_DIR}"
+RUN_NAME="${TITAN_RUN_NAME:-PN40024_T2T_prod_$(date +%Y%m%d_%H%M%S)}"
+OUTPUT_DIR="${TITAN_OUTPUT_DIR:-$PROJECT_DIR/data/titan_prod_out}"
+WORK_DIR="${TITAN_WORK_DIR:-$PROJECT_DIR/data/work}"
+CONFIG_FILE="${TITAN_CONFIG_FILE:-$PROJECT_DIR/data/slurm_apptainer.config}"
+PROFILE="${TITAN_PROFILE:-slurm,apptainer}"
+PREPARE_EGAPX_CACHE="${TITAN_PREPARE_EGAPX_CACHE:-false}"
+EGAPX_CACHE_DIR="${TITAN_EGAPX_CACHE_DIR:-$PROJECT_DIR/.egapx_cache}"
+EGAPX_RUNNER_DIR="${TITAN_EGAPX_RUNNER_DIR:-$PROJECT_DIR/.egapx_runner}"
+EGAPX_REVISION="${TITAN_EGAPX_REVISION:-v0.5.2}"
+EGAPX_DATA_VERSION="${TITAN_EGAPX_DATA_VERSION:-egapxsupportdata_20251017}"
+
+usage() {
+  cat <<'EOF'
+Usage:
+  ./launch_TITAN_serveur_colmar.sh [--prepare-egapx-cache] [--dry-run] [-- no_more_nextflow_args]
+
+Environment overrides:
+  TITAN_OUTPUT_DIR, TITAN_WORK_DIR, TITAN_RUN_NAME, TITAN_CONFIG_FILE,
+  TITAN_EGAPX_CACHE_DIR, TITAN_EGAPX_RUNNER_DIR, TITAN_PREPARE_EGAPX_CACHE.
+
+Default production inputs are defined in data/slurm_apptainer.config.
+EOF
+}
+
+die() {
+  echo "ERROR: $*" >&2
+  exit 1
+}
+
+quote_cmd() {
+  printf '%q ' "$@"
+  printf '\n'
+}
+
+DRY_RUN=false
+EXTRA_NF_ARGS=()
+while [[ $# -gt 0 ]]; do
+  case "$1" in
+    --prepare-egapx-cache) PREPARE_EGAPX_CACHE=true; shift ;;
+    --dry-run) DRY_RUN=true; shift ;;
+    -h|--help) usage; exit 0 ;;
+    --) shift; EXTRA_NF_ARGS+=("$@"); break ;;
+    *) die "Unknown option: $1. Use --help." ;;
+  esac
+done
+
+cd "$PROJECT_DIR"
+
+[[ -f "$CONFIG_FILE" ]] || die "config file not found: $CONFIG_FILE"
+[[ -f main.nf ]] || die "main.nf not found in $PROJECT_DIR"
+
+if command -v module >/dev/null 2>&1; then
+  module load Java/17.0.13
+  module load nextflow/24.04.3
+  module load apptainer/1.4.0-rc.2
+  module load python/3.12
+fi
+
+command -v nextflow >/dev/null 2>&1 || die "nextflow is not available in PATH"
+command -v apptainer >/dev/null 2>&1 || die "apptainer is not available in PATH"
+command -v python3 >/dev/null 2>&1 || die "python3 is not available in PATH"
+command -v curl >/dev/null 2>&1 || die "curl is not available in PATH"
+command -v tar >/dev/null 2>&1 || die "tar is not available in PATH"
+
+mkdir -p \
+  "$OUTPUT_DIR/nextflow_reports" \
+  "$WORK_DIR" \
+  "$EGAPX_CACHE_DIR" \
+  "$EGAPX_RUNNER_DIR" \
+  "$PROJECT_DIR/.apptainer-cache" \
+  "$PROJECT_DIR/.apptainer-tmp" \
+  "$PROJECT_DIR/.nextflow-home" \
+  "$PROJECT_DIR/.tmp"
+
+export NXF_HOME="${NXF_HOME:-$PROJECT_DIR/.nextflow-home}"
+export TMPDIR="${TMPDIR:-$PROJECT_DIR/.tmp}"
+export TITAN_APPTAINER_CACHEDIR="${TITAN_APPTAINER_CACHEDIR:-$PROJECT_DIR/.apptainer-cache}"
+export APPTAINER_CACHEDIR="${APPTAINER_CACHEDIR:-$TITAN_APPTAINER_CACHEDIR}"
+export SINGULARITY_CACHEDIR="${SINGULARITY_CACHEDIR:-$TITAN_APPTAINER_CACHEDIR}"
+export APPTAINER_TMPDIR="${APPTAINER_TMPDIR:-$PROJECT_DIR/.apptainer-tmp}"
+export SINGULARITY_TMPDIR="${SINGULARITY_TMPDIR:-$PROJECT_DIR/.apptainer-tmp}"
+export PYTHONNOUSERSITE=1
+export DEBUGINFOD_URLS=/dev/null
+
+CONFIG_SNAPSHOT="$(mktemp)"
+trap 'rm -f "$CONFIG_SNAPSHOT"' EXIT
+nextflow -c "$CONFIG_FILE" config -profile "$PROFILE" > "$CONFIG_SNAPSHOT"
+
+config_value() {
+  local key="$1"
+  awk -v key="$key" '
+    $1 == key && $2 == "=" {
+      value = $0
+      sub("^[[:space:]]*" key "[[:space:]]*=[[:space:]]*", "", value)
+      gsub(/^'\''|'\''$/, "", value)
+      print value
+      exit
+    }
+  ' "$CONFIG_SNAPSHOT"
+}
+
+prepare_egapx_cache() {
+  local runner_script="$EGAPX_RUNNER_DIR/ui/egapx.py"
+
+  if [[ ! -f "$runner_script" ]]; then
+    find "$EGAPX_RUNNER_DIR" -mindepth 1 -maxdepth 1 -exec rm -rf {} +
+    curl -fsSL "https://github.com/ncbi/egapx/archive/refs/tags/${EGAPX_REVISION}.tar.gz" \
+      | tar -xz --strip-components=1 -C "$EGAPX_RUNNER_DIR"
+  fi
+
+  python3 "$runner_script" -dl -lc "$EGAPX_CACHE_DIR" -dv "$EGAPX_DATA_VERSION" -dn "29760"
+}
+
+python3 scripts/validate_container_pins.py >/dev/null
+python3 scripts/validate_profiles.py >/dev/null
+python3 scripts/validate_inputs.py \
+  --project-dir "$PROJECT_DIR" \
+  --new-assembly "$(config_value new_assembly)" \
+  --previous-assembly "$(config_value previous_assembly)" \
+  --previous-annotations "$(config_value previous_annotations)" \
+  --rnaseq-samplesheet "$(config_value RNAseq_samplesheet)" \
+  --rnaseq-data-dir "$(config_value RNAseq_data_dir)" \
+  --protein-samplesheet "$(config_value protein_samplesheet)" \
+  --egapx-paramfile "$(config_value egapx_paramfile)" \
+  --egapx-executor "$(config_value egapx_executor)" \
+  --psiclass-vd "$(config_value PSICLASS_vd_option)" \
+  --psiclass-c "$(config_value PSICLASS_c_option)" >/dev/null
+
+if [[ "$PREPARE_EGAPX_CACHE" == true ]]; then
+  prepare_egapx_cache
+fi
+
+cmd=(
+  nextflow -c "$CONFIG_FILE" run main.nf
+  -profile "$PROFILE"
+  -name "$RUN_NAME"
+  -work-dir "$WORK_DIR"
+  -with-report "$OUTPUT_DIR/nextflow_reports/${RUN_NAME}.report.html"
+  -with-timeline "$OUTPUT_DIR/nextflow_reports/${RUN_NAME}.timeline.html"
+  -with-trace "$OUTPUT_DIR/nextflow_reports/${RUN_NAME}.trace.txt"
+  -with-dag "$OUTPUT_DIR/nextflow_reports/${RUN_NAME}.dag.html"
+  -ansi-log false
+  -resume
+  --egapx_runner_dir "$EGAPX_RUNNER_DIR"
+  --egapx_local_cache_dir "$EGAPX_CACHE_DIR"
+)
+
+cmd+=("${EXTRA_NF_ARGS[@]}")
+
+echo "Project directory: $PROJECT_DIR"
+echo "Config file:       $CONFIG_FILE"
+echo "Output directory:  $OUTPUT_DIR"
+echo "Work directory:    $WORK_DIR"
+echo "Profile:           $PROFILE"
+echo "Run name:          $RUN_NAME"
+echo "Apptainer cache:   $APPTAINER_CACHEDIR"
+echo "EGAPx cache:       $EGAPX_CACHE_DIR"
+echo
+echo "Command:"
+quote_cmd "${cmd[@]}"
+
+if [[ "$DRY_RUN" == true ]]; then
+  exit 0
+fi
+
+exec "${cmd[@]}"

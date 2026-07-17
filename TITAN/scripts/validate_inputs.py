@@ -128,7 +128,7 @@ def validate_fastq_gz(path):
         raise ValueError(f"{path}: FASTQ does not contain complete records")
     for offset in range(0, len(lines), 4):
         name, sequence, plus, quality = lines[offset : offset + 4]
-        if not name.startswith("@") or plus != "+" or len(sequence) != len(quality):
+        if not name.startswith("@") or not plus.startswith("+") or len(sequence) != len(quality):
             raise ValueError(f"{path}: invalid FASTQ record starting at sampled line {offset + 1}")
 
 
