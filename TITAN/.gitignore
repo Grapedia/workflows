@@ -14,3 +14,4 @@ nxf-tmp.*
 __pycache__/
 *.pyc
 .helixer_models/
+.interproscan_data/

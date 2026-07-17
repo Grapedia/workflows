@@ -47,6 +47,10 @@ BASE_ARGS = [
     str(ROOT / "data" / "helixer"),
     "--helixer-model",
     "land_plant",
+    "--run-interproscan",
+    "false",
+    "--interproscan-data-dir",
+    str(ROOT / "data" / "interproscan"),
 ]
 
 
@@ -181,6 +185,22 @@ def main():
                 *["--helixer-model", "fungi"],
             ],
             "no pre-fetched Helixer model for lineage 'fungi'",
+        ),
+        (
+            "missing interproscan data dir",
+            [
+                *replace_arg(BASE_ARGS, "--run-interproscan", "true"),
+                *["--interproscan-data-dir", str(INVALID / "missing_interproscan_dir")],
+            ],
+            "interproscan_data_dir does not exist or is not a directory",
+        ),
+        (
+            "interproscan data dir missing member databases",
+            [
+                *replace_arg(BASE_ARGS, "--run-interproscan", "true"),
+                *["--interproscan-data-dir", str(VALID)],
+            ],
+            "no pre-fetched InterProScan member database data",
         ),
     ]
 

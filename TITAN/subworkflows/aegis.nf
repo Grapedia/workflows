@@ -4,6 +4,7 @@ nextflow.enable.dsl=2
 include { aegis_merge } from "../modules/aegis_merge"
 include { diamond2go } from "../modules/diamond2go"
 include { eggnog_mapper } from "../modules/eggnog_mapper"
+include { interproscan } from "../modules/interproscan"
 
 workflow aegis {
 
@@ -76,6 +77,17 @@ workflow aegis {
       merged_annotation.aegis_proteins_main
     )
 
+    // ----------------------------------------------------------------------------------------
+    //     InterProScan on the same AEGIS-derived proteins
+    // ----------------------------------------------------------------------------------------
+    // Always invoked, like diamond2go/eggnog_mapper; the module itself emits placeholder
+    // outputs and skips interproscan.sh when params.run_interproscan is false.
+
+    interproscan_annotation = interproscan(
+      merged_annotation.aegis_proteins_all,
+      merged_annotation.aegis_proteins_main
+    )
+
   // Outputs
   emit:
     aegis_gff            = merged_annotation.aegis_gff
@@ -88,4 +100,7 @@ workflow aegis {
     eggnog_annotations_all  = eggnog_annotation.proteins_all_annotations
     eggnog_annotations_main = eggnog_annotation.proteins_main_annotations
     eggnog_versions         = eggnog_annotation.versions
+    interproscan_all_tsv    = interproscan_annotation.proteins_all_tsv
+    interproscan_main_tsv   = interproscan_annotation.proteins_main_tsv
+    interproscan_versions   = interproscan_annotation.versions
 }

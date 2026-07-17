@@ -48,6 +48,12 @@ Production-oriented options:
                                  Default: TITAN_RUN_HELIXER or false
   --enable-helixer-gpu           Pass --helixer_use_gpu true to Nextflow (requires a GPU visible on the node)
                                  Default: TITAN_HELIXER_USE_GPU or false
+  --prepare-interproscan-data    Download the InterProScan member database data before launching TITAN
+                                 Default: TITAN_PREPARE_INTERPROSCAN_DATA or false
+  --interproscan-data-dir PATH   Persistent InterProScan member database directory
+                                 Default: TITAN_INTERPROSCAN_DATA_DIR or <project-dir>/.interproscan_data
+  --enable-interproscan          Pass --run_interproscan true and --interproscan_data_dir to Nextflow
+                                 Default: TITAN_RUN_INTERPROSCAN or false
   --resume                       Add -resume
   --force                        Allow writing into a non-empty output directory without --resume
   --dry-run                      Print the command instead of executing it
@@ -131,6 +137,9 @@ HELIXER_MODEL_DIR="${TITAN_HELIXER_MODEL_DIR:-}"
 HELIXER_LINEAGE="${TITAN_HELIXER_LINEAGE:-land_plant}"
 RUN_HELIXER="${TITAN_RUN_HELIXER:-false}"
 HELIXER_USE_GPU="${TITAN_HELIXER_USE_GPU:-false}"
+PREPARE_INTERPROSCAN_DATA="${TITAN_PREPARE_INTERPROSCAN_DATA:-false}"
+INTERPROSCAN_DATA_DIR="${TITAN_INTERPROSCAN_DATA_DIR:-}"
+RUN_INTERPROSCAN="${TITAN_RUN_INTERPROSCAN:-false}"
 RESUME=false
 FORCE=false
 DRY_RUN=false
@@ -161,6 +170,9 @@ while [[ $# -gt 0 ]]; do
     --helixer-lineage) HELIXER_LINEAGE="${2:-}"; shift 2 ;;
     --enable-helixer) RUN_HELIXER=true; shift ;;
     --enable-helixer-gpu) HELIXER_USE_GPU=true; shift ;;
+    --prepare-interproscan-data) PREPARE_INTERPROSCAN_DATA=true; shift ;;
+    --interproscan-data-dir) INTERPROSCAN_DATA_DIR="${2:-}"; shift 2 ;;
+    --enable-interproscan) RUN_INTERPROSCAN=true; shift ;;
     --resume) RESUME=true; shift ;;
     --force) FORCE=true; shift ;;
     --dry-run) DRY_RUN=true; shift ;;
@@ -206,6 +218,9 @@ mkdir -p "$EGGNOG_DATA_DIR"
 EGGNOG_DATA_DIR="$(abs_path "$EGGNOG_DATA_DIR")"
 mkdir -p "$HELIXER_MODEL_DIR"
 HELIXER_MODEL_DIR="$(abs_path "$HELIXER_MODEL_DIR")"
+INTERPROSCAN_DATA_DIR="${INTERPROSCAN_DATA_DIR:-$PROJECT_DIR/.interproscan_data}"
+mkdir -p "$INTERPROSCAN_DATA_DIR"
+INTERPROSCAN_DATA_DIR="$(abs_path "$INTERPROSCAN_DATA_DIR")"
 
 if [[ "$RESUME" == false && "$FORCE" == false ]] && find "$OUTPUT_DIR" -mindepth 1 -maxdepth 1 | grep -q .; then
   die "Output directory is not empty: ${OUTPUT_DIR}. Use --resume to continue or --force to start a new run there."
@@ -300,6 +315,14 @@ if [[ "$PREPARE_HELIXER_MODEL" == true ]]; then
   prepare_helixer_model "$(config_value container_helixer)"
 fi
 
+prepare_interproscan_data() {
+  "$PROJECT_DIR/scripts/download_interproscan_data.sh" --data-dir "$INTERPROSCAN_DATA_DIR"
+}
+
+if [[ "$PREPARE_INTERPROSCAN_DATA" == true ]]; then
+  prepare_interproscan_data
+fi
+
 cmd=(
   nextflow run main.nf
   -profile "$PROFILE"
@@ -333,6 +356,10 @@ if [[ "$RUN_HELIXER" == true ]]; then
   fi
 fi
 
+if [[ "$RUN_INTERPROSCAN" == true ]]; then
+  cmd+=(--run_interproscan true --interproscan_data_dir "$INTERPROSCAN_DATA_DIR")
+fi
+
 if [[ "$RESUME" == true ]]; then
   cmd+=(-resume)
 fi
@@ -352,6 +379,9 @@ if [[ "$RUN_EGGNOG_MAPPER" == true ]]; then
 fi
 if [[ "$RUN_HELIXER" == true ]]; then
   echo "Helixer:           enabled, lineage $HELIXER_LINEAGE, model dir $HELIXER_MODEL_DIR, gpu $HELIXER_USE_GPU"
+fi
+if [[ "$RUN_INTERPROSCAN" == true ]]; then
+  echo "InterProScan:      enabled, data dir $INTERPROSCAN_DATA_DIR"
 fi
 if [[ "${TITAN_APPTAINER_CACHEDIR:-}" ]]; then
   echo "Apptainer cache:   $TITAN_APPTAINER_CACHEDIR"

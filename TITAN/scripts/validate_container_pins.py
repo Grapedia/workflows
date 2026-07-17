@@ -13,6 +13,7 @@ REQUIRED_PARAMS = {
     "container_diamond2go",
     "container_eggnog_mapper",
     "container_helixer",
+    "container_interproscan",
     "container_edta",
     "container_egapx",
     "container_fastp",

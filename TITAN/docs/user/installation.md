@@ -446,7 +446,43 @@ container_helixer = docker.io/gglyptodon/helixer-docker@sha256:e2294eb2c282c35b9
 
 TITAN validates `--helixer_model_dir` and the presence of the requested `--helixer_model` lineage subdirectory before heavy execution whenever `--run_helixer true` is set, and fails fast otherwise. Outputs are published under `${output_dir}/additional_annotations/helixer`, and a dedicated `additional_annotations_manifest.json` is written under `${output_dir}/provenance` alongside the main `evidence_manifest.json`.
 
-## 10. Validate with the built-in test profile
+## 10. InterProScan (optional)
+
+InterProScan adds member-database functional annotation (Pfam, CDD, Gene3D, PANTHER, SMART, ProSiteProfiles, ...) on the AEGIS-derived protein FASTAs, alongside Diamond2GO and eggNOG-mapper. It is disabled by default (`run_interproscan = false`) because it needs an external, pre-downloaded member database data directory that TITAN does not fetch on its own during a run.
+
+Download the data once with the bundled script:
+
+```bash
+scripts/download_interproscan_data.sh --data-dir /absolute/path/to/project/interproscan_data
+```
+
+This fetches the official data-only bundle (`interproscan-data-5.78-109.0.tar.gz`, ~7 GB compressed) from `https://ftp.ebi.ac.uk/pub/software/unix/iprscan/5/5.78-109.0/alt/`, verifies it against the upstream `.md5` checksum, and extracts it so `<data-dir>` directly holds `pfam/`, `cdd/`, `gene3d/`, ... (no container or InterProScan installation required for this step). The version must match `container_interproscan`. The script skips the download if `<data-dir>/pfam` already looks populated, so re-running it is a no-op once the data is fetched.
+
+Both launcher scripts can run this step automatically:
+
+```bash
+./launch_TITAN_example.sh --prepare-interproscan-data --enable-interproscan ... # plus the usual required options
+./launch_TITAN_serveur_colmar.sh --prepare-interproscan-data
+```
+
+`--prepare-interproscan-data` downloads the data into `TITAN_INTERPROSCAN_DATA_DIR` (default `<project-dir>/.interproscan_data`) if it is not already there; `--enable-interproscan` (in `launch_TITAN_example.sh`) then passes `--run_interproscan true --interproscan_data_dir "$TITAN_INTERPROSCAN_DATA_DIR"` to Nextflow. On the Colmar launcher, set `run_interproscan = true` directly in `data/slurm_apptainer.config` once the data has been downloaded.
+
+InterProScan hardcodes `data/` as a path relative to its install directory rather than accepting a CLI flag, so TITAN bind-mounts `interproscan_data_dir` to the fixed container path `/opt/interproscan/data` (matching the official Docker usage pattern) via `containerOptions` per profile, the same mechanism used for `eggnog_data_dir` and `helixer_model_dir`.
+
+By default TITAN runs every freely available analysis (no `-appl` restriction) with `-goterms -pathways` for GO term/pathway lookups and `-dp` to disable the online precalculated match lookup service, so runs stay fully offline. This is the heaviest of the three functional annotation steps; consider it in resource planning (`process_aegis` label resources, or a dedicated `withName: interproscan` override in your production config) for large protein sets.
+
+Defaults:
+
+```text
+run_interproscan = false
+interproscan_data_dir = false
+interproscan_cpus = 5
+container_interproscan = docker.io/interpro/interproscan@sha256:dc58b7c147fbbf00c2dd4f5ced42121fc1e8841fcbc7cc2c484380248ff76d11
+```
+
+TITAN validates `--interproscan_data_dir` before heavy execution whenever `--run_interproscan true` is set (directory exists and contains a `pfam` subdirectory), and fails fast otherwise. Outputs are published under `${output_dir}/InterProScan_outputs`.
+
+## 11. Validate with the built-in test profile
 
 Before running production, verify the local workflow bootstrap:
 
@@ -456,7 +492,7 @@ scripts/run-tests.sh
 
 This validates input schemas, parameter wiring, profile resolution, container pinning, fixture integrity and channel contracts in stub mode. It does not validate biological output quality.
 
-## 11. Production launch
+## 12. Production launch
 
 The recommended entry point is `launch_TITAN_example.sh`, which validates inputs and generates Nextflow reports:
 
@@ -515,7 +551,7 @@ nextflow run main.nf \
 
 Do not pass `--workflow`; TITAN rejects it because partial public modes have been removed.
 
-## 12. Production checklist
+## 13. Production checklist
 
 Before launching a long run:
 
@@ -528,6 +564,7 @@ Before launching a long run:
 * Confirm AEGIS can pull or access the pinned `tomsbiolab/aegis@sha256:...` image from `nextflow.config`.
 * If enabling eggNOG-mapper, run `--prepare-eggnog-data` (or `scripts/download_eggnog_data.sh`) at least once and confirm `eggnog_data_dir` points to a populated database directory.
 * If enabling Helixer, run `--prepare-helixer-model` (or `scripts/download_helixer_model.sh`) at least once and confirm `helixer_model_dir` contains the requested lineage; only set `helixer_use_gpu = true` if a GPU is actually visible on the node running that process.
+* If enabling InterProScan, run `--prepare-interproscan-data` (or `scripts/download_interproscan_data.sh`) at least once and confirm `interproscan_data_dir` contains a populated `pfam` subdirectory; plan for the extra runtime (all analyses, on both protein FASTAs, is the heaviest of the three functional annotation steps).
 * Confirm `TITAN_APPTAINER_CACHEDIR` points to a writable shared filesystem when using `slurm,apptainer`.
 * Run a `-stub-run` after every config/profile edit.
 * Use `-resume` for restart after interrupted runs.
@@ -535,7 +572,7 @@ Before launching a long run:
 
 For quick troubleshooting and the current limitations of stub tests, CI, SRA handling and cluster-specific Apptainer behavior, see the README sections `Troubleshooting` and `Limitations`.
 
-## 13. References
+## 14. References
 
 * EGAPx official repository and `v0.5.2` runner: <https://github.com/ncbi/egapx/tree/v0.5.2>
 * EGAPx input format and requirements: <https://github.com/ncbi/egapx/blob/v0.5.2/README.md>
@@ -545,5 +582,8 @@ For quick troubleshooting and the current limitations of stub tests, CI, SRA han
 * AEGIS Docker image: <https://hub.docker.com/r/tomsbiolab/aegis>
 * eggNOG-mapper repository and usage: <https://github.com/eggnogdb/eggnog-mapper>
 * eggNOG-mapper BioContainers image: <https://quay.io/repository/biocontainers/eggnog-mapper>
+* InterProScan repository and usage: <https://github.com/ebi-pf-team/interproscan>
+* InterProScan Docker image: <https://hub.docker.com/r/interpro/interproscan>
+* InterProScan member database data download: <https://ftp.ebi.ac.uk/pub/software/unix/iprscan/5/>
 * Helixer repository and usage: <https://github.com/weberlab-hhu/Helixer>
 * Helixer Docker image: <https://hub.docker.com/r/gglyptodon/helixer-docker>

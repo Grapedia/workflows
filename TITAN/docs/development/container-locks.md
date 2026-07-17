@@ -30,6 +30,7 @@ This checks:
 | GFFCompare | `container_gffcompare` | `avelt/gffcompare@sha256:bd411c13352a2545641c8c34b701030b3977056696607e85b4e86c876d10a82c` |
 | Helixer | `container_helixer` | `docker.io/gglyptodon/helixer-docker@sha256:e2294eb2c282c35b919933daa0d6c145b635bfac8b717dbff88e88accbde4303` |
 | HISAT2 | `container_hisat2` | `avelt/hisat2@sha256:022933fd0d30fe9fdfd83c175f7e41d480608fe0264b59f2861babaf7050a722` |
+| InterProScan | `container_interproscan` | `docker.io/interpro/interproscan@sha256:dc58b7c147fbbf00c2dd4f5ced42121fc1e8841fcbc7cc2c484380248ff76d11` |
 | Liftoff | `container_liftoff` | `quay.io/biocontainers/liftoff@sha256:460d5e82b0c59e8348633f3e0b9a19cf29f9227f7457e90bd7f1d1a2403b3555` |
 | Minimap2 + samtools | `container_minimap2_samtools` | `avelt/minimap2_samtools@sha256:70dcb87bb8021c90fc5eb660bbe1e6fc6bedadbf85c552c66704d27957b1f4ba` |
 | PsiCLASS + samtools | `container_psiclass_samtools` | `avelt/psiclass_samtools@sha256:5cad8ecfd81293287bb6612ac8a6daaf17e626339016d326cf79615606acb285` |

@@ -131,7 +131,9 @@ workflow TITAN {
         params.eggnog_data_dir,
         params.run_helixer,
         params.helixer_model_dir,
-        params.helixer_model
+        params.helixer_model,
+        params.run_interproscan,
+        params.interproscan_data_dir
     )
 
     new_assembly = input_validation.ok.map { file(params.new_assembly) }
@@ -280,8 +282,11 @@ workflow TITAN {
         aegis.out.aegis_versions,
         aegis.out.diamond2go_versions,
         aegis.out.eggnog_versions,
+        aegis.out.interproscan_versions,
         validate_final_annotation.out.versions,
         aegis.out.eggnog_annotations_all,
-        aegis.out.eggnog_annotations_main
+        aegis.out.eggnog_annotations_main,
+        aegis.out.interproscan_all_tsv,
+        aegis.out.interproscan_main_tsv
     )
 }

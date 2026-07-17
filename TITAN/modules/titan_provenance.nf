@@ -52,9 +52,12 @@ process titan_provenance {
     path(aegis_versions, stageAs: "module_versions/aegis_versions.yml")
     path(diamond2go_versions, stageAs: "module_versions/diamond2go_versions.yml")
     path(eggnog_versions, stageAs: "module_versions/eggnog_versions.yml")
+    path(interproscan_versions, stageAs: "module_versions/interproscan_versions.yml")
     path(final_validation_versions, stageAs: "module_versions/final_validation_versions.yml")
     path(eggnog_annotations_all)
     path(eggnog_annotations_main)
+    path(interproscan_annotations_all)
+    path(interproscan_annotations_main)
 
   output:
     path "evidence_manifest.json", emit: evidence_manifest
@@ -141,6 +144,8 @@ manifest = {
         file_record("aegis_proteins_main", "${aegis_proteins_main}"),
         file_record("eggnog_annotations_all", "${eggnog_annotations_all}"),
         file_record("eggnog_annotations_main", "${eggnog_annotations_main}"),
+        file_record("interproscan_annotations_all", "${interproscan_annotations_all}"),
+        file_record("interproscan_annotations_main", "${interproscan_annotations_main}"),
     ],
     "module_versions": [
         file_record("edta_versions", "${edta_versions}"),
@@ -149,6 +154,7 @@ manifest = {
         file_record("aegis_versions", "${aegis_versions}"),
         file_record("diamond2go_versions", "${diamond2go_versions}"),
         file_record("eggnog_versions", "${eggnog_versions}"),
+        file_record("interproscan_versions", "${interproscan_versions}"),
         file_record("final_validation_versions", "${final_validation_versions}"),
     ],
 }
@@ -173,6 +179,8 @@ with open("versions.yml", "w", encoding="utf-8") as handle:
     handle.write('  eggnog_data_dir: "${params.eggnog_data_dir}"\\n')
     handle.write('  helixer: "${params.run_helixer}"\\n')
     handle.write('  helixer_model: "${params.helixer_model}"\\n')
+    handle.write('  interproscan: "${params.run_interproscan}"\\n')
+    handle.write('  interproscan_data_dir: "${params.interproscan_data_dir}"\\n')
 PY
     """
 }

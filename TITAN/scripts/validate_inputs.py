@@ -277,6 +277,7 @@ def validate_args(args):
     errors = []
     run_eggnog_mapper = str(args.run_eggnog_mapper).lower() == "true"
     run_helixer = str(args.run_helixer).lower() == "true"
+    run_interproscan = str(args.run_interproscan).lower() == "true"
     required_files = {
         "new assembly": args.new_assembly,
         "previous assembly": args.previous_assembly,
@@ -328,6 +329,15 @@ def validate_args(args):
             errors.append(error(
                 f"no pre-fetched Helixer model for lineage '{args.helixer_model}' in {args.helixer_model_dir}"
             ))
+    if run_interproscan:
+        if not args.interproscan_data_dir or str(args.interproscan_data_dir).lower() == "false":
+            errors.append(error("interproscan_data_dir must be provided when run_interproscan is true"))
+        elif not args.interproscan_data_dir.exists() or not args.interproscan_data_dir.is_dir():
+            errors.append(error(f"interproscan_data_dir does not exist or is not a directory: {args.interproscan_data_dir}"))
+        elif not (args.interproscan_data_dir / "pfam").is_dir():
+            errors.append(error(
+                f"no pre-fetched InterProScan member database data found in {args.interproscan_data_dir}"
+            ))
     for label, value in {"PSICLASS_vd_option": args.psiclass_vd, "PSICLASS_c_option": args.psiclass_c}.items():
         try:
             float(value)
@@ -354,6 +364,8 @@ def build_parser():
     parser.add_argument("--run-helixer", default="false")
     parser.add_argument("--helixer-model-dir", type=Path, default=Path("false"))
     parser.add_argument("--helixer-model", default="land_plant")
+    parser.add_argument("--run-interproscan", default="false")
+    parser.add_argument("--interproscan-data-dir", type=Path, default=Path("false"))
     return parser
 
 

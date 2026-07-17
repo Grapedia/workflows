@@ -18,17 +18,20 @@ EGGNOG_DATA_DIR="${TITAN_EGGNOG_DATA_DIR:-$PROJECT_DIR/.eggnog_data}"
 PREPARE_HELIXER_MODEL="${TITAN_PREPARE_HELIXER_MODEL:-false}"
 HELIXER_MODEL_DIR="${TITAN_HELIXER_MODEL_DIR:-$PROJECT_DIR/.helixer_models}"
 HELIXER_LINEAGE="${TITAN_HELIXER_LINEAGE:-land_plant}"
+PREPARE_INTERPROSCAN_DATA="${TITAN_PREPARE_INTERPROSCAN_DATA:-false}"
+INTERPROSCAN_DATA_DIR="${TITAN_INTERPROSCAN_DATA_DIR:-$PROJECT_DIR/.interproscan_data}"
 
 usage() {
   cat <<'EOF'
 Usage:
-  ./launch_TITAN_serveur_colmar.sh [--prepare-egapx-cache] [--prepare-eggnog-data] [--prepare-helixer-model] [--dry-run] [-- no_more_nextflow_args]
+  ./launch_TITAN_serveur_colmar.sh [--prepare-egapx-cache] [--prepare-eggnog-data] [--prepare-helixer-model] [--prepare-interproscan-data] [--dry-run] [-- no_more_nextflow_args]
 
 Environment overrides:
   TITAN_OUTPUT_DIR, TITAN_WORK_DIR, TITAN_RUN_NAME, TITAN_CONFIG_FILE,
   TITAN_EGAPX_CACHE_DIR, TITAN_EGAPX_RUNNER_DIR, TITAN_PREPARE_EGAPX_CACHE,
   TITAN_EGGNOG_DATA_DIR, TITAN_PREPARE_EGGNOG_DATA,
-  TITAN_HELIXER_MODEL_DIR, TITAN_HELIXER_LINEAGE, TITAN_PREPARE_HELIXER_MODEL.
+  TITAN_HELIXER_MODEL_DIR, TITAN_HELIXER_LINEAGE, TITAN_PREPARE_HELIXER_MODEL,
+  TITAN_INTERPROSCAN_DATA_DIR, TITAN_PREPARE_INTERPROSCAN_DATA.
 
 Default production inputs are defined in data/slurm_apptainer.config. To run
 eggNOG-mapper in production, set run_eggnog_mapper = true in that config file
@@ -39,6 +42,11 @@ To run Helixer in production, set run_helixer = true (and optionally
 helixer_use_gpu = true, only if a GPU is available on the node) in that
 config file, and pass --prepare-helixer-model at least once to populate
 TITAN_HELIXER_MODEL_DIR (default <project-dir>/.helixer_models).
+
+To run InterProScan in production, set run_interproscan = true in that config
+file and pass --prepare-interproscan-data at least once to populate
+TITAN_INTERPROSCAN_DATA_DIR (default <project-dir>/.interproscan_data). This
+is a large download (several GB compressed); it only needs to run once.
 EOF
 }
 
@@ -59,6 +67,7 @@ while [[ $# -gt 0 ]]; do
     --prepare-egapx-cache) PREPARE_EGAPX_CACHE=true; shift ;;
     --prepare-eggnog-data) PREPARE_EGGNOG_DATA=true; shift ;;
     --prepare-helixer-model) PREPARE_HELIXER_MODEL=true; shift ;;
+    --prepare-interproscan-data) PREPARE_INTERPROSCAN_DATA=true; shift ;;
     --dry-run) DRY_RUN=true; shift ;;
     -h|--help) usage; exit 0 ;;
     --) shift; EXTRA_NF_ARGS+=("$@"); break ;;
@@ -91,6 +100,7 @@ mkdir -p \
   "$EGAPX_RUNNER_DIR" \
   "$EGGNOG_DATA_DIR" \
   "$HELIXER_MODEL_DIR" \
+  "$INTERPROSCAN_DATA_DIR" \
   "$PROJECT_DIR/.apptainer-cache" \
   "$PROJECT_DIR/.apptainer-tmp" \
   "$PROJECT_DIR/.nextflow-home" \
@@ -173,6 +183,14 @@ if [[ "$PREPARE_HELIXER_MODEL" == true ]]; then
   prepare_helixer_model
 fi
 
+prepare_interproscan_data() {
+  "$PROJECT_DIR/scripts/download_interproscan_data.sh" --data-dir "$INTERPROSCAN_DATA_DIR"
+}
+
+if [[ "$PREPARE_INTERPROSCAN_DATA" == true ]]; then
+  prepare_interproscan_data
+fi
+
 cmd=(
   nextflow -c "$CONFIG_FILE" run main.nf
   -profile "$PROFILE"
@@ -189,6 +207,7 @@ cmd=(
   --eggnog_data_dir "$EGGNOG_DATA_DIR"
   --helixer_model_dir "$HELIXER_MODEL_DIR"
   --helixer_model "$HELIXER_LINEAGE"
+  --interproscan_data_dir "$INTERPROSCAN_DATA_DIR"
 )
 
 cmd+=("${EXTRA_NF_ARGS[@]}")
@@ -203,6 +222,7 @@ echo "Apptainer cache:   $APPTAINER_CACHEDIR"
 echo "EGAPx cache:       $EGAPX_CACHE_DIR"
 echo "eggNOG data dir:   $EGGNOG_DATA_DIR"
 echo "Helixer model dir: $HELIXER_MODEL_DIR (lineage: $HELIXER_LINEAGE)"
+echo "InterProScan data dir: $INTERPROSCAN_DATA_DIR"
 echo
 echo "Command:"
 quote_cmd "${cmd[@]}"

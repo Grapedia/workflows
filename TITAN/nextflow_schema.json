@@ -114,7 +114,7 @@
     },
     "run_helixer": {
       "type": "boolean",
-      "description": "Run Helixer ab initio gene prediction on the EDTA soft-masked genome, independent of the AEGIS merge."
+      "description": "Run Helixer ab initio gene prediction on the EDTA soft-masked genome. Its GFF3 is also passed to AEGIS as optional merge evidence."
     },
     "helixer_model_dir": {
       "$ref": "#/definitions/path_or_false",
@@ -133,6 +133,19 @@
     "helixer_use_gpu": {
       "type": "boolean",
       "description": "Pass --nv to the Helixer container to use a GPU. Requires a GPU visible on the executing node; CPU is used otherwise."
+    },
+    "interproscan_cpus": {
+      "type": "integer",
+      "minimum": 1,
+      "description": "CPU override for InterProScan."
+    },
+    "run_interproscan": {
+      "type": "boolean",
+      "description": "Run InterProScan functional annotation on the AEGIS-derived protein FASTAs, in parallel with Diamond2GO and eggNOG-mapper."
+    },
+    "interproscan_data_dir": {
+      "$ref": "#/definitions/path_or_false",
+      "description": "Directory containing the pre-fetched InterProScan member database data (via scripts/download_interproscan_data.sh), bind-mounted to /opt/interproscan/data. Required when run_interproscan is true."
     },
     "egapx_version": {
       "type": "string",
@@ -252,6 +265,9 @@
       "$ref": "#/definitions/container_digest"
     },
     "container_helixer": {
+      "$ref": "#/definitions/container_digest"
+    },
+    "container_interproscan": {
       "$ref": "#/definitions/container_digest"
     },
     "container_edta": {

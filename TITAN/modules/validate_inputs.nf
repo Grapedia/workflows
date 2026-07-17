@@ -26,6 +26,8 @@ process validate_inputs {
     val(run_helixer)
     val(helixer_model_dir)
     val(helixer_model)
+    val(run_interproscan)
+    val(interproscan_data_dir)
 
   output:
     path "validated_inputs.ok", emit: ok
@@ -66,7 +68,9 @@ process validate_inputs {
       --eggnog-data-dir "${eggnog_data_dir}" \\
       --run-helixer "${run_helixer}" \\
       --helixer-model-dir "${helixer_model_dir}" \\
-      --helixer-model "${helixer_model}"
+      --helixer-model "${helixer_model}" \\
+      --run-interproscan "${run_interproscan}" \\
+      --interproscan-data-dir "${interproscan_data_dir}"
 
     touch validated_inputs.ok
     printf '"%s":\n  container: "not_recorded"\n' "${task.process}" > versions.yml
@@ -107,7 +111,9 @@ process validate_inputs {
       --eggnog-data-dir "${eggnog_data_dir}" \\
       --run-helixer "${run_helixer}" \\
       --helixer-model-dir "${helixer_model_dir}" \\
-      --helixer-model "${helixer_model}"
+      --helixer-model "${helixer_model}" \\
+      --run-interproscan "${run_interproscan}" \\
+      --interproscan-data-dir "${interproscan_data_dir}"
 
     touch validated_inputs.ok
     printf '"%s":\n  container: "not_recorded"\n' "${task.process}" > versions.yml

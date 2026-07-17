@@ -227,6 +227,12 @@ eggNOG-mapper is an optional functional annotation step run on the AEGIS-derived
 
 Fetch the database once with `scripts/download_eggnog_data.sh --data-dir /absolute/path/to/eggnog_data` (plain `curl`/`gunzip`/`tar`, no container or eggNOG-mapper installation needed). The script skips files that are already present, so re-running it is a no-op once the database is downloaded. Both launcher scripts can run this step for you with `--prepare-eggnog-data`, but only when that flag is passed; a plain launch never re-downloads or re-checks the database. See [docs/user/installation.md](docs/user/installation.md#8-eggnog-mapper-optional) for full details.
 
+## InterProScan
+
+InterProScan is an optional functional annotation step run on the AEGIS-derived protein FASTAs, in parallel with Diamond2GO and eggNOG-mapper. It is disabled by default (`--run_interproscan false`). To enable it, set `--run_interproscan true` and provide `--interproscan_data_dir /absolute/path/to/interproscan_data` pointing to the pre-downloaded member database data (pfam, cdd, gene3d, panther, ...); TITAN does not download this data itself. By default it runs every freely available analysis (no `--appl` restriction, matching the container's own default) with `-goterms -pathways` enabled for GO term and pathway lookups, and `-dp` to disable the online precalculated match lookup service so runs stay fully offline.
+
+Fetch the member database data once with `scripts/download_interproscan_data.sh --data-dir /absolute/path/to/interproscan_data` (plain `curl`/`tar`, verified against the upstream `.md5`, no container needed). This is a large download (~7 GB compressed); the script skips it if the data directory already looks populated. Both launcher scripts can run this step for you with `--prepare-interproscan-data`, but only when that flag is passed; a plain launch never re-downloads or re-checks the data. See [docs/user/installation.md](docs/user/installation.md#10-interproscan-optional) for full details.
+
 ## Helixer
 
 Helixer is an optional ab initio/deep-learning gene predictor run directly on the EDTA soft-masked genome. Its GFF3 is published separately under `additional_annotations/` and is also passed to AEGIS as optional evidence, merged into `final_annotation.gff3` alongside the other named evidence channels when present. It is disabled by default (`--run_helixer false`). To enable it, set `--run_helixer true`, `--helixer_model_dir /absolute/path/to/helixer_models` (a directory populated by `scripts/download_helixer_model.sh`) and optionally `--helixer_model` (`vertebrate`, `land_plant`, `fungi` or `invertebrate`; default `land_plant`).
@@ -269,7 +275,7 @@ Resource policy is centralized in [conf/base.config](conf/base.config). Active m
 
 `process_medium` and `process_high` are reserved generic labels for future modules and site-specific profile overrides. Current workflow modules should prefer the domain-specific labels above.
 
-Override resources through `conf/base.config`, a profile config, or Nextflow process selectors. EDTA, EGAPx and Diamond2GO still honor `--edta_cpus`, `--egapx_cpus` and `--diamond2go_cpus` through `withName` selectors.
+Override resources through `conf/base.config`, a profile config, or Nextflow process selectors. EDTA, EGAPx, Diamond2GO, eggNOG-mapper, Helixer and InterProScan still honor `--edta_cpus`, `--egapx_cpus`, `--diamond2go_cpus`, `--eggnog_mapper_cpus`, `--helixer_cpus` and `--interproscan_cpus` through `withName` selectors.
 
 ## Outputs
 
@@ -287,7 +293,8 @@ Main public output families:
 | AEGIS | `final_annotation.gff3`, `final_annotation_proteins_all.fasta`, `final_annotation_proteins_main.fasta` | `${output_dir}/aegis_outputs` |
 | Diamond2GO | `final_annotation_proteins_all.diamond2go.tsv`, `final_annotation_proteins_main.diamond2go.tsv` | `${output_dir}/Diamond2GO_outputs` |
 | eggNOG-mapper | `final_annotation_proteins_all.emapper.annotations`, `final_annotation_proteins_main.emapper.annotations` | `${output_dir}/EggNOG_outputs` (only when `--run_eggnog_mapper true`) |
-| Helixer | `helixer.gff3` | `${output_dir}/additional_annotations/helixer` (only when `--run_helixer true`), not merged into AEGIS |
+| InterProScan | `final_annotation_proteins_all.tsv`/`.gff3`/`.json`, `final_annotation_proteins_main.tsv`/`.gff3`/`.json` | `${output_dir}/InterProScan_outputs` (only when `--run_interproscan true`) |
+| Helixer | `helixer.gff3` | `${output_dir}/additional_annotations/helixer` (only when `--run_helixer true`); also passed to AEGIS as optional merge evidence |
 | Provenance | `evidence_manifest.json`, `additional_annotations_manifest.json`, `versions.yml` | `${output_dir}/provenance` |
 | Final validation | `final_annotation_validation.json`, `final_annotation_validation.txt` | `${output_dir}/validation` |
 | Reports | Nextflow report, timeline, trace and DAG | `${output_dir}/nextflow_reports` when using the launcher |
@@ -393,6 +400,7 @@ Final validation currently covers structural consistency: GFF3 format, coordinat
 * [GFFCompare](https://ccb.jhu.edu/software/stringtie/gffcompare.shtml)
 * [Helixer](https://github.com/weberlab-hhu/Helixer)
 * [HISAT2](https://daehwankimlab.github.io/hisat2/)
+* [InterProScan](https://github.com/ebi-pf-team/interproscan)
 * [Liftoff](https://github.com/agshumate/Liftoff)
 * [Minimap2](https://github.com/lh3/minimap2)
 * [PsiCLASS](https://github.com/splicebox/PsiCLASS)
