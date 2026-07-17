@@ -174,7 +174,7 @@ for f in modules/*.nf; do awk '/^[[:space:]]*output:/{flag=1} /^[[:space:]]*scri
 | `trimming_fastq` | FASTQ/SRA courts prepares | `*.trimmed.fastq.gz` | `${output_dir}/intermediate_files/evidence_data/RNAseq_data/trimmed_data` | Salmon, STAR, HISAT2 |
 | `liftoff_annotations` | assemblage cible, assemblage precedent, GFF3 precedent | `liftoff_previous_annotations.gff3`, `unmapped_features.txt` | `${output_dir}` | AGAT, Aegis |
 | `agat_convert_gff3_to_cds_fasta` | assemblage cible, Liftoff GFF3 | `${genome}.CDS.fasta.gz` | `${output_dir}/intermediate_files/liftoff/gff3_to_cds_fasta` | Salmon index |
-| `salmon_index` | CDS FASTA | `salmon_index/` | `${output_dir}/intermediate_files/salmon_index` | Salmon strand inference |
+| `salmon_index` | CDS FASTA | `salmon_index/` | workdir/cache uniquement | Salmon strand inference |
 | `salmon_strand_inference` | reads trimmes, index Salmon | `${sample_ID}.strand_info.classified` | `${output_dir}/intermediate_files/salmon_strand` | STAR/HISAT2 channel enrichi avec strandedness |
 | `star_genome_indices` | assemblage cible | `${genome}_index` | `${output_dir}/intermediate_files/evidence_data/star_databases` | STAR alignment |
 | `star_alignment` | index STAR, reads, strandedness | `${sample_ID}_Aligned.sortedByCoord.out.bam` | `${output_dir}/intermediate_files/evidence_data/RNAseq_alignments/STAR/{stranded,unstranded}` | StringTie, PsiCLASS, BRAKER3 |

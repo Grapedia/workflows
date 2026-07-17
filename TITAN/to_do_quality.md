@@ -119,9 +119,9 @@ Perimetre lu: `README.md`, `nextflow.config`, `main.nf`, `workflows/titan.nf`, `
 
 ### `modules/salmon_index.nf`
 
-- A ameliorer: ajouter `set -euo pipefail`.
-- A ameliorer: ajouter `versions.yml`.
-- A ameliorer: publier l'index seulement si c'est un output utile; sinon garder en workdir/cache.
+- [x] A ameliorer: ajouter `set -euo pipefail`.
+- [x] A ameliorer: ajouter `versions.yml`.
+- [x] A ameliorer: publier l'index seulement si c'est un output utile; sinon garder en workdir/cache.
 
 ### `modules/salmon_strand_inference.nf`
 

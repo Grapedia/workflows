@@ -6,6 +6,7 @@ include { prepare_RNAseq_fastq_files_long } from "../modules/prepare_RNAseq_fast
 include { trimming_fastq } from "../modules/trimming_fastq"
 include { liftoff_annotations } from "../modules/liftoff_annotations"
 include { egapx } from "../modules/egapx"
+include { clean_liftoff_gff3_for_agat } from "../modules/clean_liftoff_gff3_for_agat"
 include { agat_convert_gff3_to_cds_fasta } from "../modules/agat_convert_gff3_to_cds_fasta"
 include { salmon_index } from "../modules/salmon_index"
 include { salmon_strand_inference } from "../modules/salmon_strand_inference"
@@ -102,11 +103,15 @@ workflow generate_evidence_data {
         // EGAPx annotation pipeline on new assembly
         egapx_annotations = egapx(egapx_paramfile)
 
-        // Convert GFF3 to CDS FASTA for Salmon strand inference
-        gff_cds = agat_convert_gff3_to_cds_fasta(
-            new_assembly,
+        cleaned_liftoff_gff3 = clean_liftoff_gff3_for_agat(
             previous_annotations.liftoff_previous_annotations,
             clean_liftoff_gff3_script
+        )
+
+        // Convert cleaned GFF3 to CDS FASTA for Salmon strand inference
+        gff_cds = agat_convert_gff3_to_cds_fasta(
+            new_assembly,
+            cleaned_liftoff_gff3.cleaned_gff3
         )
 
         // Salmon index and strand inference.
