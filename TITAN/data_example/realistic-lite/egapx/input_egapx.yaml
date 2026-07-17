@@ -1,0 +1,15 @@
+genome: /data2/avelt/2026_annotations_PN40024_T2T/workflows/TITAN/data_example/realistic-lite/assemblies/T2T_ref.chr01.fasta
+taxid: 29760
+organism: Vitis vinifera
+annotation_provider: egapx_ncbi
+annotation_name_prefix: PN40024_chr01_lite
+locus_tag_prefix: VitviLite
+short_reads:
+  - - depleted-stranded_Vitis14_S16
+    - - /data2/avelt/2026_annotations_PN40024_T2T/workflows/TITAN/data_example/realistic-lite/rnaseq/depleted-stranded_Vitis14_S16_1.fastq.gz
+      - /data2/avelt/2026_annotations_PN40024_T2T/workflows/TITAN/data_example/realistic-lite/rnaseq/depleted-stranded_Vitis14_S16_2.fastq.gz
+  - - PolyA_Vitis02_S1
+    - - /data2/avelt/2026_annotations_PN40024_T2T/workflows/TITAN/data_example/realistic-lite/rnaseq/PolyA_Vitis02_S1.fastq.gz
+long_reads:
+  - - PN40024_IsoSeq_chr01
+    - - /data2/avelt/2026_annotations_PN40024_T2T/workflows/TITAN/data_example/realistic-lite/rnaseq/PN40024_IsoSeq_chr01.fasta

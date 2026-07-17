@@ -29,6 +29,7 @@ process EDTA {
   script:
     """
     set -euo pipefail
+    export PYTHONNOUSERSITE=1
     DATE=\$(date "+%Y-%m-%d %H:%M:%S")
     echo "[\$DATE] Running EDTA on $genome"
     CMD="${edta_script} -g ${genome_fasta} -n ${task.cpus}"
@@ -56,6 +57,7 @@ process EDTA {
   stub:
     """
     set -euo pipefail
+    export PYTHONNOUSERSITE=1
     cp ${genome_fasta} edta.MAKER.masked
     printf ">stub_te\\nNNNN\\n" > edta.TElib.fa
     printf "##gff-version 3\\n" > edta.TEanno.gff3

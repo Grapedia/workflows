@@ -31,9 +31,17 @@ process star_genome_indices {
         exit 1
       fi
       GENOME_SA_INDEX_NBASES=\$(awk -v n="\$genome_bases" 'BEGIN { v = int(log(n) / log(2) / 2 - 1); if (v < 1) v = 1; if (v > 14) v = 14; print v }')
-    elif ! [[ "\$GENOME_SA_INDEX_NBASES" =~ ^[0-9]+$ && "\$GENOME_SA_INDEX_NBASES" -ge 1 && "\$GENOME_SA_INDEX_NBASES" -le 14 ]]; then
-      echo "[\$DATE] ERROR: STAR_genomeSAindexNbases must be false or an integer between 1 and 14, got '\$GENOME_SA_INDEX_NBASES'" >&2
-      exit 1
+    else
+      case "\$GENOME_SA_INDEX_NBASES" in
+        ''|*[!0-9]*)
+          echo "[\$DATE] ERROR: STAR_genomeSAindexNbases must be false or an integer between 1 and 14, got '\$GENOME_SA_INDEX_NBASES'" >&2
+          exit 1
+          ;;
+      esac
+      if [[ "\$GENOME_SA_INDEX_NBASES" -lt 1 || "\$GENOME_SA_INDEX_NBASES" -gt 14 ]]; then
+        echo "[\$DATE] ERROR: STAR_genomeSAindexNbases must be false or an integer between 1 and 14, got '\$GENOME_SA_INDEX_NBASES'" >&2
+        exit 1
+      fi
     fi
 
     SJDB_GTF="${star_sjdb_gtf_file}"

@@ -67,9 +67,21 @@ For Apptainer/Singularity environments, pre-pull the same Docker image if your c
 ```bash
 apptainer pull egapx_0.5.2.sif docker://ncbi/egapx@sha256:bc657b232d93364d5f3b75ad3bfaf14b6267e46173672b609f26078d48a04298
 apptainer pull aegis_v0.3.25.sif docker://tomsbiolab/aegis@sha256:de88470b3fb4fbab3ff2d5fa0fb9fed36b55952d1e383d3fdb2f5a3a530d84e6
+apptainer pull edta_2.2.0.sif docker://quay.io/biocontainers/edta@sha256:793cbb17bc0569e01caa0c83ad8d1756a394c2ee47b3f512ad4077bc3e422579
 ```
 
 EGAPx is a nested Nextflow workflow. The TITAN EGAPx process runs the official EGAPx runner `v0.5.2`, and that runner launches EGAPx tasks using `params.egapx_executor` and `params.container_egapx`. The `apptainer` profile sets `egapx_executor = singularity` for the nested EGAPx run.
+
+EDTA uses the official BioContainers image corresponding to tag `2.2.0--hdfd78af_1`, pinned by digest. For direct HPC testing outside TITAN:
+
+```bash
+SINGULARITY_CACHEDIR=./
+export SINGULARITY_CACHEDIR
+unset -f which
+singularity pull EDTA.sif docker://quay.io/biocontainers/edta:2.2.0--hdfd78af_1
+export PYTHONNOUSERSITE=1
+singularity exec EDTA.sif EDTA.pl --genome genome.fa --species others --threads 8
+```
 
 Defaults:
 
@@ -77,6 +89,7 @@ Defaults:
 egapx_version = 0.5.2
 egapx_revision = v0.5.2
 container_egapx = ncbi/egapx@sha256:bc657b232d93364d5f3b75ad3bfaf14b6267e46173672b609f26078d48a04298
+container_edta = quay.io/biocontainers/edta@sha256:793cbb17bc0569e01caa0c83ad8d1756a394c2ee47b3f512ad4077bc3e422579
 egapx_executor = docker
 egapx_data_version = current_1
 aegis_version = v0.3.25
@@ -369,6 +382,7 @@ Before launching a long run:
 * Confirm all paths in TITAN params and EGAPx YAML are absolute and visible on compute nodes.
 * Confirm the container runtime works on compute nodes.
 * Confirm EGAPx can pull or access the pinned `ncbi/egapx@sha256:...` image from `nextflow.config`.
+* Confirm EDTA can pull or access the pinned `quay.io/biocontainers/edta@sha256:...` image from `nextflow.config`.
 * Confirm AEGIS can pull or access the pinned `tomsbiolab/aegis@sha256:...` image from `nextflow.config`.
 * Confirm `TITAN_APPTAINER_CACHEDIR` points to a writable shared filesystem when using `slurm,apptainer`.
 * Run a `-stub-run` after every config/profile edit.
@@ -382,5 +396,6 @@ For quick troubleshooting and the current limitations of stub tests, CI, SRA han
 * EGAPx official repository and `v0.5.2` runner: <https://github.com/ncbi/egapx/tree/v0.5.2>
 * EGAPx input format and requirements: <https://github.com/ncbi/egapx/blob/v0.5.2/README.md>
 * EGAPx official Docker image: <https://hub.docker.com/r/ncbi/egapx>
+* EDTA BioContainers image: <https://quay.io/repository/biocontainers/edta>
 * AEGIS repository and CLI documentation: <https://github.com/Tomsbiolab/aegis>
 * AEGIS Docker image: <https://hub.docker.com/r/tomsbiolab/aegis>

@@ -1,0 +1,4 @@
+sampleID,SRA_or_FASTQ,library_layout
+depleted-stranded_Vitis14_S16,FASTQ,paired
+PolyA_Vitis02_S1,FASTQ,single
+PN40024_IsoSeq_chr01,FASTA,long

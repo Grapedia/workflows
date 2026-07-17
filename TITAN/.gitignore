@@ -2,7 +2,9 @@ test-results/
 test-work/
 work/
 .nextflow/
+.nextflow-home/
 .nextflow.log*
+nxf-tmp.*
 .apptainer-cache/
 .apptainer-tmp/
 *.sif

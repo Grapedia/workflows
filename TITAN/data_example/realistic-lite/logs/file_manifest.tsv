@@ -1,0 +1,15 @@
+142	data_example/realistic-lite/RNAseq_samplesheet.csv
+213	data_example/realistic-lite/protein_samplesheet.csv
+916	data_example/realistic-lite/egapx/input_egapx.yaml
+1682	data_example/realistic-lite/README.md
+1710	data_example/realistic-lite/real_slurm_apptainer.config
+74528	data_example/realistic-lite/logs/PN40024_IsoSeq_chr01.selected_ids.txt
+2198718	data_example/realistic-lite/proteins/Viridiplantae_swissprot.cleaned.5000.fasta
+2364236	data_example/realistic-lite/proteins/eudicotyledons_odb10.cleaned.5000.fasta
+2806824	data_example/realistic-lite/rnaseq/depleted-stranded_Vitis14_S16_1.fastq.gz
+2822619	data_example/realistic-lite/rnaseq/depleted-stranded_Vitis14_S16_2.fastq.gz
+3075378	data_example/realistic-lite/rnaseq/PolyA_Vitis02_S1.fastq.gz
+3140845	data_example/realistic-lite/annotations/v4_3_just_ref.chr01.gff3
+8790547	data_example/realistic-lite/rnaseq/PN40024_IsoSeq_chr01.fasta
+24228323	data_example/realistic-lite/assemblies/v4_genome_ref.chr01.fasta
+27822170	data_example/realistic-lite/assemblies/T2T_ref.chr01.fasta
