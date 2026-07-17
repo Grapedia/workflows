@@ -88,18 +88,18 @@ Perimetre lu: `README.md`, `nextflow.config`, `main.nf`, `workflows/titan.nf`, `
 
 ### `modules/EDTA.nf`
 
-- A ameliorer: ajouter `set -euo pipefail`.
-- A ameliorer: ajouter `versions.yml`.
-- A ameliorer: eviter deux `publishDir` sur le meme process si possible; separer outputs publics et temporaires explicitement.
-- A ameliorer: les globs `*TElib.fa`, `*TEanno.gff3`, `*MAKER.masked` peuvent capturer plusieurs fichiers. Renommer/copier vers des noms fixes avant `output:`.
+- [x] A ameliorer: ajouter `set -euo pipefail`.
+- [x] A ameliorer: ajouter `versions.yml`.
+- [x] A ameliorer: eviter deux `publishDir` sur le meme process si possible; separer outputs publics et temporaires explicitement.
+- [x] A ameliorer: les globs `*TElib.fa`, `*TEanno.gff3`, `*MAKER.masked` peuvent capturer plusieurs fichiers. Renommer/copier vers des noms fixes avant `output:`.
 
 ### `modules/liftoff_annotations.nf`
 
 - Bon point: `cache 'deep'` est pertinent pour un mapping deterministe sur fichiers d'entree.
-- A ameliorer: ajouter `set -euo pipefail`.
-- A ameliorer: ajouter `versions.yml`.
-- A ameliorer: verifier que `unmapped_features.txt` existe meme si Liftoff ne le produit pas dans certains cas.
-- A ameliorer: simplifier les inputs `val(genome)` et `val(previous_assembly)` si seuls les noms servent au `tag`.
+- [x] A ameliorer: ajouter `set -euo pipefail`.
+- [x] A ameliorer: ajouter `versions.yml`.
+- [x] A ameliorer: verifier que `unmapped_features.txt` existe meme si Liftoff ne le produit pas dans certains cas.
+- [x] A ameliorer: simplifier les inputs `val(genome)` et `val(previous_assembly)` si seuls les noms servent au `tag`.
 
 ### `modules/egapx.nf`
 

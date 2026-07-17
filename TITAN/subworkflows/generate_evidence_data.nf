@@ -52,9 +52,7 @@ workflow generate_evidence_data {
         new_assembly
         new_assembly_name
         previous_assembly
-        previous_assembly_name
         previous_annotations_file
-        previous_annotations_name
         egapx_paramfile
         edta_script
         stringtie_script
@@ -96,11 +94,8 @@ workflow generate_evidence_data {
         // Lift over previous annotations to new assembly
         previous_annotations = liftoff_annotations(
             new_assembly,
-            new_assembly_name,
             previous_assembly,
-            previous_assembly_name,
-            previous_annotations_file,
-            previous_annotations_name
+            previous_annotations_file
         )
 
         // EGAPx annotation pipeline on new assembly
