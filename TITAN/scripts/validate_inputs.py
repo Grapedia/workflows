@@ -14,6 +14,8 @@ PROTEIN_COLUMNS = ["organism", "filename"]
 RNA_SOURCES = {"SRA", "FASTQ", "FASTA"}
 RNA_LAYOUTS = {"single", "paired", "long"}
 EGAPX_EXECUTORS = {"docker", "singularity", "apptainer"}
+PROTEIN_ALLOWED_AA = set("ABCDEFGHIKLMNPQRSTUVWYZXJO")
+PROTEIN_CLEANUP_CHARS = set(".-")
 
 
 def error(message):
@@ -52,6 +54,30 @@ def read_fasta(path):
     if empty:
         raise ValueError(f"{path}: empty FASTA sequence(s): {', '.join(empty)}")
     return records
+
+
+def validate_protein_fasta(path):
+    records = read_fasta(path)
+    bad_records = []
+    internal_stops = []
+    for name, sequence in records.items():
+        seq = "".join(sequence.upper().split())
+        seq_without_gaps = "".join(aa for aa in seq if aa not in PROTEIN_CLEANUP_CHARS)
+        seq_without_terminal_stop = seq_without_gaps.rstrip("*")
+        if not seq_without_terminal_stop:
+            bad_records.append(f"{name}: empty after BRAKER3 cleanup")
+            continue
+        if "*" in seq_without_terminal_stop:
+            internal_stops.append(name)
+        invalid = sorted(set(seq_without_terminal_stop) - PROTEIN_ALLOWED_AA)
+        if invalid:
+            bad_records.append(f"{name}: invalid protein character(s): {', '.join(invalid)}")
+    if internal_stops:
+        raise ValueError(
+            f"{path}: internal stop codon '*' in protein sequence(s): {', '.join(internal_stops[:10])}"
+        )
+    if bad_records:
+        raise ValueError(f"{path}: invalid protein FASTA for BRAKER3/ProtHint: {'; '.join(bad_records[:10])}")
 
 
 def validate_gff3(path, seqs):
@@ -209,7 +235,7 @@ def validate_protein_samplesheet(path, root):
         validate_existing_file(protein_path, f"protein FASTA for {organism or filename}", errors)
         if protein_path.exists():
             try:
-                read_fasta(protein_path)
+                validate_protein_fasta(protein_path)
             except Exception as exc:
                 errors.append(error(str(exc)))
     return errors

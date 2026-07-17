@@ -101,6 +101,16 @@ def main():
             "protein FASTA for MissingProtein does not exist",
         ),
         (
+            "protein internal stop",
+            replace_arg(BASE_ARGS, "--protein-samplesheet", INVALID / "protein_internal_stop.csv"),
+            "internal stop codon",
+        ),
+        (
+            "protein invalid character",
+            replace_arg(BASE_ARGS, "--protein-samplesheet", INVALID / "protein_invalid_character.csv"),
+            "invalid protein character",
+        ),
+        (
             "bad previous GFF3 coordinates",
             replace_arg(BASE_ARGS, "--previous-annotations", INVALID / "bad_coordinates.gff3"),
             "invalid coordinates",
@@ -119,6 +129,15 @@ def main():
 
     for name, args, expected in cases:
         failures += expect_failure(name, args, expected)
+
+    with tempfile.NamedTemporaryFile("w", suffix=".csv", dir=INVALID) as handle:
+        handle.write("organism,filename\nTerminalStop,test-data/minimal/invalid/protein_terminal_stop.fa\n")
+        handle.flush()
+        terminal_stop = run(replace_arg(BASE_ARGS, "--protein-samplesheet", handle.name))
+        if terminal_stop.returncode != 0:
+            print("ERROR: terminal protein stop should be accepted and cleaned before BRAKER3", file=sys.stderr)
+            print(terminal_stop.stdout + terminal_stop.stderr, file=sys.stderr)
+            failures += 1
 
     if failures:
         return 1

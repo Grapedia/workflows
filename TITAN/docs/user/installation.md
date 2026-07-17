@@ -183,6 +183,8 @@ SwissProtPlants,swissprot_plants.fa
 
 The `filename` entries should point to FASTA protein files available to BRAKER3. Relative paths are resolved from the TITAN project directory.
 
+Protein files must be multi-FASTA protein files suitable for ProtHint: every record needs a header, a non-empty sequence, and a unique first-word sequence ID. TITAN normalizes headers before BRAKER3 and cleans terminal `*`, `.` and `-`, but it fails early on internal `*` stop codons or non-protein characters because those usually indicate an input formatting or translation problem.
+
 ## 7. EGAPx YAML input
 
 EGAPx takes its own YAML file through `--egapx_paramfile`. TITAN passes that file to the official EGAPx runner.

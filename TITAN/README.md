@@ -98,7 +98,7 @@ Required TITAN parameters:
 | `--previous_annotations` | GFF3 annotation matching `--previous_assembly`. |
 | `--RNAseq_samplesheet` | CSV with RNA-seq inputs. |
 | `--RNAseq_data_dir` | Directory containing local FASTQ/FASTA files referenced by `sampleID`. |
-| `--protein_samplesheet` | CSV listing protein FASTA evidence. |
+| `--protein_samplesheet` | CSV listing protein FASTA evidence for BRAKER3/ProtHint. |
 | `--egapx_paramfile` | EGAPx YAML input file. |
 | `--output_dir` | TITAN output directory. |
 
@@ -292,6 +292,8 @@ Intermediate and debug outputs:
 `evidence_manifest.json` records main inputs, AEGIS evidence files, final AEGIS outputs, sizes and SHA-256 checksums. It is the current provenance record and the planned basis for more formal resume/reuse behavior in future work.
 
 The final validation report checks the final GFF3 against the EDTA-masked genome and verifies protein FASTA integrity. Critical GFF3/FASTA errors fail the workflow before completion.
+
+Protein FASTA inputs for BRAKER3 must be multi-FASTA protein files. TITAN validates them before prediction: each record must have a header, a non-empty sequence, unique first-word IDs in the original file, and protein characters only. Terminal `*`, `.` and `-` are cleaned before BRAKER3; internal `*` stop codons and other invalid characters fail validation.
 
 ## Resume And Re-Runs
 
