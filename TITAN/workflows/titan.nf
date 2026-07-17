@@ -175,7 +175,6 @@ workflow TITAN {
         params.ena_verify_md5,
         params.PSICLASS_vd_option,
         params.PSICLASS_c_option,
-        params.STAR_memory_per_job,
         params.STAR_genomeSAindexNbases,
         params.STAR_sjdbGTFfile,
         samples_list_long_reads,

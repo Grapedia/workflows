@@ -14,9 +14,10 @@ process star_alignment {
   input:
     path(star_database)
     tuple val(sample_ID), val(library_layout), path(read_1), path(read_2), val(strand_type)
-    val(star_memory_per_job)
 
   output:
+    // Downstream transcript assemblers consume the coordinate-sorted BAM directly;
+    // no BAM index is required by the current STAR -> StringTie/PsiCLASS/BRAKER3 graph.
     tuple val(sample_ID), path("${sample_ID}_Aligned.sortedByCoord.out.bam"), val(strand_type), emit: samples_aligned
     path "versions.yml", emit: versions
 
@@ -27,28 +28,34 @@ process star_alignment {
     set -euo pipefail
     DATE=\$(date "+%Y-%m-%d %H:%M:%S")
     echo "[\$DATE] Running STAR alignment on $sample_ID"
+    LIMIT_BAM_SORT_RAM="${task.memory.toBytes()}"
 
-    if [[ $library_layout == "paired" ]]
-    then
-
-      CMD="STAR --readFilesCommand zcat --genomeDir ${star_database} --runThreadN ${task.cpus} --readFilesIn ${read_1} ${read_2} --outFileNamePrefix ${sample_ID}_ --outSAMtype BAM SortedByCoordinate --outSAMunmapped Within --outSAMattributes Standard --outSAMstrandField intronMotif --limitBAMsortRAM ${star_memory_per_job}"
+    if [[ $library_layout == "paired" ]]; then
+      CMD="STAR --readFilesCommand zcat --genomeDir ${star_database} --runThreadN ${task.cpus} --readFilesIn ${read_1} ${read_2} --outFileNamePrefix ${sample_ID}_ --outSAMtype BAM SortedByCoordinate --outSAMunmapped Within --outSAMattributes Standard --outSAMstrandField intronMotif --limitBAMsortRAM \${LIMIT_BAM_SORT_RAM}"
       echo "[\$DATE] Executing: \$CMD"
 
-      STAR --readFilesCommand zcat --genomeDir ${star_database} --runThreadN ${task.cpus} --readFilesIn ${read_1} ${read_2} --outFileNamePrefix ${sample_ID}_ --outSAMtype BAM SortedByCoordinate --outSAMunmapped Within --outSAMattributes Standard --outSAMstrandField intronMotif --limitBAMsortRAM ${star_memory_per_job}
-    elif [[ $library_layout == "single" ]]
-    then
-
-      CMD="STAR --readFilesCommand zcat --genomeDir ${star_database} --runThreadN ${task.cpus} --readFilesIn ${read_1} --outFileNamePrefix ${sample_ID}_ --outSAMtype BAM SortedByCoordinate --outSAMunmapped Within --outSAMattributes Standard --outSAMstrandField intronMotif --limitBAMsortRAM ${star_memory_per_job}"
+      STAR --readFilesCommand zcat --genomeDir ${star_database} --runThreadN ${task.cpus} --readFilesIn ${read_1} ${read_2} --outFileNamePrefix ${sample_ID}_ --outSAMtype BAM SortedByCoordinate --outSAMunmapped Within --outSAMattributes Standard --outSAMstrandField intronMotif --limitBAMsortRAM "\${LIMIT_BAM_SORT_RAM}"
+    elif [[ $library_layout == "single" ]]; then
+      CMD="STAR --readFilesCommand zcat --genomeDir ${star_database} --runThreadN ${task.cpus} --readFilesIn ${read_1} --outFileNamePrefix ${sample_ID}_ --outSAMtype BAM SortedByCoordinate --outSAMunmapped Within --outSAMattributes Standard --outSAMstrandField intronMotif --limitBAMsortRAM \${LIMIT_BAM_SORT_RAM}"
       echo "[\$DATE] Executing: \$CMD"
 
-      STAR --readFilesCommand zcat --genomeDir ${star_database} --runThreadN ${task.cpus} --readFilesIn ${read_1} --outFileNamePrefix ${sample_ID}_ --outSAMtype BAM SortedByCoordinate --outSAMunmapped Within --outSAMattributes Standard --outSAMstrandField intronMotif --limitBAMsortRAM ${star_memory_per_job}
+      STAR --readFilesCommand zcat --genomeDir ${star_database} --runThreadN ${task.cpus} --readFilesIn ${read_1} --outFileNamePrefix ${sample_ID}_ --outSAMtype BAM SortedByCoordinate --outSAMunmapped Within --outSAMattributes Standard --outSAMstrandField intronMotif --limitBAMsortRAM "\${LIMIT_BAM_SORT_RAM}"
+    else
+      echo "[\$DATE] ERROR: library_layout must be 'paired' or 'single', got '$library_layout'" >&2
+      exit 1
     fi
-    printf '"%s":\n  container: "not_recorded"\n' "${task.process}" > versions.yml
+
+    STAR --version 2>&1 | sed 's/^/  star: "/; s/\$/"/' | {
+      printf '"%s":\\n  limitBAMsortRAM: "%s"\\n' "${task.process}" "\$LIMIT_BAM_SORT_RAM"
+      cat
+    } > versions.yml
     """
 
   stub:
     """
+    set -euo pipefail
+
     printf "BAM\\n" > ${sample_ID}_Aligned.sortedByCoord.out.bam
-    printf '"%s":\n  container: "not_recorded"\n' "${task.process}" > versions.yml
+    printf '"%s":\n  star: "stub"\n  limitBAMsortRAM: "stub"\n' "${task.process}" > versions.yml
     """
 }

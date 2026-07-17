@@ -165,11 +165,11 @@ Perimetre lu: `README.md`, `nextflow.config`, `main.nf`, `workflows/titan.nf`, `
 
 ### `modules/star_alignment.nf`
 
-- A ameliorer: ajouter `set -euo pipefail`.
-- A ameliorer: gerer explicitement les layouts inconnus avec `exit 1`.
-- A ameliorer: indexer le BAM ou documenter pourquoi l'index n'est pas requis par les etapes aval.
-- A ameliorer: `params.STAR_memory_per_job` devrait etre derive de `task.memory` ou passe comme option explicite.
-- A ameliorer: ajouter `versions.yml`.
+- [x] A ameliorer: ajouter `set -euo pipefail`.
+- [x] A ameliorer: gerer explicitement les layouts inconnus avec `exit 1`.
+- [x] A ameliorer: indexer le BAM ou documenter pourquoi l'index n'est pas requis par les etapes aval.
+- [x] A ameliorer: `params.STAR_memory_per_job` devrait etre derive de `task.memory` ou passe comme option explicite.
+- [x] A ameliorer: ajouter `versions.yml`.
 
 ### `modules/hisat2_genome_indices.nf`
 

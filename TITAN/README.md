@@ -342,7 +342,7 @@ Nextflow version warning: TITAN declares `24.04.3`. Install or load that version
 
 Apptainer or EGAPx image failures: confirm the pinned images in `nextflow.config` are reachable from compute nodes and that `TITAN_APPTAINER_CACHEDIR` points to writable shared storage.
 
-STAR memory failures: increase `--STAR_memory_per_job` or adjust profile resources for high-depth RNA-seq.
+STAR memory failures: increase the memory assigned to `star_alignment` in the active profile; TITAN derives STAR `--limitBAMsortRAM` from `task.memory`.
 
 Non-empty output directory: resume with `--resume`, or intentionally override with `--force`.
 

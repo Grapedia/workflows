@@ -162,7 +162,7 @@ for f in modules/*.nf; do awk '/^[[:space:]]*output:/{flag=1} /^[[:space:]]*scri
 | Samplesheet RNA-seq | `params.RNAseq_samplesheet` | CSV avec header | `sampleID`, `SRA_or_FASTQ`, `library_layout` | preparation reads, fastp, Salmon, STAR, HISAT2, Minimap2 | `library_layout` alimente les branches `single`, `paired` et `long`; la presence d'une ligne `long` active automatiquement la branche longue. |
 | Samplesheet proteines | `params.protein_samplesheet` | CSV avec header | `organism`, `filename` | BRAKER3 | Les modules BRAKER3 montent aussi `${projectDir}/data/protein_data`; ce couplage reste a normaliser. |
 | Parametres EGAPx | `params.egapx_paramfile` | YAML | parametres EGAPx | module `egapx` | Obligatoire; sorties nommees publiees sous `${output_dir}/egapx`. |
-| Options outil | `params.edta_cpus`, `params.egapx_cpus`, `params.PSICLASS_*`, `params.STAR_memory_per_job` | entiers CPU, floats, entier bytes | valeurs scalaires | EDTA, EGAPx, PsiCLASS, STAR | Les anciens flags biologiques ne pilotent plus EDTA, EGAPx ou les long reads. |
+| Options outil | `params.edta_cpus`, `params.egapx_cpus`, `params.PSICLASS_*`, `params.STAR_genomeSAindexNbases`, `params.STAR_sjdbGTFfile` | entiers CPU, floats, options STAR | valeurs scalaires | EDTA, EGAPx, PsiCLASS, STAR | Les anciens flags biologiques ne pilotent plus EDTA, EGAPx ou les long reads. |
 | Evidences Aegis | emits nommes de `generate_evidence_data` | chemins stages par Nextflow | `masked_genome`, `liftoff_annotation`, `egapx_gff3`, `braker_augustus_gff`, `braker_genemark_gtf`, STAR/StringTie, STAR/PsiCLASS, long reads si detectes | sous-workflow `aegis` | Le workflow public ne relit plus ces evidences depuis `output_dir`. |
 
 ### Inventaire des sorties par module

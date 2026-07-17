@@ -71,7 +71,6 @@ workflow generate_evidence_data {
         ena_verify_md5
         psiclass_vd_option
         psiclass_c_option
-        star_memory_per_job
         star_genome_sa_index_nbases
         star_sjdb_gtf_file
         // RNA-seq tuples:
@@ -136,7 +135,7 @@ workflow generate_evidence_data {
             star_genome_sa_index_nbases,
             star_sjdb_gtf_file
         )
-        star_aligned = star_alignment(star_indices.index, salmon_output_processed, star_memory_per_job)
+        star_aligned = star_alignment(star_indices.index, salmon_output_processed)
 
         star_aligned.samples_aligned
           .map { sample_ID, bam_file, strand_type -> bam_file }

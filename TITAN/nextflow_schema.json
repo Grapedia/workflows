@@ -142,11 +142,6 @@
       "minimum": 0,
       "description": "PsiCLASS -c option."
     },
-    "STAR_memory_per_job": {
-      "type": "integer",
-      "minimum": 1,
-      "description": "STAR --limitBAMsortRAM value."
-    },
     "STAR_genomeSAindexNbases": {
       "oneOf": [
         {
