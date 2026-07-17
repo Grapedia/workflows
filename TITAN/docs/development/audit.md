@@ -139,7 +139,7 @@ for f in modules/*.nf; do awk '/^[[:space:]]*output:/{flag=1} /^[[:space:]]*scri
 | EDTA | Masquage TE | GitHub latest documente | Digest-pinned | `EDTA` | `params.container_edta` | Stub | Non |
 | EGAPx | Annotation NCBI | 0.5.2 | Digest-pinned | `egapx` | `params.container_egapx` | Stub | `versions.yml` |
 | fastp | Trimming | 0.23.2 | Digest-pinned | `trimming_fastq` | `params.container_fastp` | Stub | Non |
-| GFFCompare | Fusion PsiCLASS | 0.12.6 | Digest-pinned | `gffcompare` | `params.container_gffcompare` | Stub | Non |
+| GFFCompare | Fusion PsiCLASS | 0.12.6 | Digest-pinned | `gffcompare` | `params.container_gffcompare` | Stub | `versions.yml` |
 | HISAT2 | Index/alignment | 2.2.1 documente | Digest-pinned | `hisat2_*` | `params.container_hisat2` | Stub | Non |
 | Liftoff | Transfert annotation | 1.5.1 | Digest-pinned | `liftoff_annotations` | `params.container_liftoff` | Stub | Non |
 | Minimap2 | Alignement long reads | 2.28 documente | Digest-pinned | `minimap2_*` | `params.container_minimap2_samtools` | Stub | Non |
@@ -189,7 +189,7 @@ for f in modules/*.nf; do awk '/^[[:space:]]*output:/{flag=1} /^[[:space:]]*scri
 | `Stringtie_merging_short_reads_STAR` | listes stagees de GTF STAR/StringTie par strandedness et mode default/alt | `merged_transcriptomes.STAR.short_reads.*.gtf`, `versions.yml` | `${output_dir}/tmp` et noms historiques sous `${output_dir}` via `publishDir saveAs` | Aegis |
 | `Stringtie_merging_short_reads_hisat2` | listes stagees de GTF HISAT2/StringTie par strandedness et mode default/alt | `merged_transcriptomes.hisat2.short_reads.*.gtf`, `versions.yml` | `${output_dir}/tmp` et noms historiques sous `${output_dir}` via `publishDir saveAs` | Public/provenance; non utilise par Aegis |
 | `Stringtie_merging_long_reads` | listes stagees de GTF Minimap2/StringTie default/alt | `merged_transcriptomes.minimap2.long_reads.*.gtf`, `versions.yml` | `${output_dir}/tmp` et noms historiques sous `${output_dir}` via `publishDir saveAs` | Aegis long reads |
-| `gffcompare` | listes stagees de GTF PsiCLASS par strandedness | `stranded_merged_output.combined.gtf`, `unstranded_merged_output.combined.gtf` vide si absent | `${output_dir}/tmp` et noms historiques sous `${output_dir}` via `publishDir saveAs` | Aegis |
+| `gffcompare` | listes stagees de GTF PsiCLASS par strandedness | `stranded_merged_output.combined.gtf`, `unstranded_merged_output.combined.gtf` vide si absent, `versions.yml` | `${output_dir}/tmp` et noms historiques sous `${output_dir}` via `publishDir saveAs` | Aegis |
 | `EDTA` | assemblage cible | `*TElib.fa`, `*TEanno.gff3`, `*MAKER.masked` | `${output_dir}/tmp` plus copies script vers `${output_dir}` | Aegis |
 | `braker3_prediction` | genome, proteines, BAM courts | `augustus.hints.gff3`, `genemark.gtf`, `genemark_supported.gtf`, `braker.gff3` | `${output_dir}` | Aegis |
 | `braker3_prediction_with_long_reads` | genome, proteines, BAM courts + longs | `augustus.hints.gff3`, `genemark.gtf`, `genemark_supported.gtf`, `braker.gff3` | `${output_dir}` | Aegis long reads |

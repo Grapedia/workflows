@@ -250,9 +250,9 @@ Perimetre lu: `README.md`, `nextflow.config`, `main.nf`, `workflows/titan.nf`, `
 ### `modules/gffcompare.nf`
 
 - Bon point: sorties nommees et publication publique avec `saveAs`.
-- A ameliorer: le script cree toujours `unstranded_merged_output.combined.gtf`, donc `optional: true` n'est pas coherent.
-- A ameliorer: proteger le cas `stranded_gtfs` vide avec une erreur explicite.
-- A ameliorer: ajouter `versions.yml`.
+- [x] A ameliorer: le script cree toujours `unstranded_merged_output.combined.gtf`, donc `optional: true` n'est pas coherent.
+- [x] A ameliorer: proteger le cas `stranded_gtfs` vide avec une erreur explicite.
+- [x] A ameliorer: ajouter `versions.yml`.
 
 ### `modules/braker3_prediction.nf`
 
