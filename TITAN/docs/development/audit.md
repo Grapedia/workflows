@@ -143,7 +143,7 @@ for f in modules/*.nf; do awk '/^[[:space:]]*output:/{flag=1} /^[[:space:]]*scri
 | HISAT2 | Index/alignment | 2.2.1 documente | Digest-pinned | `hisat2_*` | `params.container_hisat2` | Stub | Non |
 | Liftoff | Transfert annotation | 1.5.1 | Digest-pinned | `liftoff_annotations` | `params.container_liftoff` | Stub | Non |
 | Minimap2 | Alignement long reads | 2.28 documente | Digest-pinned | `minimap2_*` | `params.container_minimap2_samtools` | Stub | Non |
-| PsiCLASS | Assemblage transcriptome | 1.0.2 | Digest-pinned | `assembly_transcriptome_star_psiclass` | `params.container_psiclass_samtools` | Stub | Non |
+| PsiCLASS | Assemblage transcriptome | 1.0.2 | Digest-pinned | `assembly_transcriptome_star_psiclass` | `params.container_psiclass_samtools` | Stub | `versions.yml` |
 | Salmon | Inference strandedness | 1.10.3 | Digest-pinned | `salmon_*` | `params.container_salmon` | Stub | Non |
 | ENA API downloader | SRA/ENA FASTQ staging | Python stdlib | Digest-pinned | `prepare_RNAseq_fastq_files_*`, `scripts/download_sra_fastq.py` | `params.container_python` | Unit + Stub | Non |
 | STAR | Index/alignment | 2.7.11b | Digest-pinned | `star_*` | `params.container_star` | Stub | Non |
@@ -184,7 +184,7 @@ for f in modules/*.nf; do awk '/^[[:space:]]*output:/{flag=1} /^[[:space:]]*scri
 | `minimap2_alignment` | index Minimap2, reads longs, format FASTQ/FASTA | `${sample_ID}_Aligned.sorted.bam` | `${output_dir}/intermediate_files/evidence_data/RNAseq_alignments/minimap2` | StringTie long reads, BRAKER3 long reads |
 | `assembly_transcriptome_star_stringtie` | BAM STAR | tuple `sample_ID`, default GTF, alt GTF, `strand_type` | `${output_dir}/intermediate_files/evidence_data/transcriptomes/StringTie/short_reads/STAR/{stranded,unstranded}` | StringTie STAR merge |
 | `assembly_transcriptome_hisat2_stringtie` | BAM HISAT2 | tuple `sample_ID`, default GTF, alt GTF, `strand_type` | `${output_dir}/intermediate_files/evidence_data/transcriptomes/StringTie/short_reads/HISAT2/{stranded,unstranded}` | StringTie HISAT2 merge |
-| `assembly_transcriptome_star_psiclass` | BAM STAR | `${sample_ID}_vote.gtf` | `${output_dir}/intermediate_files/transcriptomes/STAR_PsiCLASS/{stranded,unstranded}` | GFFCompare |
+| `assembly_transcriptome_star_psiclass` | BAM STAR | `${sample_ID}_vote.gtf` | `${output_dir}/intermediate_files/evidence_data/transcriptomes/STAR_PsiCLASS/{stranded,unstranded}` | GFFCompare |
 | `assembly_transcriptome_minimap2_stringtie` | BAM Minimap2 | tuple `sample_ID`, default GTF, alt GTF | `${output_dir}/intermediate_files/evidence_data/transcriptomes/StringTie/long_reads` | StringTie long reads merge |
 | `Stringtie_merging_short_reads_STAR` | listes stagees de GTF STAR/StringTie par strandedness et mode default/alt | `merged_transcriptomes.STAR.short_reads.*.gtf` | `${output_dir}/tmp` et noms historiques sous `${output_dir}` via `publishDir saveAs` | Aegis |
 | `Stringtie_merging_short_reads_hisat2` | listes stagees de GTF HISAT2/StringTie par strandedness et mode default/alt | `*.gtf` | `${output_dir}` | Non utilise actuellement par Aegis |

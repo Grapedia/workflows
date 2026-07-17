@@ -220,11 +220,11 @@ Perimetre lu: `README.md`, `nextflow.config`, `main.nf`, `workflows/titan.nf`, `
 
 ### `modules/assembly_transcriptome_star_psiclass.nf`
 
-- A ameliorer: ajouter `set -euo pipefail`.
-- A ameliorer: emettre avec `path(...)` plutot que `file(...)`.
-- A ameliorer: passer `PSICLASS_vd_option` et `PSICLASS_c_option` comme `val` inputs ou les documenter dans un schema.
-- A ameliorer: ajouter `versions.yml`.
-- A ameliorer: chemin publie manque `evidence_data` contrairement aux autres transcriptomes; harmoniser.
+- [x] A ameliorer: ajouter `set -euo pipefail`.
+- [x] A ameliorer: emettre avec `path(...)` plutot que `file(...)`.
+- [x] A ameliorer: passer `PSICLASS_vd_option` et `PSICLASS_c_option` comme `val` inputs ou les documenter dans un schema.
+- [x] A ameliorer: ajouter `versions.yml`.
+- [x] A ameliorer: chemin publie manque `evidence_data` contrairement aux autres transcriptomes; harmoniser.
 
 ### `modules/Stringtie_merging_short_reads_STAR.nf`
 
