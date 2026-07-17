@@ -194,11 +194,11 @@ Perimetre lu: `README.md`, `nextflow.config`, `main.nf`, `workflows/titan.nf`, `
 
 ### `modules/minimap2_alignment.nf`
 
-- A ameliorer: ajouter `set -euo pipefail`.
-- A ameliorer: les trois branches FASTQ/SRA/FASTA executent la meme commande; factoriser.
-- A ameliorer: remplacer `samtools view -b ... | samtools sort - > file.bam` par `samtools sort -o file.bam -` avec `pipefail`.
-- A ameliorer: supprimer le SAM temporaire via pipe direct minimap2 vers samtools pour reduire I/O.
-- A ameliorer: ajouter `versions.yml`.
+- [x] A ameliorer: ajouter `set -euo pipefail`.
+- [x] A ameliorer: les trois branches FASTQ/SRA/FASTA executent la meme commande; factoriser.
+- [x] A ameliorer: remplacer `samtools view -b ... | samtools sort - > file.bam` par `samtools sort -o file.bam -` avec `pipefail`.
+- [x] A ameliorer: supprimer le SAM temporaire via pipe direct minimap2 vers samtools pour reduire I/O.
+- [x] A ameliorer: ajouter `versions.yml`.
 
 ### `modules/assembly_transcriptome_star_stringtie.nf`
 

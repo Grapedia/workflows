@@ -33,17 +33,21 @@ process minimap2_alignment {
       exit 1
     fi
 
-    CMD="minimap2 -t ${task.cpus} -ax splice:hq -uf ${minimap2_genome_indices} \${reads} | samtools view -b - | samtools sort -o ${sample_ID}_Aligned.sorted.bam -"
+    CMD="minimap2 -t ${task.cpus} -ax splice:hq -uf ${minimap2_genome_indices} \${reads} | samtools sort -o ${sample_ID}_Aligned.sorted.bam -"
     echo "[\$DATE] Executing: \$CMD"
     minimap2 -t ${task.cpus} -ax splice:hq -uf ${minimap2_genome_indices} "\${reads}" \\
-      | samtools view -b - \\
       | samtools sort -o ${sample_ID}_Aligned.sorted.bam -
-    printf '"%s":\n  container: "not_recorded"\n' "${task.process}" > versions.yml
+    {
+      printf '"%s":\n' "${task.process}"
+      minimap2 --version | awk '{ printf "  minimap2: \\"%s\\"\\n", \$0 }'
+      samtools --version | awk 'NR == 1 { printf "  samtools: \\"%s\\"\\n", \$0 }'
+    } > versions.yml
     """
 
   stub:
     """
+    set -euo pipefail
     printf "BAM\\n" > ${sample_ID}_Aligned.sorted.bam
-    printf '"%s":\n  container: "not_recorded"\n' "${task.process}" > versions.yml
+    printf '"%s":\n  minimap2: "stub"\n  samtools: "stub"\n' "${task.process}" > versions.yml
     """
 }
