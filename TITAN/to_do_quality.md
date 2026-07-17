@@ -56,9 +56,9 @@ Perimetre lu: `README.md`, `nextflow.config`, `main.nf`, `workflows/titan.nf`, `
 
 ### `main.nf`
 
-- A ameliorer: retirer les assignations `params.* = false` du script principal. Elles ecrasent mentalement le contrat des profils et ne remplacent pas une validation de schema.
-- A ameliorer: deplacer les defaults EGAPx/AEGIS vers `nextflow.config`.
-- A ameliorer: garder `main.nf` minimal: activation DSL2, include du workflow, appel du workflow.
+- [x] A ameliorer: retirer les assignations `params.* = false` du script principal. Elles ecrasent mentalement le contrat des profils et ne remplacent pas une validation de schema. Le script principal ne definit plus de parametres.
+- [x] A ameliorer: deplacer les defaults EGAPx/AEGIS vers `nextflow.config`.
+- [x] A ameliorer: garder `main.nf` minimal: activation DSL2, include du workflow, appel du workflow. Ce contrat est verifie par `scripts/validate_nextflow_quality.py`.
 
 ### `workflows/titan.nf`
 

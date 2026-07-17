@@ -27,6 +27,17 @@ main = (ROOT / "main.nf").read_text(encoding="utf-8")
 if re.search(r"(?m)^\s*params\.[A-Za-z0-9_]+\s*=", main):
     fail("main.nf must not mutate params at runtime")
 
+expected_main = """nextflow.enable.dsl = 2
+
+include { TITAN } from './workflows/titan'
+
+workflow {
+    TITAN()
+}
+"""
+if main != expected_main:
+    fail("main.nf must stay minimal: DSL2 activation, TITAN include, workflow call")
+
 for module_path in sorted((ROOT / "modules").glob("*.nf")):
     text = module_path.read_text(encoding="utf-8")
     if "\r" in text:
