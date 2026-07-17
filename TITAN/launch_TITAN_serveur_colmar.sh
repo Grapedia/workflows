@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 #SBATCH --job-name=TITAN_colmar
-#SBATCH --nodelist=node001,node003,node004,node005
+#SBATCH --nodelist=calcul,node001,node003,node004,node005
 #SBATCH --cpus-per-task=1
 #SBATCH --mem=4G
 #SBATCH --output=%x-%j.log
