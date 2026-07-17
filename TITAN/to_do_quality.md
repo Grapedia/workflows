@@ -202,20 +202,20 @@ Perimetre lu: `README.md`, `nextflow.config`, `main.nf`, `workflows/titan.nf`, `
 
 ### `modules/assembly_transcriptome_star_stringtie.nf`
 
-- A ameliorer: ajouter `set -euo pipefail`.
-- A ameliorer: les scripts `Stringtie.sh` et `Stringtie_AltCommands.sh` devraient etre versionnes comme inputs ou integres dans un module plus explicite.
-- A ameliorer: ajouter `versions.yml`.
-- A ameliorer: factoriser avec les modules HISAT2/minimap2 StringTie.
+- [x] A ameliorer: ajouter `set -euo pipefail`.
+- [x] A ameliorer: les scripts `Stringtie.sh` et `Stringtie_AltCommands.sh` devraient etre versionnes comme inputs ou integres dans un module plus explicite.
+- [x] A ameliorer: ajouter `versions.yml`.
+- [x] A ameliorer: factoriser avec les modules HISAT2/minimap2 StringTie.
 
 ### `modules/assembly_transcriptome_hisat2_stringtie.nf`
 
-- A ameliorer: memes points que le module STAR/StringTie: `set -euo pipefail`, `versions.yml`, factorisation.
+- [x] A ameliorer: memes points que le module STAR/StringTie: `set -euo pipefail`, `versions.yml`, factorisation.
 - A ameliorer: harmoniser le tag et les chemins publies avec STAR pour faciliter la comparaison.
 
 ### `modules/assembly_transcriptome_minimap2_stringtie.nf`
 
-- A ameliorer: ajouter `set -euo pipefail`.
-- A ameliorer: ajouter `versions.yml`.
+- [x] A ameliorer: ajouter `set -euo pipefail`.
+- [x] A ameliorer: ajouter `versions.yml`.
 - A ameliorer: verifier si les options StringTie long reads sont adaptees a FASTA et FASTQ SRA de maniere uniforme.
 
 ### `modules/assembly_transcriptome_star_psiclass.nf`

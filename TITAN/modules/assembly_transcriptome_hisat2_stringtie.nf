@@ -27,6 +27,8 @@ process assembly_transcriptome_hisat2_stringtie {
     """
     set -euo pipefail
     DATE=\$(date "+%Y-%m-%d %H:%M:%S")
+    DEFAULT_GTF="${sample_ID}_transcriptome.gtf"
+    ALT_GTF="${sample_ID}_transcriptome.AltCommands.gtf"
     echo "[\$DATE] Running transcriptome assembly with StringTie on HISAT2 $sample_ID"
     bash ${stringtie_transcriptome_script} \\
       ${stringtie_script} \\
@@ -34,15 +36,22 @@ process assembly_transcriptome_hisat2_stringtie {
       ${task.cpus} \\
       ${bam_file} \\
       short \\
-      ${sample_ID}_transcriptome.gtf \\
-      ${sample_ID}_transcriptome.AltCommands.gtf
-    printf '"%s":\n  container: "not_recorded"\n' "${task.process}" > versions.yml
+      "\${DEFAULT_GTF}" \\
+      "\${ALT_GTF}"
+    {
+      printf '"%s":\n' "${task.process}"
+      stringtie --version 2>&1 | awk '{ printf "  stringtie: \\"%s\\"\\n", \$0 }'
+      sha256sum ${stringtie_script} | awk '{ printf "  stringtie_script_sha256: \\"%s\\"\\n", \$1 }'
+      sha256sum ${stringtie_alt_script} | awk '{ printf "  stringtie_alt_script_sha256: \\"%s\\"\\n", \$1 }'
+      sha256sum ${stringtie_transcriptome_script} | awk '{ printf "  stringtie_transcriptome_script_sha256: \\"%s\\"\\n", \$1 }'
+    } > versions.yml
     """
 
   stub:
     """
+    set -euo pipefail
     printf "chr1\\tStringTie\\ttranscript\\t1\\t10\\t.\\t+\\t.\\tgene_id \\"${sample_ID}_hisat_gene\\"; transcript_id \\"${sample_ID}_hisat_tx\\";\\n" > ${sample_ID}_transcriptome.gtf
     printf "chr1\\tStringTie\\ttranscript\\t1\\t10\\t.\\t+\\t.\\tgene_id \\"${sample_ID}_hisat_gene_alt\\"; transcript_id \\"${sample_ID}_hisat_tx_alt\\";\\n" > ${sample_ID}_transcriptome.AltCommands.gtf
-    printf '"%s":\n  container: "not_recorded"\n' "${task.process}" > versions.yml
+    printf '"%s":\n  stringtie: "stub"\n  stringtie_script_sha256: "stub"\n  stringtie_alt_script_sha256: "stub"\n  stringtie_transcriptome_script_sha256: "stub"\n' "${task.process}" > versions.yml
     """
 }
