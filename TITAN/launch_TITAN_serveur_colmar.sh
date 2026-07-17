@@ -1,4 +1,18 @@
 #!/usr/bin/env bash
+#SBATCH --job-name=TITAN_colmar
+#SBATCH --nodelist=node001,node003,node004,node005
+#SBATCH --cpus-per-task=1
+#SBATCH --mem=4G
+#SBATCH --output=%x-%j.log
+# This script is itself only the Nextflow orchestrator: it stays alive for the
+# whole pipeline (potentially several days across EGAPx/BRAKER3/InterProScan)
+# and submits every actual TITAN task as its own separate sbatch job via
+# Nextflow's slurm executor (see clusterOptions/--nodelist in
+# data/slurm_apptainer.config, which restricts those task jobs the same way).
+# No --time is set here on purpose: an incorrect guess could make sbatch
+# reject the submission outright if it exceeds your partition's default. If
+# your site's default walltime is too short for the full run, submit with
+# e.g. `sbatch --time=14-00:00:00 launch_TITAN_serveur_colmar.sh` instead.
 set -Eeuo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd -P)"
