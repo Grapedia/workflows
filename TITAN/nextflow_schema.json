@@ -1,0 +1,203 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema",
+  "$id": "https://github.com/Grapedia/workflows/TITAN/nextflow_schema.json",
+  "title": "TITAN pipeline parameters",
+  "description": "Parameter schema for TITAN, a Nextflow DSL2 eukaryotic genome annotation pipeline.",
+  "type": "object",
+  "definitions": {
+    "path_or_false": {
+      "anyOf": [
+        {
+          "type": "string",
+          "minLength": 1
+        },
+        {
+          "type": "boolean",
+          "enum": [
+            false
+          ]
+        }
+      ]
+    },
+    "container_digest": {
+      "type": "string",
+      "pattern": "^[A-Za-z0-9._/-]+@sha256:[0-9a-f]{64}$"
+    }
+  },
+  "properties": {
+    "output_dir": {
+      "$ref": "#/definitions/path_or_false",
+      "description": "TITAN output directory. Required for production runs."
+    },
+    "new_assembly": {
+      "$ref": "#/definitions/path_or_false",
+      "description": "Target genome assembly to annotate, FASTA. Required for production runs."
+    },
+    "previous_assembly": {
+      "$ref": "#/definitions/path_or_false",
+      "description": "Reference assembly used by Liftoff, FASTA. Required for production runs."
+    },
+    "previous_annotations": {
+      "$ref": "#/definitions/path_or_false",
+      "description": "GFF3 annotation matching previous_assembly. Required for production runs."
+    },
+    "RNAseq_samplesheet": {
+      "$ref": "#/definitions/path_or_false",
+      "description": "CSV with sampleID,SRA_or_FASTQ,library_layout columns. Required for production runs."
+    },
+    "RNAseq_data_dir": {
+      "$ref": "#/definitions/path_or_false",
+      "description": "Directory containing local RNA-seq FASTQ/FASTA files referenced by sampleID."
+    },
+    "protein_samplesheet": {
+      "$ref": "#/definitions/path_or_false",
+      "description": "CSV with organism,filename protein evidence rows. Required for production runs."
+    },
+    "egapx_paramfile": {
+      "$ref": "#/definitions/path_or_false",
+      "description": "EGAPx YAML input file. Required for production runs."
+    },
+    "publish_intermediates": {
+      "type": "boolean",
+      "description": "Publish intermediate/debug outputs under output_dir/intermediate_files and output_dir/tmp."
+    },
+    "edta_cpus": {
+      "type": "integer",
+      "minimum": 1,
+      "description": "CPU override for EDTA."
+    },
+    "egapx_cpus": {
+      "type": "integer",
+      "minimum": 1,
+      "description": "CPU override for the TITAN EGAPx wrapper process."
+    },
+    "diamond2go_cpus": {
+      "type": "integer",
+      "minimum": 1,
+      "description": "CPU override for Diamond2GO."
+    },
+    "egapx_version": {
+      "type": "string",
+      "description": "EGAPx version recorded in provenance."
+    },
+    "egapx_revision": {
+      "type": "string",
+      "description": "EGAPx runner Git tag or revision to fetch when egapx_runner_dir is not provided."
+    },
+    "egapx_executor": {
+      "type": "string",
+      "enum": [
+        "docker",
+        "singularity"
+      ],
+      "description": "Executor passed to the nested EGAPx runner."
+    },
+    "egapx_data_version": {
+      "type": "string",
+      "description": "EGAPx data version passed to the nested EGAPx runner."
+    },
+    "egapx_runner_dir": {
+      "$ref": "#/definitions/path_or_false",
+      "description": "Optional local EGAPx runner directory. False downloads the pinned revision."
+    },
+    "egapx_local_cache_dir": {
+      "$ref": "#/definitions/path_or_false",
+      "description": "Optional persistent EGAPx local cache directory."
+    },
+    "aegis_version": {
+      "type": "string",
+      "description": "AEGIS version recorded in provenance."
+    },
+    "ena_download_timeout_seconds": {
+      "type": "integer",
+      "minimum": 1,
+      "description": "Per-request timeout for ENA/SRA FASTQ downloads."
+    },
+    "ena_max_download_attempts": {
+      "type": "integer",
+      "minimum": 1,
+      "description": "Maximum ENA/SRA download attempts per file."
+    },
+    "ena_retry_wait_seconds": {
+      "type": "integer",
+      "minimum": 0,
+      "description": "Wait time between ENA/SRA download retries."
+    },
+    "ena_verify_md5": {
+      "type": "boolean",
+      "description": "Verify ENA MD5 checksums when metadata provides them."
+    },
+    "PSICLASS_vd_option": {
+      "type": "number",
+      "minimum": 0,
+      "description": "PsiCLASS --vd option."
+    },
+    "PSICLASS_c_option": {
+      "type": "number",
+      "minimum": 0,
+      "description": "PsiCLASS -c option."
+    },
+    "STAR_memory_per_job": {
+      "type": "integer",
+      "minimum": 1,
+      "description": "STAR --limitBAMsortRAM value."
+    },
+    "container_agat": {
+      "$ref": "#/definitions/container_digest"
+    },
+    "container_aegis": {
+      "$ref": "#/definitions/container_digest"
+    },
+    "container_braker3": {
+      "$ref": "#/definitions/container_digest"
+    },
+    "container_diamond2go": {
+      "$ref": "#/definitions/container_digest"
+    },
+    "container_edta": {
+      "$ref": "#/definitions/container_digest"
+    },
+    "container_egapx": {
+      "$ref": "#/definitions/container_digest"
+    },
+    "container_fastp": {
+      "$ref": "#/definitions/container_digest"
+    },
+    "container_gffcompare": {
+      "$ref": "#/definitions/container_digest"
+    },
+    "container_hisat2": {
+      "$ref": "#/definitions/container_digest"
+    },
+    "container_liftoff": {
+      "$ref": "#/definitions/container_digest"
+    },
+    "container_minimap2_samtools": {
+      "$ref": "#/definitions/container_digest"
+    },
+    "container_psiclass_samtools": {
+      "$ref": "#/definitions/container_digest"
+    },
+    "container_python": {
+      "$ref": "#/definitions/container_digest"
+    },
+    "container_salmon": {
+      "$ref": "#/definitions/container_digest"
+    },
+    "container_star": {
+      "$ref": "#/definitions/container_digest"
+    },
+    "container_stringtie": {
+      "$ref": "#/definitions/container_digest"
+    },
+    "egapx_container": {
+      "$ref": "#/definitions/container_digest",
+      "description": "Deprecated compatibility alias for container_egapx."
+    },
+    "aegis_container": {
+      "$ref": "#/definitions/container_digest",
+      "description": "Deprecated compatibility alias for container_aegis."
+    }
+  },
+  "additionalProperties": true
+}

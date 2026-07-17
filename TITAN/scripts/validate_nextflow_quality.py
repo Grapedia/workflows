@@ -4,6 +4,7 @@
 from pathlib import Path
 import re
 import sys
+import json
 
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -74,5 +75,25 @@ for helper in ["run_aegis_merge.sh", "run_stringtie_transcriptome.sh"]:
 
 if not (ROOT / "docs" / "development" / "nextflow-dsl2-conventions.md").exists():
     fail("Nextflow DSL2 conventions document is missing")
+
+schema_path = ROOT / "nextflow_schema.json"
+if not schema_path.exists():
+    fail("nextflow_schema.json is missing")
+
+schema = json.loads(schema_path.read_text(encoding="utf-8"))
+for required_param in [
+    "output_dir",
+    "new_assembly",
+    "previous_assembly",
+    "previous_annotations",
+    "RNAseq_samplesheet",
+    "RNAseq_data_dir",
+    "protein_samplesheet",
+    "egapx_paramfile",
+    "container_egapx",
+    "container_aegis",
+]:
+    if required_param not in schema.get("properties", {}):
+        fail(f"nextflow_schema.json is missing parameter: {required_param}")
 
 print("Nextflow quality checks OK")

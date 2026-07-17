@@ -44,10 +44,9 @@ def parse_nextflow_params():
     if invalid:
         return None, fail("container params must use image@sha256 pins: " + ", ".join(invalid))
 
-    legacy = dict(re.findall(r"^\s*((?:egapx|aegis)_container)\s*=\s*\"([^\"]+)\"", config, re.MULTILINE))
     for legacy_name, canonical_name in {"egapx_container": "container_egapx", "aegis_container": "container_aegis"}.items():
-        if legacy.get(legacy_name) != found[canonical_name]:
-            return None, fail(f"{legacy_name} must match {canonical_name}")
+        if f"params.{legacy_name}" not in config or f"params.{canonical_name}" not in config:
+            return None, fail(f"{legacy_name} compatibility alias for {canonical_name} is missing")
     return found, 0
 
 

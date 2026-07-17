@@ -71,10 +71,10 @@ manifest = {
         "output_dir": "${params.output_dir}",
         "egapx_version": "${params.egapx_version}",
         "egapx_revision": "${params.egapx_revision}",
-        "egapx_container": "${params.egapx_container}",
+        "egapx_container": "${params.container_egapx}",
         "egapx_data_version": "${params.egapx_data_version}",
         "aegis_version": "${params.aegis_version}",
-        "aegis_container": "${params.aegis_container}",
+        "aegis_container": "${params.container_aegis}",
     },
     "inputs": [
         file_record("new_assembly", "${new_assembly}"),
@@ -113,9 +113,9 @@ with open("versions.yml", "w", encoding="utf-8") as handle:
     handle.write('  titan_manifest_schema: "titan.evidence_manifest.v1"\\n')
     handle.write('  egapx: "${params.egapx_version}"\\n')
     handle.write('  egapx_runner_revision: "${params.egapx_revision}"\\n')
-    handle.write('  egapx_container: "${params.egapx_container}"\\n')
+    handle.write('  egapx_container: "${params.container_egapx}"\\n')
     handle.write('  aegis: "${params.aegis_version}"\\n')
-    handle.write('  aegis_container: "${params.aegis_container}"\\n')
+    handle.write('  aegis_container: "${params.container_aegis}"\\n')
 PY
     """
 }

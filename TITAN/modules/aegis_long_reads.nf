@@ -2,7 +2,7 @@ process aegis_long_reads {
   label 'process_aegis'
   tag "AEGIS merge of short- and long-read evidence"
 
-  container "${params.aegis_container}"
+  container "${params.container_aegis}"
   publishDir "${params.output_dir}/aegis_outputs", mode: 'copy'
   input:
     path(edta_masked_genome)
@@ -34,7 +34,7 @@ process aegis_long_reads {
       short_and_long_reads \\
       ${edta_masked_genome} \\
       ${params.aegis_version} \\
-      ${params.aegis_container} \\
+      ${params.container_aegis} \\
       final_annotation \\
       ${liftoff_annotations} \\
       ${augustus_gff} \\
@@ -59,6 +59,6 @@ process aegis_long_reads {
     printf ">aegis_stub_protein\\nM\\n" > final_annotation_proteins_all.fasta
     printf ">aegis_stub_protein\\nM\\n" > final_annotation_proteins_main.fasta
     printf '"%s":\\n  aegis: "%s"\\n  aegis_container: "%s"\\n' \\
-      "${task.process}" "${params.aegis_version}" "${params.aegis_container}" > versions.yml
+      "${task.process}" "${params.aegis_version}" "${params.container_aegis}" > versions.yml
     """
 }

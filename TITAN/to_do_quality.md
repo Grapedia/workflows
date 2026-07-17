@@ -42,10 +42,10 @@ Perimetre lu: `README.md`, `nextflow.config`, `main.nf`, `workflows/titan.nf`, `
 ### `nextflow.config`
 
 - Les containers sont pin avec digest, bon point pour la reproductibilite.
-- A ameliorer: les chemins par defaut pointent vers `data/...` alors que les exemples actuels sont sous `data_example/` et `test-data/`. Eviter des defaults de production non valides; utiliser `false` ou des fixtures de test seulement dans le profil `test`.
-- A ameliorer: `docker.enabled = true` au niveau global peut surprendre avec les profils HPC. Preferer activer Docker dans `conf/local.config`, et laisser le runtime au profil.
-- A ameliorer: harmoniser `container_egapx` et `egapx_container`, `container_aegis` et `aegis_container`. Garder un seul nom canonique avec compatibilite temporaire si necessaire.
-- A ameliorer: ajouter un schema `nextflow_schema.json` pour typer et documenter les parametres.
+- [x] A ameliorer: les chemins par defaut pointent vers `data/...` alors que les exemples actuels sont sous `data_example/` et `test-data/`. Eviter des defaults de production non valides; utiliser `false` ou des fixtures de test seulement dans le profil `test`.
+- [x] A ameliorer: `docker.enabled = true` au niveau global peut surprendre avec les profils HPC. Preferer activer Docker dans `conf/local.config`, et laisser le runtime au profil.
+- [x] A ameliorer: harmoniser `container_egapx` et `egapx_container`, `container_aegis` et `aegis_container`. Garder un seul nom canonique avec compatibilite temporaire si necessaire. `container_egapx` et `container_aegis` sont canoniques; les anciens noms restent des alias.
+- [x] A ameliorer: ajouter un schema `nextflow_schema.json` pour typer et documenter les parametres.
 
 ### `conf/base.config`
 

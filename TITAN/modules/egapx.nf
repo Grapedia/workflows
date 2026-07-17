@@ -23,7 +23,7 @@ process egapx {
 
     EGAPX_VERSION="${params.egapx_version}"
     EGAPX_REVISION="${params.egapx_revision}"
-    EGAPX_CONTAINER="${params.egapx_container}"
+    EGAPX_CONTAINER="${params.container_egapx}"
     EGAPX_EXECUTOR="${params.egapx_executor}"
     EGAPX_DATA_VERSION="${params.egapx_data_version}"
     EGAPX_RUNNER_DIR="${params.egapx_runner_dir}"
@@ -87,6 +87,6 @@ process egapx {
     cp egapx.complete.transcripts.fna egapx_out/complete.transcripts.fna
     cp egapx.annotated_genome.asn egapx_out/annotated_genome.asn
     printf '"%s":\\n  egapx: "%s"\\n  egapx_runner_revision: "%s"\\n  egapx_container: "%s"\\n  egapx_data_version: "%s"\\n' \\
-      "${task.process}" "${params.egapx_version}" "${params.egapx_revision}" "${params.egapx_container}" "${params.egapx_data_version}" > versions.yml
+      "${task.process}" "${params.egapx_version}" "${params.egapx_revision}" "${params.container_egapx}" "${params.egapx_data_version}" > versions.yml
     """
 }

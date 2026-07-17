@@ -69,21 +69,21 @@ apptainer pull egapx_0.5.2.sif docker://ncbi/egapx@sha256:bc657b232d93364d5f3b75
 apptainer pull aegis_v0.3.25.sif docker://tomsbiolab/aegis@sha256:de88470b3fb4fbab3ff2d5fa0fb9fed36b55952d1e383d3fdb2f5a3a530d84e6
 ```
 
-EGAPx is a nested Nextflow workflow. The TITAN EGAPx process runs the official EGAPx runner `v0.5.2`, and that runner launches EGAPx tasks using `params.egapx_executor` and `params.egapx_container`. The `apptainer` profile sets `egapx_executor = singularity` for the nested EGAPx run.
+EGAPx is a nested Nextflow workflow. The TITAN EGAPx process runs the official EGAPx runner `v0.5.2`, and that runner launches EGAPx tasks using `params.egapx_executor` and `params.container_egapx`. The `apptainer` profile sets `egapx_executor = singularity` for the nested EGAPx run.
 
 Defaults:
 
 ```text
 egapx_version = 0.5.2
 egapx_revision = v0.5.2
-egapx_container = ncbi/egapx@sha256:bc657b232d93364d5f3b75ad3bfaf14b6267e46173672b609f26078d48a04298
+container_egapx = ncbi/egapx@sha256:bc657b232d93364d5f3b75ad3bfaf14b6267e46173672b609f26078d48a04298
 egapx_executor = docker
 egapx_data_version = current_1
 aegis_version = v0.3.25
-aegis_container = tomsbiolab/aegis@sha256:de88470b3fb4fbab3ff2d5fa0fb9fed36b55952d1e383d3fdb2f5a3a530d84e6
+container_aegis = tomsbiolab/aegis@sha256:de88470b3fb4fbab3ff2d5fa0fb9fed36b55952d1e383d3fdb2f5a3a530d84e6
 ```
 
-AEGIS now uses the upstream CLI container and runs `aegis merge` followed by `aegis extract`. On HPC without Docker, set `--egapx_executor singularity` for nested EGAPx execution and make the AEGIS image available through your site container runtime.
+AEGIS now uses the upstream CLI container and runs `aegis merge` followed by `aegis extract`. On HPC without Docker, set `--egapx_executor singularity` for nested EGAPx execution and make the AEGIS image available through your site container runtime. Legacy `--egapx_container` and `--aegis_container` overrides are still accepted, but new runs should use `--container_egapx` and `--container_aegis`.
 
 ## 4. Required input files
 
