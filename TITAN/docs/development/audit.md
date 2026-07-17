@@ -134,7 +134,7 @@ for f in modules/*.nf; do awk '/^[[:space:]]*output:/{flag=1} /^[[:space:]]*scri
 | --- | --- | --- | --- | --- | --- | --- | --- |
 | Aegis | Integration finale annotation | v0.3.25 image label | Digest-pinned | `aegis_short_reads`, `aegis_long_reads` | `params.container_aegis` | Stub + test CLI Docker | `versions.yml` |
 | AGAT | GFF3 vers CDS FASTA | 1.2.0 | Digest-pinned | `agat_convert_gff3_to_cds_fasta` | `params.container_agat` | Stub | Non |
-| BRAKER3 | Prediction ab initio | v3.0.8 documente | Digest-pinned | `braker3_prediction*` | `params.container_braker3` | Stub | Non |
+| BRAKER3 | Prediction ab initio | v3.0.8 documente | Digest-pinned | `braker3_prediction*` | `params.container_braker3` | Stub | `versions.yml` |
 | Diamond2GO | Annotation fonctionnelle | commit documente | Digest-pinned | `diamond2go` | `params.container_diamond2go` | Stub | Non |
 | EDTA | Masquage TE | GitHub latest documente | Digest-pinned | `EDTA` | `params.container_edta` | Stub | Non |
 | EGAPx | Annotation NCBI | 0.5.2 | Digest-pinned | `egapx` | `params.container_egapx` | Stub | `versions.yml` |
@@ -191,8 +191,8 @@ for f in modules/*.nf; do awk '/^[[:space:]]*output:/{flag=1} /^[[:space:]]*scri
 | `Stringtie_merging_long_reads` | listes stagees de GTF Minimap2/StringTie default/alt | `merged_transcriptomes.minimap2.long_reads.*.gtf`, `versions.yml` | `${output_dir}/tmp` et noms historiques sous `${output_dir}` via `publishDir saveAs` | Aegis long reads |
 | `gffcompare` | listes stagees de GTF PsiCLASS par strandedness | `stranded_merged_output.combined.gtf`, `unstranded_merged_output.combined.gtf` vide si absent, `versions.yml` | `${output_dir}/tmp` et noms historiques sous `${output_dir}` via `publishDir saveAs` | Aegis |
 | `EDTA` | assemblage cible | `*TElib.fa`, `*TEanno.gff3`, `*MAKER.masked` | `${output_dir}/tmp` plus copies script vers `${output_dir}` | Aegis |
-| `braker3_prediction` | genome, proteines, BAM courts | `augustus.hints.gff3`, `genemark.gtf`, `genemark_supported.gtf`, `braker.gff3` | `${output_dir}` | Aegis |
-| `braker3_prediction_with_long_reads` | genome, proteines, BAM courts + longs | `augustus.hints.gff3`, `genemark.gtf`, `genemark_supported.gtf`, `braker.gff3` | `${output_dir}` | Aegis long reads |
+| `braker3_prediction` | genome, proteines, BAM courts | `augustus.hints.gff3`, `genemark.gtf`, `genemark_supported.gtf`, `braker.gff3`, `versions.yml`; logs et manifeste sous `intermediate_files/braker3` si `publish_intermediates` | `${output_dir}` | Aegis |
+| `braker3_prediction_with_long_reads` | genome, proteines, BAM courts + longs | `augustus.hints.gff3`, `genemark.gtf`, `genemark_supported.gtf`, `braker.gff3`, `versions.yml`; logs et manifeste sous `intermediate_files/braker3` si `publish_intermediates` | `${output_dir}` | Aegis long reads |
 | `aegis_short_reads` | genome masque, Liftoff, EGAPx GFF3, BRAKER3, STAR/StringTie, GFFCompare | `final_annotation.gff3`, `final_annotation_proteins_all.fasta`, `final_annotation_proteins_main.fasta`, `versions.yml` | `${output_dir}/aegis_outputs` | Diamond2GO |
 | `aegis_long_reads` | idem short + StringTie long reads | `final_annotation.gff3`, `final_annotation_proteins_all.fasta`, `final_annotation_proteins_main.fasta`, `versions.yml` | `${output_dir}/aegis_outputs` | Diamond2GO |
 | `diamond2go` | proteines Aegis all/main | `*-diamond*` | `${output_dir}/Diamond2GO_outputs` | sortie finale fonctionnelle |

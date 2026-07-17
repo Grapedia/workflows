@@ -267,7 +267,7 @@ Main public output families:
 | --- | --- | --- |
 | Liftoff | `liftoff_previous_annotations.gff3`, `unmapped_features.txt` | `${output_dir}` |
 | EDTA | `assembly_masked.EDTA.fasta` | `${output_dir}` |
-| BRAKER3 | `augustus.hints.gff3`, `genemark.gtf`, `braker.gff3` | `${output_dir}` |
+| BRAKER3 | `augustus.hints.gff3`, `genemark.gtf`, `genemark_supported.gtf`, `braker.gff3` | `${output_dir}` |
 | Transcript evidence | merged STAR/StringTie, STAR/PsiCLASS and optional Minimap2/StringTie long-read GTFs | `${output_dir}` |
 | EGAPx | `egapx.complete.genomic.gff3`, GTF, protein, CDS, transcript, ASN and `egapx_out/` | `${output_dir}/egapx` |
 | AEGIS | `final_annotation.gff3`, `final_annotation_proteins_all.fasta`, `final_annotation_proteins_main.fasta` | `${output_dir}/aegis_outputs` |
@@ -275,6 +275,8 @@ Main public output families:
 | Provenance | `evidence_manifest.json`, `versions.yml` | `${output_dir}/provenance` |
 | Final validation | `final_annotation_validation.json`, `final_annotation_validation.txt` | `${output_dir}/validation` |
 | Reports | Nextflow report, timeline, trace and DAG | `${output_dir}/nextflow_reports` when using the launcher |
+
+Intermediate/debug outputs are controlled by `params.publish_intermediates`. BRAKER3 debug artifacts (`braker3_run.log`, `braker3_command.txt`, `braker3_inputs.tsv` and optional upstream logs) are published under `${output_dir}/intermediate_files/braker3` only when this option is enabled.
 
 Intermediate and debug outputs:
 

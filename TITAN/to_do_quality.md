@@ -257,17 +257,17 @@ Perimetre lu: `README.md`, `nextflow.config`, `main.nf`, `workflows/titan.nf`, `
 ### `modules/braker3_prediction.nf`
 
 - Bon point: `set -euo pipefail`.
-- A ameliorer: ajouter `versions.yml`.
-- A ameliorer: les chemins internes `/BRAKER-3.0.8`, `/ProtHint-2.6.0`, etc. devraient etre documentes dans le Dockerfile ou exposes comme constantes testees.
-- A ameliorer: la boucle `for file in ${protein_fastas}` est fragile avec espaces. Preferer fichiers sans espaces valides en amont ou script Python de preparation.
-- A ameliorer: verifier que `bam_short` n'est jamais vide et produire une erreur claire.
-- A ameliorer: publier seulement les outputs finaux publics, et garder le reste de BRAKER en workdir ou dans un dossier intermediaire dedie.
+- [x] A ameliorer: ajouter `versions.yml`.
+- [x] A ameliorer: les chemins internes `/BRAKER-3.0.8`, `/ProtHint-2.6.0`, etc. devraient etre documentes dans le Dockerfile ou exposes comme constantes testees.
+- [x] A ameliorer: la boucle `for file in ${protein_fastas}` est fragile avec espaces. Preferer fichiers sans espaces valides en amont ou script Python de preparation.
+- [x] A ameliorer: verifier que `bam_short` n'est jamais vide et produire une erreur claire.
+- [x] A ameliorer: publier seulement les outputs finaux publics, et garder le reste de BRAKER en workdir ou dans un dossier intermediaire dedie.
 
 ### `modules/braker3_prediction_with_long_reads.nf`
 
 - A ameliorer: factoriser avec `braker3_prediction.nf`; seule la construction de la liste BAM change.
-- A ameliorer: memes points: `versions.yml`, robustesse des listes, validation BAM/proteines, documentation des chemins internes.
-- A ameliorer: nommer clairement `bam_short`, `bam_long`, `bam_all` dans logs/provenance.
+- [x] A ameliorer: memes points: `versions.yml`, robustesse des listes, validation BAM/proteines, documentation des chemins internes.
+- [x] A ameliorer: nommer clairement `bam_short`, `bam_long`, `bam_all` dans logs/provenance.
 
 ### `modules/aegis_merge.nf`
 

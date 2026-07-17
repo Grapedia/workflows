@@ -4,12 +4,23 @@ process braker3_prediction {
 
   tag "Executing BRAKER3/AUGUSTUS-Genemark prediction"
   container params.container_braker3
-  publishDir "${params.output_dir}", mode: 'copy'
+  publishDir "${params.output_dir}", mode: 'copy', saveAs: { filename ->
+    if (filename in ['augustus.hints.gff3', 'genemark.gtf', 'genemark_supported.gtf', 'braker.gff3', 'versions.yml']) {
+      return filename
+    }
+    return null
+  }
+  publishDir "${params.output_dir}/intermediate_files/braker3", mode: 'copy', enabled: params.publish_intermediates, saveAs: { filename ->
+    if (filename in ['braker3_run.log', 'braker3_command.txt', 'braker3_inputs.tsv', 'braker.log', 'errors']) {
+      return filename
+    }
+    return null
+  }
 
   input:
     path(genome)
-    path(protein_fastas)
-    path(bam_short)
+    path(protein_fastas, stageAs: "protein_fastas/*")
+    path(bam_short, stageAs: "bam_short/*")
     path(clean_protein_script)
 
   output:
@@ -17,6 +28,11 @@ process braker3_prediction {
     path "genemark.gtf", emit: genemark_gtf
     path "genemark_supported.gtf", emit: genemark_supported_gtf
     path "braker.gff3", emit: braker_gff
+    path "braker3_run.log", emit: debug_log
+    path "braker3_command.txt", emit: command_log
+    path "braker3_inputs.tsv", emit: input_manifest
+    path "braker.log", optional: true, emit: braker_log
+    path "errors", optional: true, emit: errors
     path "versions.yml", emit: versions
 
 
@@ -24,49 +40,156 @@ process braker3_prediction {
   script:
     """
     set -euo pipefail
-    DATE=\$(date "+%Y-%m-%d %H:%M:%S")
-    echo "[\$DATE] Running BRAKER3/AUGUSTUS-Genemark prediction"
+    exec > >(tee -a braker3_run.log) 2>&1
 
-    bam=\$(printf '%s,' ${bam_short} | sed 's/,\$//')
+    BRAKER_DIR="/BRAKER-3.0.8"
+    PROTHINT_BIN="/ProtHint-2.6.0/bin"
+    GENEMARK_DIR="/GeneMark-ETP"
+    AUGUSTUS_CONFIG_DIR="/Augustus/config"
+    TSEBRA_BIN="/TSEBRA/bin"
 
-    # Cleaned the protein fasta files for BRAKER3 -> simpler header and replace . and * by X
-    cleaned_proteins=""
-    for file in ${protein_fastas}; do
-        cleaned="\$(basename "\${file%.*}").cleaned.fasta"
-        python3 ${clean_protein_script} "\$file" "\$cleaned" "\${file%.*}"
-        if [[ -z "\$cleaned_proteins" ]]; then
-            cleaned_proteins="\$cleaned"
-        else
-            cleaned_proteins="\$cleaned_proteins,\$cleaned"
+    log() {
+        printf '[%s] %s\\n' "\$(date '+%Y-%m-%d %H:%M:%S')" "\$*"
+    }
+
+    require_path() {
+        local path="\$1"
+        local description="\$2"
+        if [[ ! -e "\$path" ]]; then
+            log "ERROR: missing \${description}: \${path}"
+            exit 1
         fi
-    done
+    }
 
-    CMD="/BRAKER-3.0.8/scripts/braker.pl --genome=${genome} --bam=\${bam} \
-    --prot_seq=\${cleaned_proteins} \
-    --threads=${task.cpus} --workingdir=\${PWD} --softmasking --gff3 \
-    --PROTHINT_PATH=/ProtHint-2.6.0/bin/ --GENEMARK_PATH=/GeneMark-ETP --AUGUSTUS_CONFIG_PATH=/Augustus/config --TSEBRA_PATH=/TSEBRA/bin"
-    echo "[\$DATE] Executing: \$CMD"
+    collect_files() {
+        local directory="\$1"
+        local pattern="\$2"
+        local output_list="\$3"
+        local description="\$4"
 
-    /BRAKER-3.0.8/scripts/braker.pl --genome=${genome} --bam=\${bam} \
-    --prot_seq=\${cleaned_proteins} \
-    --threads=${task.cpus} --workingdir=\${PWD} --softmasking --gff3 \
-    --PROTHINT_PATH=/ProtHint-2.6.0/bin/ --GENEMARK_PATH=/GeneMark-ETP --AUGUSTUS_CONFIG_PATH=/Augustus/config --TSEBRA_PATH=/TSEBRA/bin
+        if [[ ! -d "\$directory" ]]; then
+            log "ERROR: missing \${description} directory: \${directory}"
+            exit 1
+        fi
+
+        find "\$directory" -type f -name "\$pattern" -print0 | sort -z | xargs -0 -r -n1 printf '%s\\n' > "\$output_list"
+        if [[ ! -s "\$output_list" ]]; then
+            log "ERROR: no \${description} found in \${directory} with pattern \${pattern}"
+            exit 1
+        fi
+    }
+
+    copy_required_output() {
+        local source="\$1"
+        local destination="\$2"
+        if [[ ! -s "\$source" ]]; then
+            log "ERROR: required BRAKER3 output is missing or empty: \${source}"
+            log "Top-level files available after BRAKER3 failure/debug:"
+            find . -maxdepth 2 -type f | sort | sed 's#^./#  #'
+            exit 1
+        fi
+        cp "\$source" "\$destination"
+    }
+
+    log "Running BRAKER3/AUGUSTUS-GeneMark prediction"
+    log "Work directory: \${PWD}"
+    log "Task resources: cpus=${task.cpus}; memory=${task.memory ?: 'not_set'}"
+
+    require_path "\${BRAKER_DIR}/scripts/braker.pl" "BRAKER braker.pl script"
+    require_path "\${PROTHINT_BIN}" "ProtHint bin directory"
+    require_path "\${GENEMARK_DIR}" "GeneMark-ETP directory"
+    require_path "\${AUGUSTUS_CONFIG_DIR}" "AUGUSTUS config directory"
+    require_path "\${TSEBRA_BIN}" "TSEBRA bin directory"
+    require_path "${clean_protein_script}" "protein cleanup script"
+    require_path "${genome}" "genome FASTA"
+
+    collect_files "bam_short" "*.bam" "bam_short.list" "short-read BAM evidence"
+    collect_files "protein_fastas" "*" "protein_fastas.list" "protein FASTA evidence"
+
+    bam_short_count=\$(wc -l < bam_short.list | tr -d ' ')
+    protein_count=\$(wc -l < protein_fastas.list | tr -d ' ')
+    bam=\$(paste -sd, bam_short.list)
+
+    {
+        printf 'type\\tpath\\tsize_bytes\\n'
+        printf 'genome\\t%s\\t%s\\n' "${genome}" "\$(stat -c '%s' "${genome}")"
+        while IFS= read -r file; do
+            printf 'bam_short\\t%s\\t%s\\n' "\$file" "\$(stat -c '%s' "\$file")"
+        done < bam_short.list
+        while IFS= read -r file; do
+            printf 'protein_fasta\\t%s\\t%s\\n' "\$file" "\$(stat -c '%s' "\$file")"
+        done < protein_fastas.list
+    } > braker3_inputs.tsv
+
+    log "Short-read BAM files: \${bam_short_count}"
+    log "Protein FASTA files: \${protein_count}"
+    log "Cleaning protein FASTA headers for BRAKER3"
+
+    : > cleaned_proteins.list
+    while IFS= read -r protein; do
+        stem=\$(basename "\$protein")
+        stem="\${stem%.*}"
+        safe_stem=\$(printf '%s' "\$stem" | tr -c 'A-Za-z0-9_.-' '_')
+        cleaned="\${safe_stem}.cleaned.fasta"
+        python3 "${clean_protein_script}" "\$protein" "\$cleaned" "\$stem"
+        if [[ ! -s "\$cleaned" ]]; then
+            log "ERROR: cleaned protein FASTA is missing or empty: \${cleaned}"
+            exit 1
+        fi
+        printf '%s\\n' "\$cleaned" >> cleaned_proteins.list
+    done < protein_fastas.list
+    cleaned_proteins=\$(paste -sd, cleaned_proteins.list)
+
+    braker_cmd=(
+        "\${BRAKER_DIR}/scripts/braker.pl"
+        "--genome=${genome}"
+        "--bam=\${bam}"
+        "--prot_seq=\${cleaned_proteins}"
+        "--threads=${task.cpus}"
+        "--workingdir=\${PWD}"
+        "--softmasking"
+        "--gff3"
+        "--PROTHINT_PATH=\${PROTHINT_BIN}/"
+        "--GENEMARK_PATH=\${GENEMARK_DIR}"
+        "--AUGUSTUS_CONFIG_PATH=\${AUGUSTUS_CONFIG_DIR}"
+        "--TSEBRA_PATH=\${TSEBRA_BIN}"
+    )
+
+    printf '%q ' "\${braker_cmd[@]}" > braker3_command.txt
+    printf '\\n' >> braker3_command.txt
+    log "Executing BRAKER3 command recorded in braker3_command.txt"
+
+    "\${braker_cmd[@]}"
     # to test to decrease monoexon genes : --augustus_args="--singlestrand=true --alternatives-from-evidence=0"
     # --singlestrand=true: If enabled, only keeps predictions consistent with a single strand.
     # --alternatives-from-evidence=0: Disables alternative predictions based on hints, which can help filter out monoexons.
-    cp Augustus/augustus.hints.gff3 .
-    cp GeneMark-ETP/genemark.gtf .
-    cp GeneMark-ETP/genemark_supported.gtf .
-    test -s braker.gff3
-    printf '"%s":\n  container: "not_recorded"\n' "${task.process}" > versions.yml
+    copy_required_output "Augustus/augustus.hints.gff3" "augustus.hints.gff3"
+    copy_required_output "GeneMark-ETP/genemark.gtf" "genemark.gtf"
+    copy_required_output "GeneMark-ETP/genemark_supported.gtf" "genemark_supported.gtf"
+    copy_required_output "braker.gff3" "braker.gff3"
+
+    {
+        printf '"%s":\\n' "${task.process}"
+        printf '  braker: "3.0.8"\\n'
+        printf '  prothint: "2.6.0"\\n'
+        printf '  genemark_etp_path: "%s"\\n' "\${GENEMARK_DIR}"
+        printf '  augustus_config_path: "%s"\\n' "\${AUGUSTUS_CONFIG_DIR}"
+        printf '  tsebra_path: "%s"\\n' "\${TSEBRA_BIN}"
+        printf '  bam_short_count: "%s"\\n' "\${bam_short_count}"
+        printf '  protein_count: "%s"\\n' "\${protein_count}"
+    } > versions.yml
+    log "BRAKER3 completed successfully"
     """
 
   stub:
     """
-    printf "##gff-version 3\\nchr1\\tAUGUSTUS\\tgene\\t1\\t10\\t.\\t+\\t.\\tID=augustus_stub_gene\\n" > augustus.hints.gff3
-    printf "chr1\\tGeneMark\\ttranscript\\t1\\t10\\t.\\t+\\t.\\tgene_id \\"genemark_stub_gene\\"; transcript_id \\"genemark_stub_tx\\";\\n" > genemark.gtf
+    printf "##gff-version 3\\n" > augustus.hints.gff3
+    : > genemark.gtf
     cp genemark.gtf genemark_supported.gtf
-    printf "##gff-version 3\\nchr1\\tBRAKER3\\tgene\\t1\\t10\\t.\\t+\\t.\\tID=braker_stub_gene\\n" > braker.gff3
-    printf '"%s":\n  container: "not_recorded"\n' "${task.process}" > versions.yml
+    printf "##gff-version 3\\n" > braker.gff3
+    printf "Stub BRAKER3 run\\n" > braker3_run.log
+    printf "stub\\n" > braker3_command.txt
+    printf "type\\tpath\\tsize_bytes\\n" > braker3_inputs.tsv
+    printf '"%s":\n  braker: "stub"\n' "${task.process}" > versions.yml
     """
 }

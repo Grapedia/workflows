@@ -13,6 +13,13 @@ cpanm Scalar::Util::Numeric File::HomeDir Parallel::ForkManager Math::Utils YAML
 wget https://github.com/Gaius-Augustus/BRAKER/archive/refs/tags/v3.0.8.tar.gz && \
 tar -xvf v3.0.8.tar.gz
 
+# Runtime paths consumed and validated by modules/braker3_prediction*.nf:
+#   BRAKER_DIR=/BRAKER-3.0.8
+#   PROTHINT_BIN=/ProtHint-2.6.0/bin
+#   GENEMARK_DIR=/GeneMark-ETP
+#   AUGUSTUS_CONFIG_DIR=/Augustus/config
+#   TSEBRA_BIN=/TSEBRA/bin
+
 # install spaln
 RUN wget https://github.com/ogotoh/spaln/archive/refs/tags/Ver.2.3.3.tar.gz && \
 tar -xvf Ver.2.3.3.tar.gz && \
