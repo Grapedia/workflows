@@ -132,7 +132,7 @@ for f in modules/*.nf; do awk '/^[[:space:]]*output:/{flag=1} /^[[:space:]]*scri
 
 | Outil | Etape | Version actuelle | Version verrouillee | Module | Conteneur | Test | Version collectee |
 | --- | --- | --- | --- | --- | --- | --- | --- |
-| Aegis | Integration finale annotation | v0.3.25 image label | Digest-pinned | `aegis_short_reads`, `aegis_long_reads` | `params.container_aegis` | Stub + test CLI Docker | `versions.yml` |
+| Aegis | Integration finale annotation | v0.3.25 image label | Digest-pinned | `aegis_merge` | `params.container_aegis` | Stub + test CLI Docker | `versions.yml` |
 | AGAT | GFF3 vers CDS FASTA | 1.2.0 | Digest-pinned | `agat_convert_gff3_to_cds_fasta` | `params.container_agat` | Stub | Non |
 | BRAKER3 | Prediction ab initio | v3.0.8 documente | Digest-pinned | `braker3_prediction*` | `params.container_braker3` | Stub | `versions.yml` |
 | Diamond2GO | Annotation fonctionnelle | commit documente | Digest-pinned | `diamond2go` | `params.container_diamond2go` | Stub | `versions.yml` |
@@ -148,6 +148,7 @@ for f in modules/*.nf; do awk '/^[[:space:]]*output:/{flag=1} /^[[:space:]]*scri
 | ENA API downloader | SRA/ENA FASTQ staging | Python stdlib | Digest-pinned | `prepare_RNAseq_fastq_files_*`, `scripts/download_sra_fastq.py` | `params.container_python` | Unit + Stub | Non |
 | STAR | Index/alignment | 2.7.11b | Digest-pinned | `star_*` | `params.container_star` | Stub | Non |
 | StringTie | Assemblage/fusion | 2.2.3 documente | Digest-pinned | `assembly_transcriptome_*`, `Stringtie_merging_*` | `params.container_stringtie` | Stub | Non |
+| TITAN final validation | Validation finale GFF3/FASTA | script SHA-256 | Digest-pinned Python | `validate_final_annotation` | `params.container_python` | Unit + Stub | `versions.yml` |
 | gffread | Conversion GTF/GFF3 | Non requis par les modules AEGIS actuels | Non | n/a | n/a | n/a | n/a |
 | samtools | BAM | 1.9 documente selon images | Partiel | alignements | images combinees | Non | Non |
 | DIAMOND | Diamond2GO/BRAKER3 | 2.1.9/2.1.11 selon docs | Partiel | `diamond2go`, `braker3` | images combinees | Non | Non |

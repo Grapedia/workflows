@@ -288,10 +288,10 @@ Perimetre lu: `README.md`, `nextflow.config`, `main.nf`, `workflows/titan.nf`, `
 
 ### `modules/validate_final_annotation.nf`
 
-- A ameliorer: ajouter `container params.container_python` ou un container dedie pour ne pas dependre du Python hote.
-- A ameliorer: passer `scripts/validate_final_annotation.py` comme input `path` pour rendre la dependance visible dans le cache.
-- A ameliorer: ajouter `set -euo pipefail`.
-- A ameliorer: ajouter `versions.yml` ou integrer le hash/version du script de validation.
+- [x] A ameliorer: ajouter `container params.container_python` ou un container dedie pour ne pas dependre du Python hote.
+- [x] A ameliorer: passer `scripts/validate_final_annotation.py` comme input `path` pour rendre la dependance visible dans le cache.
+- [x] A ameliorer: ajouter `set -euo pipefail`.
+- [x] A ameliorer: ajouter `versions.yml` ou integrer le hash/version du script de validation.
 
 ### `modules/titan_provenance.nf`
 

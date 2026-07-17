@@ -207,7 +207,8 @@ workflow TITAN {
         evidence_data.masked_genome,
         aegis.out.aegis_gff,
         aegis.out.aegis_proteins_all,
-        aegis.out.aegis_proteins_main
+        aegis.out.aegis_proteins_main,
+        file("${projectDir}/scripts/validate_final_annotation.py")
     )
 
     titan_provenance(
