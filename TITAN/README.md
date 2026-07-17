@@ -79,6 +79,8 @@ Use Linux or an HPC environment with:
 * Docker for local container runs, or Apptainer/Singularity for HPC.
 * `curl` and `tar` for the EGAPx runner bootstrap.
 
+The TITAN EGAPx wrapper intentionally runs on the host rather than inside a TITAN process container. It launches the official EGAPx nested Nextflow runner, so the host environment must provide `python3`, `curl`, `tar`, and the nested executor selected by `--egapx_executor` (`docker`, `singularity`, or `apptainer`). For strict offline reproducibility, pre-stage the pinned EGAPx runner and pass `--egapx_runner_dir`; otherwise TITAN downloads `--egapx_revision` from GitHub during the EGAPx task.
+
 For EGAPx runner support, Python should provide `yaml`:
 
 ```bash
@@ -216,6 +218,8 @@ long_reads:
 ```
 
 EGAPx performs its own masking. It receives the original target assembly from its YAML, not the EDTA-masked assembly.
+
+EGAPx is a nested Nextflow run inside the TITAN `egapx` process. Its inner work directory is staged under the task work directory as `egapx_work`, its published outputs are copied from `egapx_out`, and its executor/container settings are controlled by `--egapx_executor` and `--container_egapx`. Debug nested failures from `egapx_out/nextflow` and the TITAN task `.command.*` files.
 
 ## Profiles
 

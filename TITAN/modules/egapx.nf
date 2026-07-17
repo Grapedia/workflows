@@ -2,6 +2,8 @@ process egapx {
   label 'process_prediction'
 
   tag "Executing NCBI egapx gene annotation pipeline ..."
+  // Intentionally no process container: this wrapper launches the official EGAPx
+  // nested Nextflow runner, which must access the host Docker/Apptainer runtime.
   publishDir "${params.output_dir}/egapx", mode: 'copy'
   input:
     path egapx_paramfile
@@ -29,11 +31,20 @@ process egapx {
     EGAPX_RUNNER_DIR="${params.egapx_runner_dir}"
     EGAPX_LOCAL_CACHE_DIR="${params.egapx_local_cache_dir}"
 
+    for required_command in python3 curl tar "\$EGAPX_EXECUTOR"; do
+      if ! command -v "\$required_command" >/dev/null 2>&1; then
+        echo "ERROR: EGAPx wrapper requires '\$required_command' on the host PATH because it launches a nested Nextflow workflow." >&2
+        exit 1
+      fi
+    done
+
     mkdir -p egapx_runner egapx_work egapx_out
 
     if [[ -n "\$EGAPX_RUNNER_DIR" && "\$EGAPX_RUNNER_DIR" != "false" ]]; then
+      echo "[\$DATE] Using pre-staged EGAPx runner from \$EGAPX_RUNNER_DIR"
       cp -R "\$EGAPX_RUNNER_DIR"/. egapx_runner/
     else
+      echo "[\$DATE] Downloading EGAPx runner revision \$EGAPX_REVISION. For strict offline reproducibility, provide --egapx_runner_dir."
       curl -fsSL "https://github.com/ncbi/egapx/archive/refs/tags/\${EGAPX_REVISION}.tar.gz" \\
         | tar -xz --strip-components=1 -C egapx_runner
     fi
@@ -60,12 +71,24 @@ process egapx {
     echo "[\$DATE] Executing: \${CMD[*]}"
     "\${CMD[@]}"
 
-    cp egapx_out/complete.genomic.gff egapx.complete.genomic.gff3
-    cp egapx_out/complete.genomic.gtf egapx.complete.genomic.gtf
-    cp egapx_out/complete.proteins.faa egapx.complete.proteins.faa
-    cp egapx_out/complete.cds.fna egapx.complete.cds.fna
-    cp egapx_out/complete.transcripts.fna egapx.complete.transcripts.fna
-    cp egapx_out/annotated_genome.asn egapx.annotated_genome.asn
+    copy_required_egapx_output() {
+      local source_path="\$1"
+      local output_path="\$2"
+      local label="\$3"
+      if [[ ! -s "\$source_path" ]]; then
+        echo "ERROR: EGAPx did not produce expected \$label output: \$source_path" >&2
+        echo "       Check egapx_out/nextflow logs, executor '\$EGAPX_EXECUTOR', data version '\$EGAPX_DATA_VERSION', and container '\$EGAPX_CONTAINER'." >&2
+        exit 1
+      fi
+      cp "\$source_path" "\$output_path"
+    }
+
+    copy_required_egapx_output egapx_out/complete.genomic.gff egapx.complete.genomic.gff3 "complete genomic GFF"
+    copy_required_egapx_output egapx_out/complete.genomic.gtf egapx.complete.genomic.gtf "complete genomic GTF"
+    copy_required_egapx_output egapx_out/complete.proteins.faa egapx.complete.proteins.faa "protein FASTA"
+    copy_required_egapx_output egapx_out/complete.cds.fna egapx.complete.cds.fna "CDS FASTA"
+    copy_required_egapx_output egapx_out/complete.transcripts.fna egapx.complete.transcripts.fna "transcript FASTA"
+    copy_required_egapx_output egapx_out/annotated_genome.asn egapx.annotated_genome.asn "annotated genome ASN"
 
     printf '"%s":\\n  egapx: "%s"\\n  egapx_runner_revision: "%s"\\n  egapx_container: "%s"\\n  egapx_data_version: "%s"\\n' \\
       "${task.process}" "\$EGAPX_VERSION" "\$EGAPX_REVISION" "\$EGAPX_CONTAINER" "\$EGAPX_DATA_VERSION" > versions.yml

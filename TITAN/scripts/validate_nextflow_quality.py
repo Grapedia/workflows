@@ -79,7 +79,7 @@ for nextflow_path in [
     if re.search(r"file\s*\([^)]*\)\.text", text):
         fail(f"{nextflow_path.relative_to(ROOT)} reads task files from workflow Groovy code")
 
-for helper in ["run_aegis_merge.sh", "run_stringtie_transcriptome.sh"]:
+for helper in ["run_aegis_merge.sh", "run_stringtie_transcriptome.sh", "clean_liftoff_gff3_for_agat.py"]:
     helper_path = ROOT / "scripts" / helper
     if not helper_path.exists():
         fail(f"shared helper script is missing: scripts/{helper}")

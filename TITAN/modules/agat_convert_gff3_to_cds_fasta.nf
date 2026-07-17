@@ -7,6 +7,7 @@ process agat_convert_gff3_to_cds_fasta {
   input:
     path(genome)
     path(liftoff_gff3)
+    path(clean_liftoff_gff3_script)
 
   output:
     path("${genome.simpleName}.CDS.fasta.gz"), emit: cds_fasta
@@ -20,11 +21,12 @@ process agat_convert_gff3_to_cds_fasta {
     DATE=\$(date "+%Y-%m-%d %H:%M:%S")
     echo "[\$DATE] Running agat_convert_gff3_to_cds_fasta on ${genome}"
 
-    # formatting gff3 for AGAT (mandatory for PN40024 V4.3 gff3 version from grapedia)
-    grep "obsolete=true" ${liftoff_gff3} | grep "Deleted" | awk -F'\t' '{print \$9}' | sed 's/.*ID=\\([^;]*\\);.*/\\1/' > to_remove.txt || true
-    grep -F -f to_remove.txt ${liftoff_gff3} | grep "mRNA" | awk -F'\t' '{print \$9}' | sed 's/.*Parent=\\([^;]*\\);.*/\\1/' >> to_remove.txt || true
-    grep -v -F -f to_remove.txt ${liftoff_gff3} > cleaned.gff3
-    awk 'BEGIN{FS=OFS="\t"} /^#/ || NF==9' cleaned.gff3 > cleaned.OK.gff3
+    command -v python3 >/dev/null || { echo "python3 is required in the AGAT container to clean Liftoff GFF3 before AGAT extraction" >&2; exit 127; }
+    python3 ${clean_liftoff_gff3_script} \\
+      --input ${liftoff_gff3} \\
+      --output cleaned.OK.gff3 \\
+      --removed-ids removed_feature_ids.txt
+
     fold -w 80 ${genome} > reformatted.fa
     CMD="agat_sp_extract_sequences.pl -g cleaned.OK.gff3 -f reformatted.fa -o ${genome.simpleName}.CDS.fasta"
     echo "[\$DATE] Executing: \$CMD"
@@ -35,6 +37,7 @@ process agat_convert_gff3_to_cds_fasta {
 
   stub:
     """
+    set -euo pipefail
     printf ">stub_cds\\nATGGCC\\n" | gzip -c > ${genome.simpleName}.CDS.fasta.gz
     printf '"%s":\n  container: "not_recorded"\n' "${task.process}" > versions.yml
     """

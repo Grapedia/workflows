@@ -104,18 +104,18 @@ Perimetre lu: `README.md`, `nextflow.config`, `main.nf`, `workflows/titan.nf`, `
 ### `modules/egapx.nf`
 
 - Bon point: script defensif avec `set -euo pipefail` et `versions.yml`.
-- A ameliorer: le module telecharge du code depuis GitHub a l'execution. Pour une reproductibilite stricte, preferer un runner prepackaged/pinned ou un cache gere hors process.
-- A ameliorer: le module orchestre un autre workflow Nextflow dans un process. Documenter clairement les implications de nesting Nextflow, executors, workdir, cache et logs.
-- A ameliorer: ajouter un `container` ou documenter pourquoi le process hote doit avoir `curl`, `tar`, `python3` et Docker/Apptainer disponibles.
-- A ameliorer: rendre les noms attendus dans `egapx_out/` configurables ou valides avec messages d'erreur explicites avant les `cp`.
+- [x] A ameliorer: le module telecharge du code depuis GitHub a l'execution. Pour une reproductibilite stricte, preferer un runner prepackaged/pinned ou un cache gere hors process.
+- [x] A ameliorer: le module orchestre un autre workflow Nextflow dans un process. Documenter clairement les implications de nesting Nextflow, executors, workdir, cache et logs.
+- [x] A ameliorer: ajouter un `container` ou documenter pourquoi le process hote doit avoir `curl`, `tar`, `python3` et Docker/Apptainer disponibles.
+- [x] A ameliorer: rendre les noms attendus dans `egapx_out/` configurables ou valides avec messages d'erreur explicites avant les `cp`.
 
 ### `modules/agat_convert_gff3_to_cds_fasta.nf`
 
-- A ameliorer: ajouter `set -euo pipefail`.
-- A ameliorer: remplacer la logique `grep | awk | sed` par un script teste, car elle encode une correction PN40024 specifique dans un module generique.
-- A ameliorer: emettre un output nomme (`emit: cds_fasta`).
-- A ameliorer: gerer le cas `to_remove.txt` vide sans risque de comportement ambigu de `grep -f`.
-- A ameliorer: ajouter `versions.yml`.
+- [x] A ameliorer: ajouter `set -euo pipefail`.
+- [x] A ameliorer: remplacer la logique `grep | awk | sed` par un script teste, car elle encode une correction PN40024 specifique dans un module generique.
+- [x] A ameliorer: emettre un output nomme (`emit: cds_fasta`).
+- [x] A ameliorer: gerer le cas `to_remove.txt` vide sans risque de comportement ambigu de `grep -f`.
+- [x] A ameliorer: ajouter `versions.yml`.
 
 ### `modules/salmon_index.nf`
 

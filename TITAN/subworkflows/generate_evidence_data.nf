@@ -58,6 +58,7 @@ workflow generate_evidence_data {
         stringtie_script
         stringtie_alt_script
         stringtie_transcriptome_script
+        clean_liftoff_gff3_script
         clean_protein_script
         empty_default_gtf
         empty_alt_gtf
@@ -104,7 +105,8 @@ workflow generate_evidence_data {
         // Convert GFF3 to CDS FASTA for Salmon strand inference
         gff_cds = agat_convert_gff3_to_cds_fasta(
             new_assembly,
-            previous_annotations.liftoff_previous_annotations
+            previous_annotations.liftoff_previous_annotations,
+            clean_liftoff_gff3_script
         )
 
         // Salmon index and strand inference.

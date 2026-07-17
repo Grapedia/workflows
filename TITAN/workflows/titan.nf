@@ -163,6 +163,7 @@ workflow TITAN {
         file("${projectDir}/scripts/Stringtie.sh"),
         file("${projectDir}/scripts/Stringtie_AltCommands.sh"),
         file("${projectDir}/scripts/run_stringtie_transcriptome.sh"),
+        file("${projectDir}/scripts/clean_liftoff_gff3_for_agat.py"),
         file("${projectDir}/scripts/clean_protein_fasta_for_BRAKER3.py"),
         file("${projectDir}/assets/empty_default.gtf"),
         file("${projectDir}/assets/empty_alt.gtf"),

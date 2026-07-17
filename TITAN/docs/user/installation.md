@@ -254,6 +254,9 @@ Important EGAPx notes:
 * If using SRA accessions, provide one run accession per row and check ENA availability before launching production.
 * EGAPx performs its own masking; it does not require the EDTA-masked genome as input.
 * EGAPx currently supports many vertebrates, arthropods, echinoderms and plants; fungi, protists and nematodes are out of scope according to NCBI documentation.
+* TITAN's `egapx` process launches a nested EGAPx Nextflow workflow from the host environment. The host must provide `python3`, `curl`, `tar` and the selected nested executor (`docker`, `singularity` or `apptainer`).
+* For strict offline reproducibility, pre-stage the EGAPx runner matching `egapx_revision` and set `--egapx_runner_dir`; otherwise TITAN downloads that pinned GitHub revision inside the task.
+* Nested EGAPx work and logs live under the task work directory in `egapx_work` and under published `egapx_out/nextflow`; the outer TITAN process only stages the final named EGAPx outputs.
 
 TITAN publishes EGAPx outputs under `${output_dir}/egapx`, including:
 
