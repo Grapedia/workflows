@@ -15,6 +15,8 @@ include { multiqc_report } from '../modules/multiqc_report'
 include { trnascan_se } from '../modules/trnascan_se'
 include { rfam_split_genome; infernal_rfam_search; infernal_rfam_merge } from '../modules/infernal_rfam'
 include { lncrna_candidate_annotation } from '../modules/lncrna_candidate_annotation'
+include { mikado_prepare; mikado_serialise; mikado_pick; final_annotation_sources_qc } from '../modules/mikado'
+include { transdecoder_longorfs; transdecoder_predict } from '../modules/transdecoder'
 
 def isMissingParam(value) {
     return value == null || value == true || value == false || value.toString().trim() == '' || value.toString().trim().equalsIgnoreCase('true') || value.toString().trim().equalsIgnoreCase('false')
@@ -245,6 +247,50 @@ workflow TITAN {
         helixer_results.gff3
     )
 
+    mikado_prepared = mikado_prepare(
+        evidence_data.masked_genome,
+        evidence_data.braker_augustus_gff3,
+        evidence_data.braker_genemark_gtf,
+        evidence_data.liftoff_gff3,
+        evidence_data.egapx_gff3,
+        evidence_data.star_stringtie_stranded_default_gtf,
+        evidence_data.star_stringtie_stranded_alt_gtf,
+        evidence_data.star_psiclass_stranded_gtf,
+        evidence_data.star_psiclass_unstranded_gtf,
+        evidence_data.star_stringtie_unstranded_default_gtf,
+        evidence_data.star_stringtie_unstranded_alt_gtf,
+        evidence_data.hisat2_stringtie_stranded_default_gtf,
+        evidence_data.hisat2_stringtie_stranded_alt_gtf,
+        evidence_data.hisat2_stringtie_unstranded_default_gtf,
+        evidence_data.hisat2_stringtie_unstranded_alt_gtf,
+        evidence_data.long_reads_default_gtf,
+        evidence_data.long_reads_alt_gtf,
+        helixer_results.gff3,
+        file("${projectDir}/scripts/make_mikado_list.py")
+    )
+
+    transdecoder_longorfs_results = transdecoder_longorfs(mikado_prepared.fasta)
+    transdecoder_predict_results = transdecoder_predict(
+        mikado_prepared.fasta,
+        transdecoder_longorfs_results.longorfs_dir
+    )
+    mikado_serialise_results = mikado_serialise(
+        mikado_prepared.config,
+        mikado_prepared.fasta,
+        transdecoder_predict_results.bed
+    )
+    mikado_results = mikado_pick(
+        evidence_data.masked_genome,
+        mikado_prepared.config,
+        mikado_serialise_results.database
+    )
+
+    final_annotation_sources_qc_results = final_annotation_sources_qc(
+        aegis.out.aegis_gff,
+        mikado_results.gff3,
+        file("${projectDir}/scripts/compare_final_annotations.py")
+    )
+
     lncrna_results = lncrna_candidate_annotation(
         new_assembly,
         aegis.out.aegis_gff,
@@ -306,6 +352,7 @@ workflow TITAN {
         agat_stats_results.stats_txt,
         ncrna_qc_results.multiqc_tsv,
         lncrna_results.multiqc_tsv,
+        final_annotation_sources_qc_results.multiqc_tsv,
         validate_final_annotation.out.json_report
     )
 

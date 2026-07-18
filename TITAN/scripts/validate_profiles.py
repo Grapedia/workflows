@@ -8,6 +8,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 RESOURCE_LABELS = {
     "process_low",
+    "process_medium",
     "process_trim",
     "process_index",
     "process_alignment",

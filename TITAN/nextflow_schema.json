@@ -208,6 +208,22 @@
       "maximum": 1,
       "description": "Coding probability cutoff documented for CPAT-plant; CP >= cutoff is coding."
     },
+    "run_mikado": {
+      "type": "boolean",
+      "description": "Run Mikado as a parallel final GFF3 annotation source using the same annotation evidence inputs as AEGIS."
+    },
+    "run_transdecoder": {
+      "type": "boolean",
+      "description": "Run TransDecoder on Mikado prepared transcripts before Mikado serialise/pick. Effective only when run_mikado is true."
+    },
+    "mikado_mode": {
+      "type": "string",
+      "description": "Mikado configure mode, e.g. permissive."
+    },
+    "mikado_scoring": {
+      "type": "string",
+      "description": "Mikado scoring file or bundled scoring profile, e.g. plant.yaml."
+    },
     "egapx_version": {
       "type": "string",
       "description": "EGAPx version recorded in provenance."
@@ -329,6 +345,12 @@
       "$ref": "#/definitions/container_digest"
     },
     "container_infernal": {
+      "$ref": "#/definitions/container_digest"
+    },
+    "container_mikado": {
+      "$ref": "#/definitions/container_digest"
+    },
+    "container_transdecoder": {
       "$ref": "#/definitions/container_digest"
     },
     "container_braker3": {

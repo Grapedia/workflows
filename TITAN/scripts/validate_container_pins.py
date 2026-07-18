@@ -23,12 +23,14 @@ REQUIRED_PARAMS = {
     "container_hisat2",
     "container_liftoff",
     "container_minimap2_samtools",
+    "container_mikado",
     "container_psiclass_samtools",
     "container_python",
     "container_salmon",
     "container_star",
     "container_stringtie",
     "container_trnascan",
+    "container_transdecoder",
 }
 
 PINNED_IMAGE = re.compile(r"^[\w./-]+@sha256:[0-9a-f]{64}$")

@@ -245,8 +245,10 @@ Publié sous `${params.output_dir}/additional_annotations/ncrna/lncrna/`.
 
 ## Phase 4 — Mikado (sélection consensus de transcrits)
 
+**Statut TITAN codex-dev — 2026-07-18** : Phase 4 implémentée avec la Phase 5 comme branche finale parallèle à AEGIS. Mikado consomme les mêmes familles d'évidences qu'AEGIS et publie un second GFF3 final sous `final_annotations/mikado/`, sans fusion automatique avec `aegis_outputs/final_annotation.gff3`.
+
 **But** : sélectionner le meilleur modèle de transcrit par locus parmi StringTie, PsiCLASS et les GTF long-reads.
-**Pourquoi** : Mikado consolide plusieurs assemblages transcriptomiques et choisit un modèle par locus avec un score explicable — plus robuste qu'un simple merge de GTF pour produire une annotation RNA-seq candidate à comparer avec AEGIS.
+**Pourquoi** : Mikado consolide plusieurs sources d'évidence et choisit un modèle par locus avec un score explicable — c'est une source finale GFF3 alternative à AEGIS, à comparer avec AEGIS plutôt qu'à fusionner automatiquement.
 **Position dans le graphe** : après les merges STAR/StringTie, STAR/PsiCLASS, HISAT2/StringTie et long-reads ; **avant** la Phase 5 (TransDecoder), dont Mikado a besoin en entrée pour le score de la 3e passe (`mikado serialise --orfs`).
 
 - Image : `quay.io/biocontainers/mikado@sha256:dd6f5a2a2d7fdbab73c835cd0f49bd1444ecaddf8e4cd96fbf0fe24f5ecf5f22` (2.3.4, tag stable — pas la 2.3.5rc3 disponible en release candidate).
@@ -254,7 +256,7 @@ Publié sous `${params.output_dir}/additional_annotations/ncrna/lncrna/`.
 - Label : `process_transcriptome`
 
 **Input** :
-- `merged_star_stringtie_stranded_default.gtf`, `merged_star_stringtie_stranded_alt.gtf`, `merged_hisat2_stringtie_stranded_default.gtf`, `star_psiclass_stranded_gtf`, `merged_transcriptomes.minimap2.long_reads.default_args.gtf` (si `has_long_reads`) — tous déjà produits par `generate_evidence_data`.
+- Même périmètre de sources que l'appel AEGIS : Liftoff, EGAPx, BRAKER3/AUGUSTUS/Genemark, STAR/StringTie, HISAT2/StringTie, STAR/PsiCLASS, long-reads si présents, Helixer si activé.
 - `params.new_assembly`.
 - Protéines externes optionnelles : `protein_samplesheet` (déjà utilisé par BRAKER3).
 - CDS/ORFs de la Phase 5 (dépendance croisée).
@@ -263,10 +265,13 @@ Publié sous `${params.output_dir}/additional_annotations/ncrna/lncrna/`.
 ```bash
 # 0. Générer la liste des GTF sources (script dans scripts/, pas de closure Groovy complexe)
 scripts/make_mikado_list.py \
-  --star-stringtie merged_star_stringtie_stranded_default.gtf:star_stringtie:True \
-  --hisat2-stringtie merged_hisat2_stringtie_stranded_default.gtf:hisat2_stringtie:True \
-  --star-psiclass star_psiclass_stranded.gtf:star_psiclass:True \
-  --long-reads merged_long_reads_default.gtf:minimap2_stringtie:True \
+  --source liftoff.gff3:liftoff:False:10:True \
+  --source egapx.gff3:egapx:False:9:True \
+  --source braker_augustus.gff3:braker_augustus:False:8:False \
+  --source merged_star_stringtie_stranded_default.gtf:star_stringtie:True:5:False \
+  --source merged_hisat2_stringtie_stranded_default.gtf:hisat2_stringtie:True:5:False \
+  --source star_psiclass_stranded.gtf:star_psiclass:True:5:False \
+  --source merged_long_reads_default.gtf:minimap2_stringtie:False:6:False \
   -o transcript_inputs.tsv
 
 mikado configure \
@@ -291,18 +296,18 @@ mikado pick --json-conf configuration.yaml \
 ```
 
 **Output** :
-- `mikado.loci.gff3` (publié, l'annotation RNA-seq consensus)
+- `final_mikado_annotation.gff3` et `mikado.loci.gff3` (publiés, annotation finale Mikado alternative à AEGIS)
 - `mikado.subloci.gff3` (intermédiaire, pour audit des loci ambigus)
 - `mikado_prepared.fasta` (transcrits consolidés, entrée de la Phase 5)
 
-Publié sous `${params.output_dir}/additional_annotations/mikado/`.
+Publié sous `${params.output_dir}/final_annotations/mikado/`.
 
 **Jalons**
-1. M1 — `modules/mikado_prepare.nf`, `modules/mikado_serialise.nf`, `modules/mikado_pick.nf` créés avec `stub:`.
-2. M2 — `scripts/make_mikado_list.py` écrit + testé unitairement (génère bien le TSV attendu par `mikado configure --list`).
-3. M3 — Run complet `mikado configure`+`prepare` seul (sans TransDecoder) pour valider la consolidation des GTF avant d'ajouter la dépendance croisée avec la Phase 5.
-4. M4 — Intégration complète avec TransDecoder (Phase 5), run `serialise`+`pick` de bout en bout.
-5. M5 — Comparaison `mikado.loci.gff3` vs `aegis.out.aegis_gff` (combien de loci Mikado chevauchent un gène AEGIS existant vs sont nouveaux) — reporté dans le rapport qualité, pas fusionné automatiquement dans AEGIS (cf. règle d'architecture : rester en `additional_annotations/` tant que non validé biologiquement).
+1. ✅ M1 — `modules/mikado.nf` créé avec `mikado_prepare`, `mikado_serialise`, `mikado_pick` et `stub:`.
+2. ✅ M2 — `scripts/make_mikado_list.py` écrit + testé unitairement.
+3. ⚠️ M3 — Run réel `mikado configure`+`prepare` sur données complètes non exécuté dans cette passe.
+4. ✅ M4 — Intégration complète avec TransDecoder (Phase 5), `serialise`+`pick` validés en `-profile test -stub-run --run_mikado true`.
+5. ✅ M5 — Comparaison `final_mikado_annotation.gff3` vs `aegis.out.aegis_gff` ajoutée au rapport qualité MultiQC.
 
 **Validation**
 - `mikado.loci.gff3` valide structurellement.
@@ -314,12 +319,14 @@ Publié sous `${params.output_dir}/additional_annotations/mikado/`.
 
 ## Phase 5 — TransDecoder (ORF/CDS)
 
+**Statut TITAN codex-dev — 2026-07-18** : Phase 5 implémentée entre `mikado_prepare` et `mikado_serialise`; elle suit `run_mikado` et fournit le `.bed` ORF consommé par Mikado.
+
 **But** : prédire les régions codantes (CDS/protéines) dans les transcrits consolidés par Mikado.
 **Pourquoi** : nécessaire à `mikado serialise --orfs` (Phase 4) et produit une évidence protéique RNA-seq indépendante de BRAKER3/EGAPx pour comparaison.
 **Position dans le graphe** : entre `mikado prepare` et `mikado serialise` (Phase 4).
 
 - Image : `quay.io/biocontainers/transdecoder@sha256:c70f3a30cc8f3aecccb1d8978b9a49865d3994ebd7885361ab4c9dd820bd17f5` (6.0.0)
-- Paramètres : `params.run_transdecoder = false` (suit `params.run_mikado`, pas de sens de l'activer seul), `params.container_transdecoder`
+- Paramètres : `params.run_transdecoder = true` (effectif seulement si `params.run_mikado = true`, pas de sens de l'activer seul), `params.container_transdecoder`
 - Label : `process_medium`
 
 **Input** : `mikado_prepared.fasta` (sortie de `mikado prepare`, Phase 4).
@@ -336,12 +343,12 @@ TransDecoder.Predict -t mikado_prepared.fasta --single_best_only
 - `mikado_prepared.fasta.transdecoder.pep` (protéines, publiées pour audit)
 - `mikado_prepared.fasta.transdecoder.gff3` (publié)
 
-Publié sous `${params.output_dir}/additional_annotations/transdecoder/`.
+Publié sous `${params.output_dir}/final_annotations/mikado/transdecoder/`.
 
 **Jalons**
-1. M1 — `modules/transdecoder_longorfs.nf` + `modules/transdecoder_predict.nf` créés avec `stub:`.
-2. M2 — Run sur `mikado_prepared.fasta` réel (dépend donc du M3 de la Phase 4), validation du `.bed` produit contre le format attendu par `mikado serialise`.
-3. M3 — Intégré dans le graphe Mikado complet (Phase 4, M4).
+1. ✅ M1 — `modules/transdecoder.nf` créé avec `transdecoder_longorfs`, `transdecoder_predict` et `stub:`.
+2. ⚠️ M2 — Run réel sur `mikado_prepared.fasta` complet non exécuté dans cette passe.
+3. ✅ M3 — Intégré dans le graphe Mikado complet (Phase 4, M4), validé en `-profile test -stub-run --run_mikado true`.
 
 **Validation**
 - Le `.bed` TransDecoder est directement consommable par `mikado serialise` sans erreur de parsing (le test d'intégration EST la Phase 4 M4).
