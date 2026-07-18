@@ -8,6 +8,9 @@ include { validate_final_annotation } from '../modules/validate_final_annotation
 include { validate_inputs } from '../modules/validate_inputs'
 include { helixer_prediction } from '../modules/helixer_prediction'
 include { additional_annotations_provenance } from '../modules/additional_annotations_provenance'
+include { busco } from '../modules/busco'
+include { agat_stats } from '../modules/agat_stats'
+include { multiqc_report } from '../modules/multiqc_report'
 
 def isMissingParam(value) {
     return value == null || value == true || value == false || value.toString().trim() == '' || value.toString().trim().equalsIgnoreCase('true') || value.toString().trim().equalsIgnoreCase('false')
@@ -233,6 +236,22 @@ workflow TITAN {
         aegis.out.aegis_proteins_all,
         aegis.out.aegis_proteins_main,
         file("${projectDir}/scripts/validate_final_annotation.py")
+    )
+
+    // ----------------------------------------------------------------------------------------
+    //     Final annotation quality report: BUSCO completeness, AGAT structural
+    //     stats and every fastp trimming report, aggregated with MultiQC.
+    // ----------------------------------------------------------------------------------------
+
+    busco_results = busco(aegis.out.aegis_proteins_main)
+
+    agat_stats_results = agat_stats(aegis.out.aegis_gff)
+
+    multiqc_report(
+        evidence_data.fastp_json_reports,
+        busco_results.short_summary,
+        agat_stats_results.stats_txt,
+        validate_final_annotation.out.json_report
     )
 
     titan_provenance(

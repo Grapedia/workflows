@@ -241,6 +241,21 @@ Helixer runs on CPU by default. Set `--helixer_use_gpu true` to request a GPU (A
 
 Fetch a lineage model once with `scripts/download_helixer_model.sh --model-dir /absolute/path/to/helixer_models --container <container_helixer> --lineage land_plant`. Helixer's own `Helixer.py` does not auto-download models and fails fast with a clear error if the model is missing; the download script also pre-creates the directories Helixer itself expects to already exist. It skips the fetch if the model is already present. Both launcher scripts can run this step with `--prepare-helixer-model` (`launch_TITAN_example.sh`) or by passing `run_helixer = true` in `data/slurm_apptainer.config` plus `--prepare-helixer-model` (`launch_TITAN_serveur_colmar.sh`). See [docs/user/installation.md](docs/user/installation.md#9-helixer-optional) for full details.
 
+## Quality report (BUSCO, AGAT stats, MultiQC)
+
+TITAN closes the run with a `quality_report/` step: BUSCO gene-set completeness (protein mode) on `final_annotation_proteins_main.fasta`, structural statistics on `final_annotation.gff3` via `agat_sp_statistics.pl`, and every per-sample fastp trimming report, all aggregated into one MultiQC HTML.
+
+BUSCO needs an offline lineage dataset TITAN does not download itself. To enable it:
+
+1. Stage the lineage dataset once, from a node with internet access: `busco --download <lineage> --download_path /absolute/path/to/busco_data` (run `busco --list-datasets` to see the options for your clade).
+2. Set `--run_busco true --busco_data_dir /absolute/path/to/busco_data --busco_lineage <lineage>`.
+
+For Vitis (eudicots), `data/slurm_apptainer.config` already ships this staged and enabled: `busco_lineage = "eudicotyledons_odb12.2"`, data downloaded into `.busco_data/`. Note this is BUSCO 6.1.0/OrthoDB v12 naming - the older `eudicots_odb10` name from BUSCO v3-5 no longer exists for plant clades in this pinned version (virus lineages are the only ones still published under `_odb10`).
+
+AGAT stats and the MultiQC aggregation always run (no data dependency); with BUSCO disabled they just report on fastp + AGAT stats.
+
+Unlike the other optional tools above, there is currently no `--prepare-busco-data` launcher flag - stage the dataset manually with the `busco --download` command and pass `--busco_data_dir`/`-c` overrides (or extra args after `--`) to either launcher script.
+
 ## Profiles
 
 | Profile | Purpose |
@@ -275,7 +290,7 @@ Resource policy is centralized in [conf/base.config](conf/base.config). Active m
 
 `process_medium` and `process_high` are reserved generic labels for future modules and site-specific profile overrides. Current workflow modules should prefer the domain-specific labels above.
 
-Override resources through `conf/base.config`, a profile config, or Nextflow process selectors. EDTA, EGAPx, Diamond2GO, eggNOG-mapper, Helixer and InterProScan still honor `--edta_cpus`, `--egapx_cpus`, `--diamond2go_cpus`, `--eggnog_mapper_cpus`, `--helixer_cpus` and `--interproscan_cpus` through `withName` selectors.
+Override resources through `conf/base.config`, a profile config, or Nextflow process selectors. EDTA, EGAPx, Diamond2GO, eggNOG-mapper, Helixer, InterProScan and BUSCO still honor `--edta_cpus`, `--egapx_cpus`, `--diamond2go_cpus`, `--eggnog_mapper_cpus`, `--helixer_cpus`, `--interproscan_cpus` and `--busco_cpus` through `withName` selectors.
 
 ## Outputs
 
@@ -294,6 +309,7 @@ Main public output families:
 | Diamond2GO | `final_annotation_proteins_all.diamond2go.tsv`, `final_annotation_proteins_main.diamond2go.tsv` | `${output_dir}/Diamond2GO_outputs` |
 | eggNOG-mapper | `final_annotation_proteins_all.emapper.annotations`, `final_annotation_proteins_main.emapper.annotations` | `${output_dir}/EggNOG_outputs` (only when `--run_eggnog_mapper true`) |
 | InterProScan | `final_annotation_proteins_all.tsv`/`.gff3`/`.json`, `final_annotation_proteins_main.tsv`/`.gff3`/`.json` | `${output_dir}/InterProScan_outputs` (only when `--run_interproscan true`) |
+| Quality report | `busco_short_summary.txt`, `agat_stats.txt`, `titan_multiqc_report.html` | `${output_dir}/quality_report/` |
 | Helixer | `helixer.gff3` | `${output_dir}/additional_annotations/helixer` (only when `--run_helixer true`); also passed to AEGIS as optional merge evidence |
 | Provenance | `evidence_manifest.json`, `additional_annotations_manifest.json`, `versions.yml` | `${output_dir}/provenance` |
 | Final validation | `final_annotation_validation.json`, `final_annotation_validation.txt` | `${output_dir}/validation` |

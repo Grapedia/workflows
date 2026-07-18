@@ -15,4 +15,6 @@ __pycache__/
 *.pyc
 .helixer_models/
 .interproscan_data/
+.busco_data/
 TITAN_colmar-*.log
+busco_downloads/

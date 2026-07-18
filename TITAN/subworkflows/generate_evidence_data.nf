@@ -318,4 +318,5 @@ workflow generate_evidence_data {
         star_psiclass_unstranded_gtf = gffcompare_out.star_psiclass_unstranded
         long_reads_default_gtf = merged_long_reads_default_args_gtf
         long_reads_alt_gtf = merged_long_reads_alt_args_gtf
+        fastp_json_reports = trimmed_reads.fastp_json.collect()
 }

@@ -147,6 +147,23 @@
       "$ref": "#/definitions/path_or_false",
       "description": "Directory containing the pre-fetched InterProScan member database data (via scripts/download_interproscan_data.sh), bind-mounted to /opt/interproscan/data. Required when run_interproscan is true."
     },
+    "busco_cpus": {
+      "type": "integer",
+      "minimum": 1,
+      "description": "CPU override for BUSCO."
+    },
+    "run_busco": {
+      "type": "boolean",
+      "description": "Run BUSCO gene-set completeness (protein mode) on the final AEGIS main protein set, as part of quality_report."
+    },
+    "busco_lineage": {
+      "type": "string",
+      "description": "BUSCO lineage dataset name (e.g. eudicotyledons_odb12.2) to score the final protein set against."
+    },
+    "busco_data_dir": {
+      "$ref": "#/definitions/path_or_false",
+      "description": "Directory containing the pre-fetched BUSCO lineage dataset (via `busco --download <lineage> --download_path <dir>`), used offline. Required when run_busco is true."
+    },
     "egapx_version": {
       "type": "string",
       "description": "EGAPx version recorded in provenance."
@@ -253,6 +270,12 @@
       "$ref": "#/definitions/container_digest"
     },
     "container_aegis": {
+      "$ref": "#/definitions/container_digest"
+    },
+    "container_busco": {
+      "$ref": "#/definitions/container_digest"
+    },
+    "container_multiqc": {
       "$ref": "#/definitions/container_digest"
     },
     "container_braker3": {
