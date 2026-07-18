@@ -272,6 +272,8 @@ workflow TITAN {
         rfam_results.versions,
         lncrna_results.gff3,
         lncrna_results.summary_tsv,
+        lncrna_results.cpat_best,
+        lncrna_results.cpat_log,
         lncrna_results.versions
     )
 

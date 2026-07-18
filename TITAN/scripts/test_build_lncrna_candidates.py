@@ -69,6 +69,38 @@ def test_candidate_builder_filters_overlaps_and_short_transcripts():
         assert "lncRNA_candidate\t1" in summary
         assert "excluded_short\t1" in summary
         assert "excluded_overlap_coding_or_ncrna\t2" in summary
+        assert "excluded_cpat_coding\t0" in summary
+
+        cpat = tmp / "cpat_plant.output.ORF_prob.best.tsv"
+        write(cpat, "seq_ID\tcoding_prob\nlncrna_candidate_1.t1\t0.73\n")
+        subprocess.run(
+            [
+                "python3",
+                str(SCRIPT),
+                "--genome",
+                str(genome),
+                "--final-annotation",
+                str(final_gff3),
+                "--trna-gff3",
+                str(trna),
+                "--rfam-gff3",
+                str(rfam),
+                "--min-length",
+                "100",
+                "--cpat-best-tsv",
+                str(cpat),
+                "--cpat-cutoff",
+                "0.46",
+                str(gtf),
+            ],
+            cwd=tmp,
+            check=True,
+        )
+        gff3 = (tmp / "lncrna_candidates.gff3").read_text(encoding="utf-8")
+        summary = (tmp / "lncrna_classification_summary.tsv").read_text(encoding="utf-8")
+        assert "keep1" not in gff3
+        assert "lncRNA_candidate\t0" in summary
+        assert "excluded_cpat_coding\t1" in summary
 
 
 if __name__ == "__main__":

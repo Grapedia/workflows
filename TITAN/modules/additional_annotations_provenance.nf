@@ -21,6 +21,8 @@ process additional_annotations_provenance {
     path(rfam_versions, stageAs: "module_versions/rfam_versions.yml")
     path(lncrna_gff3)
     path(lncrna_summary)
+    path(lncrna_cpat_best)
+    path(lncrna_cpat_log)
     path(lncrna_versions, stageAs: "module_versions/lncrna_versions.yml")
 
   output:
@@ -80,6 +82,7 @@ manifest = {
         "cpat_model_dir": "${params.cpat_model_dir}",
         "cpat_model_flavour": "${params.cpat_model_flavour}",
         "cpat_plant_cutoff": "${params.cpat_plant_cutoff}",
+        "container_cpat": "${params.container_cpat}",
     },
     "outputs": [
         file_record("helixer_gff3", "${helixer_gff3}"),
@@ -91,6 +94,8 @@ manifest = {
         file_record("rfam_search_log", "${rfam_search_log}"),
         file_record("lncrna_gff3", "${lncrna_gff3}"),
         file_record("lncrna_summary", "${lncrna_summary}"),
+        file_record("lncrna_cpat_best", "${lncrna_cpat_best}"),
+        file_record("lncrna_cpat_log", "${lncrna_cpat_log}"),
     ],
     "module_versions": [
         file_record("helixer_versions", "${helixer_versions}"),

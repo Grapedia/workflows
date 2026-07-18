@@ -10,6 +10,7 @@ REQUIRED_PARAMS = {
     "container_agat",
     "container_aegis",
     "container_braker3",
+    "container_cpat",
     "container_diamond2go",
     "container_eggnog_mapper",
     "container_helixer",

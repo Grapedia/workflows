@@ -134,7 +134,42 @@ def collect_transcripts(gtf_paths):
     return transcripts
 
 
-def write_outputs(transcripts, genome, blockers, min_length, prefix):
+def load_cpat_coding_ids(path, cutoff):
+    if not path:
+        return set()
+    coding_ids = set()
+    with path.open(encoding="utf-8") as handle:
+        header = []
+        for line in handle:
+            if not line.strip() or line.startswith("#"):
+                continue
+            fields = line.rstrip("\n").split("\t")
+            lowered = [field.lower() for field in fields]
+            if not header and any("coding" in field or "prob" in field for field in lowered):
+                header = lowered
+                continue
+            probability = None
+            if header:
+                for key in ("coding_prob", "coding_probability", "coding probability", "prob"):
+                    if key in header:
+                        try:
+                            probability = float(fields[header.index(key)])
+                        except (IndexError, ValueError):
+                            probability = None
+                        break
+            if probability is None:
+                for value in reversed(fields[1:]):
+                    try:
+                        probability = float(value)
+                        break
+                    except ValueError:
+                        continue
+            if probability is not None and probability >= cutoff:
+                coding_ids.add(fields[0])
+    return coding_ids
+
+
+def write_outputs(transcripts, genome, blockers, min_length, prefix, cpat_coding_ids=None):
     gff3_path = Path(f"{prefix}.gff3")
     gtf_path = Path(f"{prefix}.gtf")
     fasta_path = Path(f"{prefix}.fasta")
@@ -144,6 +179,7 @@ def write_outputs(transcripts, genome, blockers, min_length, prefix):
     kept = []
     excluded_short = 0
     excluded_overlap = 0
+    excluded_cpat = 0
     for transcript_id, record in sorted(transcripts.items()):
         if record["length"] < min_length:
             excluded_short += 1
@@ -151,6 +187,10 @@ def write_outputs(transcripts, genome, blockers, min_length, prefix):
         interval = (record["seqid"], min(start for start, _ in record["exons"]), max(end for _, end in record["exons"]))
         if any(intervals_overlap(interval, blocker) for blocker in blockers):
             excluded_overlap += 1
+            continue
+        candidate_id = f"lncrna_candidate_{len(kept) + excluded_cpat + 1}.t1"
+        if cpat_coding_ids and candidate_id in cpat_coding_ids:
+            excluded_cpat += 1
             continue
         kept.append((transcript_id, record, interval))
 
@@ -178,6 +218,7 @@ def write_outputs(transcripts, genome, blockers, min_length, prefix):
         summary.write(f"lncRNA_candidate\t{len(kept)}\n")
         summary.write(f"excluded_short\t{excluded_short}\n")
         summary.write(f"excluded_overlap_coding_or_ncrna\t{excluded_overlap}\n")
+        summary.write(f"excluded_cpat_coding\t{excluded_cpat}\n")
 
     with mqc_path.open("w", encoding="utf-8") as mqc:
         mqc.write("# id: titan_lncrna_candidates\n")
@@ -188,6 +229,7 @@ def write_outputs(transcripts, genome, blockers, min_length, prefix):
         mqc.write(f"lncRNA candidates\t{len(kept)}\n")
         mqc.write(f"Excluded short transcripts\t{excluded_short}\n")
         mqc.write(f"Excluded coding/ncRNA overlaps\t{excluded_overlap}\n")
+        mqc.write(f"Excluded CPAT-plant coding calls\t{excluded_cpat}\n")
 
     return len(kept)
 
@@ -199,6 +241,8 @@ def main(argv=None):
     parser.add_argument("--trna-gff3", required=True, type=Path)
     parser.add_argument("--rfam-gff3", required=True, type=Path)
     parser.add_argument("--min-length", required=True, type=int)
+    parser.add_argument("--cpat-best-tsv", type=Path)
+    parser.add_argument("--cpat-cutoff", type=float, default=0.46)
     parser.add_argument("--output-prefix", default="lncrna_candidates")
     parser.add_argument("gtf", nargs="+", type=Path)
     args = parser.parse_args(argv)
@@ -207,7 +251,8 @@ def main(argv=None):
     transcripts = collect_transcripts(args.gtf)
     blockers = load_blocking_intervals([args.final_annotation], {"CDS"})
     blockers.extend(load_blocking_intervals([args.trna_gff3, args.rfam_gff3]))
-    write_outputs(transcripts, genome, blockers, args.min_length, args.output_prefix)
+    cpat_coding_ids = load_cpat_coding_ids(args.cpat_best_tsv, args.cpat_cutoff)
+    write_outputs(transcripts, genome, blockers, args.min_length, args.output_prefix, cpat_coding_ids)
     return 0
 
 

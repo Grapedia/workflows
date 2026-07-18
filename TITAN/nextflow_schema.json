@@ -196,7 +196,7 @@
     },
     "cpat_model_dir": {
       "$ref": "#/definitions/path_or_false",
-      "description": "Directory containing CPAT-plant model files Plant_Hexamer.tsv and Plant.logit.RData. A Vitis-specific model is preferred when available."
+      "description": "Directory containing CPAT-plant model files Plant_Hexamer.tsv and Plant.logit.RData. Defaults to bundled Plant-LncPipe model files; a Vitis-specific model is preferred when available."
     },
     "cpat_model_flavour": {
       "type": "string",
@@ -317,6 +317,9 @@
       "$ref": "#/definitions/container_digest"
     },
     "container_busco": {
+      "$ref": "#/definitions/container_digest"
+    },
+    "container_cpat": {
       "$ref": "#/definitions/container_digest"
     },
     "container_multiqc": {

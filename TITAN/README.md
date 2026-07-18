@@ -255,9 +255,9 @@ TITAN splits the target FASTA by sequence/chromosome, runs `cmsearch --cut_ga --
 
 ## lncRNA candidates
 
-TITAN can build preliminary lncRNA candidates from merged transcript evidence after AEGIS, tRNAscan-SE and Infernal/Rfam complete. It is disabled by default (`--run_lncrna false`). When enabled, candidates are filtered by `--lncrna_min_length` and excluded when they overlap coding CDS, tRNA or Rfam ncRNA intervals. Outputs are published under `${output_dir}/additional_annotations/ncrna/lncrna/` as `lncrna_candidates.gff3`, `.gtf`, `.fasta` and summary TSV files, and the count summary is included in MultiQC.
+TITAN can build preliminary lncRNA candidates from merged transcript evidence after AEGIS, tRNAscan-SE and Infernal/Rfam complete. It is disabled by default (`--run_lncrna false`). When enabled, candidates are filtered by `--lncrna_min_length`, excluded when they overlap coding CDS, tRNA or Rfam ncRNA intervals, then filtered with the bundled Plant-LncPipe CPAT-plant model using `--cpat_plant_cutoff 0.46`. Outputs are published under `${output_dir}/additional_annotations/ncrna/lncrna/` as `lncrna_candidates.gff3`, `.gtf`, `.fasta`, CPAT raw TSV/log files and summary TSV files, and the count summary is included in MultiQC.
 
-This is deliberately a candidate layer, not a final lncRNA annotation. CPAT's official prebuilt models cover animal model species only; TITAN therefore records `--cpat_model_dir`, `--cpat_model_flavour` and `--cpat_plant_cutoff` for provenance and can require Plant-LncPipe CPAT-plant files (`Plant_Hexamer.tsv`, `Plant.logit.RData`) with `--lncrna_require_cpat_model true`. A Vitis-trained CPAT model is still preferred before promoting candidates to `final_lncrna.gff3`.
+This is deliberately a candidate layer, not a final lncRNA annotation. CPAT's official prebuilt models cover animal model species only; TITAN bundles Plant-LncPipe CPAT-plant files under `resources/cpat_plant_lncpipe/` and records `--cpat_model_dir`, `--cpat_model_flavour`, `--cpat_plant_cutoff` and `--container_cpat` for provenance. A Vitis-trained CPAT model is still preferred before promoting candidates to `final_lncrna.gff3`.
 
 ## Quality report (BUSCO, AGAT stats, MultiQC)
 
@@ -332,7 +332,7 @@ Main public output families:
 | Helixer | `helixer.gff3` | `${output_dir}/additional_annotations/helixer` (only when `--run_helixer true`); also passed to AEGIS as optional merge evidence |
 | tRNAscan-SE | `trna.gff3`, `trnascan.out`, `trnascan.struct`, `trnascan.stats` | `${output_dir}/additional_annotations/ncrna/trna` (only populated with predictions when `--run_trnascan true`) |
 | Infernal/Rfam | `rfam_ncrna.gff3`, `rfam_hits.tbl`, `rfam_search.out` | `${output_dir}/additional_annotations/ncrna/rfam` (only populated with predictions when `--run_rfam true`) |
-| lncRNA candidates | `lncrna_candidates.gff3`, `lncrna_candidates.gtf`, `lncrna_candidates.fasta`, `lncrna_classification_summary.tsv` | `${output_dir}/additional_annotations/ncrna/lncrna` (only populated with candidates when `--run_lncrna true`) |
+| lncRNA candidates | `lncrna_candidates.gff3`, `lncrna_candidates.gtf`, `lncrna_candidates.fasta`, `cpat_plant.output.ORF_prob.best.tsv`, `lncrna_classification_summary.tsv` | `${output_dir}/additional_annotations/ncrna/lncrna` (only populated with candidates when `--run_lncrna true`) |
 | Provenance | `evidence_manifest.json`, `additional_annotations_manifest.json`, `versions.yml` | `${output_dir}/provenance` |
 | Final validation | `final_annotation_validation.json`, `final_annotation_validation.txt` | `${output_dir}/validation` |
 | Reports | Nextflow report, timeline, trace and DAG | `${output_dir}/nextflow_reports` when using the launcher |
