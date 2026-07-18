@@ -12,6 +12,7 @@ process multiqc_report {
   input:
     path(fastp_json_reports, stageAs: "fastp_reports/*")
     path(busco_short_summary)
+    path(omark_mqc_tsv)
     path(agat_stats_txt)
     path(ncrna_qc_reports, stageAs: "ncrna_qc/*")
     path(lncrna_qc_tsv)
@@ -32,6 +33,7 @@ process multiqc_report {
     mkdir -p mqc_input
     cp fastp_reports/*.fastp.json mqc_input/ 2>/dev/null || true
     cp ${busco_short_summary} mqc_input/ 2>/dev/null || true
+    cp ${omark_mqc_tsv} mqc_input/ 2>/dev/null || true
     cp ${agat_stats_txt} mqc_input/ 2>/dev/null || true
     cp ncrna_qc/* mqc_input/ 2>/dev/null || true
     cp ${lncrna_qc_tsv} mqc_input/ 2>/dev/null || true

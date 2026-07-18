@@ -54,11 +54,14 @@ process titan_provenance {
     path(diamond2go_versions, stageAs: "module_versions/diamond2go_versions.yml")
     path(eggnog_versions, stageAs: "module_versions/eggnog_versions.yml")
     path(interproscan_versions, stageAs: "module_versions/interproscan_versions.yml")
+    path(omark_versions, stageAs: "module_versions/omark_versions.yml")
     path(final_validation_versions, stageAs: "module_versions/final_validation_versions.yml")
     path(eggnog_annotations_all)
     path(eggnog_annotations_main)
     path(interproscan_annotations_all)
     path(interproscan_annotations_main)
+    path(omark_detailed_summary)
+    path(omark_summary)
 
   output:
     path "evidence_manifest.json", emit: evidence_manifest
@@ -112,6 +115,9 @@ manifest = {
         "aegis_container": "${aegis_container}",
         "run_flair": "${params.run_flair}",
         "container_flair": "${params.container_flair}",
+        "run_omark": "${params.run_omark}",
+        "omark_data_dir": "${params.omark_data_dir}",
+        "container_omark": "${params.container_omark}",
     },
     "inputs": [
         file_record("new_assembly", "${new_assembly}"),
@@ -150,6 +156,8 @@ manifest = {
         file_record("eggnog_annotations_main", "${eggnog_annotations_main}"),
         file_record("interproscan_annotations_all", "${interproscan_annotations_all}"),
         file_record("interproscan_annotations_main", "${interproscan_annotations_main}"),
+        file_record("omark_detailed_summary", "${omark_detailed_summary}"),
+        file_record("omark_summary", "${omark_summary}"),
     ],
     "module_versions": [
         file_record("edta_versions", "${edta_versions}"),
@@ -159,6 +167,7 @@ manifest = {
         file_record("diamond2go_versions", "${diamond2go_versions}"),
         file_record("eggnog_versions", "${eggnog_versions}"),
         file_record("interproscan_versions", "${interproscan_versions}"),
+        file_record("omark_versions", "${omark_versions}"),
         file_record("final_validation_versions", "${final_validation_versions}"),
     ],
 }
@@ -186,6 +195,8 @@ with open("versions.yml", "w", encoding="utf-8") as handle:
     handle.write('  helixer_model: "${params.helixer_model}"\\n')
     handle.write('  interproscan: "${params.run_interproscan}"\\n')
     handle.write('  interproscan_data_dir: "${params.interproscan_data_dir}"\\n')
+    handle.write('  omark: "${params.run_omark}"\\n')
+    handle.write('  omark_data_dir: "${params.omark_data_dir}"\\n')
 PY
     """
 }

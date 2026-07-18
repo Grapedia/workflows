@@ -454,6 +454,8 @@ Publié sous `${params.output_dir}/additional_annotations/sqanti3/` et `${params
 
 ## Phase 8 — OMArk (QC complémentaire à BUSCO)
 
+**Statut TITAN codex-dev — 2026-07-18** : Phase 8 implémentée comme QC protéome final optionnel après AEGIS/BUSCO. OMArk consomme `final_annotation_proteins_main.fasta`, publie les sorties sous `quality_report/omark/`, enregistre les sorties dans la provenance principale et ajoute `omark_mqc.tsv` au rapport MultiQC final.
+
 **But** : évaluer non seulement la complétude du jeu de gènes mais aussi sa cohérence par rapport aux espèces proches, et détecter des indices de contamination.
 **Pourquoi** : complémentaire à BUSCO (déjà implémenté) — OMArk considère les familles de gènes conservées multi-copies (BUSCO les exclut), et rapporte explicitement des signaux de contamination absents de BUSCO.
 **Position dans le graphe** : juste après `busco` dans `workflows/titan.nf`, même niveau que le reste du `quality_report/`.
@@ -479,13 +481,15 @@ omark -f proteins_main.omamer \
 **Output** :
 - `omark_out/proteins_main_detailed_summary.txt` (publié — complétude + cohérence + contamination)
 - `omark_out/proteins_main_omark.sum` (publié, résumé condensé)
+- `proteins_main.omamer` (résultat OMAmer intermédiaire publié pour traçabilité)
+- `omark_mqc.tsv` (résumé custom-content MultiQC)
 
 Publié sous `${params.output_dir}/quality_report/omark/`.
 
 **Jalons**
-1. M1 — `modules/omark.nf` créé avec `stub:`, suit exactement le pattern `busco.nf` (déjà écrit, à dupliquer/adapter).
-2. M2 — Base OMAmer téléchargée et smoke-testée offline (même méthode que pour BUSCO : `apptainer exec` direct hors Nextflow avant intégration).
-3. M3 — Intégré, ajouté au `multiqc_report` comme custom content (OMArk n'a pas de module MultiQC natif contrairement à BUSCO — même traitement "texte brut" que prévu pour `agat_stats.txt`).
+1. ✅ M1 — `modules/omark.nf` créé avec `stub:`, sur le même pattern que `busco.nf`.
+2. ⏳ M2 — Base OMAmer réelle non téléchargée/smoke-testée dans codex-dev ; validation actuelle faite en `-profile test -stub-run`.
+3. ✅ M3 — Intégré, ajouté au `multiqc_report` comme custom content via `omark_mqc.tsv`.
 
 **Validation**
 - Complétude OMArk et complétude BUSCO doivent être cohérentes entre elles (à quelques points de pourcentage près) — un grand écart signale que l'un des deux est mal configuré (mauvaise lignée/base).

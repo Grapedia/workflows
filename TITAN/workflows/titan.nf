@@ -9,6 +9,7 @@ include { validate_inputs } from '../modules/validate_inputs'
 include { helixer_prediction } from '../modules/helixer_prediction'
 include { additional_annotations_provenance } from '../modules/additional_annotations_provenance'
 include { busco } from '../modules/busco'
+include { omark } from '../modules/omark'
 include { agat_stats } from '../modules/agat_stats'
 include { ncrna_annotation_qc } from '../modules/ncrna_annotation_qc'
 include { multiqc_report } from '../modules/multiqc_report'
@@ -373,6 +374,8 @@ workflow TITAN {
 
     busco_results = busco(aegis.out.aegis_proteins_main)
 
+    omark_results = omark(aegis.out.aegis_proteins_main)
+
     agat_stats_results = agat_stats(aegis.out.aegis_gff)
 
     ncrna_qc_results = ncrna_annotation_qc(
@@ -383,6 +386,7 @@ workflow TITAN {
     multiqc_report(
         evidence_data.fastp_json_reports,
         busco_results.short_summary,
+        omark_results.multiqc_tsv,
         agat_stats_results.stats_txt,
         ncrna_qc_results.multiqc_tsv,
         lncrna_results.multiqc_tsv,
@@ -440,10 +444,13 @@ workflow TITAN {
         aegis.out.diamond2go_versions,
         aegis.out.eggnog_versions,
         aegis.out.interproscan_versions,
+        omark_results.versions,
         validate_final_annotation.out.versions,
         aegis.out.eggnog_annotations_all,
         aegis.out.eggnog_annotations_main,
         aegis.out.interproscan_all_tsv,
-        aegis.out.interproscan_main_tsv
+        aegis.out.interproscan_main_tsv,
+        omark_results.detailed_summary,
+        omark_results.summary
     )
 }

@@ -164,6 +164,14 @@
       "$ref": "#/definitions/path_or_false",
       "description": "Directory containing the pre-fetched BUSCO lineage dataset (via `busco --download <lineage> --download_path <dir>`), used offline. Required when run_busco is true."
     },
+    "run_omark": {
+      "type": "boolean",
+      "description": "Run OMArk/OMAmer protein-set QC on the final AEGIS main protein FASTA and add the summary to MultiQC."
+    },
+    "omark_data_dir": {
+      "$ref": "#/definitions/path_or_false",
+      "description": "Directory containing the offline OMAmer database file omamer.h5. Required when run_omark is true."
+    },
     "run_trnascan": {
       "type": "boolean",
       "description": "Run tRNAscan-SE on the target genome to annotate tRNA genes under additional_annotations/ncrna/trna."
@@ -341,6 +349,9 @@
       "$ref": "#/definitions/container_digest"
     },
     "container_busco": {
+      "$ref": "#/definitions/container_digest"
+    },
+    "container_omark": {
       "$ref": "#/definitions/container_digest"
     },
     "container_cpat": {

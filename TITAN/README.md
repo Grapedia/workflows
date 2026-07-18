@@ -277,9 +277,15 @@ SQANTI3 is an optional long-read isoform QC branch (`--run_sqanti3 true`). It ru
 
 SQANTI3 outputs are published under `${output_dir}/additional_annotations/sqanti3/stringtie_long_reads/` and `${output_dir}/additional_annotations/sqanti3/flair_isoforms/`. TITAN also creates `quality_report/sqanti3/sqanti3_long_read_isoform_qc_mqc.tsv` and includes the structural-category summary in the final MultiQC report.
 
+## OMArk protein-set QC
+
+OMArk is an optional final protein-set QC branch (`--run_omark true`) complementary to BUSCO. It runs OMAmer on AEGIS `final_annotation_proteins_main.fasta`, then reports OMArk completeness, consistency and contamination signals under `${output_dir}/quality_report/omark/`. It requires an offline OMAmer database at `--omark_data_dir /absolute/path` containing `omamer.h5`.
+
+TITAN publishes `proteins_main_detailed_summary.txt`, `proteins_main_omark.sum`, `proteins_main.omamer` and `omark_mqc.tsv`. The `omark_mqc.tsv` custom-content table is included in the final MultiQC report.
+
 ## Quality report (BUSCO, AGAT stats, MultiQC)
 
-TITAN closes the run with a `quality_report/` step: BUSCO gene-set completeness (protein mode) on AEGIS `final_annotation_proteins_main.fasta`, structural statistics on AEGIS `final_annotation.gff3` via `agat_sp_statistics.pl`, optional ncRNA summaries, optional SQANTI3 long-read isoform QC, the optional AEGIS-vs-Mikado final source comparison, and every per-sample fastp trimming report, all aggregated into one MultiQC HTML.
+TITAN closes the run with a `quality_report/` step: BUSCO gene-set completeness (protein mode) on AEGIS `final_annotation_proteins_main.fasta`, optional OMArk protein-set consistency/contamination QC, structural statistics on AEGIS `final_annotation.gff3` via `agat_sp_statistics.pl`, optional ncRNA summaries, optional SQANTI3 long-read isoform QC, the optional AEGIS-vs-Mikado final source comparison, and every per-sample fastp trimming report, all aggregated into one MultiQC HTML.
 
 BUSCO needs an offline lineage dataset TITAN does not download itself. To enable it:
 
@@ -347,7 +353,8 @@ Main public output families:
 | Diamond2GO | `final_annotation_proteins_all.diamond2go.tsv`, `final_annotation_proteins_main.diamond2go.tsv` | `${output_dir}/Diamond2GO_outputs` |
 | eggNOG-mapper | `final_annotation_proteins_all.emapper.annotations`, `final_annotation_proteins_main.emapper.annotations` | `${output_dir}/EggNOG_outputs` (only when `--run_eggnog_mapper true`) |
 | InterProScan | `final_annotation_proteins_all.tsv`/`.gff3`/`.json`, `final_annotation_proteins_main.tsv`/`.gff3`/`.json` | `${output_dir}/InterProScan_outputs` (only when `--run_interproscan true`) |
-| Quality report | `busco_short_summary.txt`, `agat_stats.txt`, `ncrna_annotation_counts_mqc.tsv`, `final_annotation_sources_mqc.tsv`, `titan_multiqc_report.html` | `${output_dir}/quality_report/` |
+| Quality report | `busco_short_summary.txt`, `proteins_main_omark.sum`, `agat_stats.txt`, `ncrna_annotation_counts_mqc.tsv`, `final_annotation_sources_mqc.tsv`, `titan_multiqc_report.html` | `${output_dir}/quality_report/` |
+| OMArk | `proteins_main.omamer`, `proteins_main_detailed_summary.txt`, `proteins_main_omark.sum`, `omark_mqc.tsv` | `${output_dir}/quality_report/omark` (only populated with real QC when `--run_omark true`) |
 | Helixer | `helixer.gff3` | `${output_dir}/additional_annotations/helixer` (only when `--run_helixer true`); also passed to AEGIS as optional merge evidence |
 | FLAIR | `flair_isoforms.gtf`, `flair_isoforms.fa`, per-sample `.flair.isoforms.gtf`/`.fa` files | `${output_dir}/additional_annotations/flair` (only populated with isoforms when `--run_flair true` and long reads are present); also passed to AEGIS and Mikado as optional transcript evidence |
 | SQANTI3 | `*.sqanti3_classification.txt`, `*.sqanti3_corrected.gtf`, `*.sqanti3_report.html`, `sqanti3_long_read_isoform_qc_mqc.tsv` | `${output_dir}/additional_annotations/sqanti3` and `${output_dir}/quality_report/sqanti3` (only populated with classifications when `--run_sqanti3 true` and long reads are present) |
