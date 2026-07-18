@@ -329,15 +329,15 @@ Record the data version printed by EGAPx, for example `egapxsupportdata_20251017
 
 EGAPx creates an `egapx_config/` directory the first time it is run with a new executor and asks the user to edit it. TITAN can pass a prepared directory with `--egapx_config_dir`.
 
-For the realistic-lite Slurm/Apptainer fixture, TITAN includes:
+A typical Slurm/Apptainer setup uses a local directory like:
 
 ```text
-data_example/realistic-lite/egapx_config/
+egapx_config/
   singularity.config
   process_resources.config
 ```
 
-That config runs EGAPx's nested Nextflow locally inside the outer TITAN Slurm job while using Apptainer/Singularity containers. This avoids nested Slurm submission for the small fixture. For full production, either:
+That config can run EGAPx's nested Nextflow locally inside the outer TITAN Slurm job while using Apptainer/Singularity containers. This avoids nested Slurm submission for small or moderate runs. For full production, either:
 
 * keep this single-node nested EGAPx model and allocate enough CPUs, memory and walltime to the outer TITAN `egapx` process; or
 * create a site-specific EGAPx executor config from the official EGAPx examples if you want EGAPx itself to submit nested cluster jobs.

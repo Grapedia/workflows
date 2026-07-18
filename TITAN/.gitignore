@@ -19,6 +19,7 @@ __pycache__/
 .rfam_data/
 .omark_data/
 resources/
+data_example/
 .tmp/
 TITAN_colmar-*.log
 busco_downloads/
