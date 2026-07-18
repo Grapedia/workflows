@@ -393,10 +393,10 @@ Both launcher scripts can run this step automatically:
 
 ```bash
 ./launch_TITAN_example.sh --prepare-eggnog-data --enable-eggnog-mapper ... # plus the usual required options
-./launch_TITAN_serveur_colmar.sh --prepare-eggnog-data
+examples/colmar/launch_TITAN_serveur_colmar.sh --prepare-eggnog-data
 ```
 
-`--prepare-eggnog-data` downloads the database into `TITAN_EGGNOG_DATA_DIR` (default `<project-dir>/.eggnog_data`) if it is not already there; `--enable-eggnog-mapper` (in `launch_TITAN_example.sh`) then passes `--run_eggnog_mapper true --eggnog_data_dir "$TITAN_EGGNOG_DATA_DIR"` to Nextflow. On the Colmar launcher, set `run_eggnog_mapper = true` directly in `data/slurm_apptainer.config` once the database has been downloaded.
+`--prepare-eggnog-data` downloads the database into `TITAN_EGGNOG_DATA_DIR` (default `<project-dir>/.eggnog_data`) if it is not already there; `--enable-eggnog-mapper` (in `launch_TITAN_example.sh`) then passes `--run_eggnog_mapper true --eggnog_data_dir "$TITAN_EGGNOG_DATA_DIR"` to Nextflow. On the Colmar launcher, set `run_eggnog_mapper = true` in the site copy of `examples/colmar/slurm_apptainer.config` once the database has been downloaded.
 
 Defaults:
 
@@ -430,10 +430,10 @@ This populates `<model-dir>/<lineage>/*.h5`. The script skips the fetch if a mod
 
 ```bash
 ./launch_TITAN_example.sh --prepare-helixer-model --enable-helixer ... # plus the usual required options
-./launch_TITAN_serveur_colmar.sh --prepare-helixer-model
+examples/colmar/launch_TITAN_serveur_colmar.sh --prepare-helixer-model
 ```
 
-`--prepare-helixer-model` downloads the model into `TITAN_HELIXER_MODEL_DIR` (default `<project-dir>/.helixer_models`) if it is not already there; `--enable-helixer` (in `launch_TITAN_example.sh`) then passes `--run_helixer true --helixer_model_dir "$TITAN_HELIXER_MODEL_DIR" --helixer_model "$TITAN_HELIXER_LINEAGE"` to Nextflow, and `--enable-helixer-gpu` additionally passes `--helixer_use_gpu true`. On the Colmar launcher, set `run_helixer = true` (and optionally `helixer_use_gpu = true`) directly in `data/slurm_apptainer.config` once the model has been downloaded.
+`--prepare-helixer-model` downloads the model into `TITAN_HELIXER_MODEL_DIR` (default `<project-dir>/.helixer_models`) if it is not already there; `--enable-helixer` (in `launch_TITAN_example.sh`) then passes `--run_helixer true --helixer_model_dir "$TITAN_HELIXER_MODEL_DIR" --helixer_model "$TITAN_HELIXER_LINEAGE"` to Nextflow, and `--enable-helixer-gpu` additionally passes `--helixer_use_gpu true`. On the Colmar launcher, set `run_helixer = true` and optionally `helixer_use_gpu = true` in the site copy of `examples/colmar/slurm_apptainer.config` once the model has been downloaded.
 
 Defaults:
 
@@ -464,10 +464,10 @@ Both launcher scripts can run this step automatically:
 
 ```bash
 ./launch_TITAN_example.sh --prepare-interproscan-data --enable-interproscan ... # plus the usual required options
-./launch_TITAN_serveur_colmar.sh --prepare-interproscan-data
+examples/colmar/launch_TITAN_serveur_colmar.sh --prepare-interproscan-data
 ```
 
-`--prepare-interproscan-data` downloads the data into `TITAN_INTERPROSCAN_DATA_DIR` (default `<project-dir>/.interproscan_data`) if it is not already there; `--enable-interproscan` (in `launch_TITAN_example.sh`) then passes `--run_interproscan true --interproscan_data_dir "$TITAN_INTERPROSCAN_DATA_DIR"` to Nextflow. On the Colmar launcher, set `run_interproscan = true` directly in `data/slurm_apptainer.config` once the data has been downloaded.
+`--prepare-interproscan-data` downloads the data into `TITAN_INTERPROSCAN_DATA_DIR` (default `<project-dir>/.interproscan_data`) if it is not already there; `--enable-interproscan` (in `launch_TITAN_example.sh`) then passes `--run_interproscan true --interproscan_data_dir "$TITAN_INTERPROSCAN_DATA_DIR"` to Nextflow. On the Colmar launcher, set `run_interproscan = true` in the site copy of `examples/colmar/slurm_apptainer.config` once the data has been downloaded.
 
 InterProScan hardcodes `data/` as a path relative to its install directory rather than accepting a CLI flag, so TITAN bind-mounts `interproscan_data_dir` to the fixed container path `/opt/interproscan/data` (matching the official Docker usage pattern) via `containerOptions` per profile, the same mechanism used for `eggnog_data_dir` and `helixer_model_dir`.
 
@@ -494,7 +494,7 @@ Enable it in a direct Nextflow command with:
 --run_trnascan true
 ```
 
-On the Colmar production launcher, set `run_trnascan = true` in `data/slurm_apptainer.config`. No `--prepare-*` step is needed.
+On the Colmar production launcher, set `run_trnascan = true` in the site copy of `examples/colmar/slurm_apptainer.config`. No `--prepare-*` step is needed.
 
 Defaults:
 
@@ -529,10 +529,10 @@ Enable it in a direct Nextflow command with:
 The Colmar production launcher can run the preparation step:
 
 ```bash
-./launch_TITAN_serveur_colmar.sh --prepare-rfam-data
+examples/colmar/launch_TITAN_serveur_colmar.sh --prepare-rfam-data
 ```
 
-For that launcher, keep `run_rfam = true` and `rfam_data_dir = "${projectDir}/.rfam_data"` in `data/slurm_apptainer.config`, or override `TITAN_RFAM_DATA_DIR` before launching.
+For that launcher, keep `run_rfam = true` and `rfam_data_dir = "${projectDir}/.rfam_data"` in the site copy of `examples/colmar/slurm_apptainer.config`, or override `TITAN_RFAM_DATA_DIR` before launching.
 
 Defaults:
 
@@ -677,10 +677,10 @@ Enable OMArk with:
 The Colmar production launcher can run the preparation step:
 
 ```bash
-./launch_TITAN_serveur_colmar.sh --prepare-omark-data
+examples/colmar/launch_TITAN_serveur_colmar.sh --prepare-omark-data
 ```
 
-For that launcher, keep `run_omark = true` and `omark_data_dir = "${projectDir}/.omark_data"` in `data/slurm_apptainer.config`, or override `TITAN_OMARK_DATA_DIR` before launching.
+For that launcher, keep `run_omark = true` and `omark_data_dir = "${projectDir}/.omark_data"` in the site copy of `examples/colmar/slurm_apptainer.config`, or override `TITAN_OMARK_DATA_DIR` before launching.
 
 Defaults:
 
@@ -805,11 +805,11 @@ Before launching a long run:
 * If enabling Helixer, run `--prepare-helixer-model` (or `scripts/download_helixer_model.sh`) at least once and confirm `helixer_model_dir` contains the requested lineage; only set `helixer_use_gpu = true` if a GPU is actually visible on the node running that process.
 * If enabling InterProScan, run `--prepare-interproscan-data` (or `scripts/download_interproscan_data.sh`) at least once and confirm `interproscan_data_dir` contains a populated `pfam` subdirectory; plan for the extra runtime (all analyses, on both protein FASTAs, is the heaviest of the three functional annotation steps).
 * If enabling tRNAscan-SE, confirm the pinned `trnascan-se` image is available; no offline data directory is required.
-* If enabling Infernal/Rfam, run `--prepare-rfam-data` on the Colmar launcher (or `scripts/download_rfam_data.sh`) at least once and confirm `rfam_data_dir` contains `Rfam.cm`, `Rfam.clanin` and the `cmpress` index files.
+* If enabling Infernal/Rfam, run `--prepare-rfam-data` on the launcher (or `scripts/download_rfam_data.sh`) at least once and confirm `rfam_data_dir` contains `Rfam.cm`, `Rfam.clanin` and the `cmpress` index files.
 * If enabling lncRNA candidates, stage the CPAT Plant-LncPipe model with `scripts/download_cpat_plant_lncpipe.sh` or confirm TITAN can download it during validation; enable tRNAscan-SE and Rfam for the cleanest candidate filtering.
 * If enabling Mikado, keep `run_transdecoder = true` unless you intentionally want a transcript-only Mikado run, and plan for a separate final annotation output under `final_annotations/mikado`.
 * If enabling FLAIR or SQANTI3, confirm the RNA-seq samplesheet contains at least one `library_layout=long` sample.
-* If enabling OMArk, run `--prepare-omark-data` on the Colmar launcher (or `scripts/download_omark_data.sh`) at least once and confirm `omark_data_dir` contains `omamer.h5`.
+* If enabling OMArk, run `--prepare-omark-data` on the launcher (or `scripts/download_omark_data.sh`) at least once and confirm `omark_data_dir` contains `omamer.h5`.
 * If enabling BUSCO, pre-stage the selected lineage dataset and confirm `busco_data_dir` points to the directory containing that lineage.
 * Confirm `TITAN_APPTAINER_CACHEDIR` points to a writable shared filesystem when using `slurm,apptainer`.
 * Run a `-stub-run` after every config/profile edit.
