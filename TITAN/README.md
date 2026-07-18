@@ -111,7 +111,7 @@ shows the full per-sample task fan-out.
 ## Quick Start
 
 ```bash
-git clone git@github-amandine:Grapedia/workflows.git
+git clone git@github.com:Grapedia/workflows.git
 cd workflows/TITAN
 scripts/run-tests.sh
 ```

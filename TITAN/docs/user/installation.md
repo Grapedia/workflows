@@ -40,7 +40,7 @@ python3 -m pip install --user pyyaml
 Clone the workflow repository and move to the TITAN directory:
 
 ```bash
-git clone git@github-amandine:Grapedia/workflows.git
+git clone git@github.com:Grapedia/workflows.git
 cd workflows/TITAN
 ```
 
