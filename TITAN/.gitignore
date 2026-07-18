@@ -24,6 +24,12 @@ data_example/
 /data/slurm_apptainer.config
 /dockerfiles/aegis/
 /dockerfiles/aegis_v.2025_05_20/
+/dockerfiles/CPAT/
+/dockerfiles/CPC2/
+/dockerfiles/FEELnc/
+/dockerfiles/edta/
+/dockerfiles/edta_manual/
+/dockerfiles/egapx/
 .tmp/
 TITAN_colmar-*.log
 busco_downloads/

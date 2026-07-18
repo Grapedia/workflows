@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 import re
+import subprocess
 import sys
 from pathlib import Path
 
@@ -79,7 +80,15 @@ def validate_modules():
 
 def validate_dockerfiles():
     bad = []
-    for path in sorted((ROOT / "dockerfiles").glob("**/Dockerfile")):
+    result = subprocess.run(
+        ["git", "ls-files", "dockerfiles/**/Dockerfile"],
+        cwd=ROOT,
+        check=True,
+        text=True,
+        capture_output=True,
+    )
+    for rel_path in sorted(result.stdout.splitlines()):
+        path = ROOT / rel_path
         for line_number, line in enumerate(path.read_text().splitlines(), 1):
             stripped = line.strip()
             if not stripped.startswith("FROM "):
