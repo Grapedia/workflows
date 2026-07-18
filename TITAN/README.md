@@ -271,13 +271,47 @@ shared filesystems and container cache settings.
 
 ## Tool References
 
-[AEGIS](https://github.com/Tomsbiolab/aegis), [AGAT](https://github.com/NBISweden/AGAT),
-[BRAKER3](https://github.com/Gaius-Augustus/BRAKER), [Diamond2GO](https://github.com/rhysf/Diamond2GO),
-[eggNOG-mapper](https://github.com/eggnogdb/eggnog-mapper), [EDTA](https://github.com/oushujun/EDTA),
-[EGAPx](https://github.com/ncbi/egapx), [fastp](https://github.com/OpenGene/fastp),
-[GFFCompare](https://ccb.jhu.edu/software/stringtie/gffcompare.shtml), [Helixer](https://github.com/weberlab-hhu/Helixer),
-[HISAT2](https://daehwankimlab.github.io/hisat2/), [InterProScan](https://github.com/ebi-pf-team/interproscan),
-[Liftoff](https://github.com/agshumate/Liftoff), [Minimap2](https://github.com/lh3/minimap2),
-[PsiCLASS](https://github.com/splicebox/PsiCLASS), [Salmon](https://combine-lab.github.io/salmon/),
-[ENA Browser API](https://www.ebi.ac.uk/ena/browser/api/), [STAR](https://github.com/alexdobin/STAR),
-[StringTie](https://ccb.jhu.edu/software/stringtie/).
+Primary workflow and orchestration:
+[Nextflow](https://www.nextflow.io/),
+[Apptainer](https://apptainer.org/),
+[Slurm](https://slurm.schedmd.com/).
+
+Input, transfer and evidence generation:
+[ENA Browser API](https://www.ebi.ac.uk/ena/browser/api/),
+[fastp](https://github.com/OpenGene/fastp),
+[Liftoff](https://github.com/agshumate/Liftoff),
+[Salmon](https://combine-lab.github.io/salmon/),
+[STAR](https://github.com/alexdobin/STAR),
+[HISAT2](https://daehwankimlab.github.io/hisat2/),
+[Minimap2](https://github.com/lh3/minimap2),
+[StringTie](https://ccb.jhu.edu/software/stringtie/),
+[PsiCLASS](https://github.com/splicebox/PsiCLASS),
+[GFFCompare](https://ccb.jhu.edu/software/stringtie/gffcompare.shtml).
+
+Genome annotation and integration:
+[EDTA](https://github.com/oushujun/EDTA),
+[EGAPx](https://github.com/ncbi/egapx),
+[BRAKER3](https://github.com/Gaius-Augustus/BRAKER),
+[GeneMark-ETP](http://exon.gatech.edu/GeneMark/),
+[AUGUSTUS](https://github.com/Gaius-Augustus/Augustus),
+[Helixer](https://github.com/weberlab-hhu/Helixer),
+[AEGIS](https://github.com/Tomsbiolab/aegis),
+[AGAT](https://github.com/NBISweden/AGAT).
+
+Optional isoform, ncRNA and lncRNA branches:
+[FLAIR](https://github.com/BrooksLabUCSC/flair),
+[Mikado](https://github.com/EI-CoreBioinformatics/mikado),
+[TransDecoder](https://github.com/TransDecoder/TransDecoder),
+[SQANTI3](https://github.com/ConesaLab/SQANTI3),
+[tRNAscan-SE](http://trna.ucsc.edu/tRNAscan-SE/),
+[Infernal](http://eddylab.org/infernal/),
+[Rfam](https://rfam.org/),
+[CPAT](https://cpat.readthedocs.io/).
+
+Functional annotation and quality reporting:
+[Diamond2GO](https://github.com/rhysf/Diamond2GO),
+[eggNOG-mapper](https://github.com/eggnogdb/eggnog-mapper),
+[InterProScan](https://github.com/ebi-pf-team/interproscan),
+[BUSCO](https://busco.ezlab.org/),
+[OMArk](https://github.com/DessimozLab/OMArk),
+[MultiQC](https://multiqc.info/).
