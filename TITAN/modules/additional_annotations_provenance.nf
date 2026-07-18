@@ -11,6 +11,10 @@ process additional_annotations_provenance {
     val(workflow_command_line)
     path(helixer_gff3)
     path(helixer_versions, stageAs: "module_versions/helixer_versions.yml")
+    path(trnascan_gff3)
+    path(trnascan_raw_table)
+    path(trnascan_stats)
+    path(trnascan_versions, stageAs: "module_versions/trnascan_versions.yml")
 
   output:
     path "additional_annotations_manifest.json", emit: manifest
@@ -57,12 +61,18 @@ manifest = {
         "helixer_use_gpu": "${params.helixer_use_gpu}",
         "helixer_model_dir": "${params.helixer_model_dir}",
         "container_helixer": "${params.container_helixer}",
+        "run_trnascan": "${params.run_trnascan}",
+        "container_trnascan": "${params.container_trnascan}",
     },
     "outputs": [
         file_record("helixer_gff3", "${helixer_gff3}"),
+        file_record("trnascan_gff3", "${trnascan_gff3}"),
+        file_record("trnascan_raw_table", "${trnascan_raw_table}"),
+        file_record("trnascan_stats", "${trnascan_stats}"),
     ],
     "module_versions": [
         file_record("helixer_versions", "${helixer_versions}"),
+        file_record("trnascan_versions", "${trnascan_versions}"),
     ],
 }
 
@@ -75,6 +85,7 @@ with open("versions.yml", "w", encoding="utf-8") as handle:
     handle.write('  additional_annotations_manifest_schema: "titan.additional_annotations_manifest.v1"\\n')
     handle.write('  container: "${task.container}"\\n')
     handle.write('  helixer: "${params.run_helixer}"\\n')
+    handle.write('  trnascan: "${params.run_trnascan}"\\n')
 PY
     """
 }

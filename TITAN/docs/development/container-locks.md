@@ -38,6 +38,7 @@ This checks:
 | Salmon | `container_salmon` | `quay.io/biocontainers/salmon@sha256:71ffc3b4961971159a6a2327d55686fb499c43335644ea5623476a082e826fc0` |
 | STAR | `container_star` | `quay.io/biocontainers/star@sha256:f5910f39a9f5bc171a51fe7400d33e7586cb353c47d759a7c190562322150067` |
 | StringTie | `container_stringtie` | `avelt/stringtie@sha256:856395c26e0c36544ef5c66e24badcac4f68fd5fa51864a0f964a737250545bb` |
+| tRNAscan-SE | `container_trnascan` | `quay.io/biocontainers/trnascan-se@sha256:e573090368974ff1228e6894828c6c8a132dfecc3198f5e9fb76832f8f434f29` |
 
 ## Dockerfile base images
 

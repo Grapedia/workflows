@@ -26,6 +26,7 @@ REQUIRED_PARAMS = {
     "container_salmon",
     "container_star",
     "container_stringtie",
+    "container_trnascan",
 }
 
 PINNED_IMAGE = re.compile(r"^[\w./-]+@sha256:[0-9a-f]{64}$")

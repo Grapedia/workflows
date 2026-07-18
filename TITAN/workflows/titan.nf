@@ -11,6 +11,7 @@ include { additional_annotations_provenance } from '../modules/additional_annota
 include { busco } from '../modules/busco'
 include { agat_stats } from '../modules/agat_stats'
 include { multiqc_report } from '../modules/multiqc_report'
+include { trnascan_se } from '../modules/trnascan_se'
 
 def isMissingParam(value) {
     return value == null || value == true || value == false || value.toString().trim() == '' || value.toString().trim().equalsIgnoreCase('true') || value.toString().trim().equalsIgnoreCase('false')
@@ -146,6 +147,11 @@ workflow TITAN {
     protein_samplesheet = input_validation.ok.map { file(params.protein_samplesheet) }
     egapx_paramfile = input_validation.ok.map { file(params.egapx_paramfile) }
 
+    trnascan_results = trnascan_se(
+        new_assembly,
+        file("${projectDir}/scripts/trnascan_to_gff3.py")
+    )
+
     rnaseq_rows = rnaseq_samplesheet
        .splitCsv(header: true, sep: ',')
        .map { row -> [ row.sampleID, row.SRA_or_FASTQ, row.library_layout, rnaseqLocalFiles(row) ] }
@@ -207,7 +213,11 @@ workflow TITAN {
         workflow.commitId ?: '',
         workflow.commandLine ?: '',
         helixer_results.gff3,
-        helixer_results.versions
+        helixer_results.versions,
+        trnascan_results.gff3,
+        trnascan_results.raw_table,
+        trnascan_results.stats,
+        trnascan_results.versions
     )
 
     println "Running Aegis from generated named evidence; EDTA masked genome is passed as a direct channel input."

@@ -1,0 +1,4 @@
+Sequence Name	tRNA #	Begin	End	Type	Anticodon	Intron Begin	Intron End	Score
+------------	------	-----	---	----	---------	------------	----------	-----
+chr1	1	10	80	Ala	TGC	0	0	72.4
+chr2	2	110	40	Gly	GCC	0	0	88.0

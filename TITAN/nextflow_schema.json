@@ -164,6 +164,10 @@
       "$ref": "#/definitions/path_or_false",
       "description": "Directory containing the pre-fetched BUSCO lineage dataset (via `busco --download <lineage> --download_path <dir>`), used offline. Required when run_busco is true."
     },
+    "run_trnascan": {
+      "type": "boolean",
+      "description": "Run tRNAscan-SE on the target genome to annotate tRNA genes under additional_annotations/ncrna/trna."
+    },
     "egapx_version": {
       "type": "string",
       "description": "EGAPx version recorded in provenance."
@@ -276,6 +280,9 @@
       "$ref": "#/definitions/container_digest"
     },
     "container_multiqc": {
+      "$ref": "#/definitions/container_digest"
+    },
+    "container_trnascan": {
       "$ref": "#/definitions/container_digest"
     },
     "container_braker3": {

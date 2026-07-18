@@ -1,6 +1,8 @@
 #!/usr/bin/env python3
 """Static quality checks for TITAN Nextflow modules."""
 
+from __future__ import annotations
+
 from pathlib import Path
 import re
 import sys
@@ -112,6 +114,7 @@ for required_param in [
     "container_eggnog_mapper",
     "container_helixer",
     "container_interproscan",
+    "container_trnascan",
 ]:
     if required_param not in schema.get("properties", {}):
         fail(f"nextflow_schema.json is missing parameter: {required_param}")

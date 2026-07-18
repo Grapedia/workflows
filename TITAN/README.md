@@ -241,6 +241,12 @@ Helixer runs on CPU by default. Set `--helixer_use_gpu true` to request a GPU (A
 
 Fetch a lineage model once with `scripts/download_helixer_model.sh --model-dir /absolute/path/to/helixer_models --container <container_helixer> --lineage land_plant`. Helixer's own `Helixer.py` does not auto-download models and fails fast with a clear error if the model is missing; the download script also pre-creates the directories Helixer itself expects to already exist. It skips the fetch if the model is already present. Both launcher scripts can run this step with `--prepare-helixer-model` (`launch_TITAN_example.sh`) or by passing `run_helixer = true` in `data/slurm_apptainer.config` plus `--prepare-helixer-model` (`launch_TITAN_serveur_colmar.sh`). See [docs/user/installation.md](docs/user/installation.md#9-helixer-optional) for full details.
 
+## tRNAscan-SE
+
+tRNAscan-SE is an optional ncRNA annotation branch run directly on the target genome, in parallel with the main evidence-generation graph. It is disabled by default (`--run_trnascan false`). To enable it, set `--run_trnascan true`; TITAN runs tRNAscan-SE in eukaryotic mode, keeps the raw table/structure/isotype/statistics files, and converts the raw table to a standardized `trna.gff3` with `scripts/trnascan_to_gff3.py`.
+
+Outputs are published under `${output_dir}/additional_annotations/ncrna/trna/` and recorded in `provenance/additional_annotations_manifest.json`. The tRNA GFF3 is not merged into the AEGIS coding annotation automatically.
+
 ## Quality report (BUSCO, AGAT stats, MultiQC)
 
 TITAN closes the run with a `quality_report/` step: BUSCO gene-set completeness (protein mode) on `final_annotation_proteins_main.fasta`, structural statistics on `final_annotation.gff3` via `agat_sp_statistics.pl`, and every per-sample fastp trimming report, all aggregated into one MultiQC HTML.
@@ -311,6 +317,7 @@ Main public output families:
 | InterProScan | `final_annotation_proteins_all.tsv`/`.gff3`/`.json`, `final_annotation_proteins_main.tsv`/`.gff3`/`.json` | `${output_dir}/InterProScan_outputs` (only when `--run_interproscan true`) |
 | Quality report | `busco_short_summary.txt`, `agat_stats.txt`, `titan_multiqc_report.html` | `${output_dir}/quality_report/` |
 | Helixer | `helixer.gff3` | `${output_dir}/additional_annotations/helixer` (only when `--run_helixer true`); also passed to AEGIS as optional merge evidence |
+| tRNAscan-SE | `trna.gff3`, `trnascan.out`, `trnascan.struct`, `trnascan.stats` | `${output_dir}/additional_annotations/ncrna/trna` (only populated with predictions when `--run_trnascan true`) |
 | Provenance | `evidence_manifest.json`, `additional_annotations_manifest.json`, `versions.yml` | `${output_dir}/provenance` |
 | Final validation | `final_annotation_validation.json`, `final_annotation_validation.txt` | `${output_dir}/validation` |
 | Reports | Nextflow report, timeline, trace and DAG | `${output_dir}/nextflow_reports` when using the launcher |
