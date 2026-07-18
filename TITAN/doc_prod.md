@@ -21,6 +21,8 @@ today, and what to do. Priority order matches the numbered sections.
 - [done] Section 1 development-session artifacts removed. Durable architecture
   rationale was rewritten into `docs/development/ARCHITECTURE.md`.
 - [done] Section 2 broken/stale README references fixed.
+- [done] Section 3 developer references cleaned and linked from
+  `CONTRIBUTING.md`.
 
 ---
 
@@ -82,9 +84,9 @@ rather than "how the AI agent worked":
 
 | File | Verdict |
 | --- | --- |
-| `docs/development/nextflow-dsl2-conventions.md` | Keep as-is. Good, short, timeless. Consider merging into a single `CONTRIBUTING.md` at the TITAN root together with the "Developer Quality Contract" section currently in `README.md` (see section 4) so contributors have one place to look, and `README.md` stays user-facing. |
-| `docs/development/container-locks.md` | Keep as-is, same merge target as above (`CONTRIBUTING.md`), or keep standalone and link it from `CONTRIBUTING.md` — it's referenced by name from `scripts/validate_container_pins.py` output/tests, so keep the filename stable if merging. |
-| `docs/development/architecture-audit.md` | Rewrite per section 1 into `docs/development/ARCHITECTURE.md` (durable rationale only). |
+| `docs/development/nextflow-dsl2-conventions.md` | [done] Kept as-is and linked from `CONTRIBUTING.md`. |
+| `docs/development/container-locks.md` | [done] Kept with stable filename and linked from `CONTRIBUTING.md`. |
+| `docs/development/architecture-audit.md` | [done] Rewritten into `docs/development/ARCHITECTURE.md` as durable rationale only. |
 
 Recommended end state for `docs/development/`:
 
@@ -95,26 +97,22 @@ docs/development/
   container-locks.md
 ```
 
-...or fold all three into one `CONTRIBUTING.md` at the TITAN root — either
-is fine; pick whichever the team prefers, but don't keep both an
-audit-log-flavored doc and a clean one saying the same thing.
+[done] `CONTRIBUTING.md` is now the contributor entrypoint and links to the
+three stable `docs/development/` references instead of duplicating them.
 
 ---
 
 ## 4. `README.md` — restructure
 
-Current state: 483 lines, one flat file mixing a quick start, a "Developer
-Quality Contract" (lines 56-70, pure contributor content, not for a
-scientific-publication audience), 14 per-tool reference sections (lines
-224-305, one paragraph each for eggNOG/InterProScan/Helixer/tRNAscan/Rfam/
-lncRNA/Mikado/FLAIR/SQANTI3/OMArk/expression validation/quality report), a
-full outputs table, and troubleshooting — all in reading order, no way to
-jump straight to "what does this pipeline actually do" without scrolling
-past setup instructions.
+Current state after sections 1-3: `README.md` is cleaner, but still has one
+flat user-facing file mixing quick start, detailed per-tool reference
+sections, a full outputs table, and troubleshooting. There is still no
+pipeline diagram near the intro, so a reader has no compact way to see what
+the pipeline actually does before scrolling through setup instructions.
 
 Plan:
 
-1. **Move "Developer Quality Contract" (lines 56-70) to `CONTRIBUTING.md`**
+1. [done] **Move "Developer Quality Contract" to `CONTRIBUTING.md`**
    (see section 3). A user citing TITAN in a methods section does not need
    to know the module-authoring conventions.
 2. **Add the pipeline diagram right after the intro** (section 5 below),

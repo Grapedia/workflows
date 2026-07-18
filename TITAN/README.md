@@ -4,7 +4,7 @@ TITAN is a Nextflow pipeline for eukaryotic genome annotation. It combines trans
 
 Contributors: David Navarro, Antonio Santiago, Jose Tomas Matus, Amandine Velt, Camille Rustenholz and Marco Moretto.
 
-Full setup details are in [docs/user/installation.md](docs/user/installation.md). Contributor architecture and development conventions are under [docs/development](docs/development).
+Full setup details are in [docs/user/installation.md](docs/user/installation.md). Contributor guidance is in [CONTRIBUTING.md](CONTRIBUTING.md), with architecture and development references under [docs/development](docs/development).
 
 ## Current Contract
 
@@ -52,22 +52,6 @@ For production, prepare inputs and run through the launcher:
 ```
 
 The launcher resolves paths, checks profile/container contracts, validates inputs and writes Nextflow reports under `${output_dir}/nextflow_reports`.
-
-## Developer Quality Contract
-
-TITAN uses Nextflow DSL2 modules and subworkflows with a stable public graph. Development changes should preserve these contracts:
-
-* Modules should keep workflow logic local to `input:`, `output:`, `script:` and `stub:` blocks. Domain options should be passed as `val` or `path` inputs instead of being read directly from `params`; `params` remains acceptable for containers, labels and publish locations.
-* Existing process names are kept stable to avoid breaking `withName` selectors, traces and resume behavior. New processes should use lower snake case matching the module filename, as documented in [docs/development/nextflow-dsl2-conventions.md](docs/development/nextflow-dsl2-conventions.md).
-* Every process must use an explicit label from the resource policy in [conf/base.config](conf/base.config).
-* Process outputs should be named with `emit:` and should use `path(...)` for files. Avoid broad output globs that can capture temporary files.
-* Every process should emit `versions.yml`. For tools where a reliable runtime `--version` command is not available, record at least the process identity and configured container/tool version.
-* Shell scripts in modules must use `set -euo pipefail`. Complex repeated shell workflows should live under `scripts/` and be passed into modules as `path` inputs.
-* Workflow closures must not read task output files with `file(...).text`; emit values from the producing process or move parsing into a process/script.
-* User-facing parameters should be documented and typed in [nextflow_schema.json](nextflow_schema.json).
-* Keep `scripts/run-tests.sh` passing. Add focused tests or static checks when changing tuple contracts, module outputs, labels, publication behavior or shared helper scripts.
-
-`nf-test` specs are the preferred direction for future module-level tests once contracts are stable. Until then, TITAN uses Python/static checks plus the full `test` profile stub run in `scripts/run-tests.sh`.
 
 ## Requirements
 
