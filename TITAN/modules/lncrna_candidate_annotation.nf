@@ -30,6 +30,7 @@ process lncrna_candidate_annotation {
     path(hisat2_stringtie_gtf)
     path(long_reads_gtf)
     path(build_lncrna_candidates)
+    path(download_cpat_plant_lncpipe)
 
   output:
     path "lncrna_candidates.gff3", emit: gff3
@@ -73,6 +74,9 @@ EOF
         if [[ -z "${params.cpat_model_dir}" || "${params.cpat_model_dir}" == "false" ]]; then
             echo "ERROR: cpat_model_dir must be provided when run_lncrna=true and lncrna_require_cpat_model=true" >&2
             exit 1
+        fi
+        if [[ ! -s "${params.cpat_model_dir}/Plant_Hexamer.tsv" || ! -s "${params.cpat_model_dir}/Plant.logit.RData" ]]; then
+            bash "${download_cpat_plant_lncpipe}" --model-dir "${params.cpat_model_dir}"
         fi
         if [[ ! -s "${params.cpat_model_dir}/Plant_Hexamer.tsv" || ! -s "${params.cpat_model_dir}/Plant.logit.RData" ]]; then
             echo "ERROR: cpat_model_dir must contain Plant_Hexamer.tsv and Plant.logit.RData for CPAT-plant mode" >&2

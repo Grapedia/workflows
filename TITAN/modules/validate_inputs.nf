@@ -52,6 +52,16 @@ process validate_inputs {
       fi
     done
 
+    if [[ "${params.run_lncrna}" == "true" && "${params.lncrna_require_cpat_model}" == "true" ]]; then
+      if [[ -z "${params.cpat_model_dir}" || "${params.cpat_model_dir}" == "false" ]]; then
+        echo "ERROR: cpat_model_dir must be provided when run_lncrna=true and lncrna_require_cpat_model=true" >&2
+        exit 1
+      fi
+      if [[ ! -s "${params.cpat_model_dir}/Plant_Hexamer.tsv" || ! -s "${params.cpat_model_dir}/Plant.logit.RData" ]]; then
+        bash ${projectDir}/scripts/download_cpat_plant_lncpipe.sh --model-dir "${params.cpat_model_dir}"
+      fi
+    fi
+
     python3 ${projectDir}/scripts/validate_inputs.py \\
       --project-dir "${projectDir}" \\
       --new-assembly "${new_assembly}" \\
@@ -94,6 +104,16 @@ process validate_inputs {
         exit 1
       fi
     done
+
+    if [[ "${params.run_lncrna}" == "true" && "${params.lncrna_require_cpat_model}" == "true" ]]; then
+      if [[ -z "${params.cpat_model_dir}" || "${params.cpat_model_dir}" == "false" ]]; then
+        echo "ERROR: cpat_model_dir must be provided when run_lncrna=true and lncrna_require_cpat_model=true" >&2
+        exit 1
+      fi
+      if [[ ! -s "${params.cpat_model_dir}/Plant_Hexamer.tsv" || ! -s "${params.cpat_model_dir}/Plant.logit.RData" ]]; then
+        bash ${projectDir}/scripts/download_cpat_plant_lncpipe.sh --model-dir "${params.cpat_model_dir}"
+      fi
+    fi
 
     python3 ${projectDir}/scripts/validate_inputs.py \\
       --project-dir "${projectDir}" \\

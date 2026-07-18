@@ -155,10 +155,10 @@ Publié sous `${params.output_dir}/additional_annotations/ncrna/rfam/`.
 
 **Décision CPAT — 2026-07-18** : aucun modèle CPAT spécifique *Vitis vinifera* prêt à télécharger n'a été identifié. Le dépôt Plant-LncPipe fournit un modèle CPAT-plant générique (`Plant_Hexamer.tsv`, `Plant.logit.RData`, cutoff 0.46) ; ces fichiers sont maintenant intégrés sous `resources/cpat_plant_lncpipe/` et utilisés comme mode dégradé/provenancé via `params.cpat_model_dir`, mais la sortie TITAN reste `lncrna_candidates.gff3` tant qu'un modèle CPAT *Vitis* n'est pas entraîné et validé.
 
-**Statut TITAN codex-dev — 2026-07-18** : couche candidate implémentée avec filtrage CPAT-plant et validée en `-profile test -stub-run`.
+**Statut TITAN codex-dev — 2026-07-18** : couche candidate implémentée avec filtrage CPAT-plant et téléchargement automatique idempotent des modèles manquants, validée en `-profile test -stub-run`.
 
 - ✅ M1 : `modules/lncrna_candidate_annotation.nf` créé avec `stub:`, sortie candidate publiée sous `additional_annotations/ncrna/lncrna/`, résumé MultiQC ajouté.
-- ✅ M2 partiel : modèle CPAT *Vitis* non disponible ; CPAT-plant Plant-LncPipe téléchargé, checksumé, utilisé et tracé comme mode dégradé, pas comme validation finale *Vitis*.
+- ✅ M2 partiel : modèle CPAT *Vitis* non disponible ; CPAT-plant Plant-LncPipe téléchargé, checksumé, retéléchargé automatiquement si absent, utilisé et tracé comme mode dégradé, pas comme validation finale *Vitis*.
 - ⚠️ M3/M4 : test 1 chromosome et run complet production non exécutés dans cette passe.
 - ✅ M5 : intégré dans `workflows/titan.nf`, provenance additionnelle et MultiQC final mis à jour, validations `scripts/run-tests.sh`, `nextflow run main.nf -profile test -stub-run`, `-resume` et `--run_lncrna true` avec modèle CPAT-plant requis passées.
 

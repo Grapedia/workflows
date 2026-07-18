@@ -253,7 +253,8 @@ workflow TITAN {
         evidence_data.star_stringtie_stranded_default_gtf,
         evidence_data.hisat2_stringtie_stranded_default_gtf,
         evidence_data.long_reads_default_gtf,
-        file("${projectDir}/scripts/build_lncrna_candidates.py")
+        file("${projectDir}/scripts/build_lncrna_candidates.py"),
+        file("${projectDir}/scripts/download_cpat_plant_lncpipe.sh")
     )
 
     additional_annotations_provenance(

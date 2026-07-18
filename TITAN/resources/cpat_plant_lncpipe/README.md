@@ -8,4 +8,6 @@ Downloaded from:
 
 The published Plant-LncPipe cutoff is 0.46: coding probability >= 0.46 is treated as coding, and coding probability < 0.46 is treated as non-coding.
 
+If these files are missing, TITAN can recreate them with `scripts/download_cpat_plant_lncpipe.sh --model-dir resources/cpat_plant_lncpipe` when `--run_lncrna true`.
+
 These files are generic plant models, not Vitis-specific CPAT models. TITAN therefore keeps the output named `lncrna_candidates.gff3` until a Vitis-trained CPAT model is available and validated.

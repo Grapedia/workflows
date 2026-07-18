@@ -47,6 +47,7 @@ run_step "$PYTHON_BIN" scripts/test_clean_liftoff_gff3_for_agat.py
 run_step "$PYTHON_BIN" scripts/test_trnascan_to_gff3.py
 run_step "$PYTHON_BIN" scripts/test_rfam_tblout_to_gff3.py
 run_step "$PYTHON_BIN" scripts/test_build_lncrna_candidates.py
+run_step bash scripts/test_download_cpat_plant_lncpipe.sh
 
 run_step nextflow config -profile test
 run_step nextflow run main.nf -profile test -stub-run -ansi-log false
