@@ -251,7 +251,7 @@ Outputs are published under `${output_dir}/additional_annotations/ncrna/trna/` a
 
 Infernal/Rfam is an optional ncRNA annotation branch run directly on the target genome, in parallel with tRNAscan-SE and the main evidence-generation graph. It is disabled by default (`--run_rfam false`). To enable it, stage Rfam offline once (`Rfam.cm`, `Rfam.clanin`, and the `cmpress` indexes) and set `--run_rfam true --rfam_data_dir /absolute/path/to/rfam_data`.
 
-TITAN runs `cmsearch --cut_ga --rfam --nohmmonly` against the staged Rfam covariance models and converts `rfam_hits.tbl` to `rfam_ncrna.gff3` with `scripts/rfam_tblout_to_gff3.py`. Outputs are published under `${output_dir}/additional_annotations/ncrna/rfam/` and recorded in `provenance/additional_annotations_manifest.json`. Rfam ncRNA annotations are not merged into the AEGIS coding annotation automatically.
+TITAN splits the target FASTA by sequence/chromosome, runs `cmsearch --cut_ga --rfam --nohmmonly` independently on each split so the search can parallelize, then merges all `rfam_hits.tbl` fragments and converts once to `rfam_ncrna.gff3` with `scripts/rfam_tblout_to_gff3.py`. Outputs are published under `${output_dir}/additional_annotations/ncrna/rfam/` and recorded in `provenance/additional_annotations_manifest.json`. Rfam ncRNA annotations are not merged into the AEGIS coding annotation automatically.
 
 ## Quality report (BUSCO, AGAT stats, MultiQC)
 

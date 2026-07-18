@@ -92,7 +92,7 @@ Publié sous `${params.output_dir}/additional_annotations/ncrna/trna/`.
 - ✅ M2 : `scripts/rfam_tblout_to_gff3.py` créé avec fixture `test-data/minimal/valid/rfam_hits.tbl` et test unitaire `scripts/test_rfam_tblout_to_gff3.py`.
 - ⚠️ M3 : téléchargement/indexation Rfam et test `cmsearch` sur petit contig non exécutés dans cette passe ; dépend d'un `rfam_data_dir` réel préparé hors pipeline.
 - ⚠️ M4 : estimation temps réel sur génome T2T complet non exécutée ; à faire sur infrastructure cible avant run complet, avec décision éventuelle de split par chromosome.
-- ✅ M5 : intégré dans `workflows/titan.nf`, paramètres, label `process_rfam`, bind Apptainer et conteneur pinné ajoutés, provenance additionnelle mise à jour, validations `scripts/run-tests.sh`, `nextflow run main.nf -profile test -stub-run`, `-resume` et `--run_rfam true` passées.
+- ✅ M5 : intégré dans `workflows/titan.nf`, avec split FASTA par séquence/chromosome, `cmsearch` parallélisé par split, merge des `rfam_hits.tbl` puis conversion finale unique ; paramètres, label `process_rfam`, bind Apptainer et conteneur pinné ajoutés, provenance additionnelle mise à jour, validations `scripts/run-tests.sh`, `nextflow run main.nf -profile test -stub-run`, `-resume` et `--run_rfam true` passées.
 
 **But** : annoter les gènes d'ARN non-codants couverts par les modèles de covariance Rfam (rRNA, snRNA, snoRNA, et autres familles Rfam pertinentes chez les plantes).
 **Pourquoi** : composante standard de toute annotation ncRNA complète (mentionnée explicitement dans la méthodologie PN40024.v5.1 pour filtrer les faux lncRNA). Approche standard de l'industrie (Ensembl, NCBI) : BLASTN Rfam en pré-filtre, puis `cmsearch` Infernal ciblé pour réduire le coût de calcul.
@@ -141,7 +141,7 @@ Publié sous `${params.output_dir}/additional_annotations/ncrna/rfam/`.
 4. M4 — Estimation du temps réel sur le génome T2T complet (hors pipeline, avec `time cmsearch ...` sur le vrai génome) : si >24h même à 32 cpus, prévoir un split par chromosome avant intégration (voir note ci-dessous).
 5. M5 — Intégré dans `workflows/titan.nf`, publié.
 
-**Note sur la charge de calcul** : `cmsearch --rfam` full-genome contre l'intégralité de Rfam (~4000 familles) est le poste de calcul le plus lourd de ce document après FCS-GX. Si le M4 révèle un temps prohibitif, découper le run par chromosome (`splitFasta` + `.collect()` sur les résultats) est la parade standard plutôt que de réduire la couverture Rfam.
+**Note sur la charge de calcul** : `cmsearch --rfam` full-genome contre l'intégralité de Rfam (~4000 familles) est le poste de calcul le plus lourd de ce document après FCS-GX. TITAN découpe maintenant le run par séquence/chromosome et collecte les résultats avant conversion GFF3 finale, afin de paralléliser le calcul sans réduire la couverture Rfam.
 
 **Validation**
 - `rfam_ncrna.gff3` valide (même contrôle GFF3 que Phase 1).

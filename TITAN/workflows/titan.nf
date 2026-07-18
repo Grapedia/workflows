@@ -12,7 +12,7 @@ include { busco } from '../modules/busco'
 include { agat_stats } from '../modules/agat_stats'
 include { multiqc_report } from '../modules/multiqc_report'
 include { trnascan_se } from '../modules/trnascan_se'
-include { infernal_rfam } from '../modules/infernal_rfam'
+include { rfam_split_genome; infernal_rfam_search; infernal_rfam_merge } from '../modules/infernal_rfam'
 
 def isMissingParam(value) {
     return value == null || value == true || value == false || value.toString().trim() == '' || value.toString().trim().equalsIgnoreCase('true') || value.toString().trim().equalsIgnoreCase('false')
@@ -153,8 +153,17 @@ workflow TITAN {
         file("${projectDir}/scripts/trnascan_to_gff3.py")
     )
 
-    rfam_results = infernal_rfam(
-        new_assembly,
+    rfam_split = rfam_split_genome(new_assembly)
+    rfam_search_inputs = rfam_split.fasta_parts
+        .flatten()
+        .map { fasta_part -> tuple(fasta_part.baseName, fasta_part) }
+    rfam_search_results = infernal_rfam_search(rfam_search_inputs)
+    rfam_search_files = rfam_search_results.search_results
+        .map { sequence_id, tblout, search_log -> [tblout, search_log] }
+        .flatten()
+        .collect()
+    rfam_results = infernal_rfam_merge(
+        rfam_search_files,
         file("${projectDir}/scripts/rfam_tblout_to_gff3.py")
     )
 
