@@ -56,12 +56,17 @@ process titan_provenance {
     path(interproscan_versions, stageAs: "module_versions/interproscan_versions.yml")
     path(omark_versions, stageAs: "module_versions/omark_versions.yml")
     path(final_validation_versions, stageAs: "module_versions/final_validation_versions.yml")
+    path(final_transcriptome_index_versions, stageAs: "module_versions/final_transcriptome_index_versions.yml")
+    path(expression_quant_versions, stageAs: "module_versions/expression_quant_versions/*")
+    path(expression_support_versions, stageAs: "module_versions/expression_support_versions.yml")
     path(eggnog_annotations_all)
     path(eggnog_annotations_main)
     path(interproscan_annotations_all)
     path(interproscan_annotations_main)
     path(omark_detailed_summary)
     path(omark_summary)
+    path(expression_support_summary_json)
+    path(expression_gene_tpm_matrix)
 
   output:
     path "evidence_manifest.json", emit: evidence_manifest
@@ -118,6 +123,9 @@ manifest = {
         "run_omark": "${params.run_omark}",
         "omark_data_dir": "${params.omark_data_dir}",
         "container_omark": "${params.container_omark}",
+        "run_expression_validation": "${params.run_expression_validation}",
+        "expression_support_min_tpm": "${params.expression_support_min_tpm}",
+        "container_salmon": "${params.container_salmon}",
     },
     "inputs": [
         file_record("new_assembly", "${new_assembly}"),
@@ -158,6 +166,8 @@ manifest = {
         file_record("interproscan_annotations_main", "${interproscan_annotations_main}"),
         file_record("omark_detailed_summary", "${omark_detailed_summary}"),
         file_record("omark_summary", "${omark_summary}"),
+        file_record("expression_support_summary_json", "${expression_support_summary_json}"),
+        file_record("expression_gene_tpm_matrix", "${expression_gene_tpm_matrix}"),
     ],
     "module_versions": [
         file_record("edta_versions", "${edta_versions}"),
@@ -169,8 +179,13 @@ manifest = {
         file_record("interproscan_versions", "${interproscan_versions}"),
         file_record("omark_versions", "${omark_versions}"),
         file_record("final_validation_versions", "${final_validation_versions}"),
+        file_record("final_transcriptome_index_versions", "${final_transcriptome_index_versions}"),
+        file_record("expression_support_versions", "${expression_support_versions}"),
     ],
 }
+
+for version_file in sorted(Path("module_versions/expression_quant_versions").glob("*")):
+    manifest["module_versions"].append(file_record(f"expression_quant_versions/{version_file.name}", version_file))
 
 with open("evidence_manifest.json", "w", encoding="utf-8") as handle:
     json.dump(manifest, handle, indent=2, sort_keys=True)
@@ -197,6 +212,8 @@ with open("versions.yml", "w", encoding="utf-8") as handle:
     handle.write('  interproscan_data_dir: "${params.interproscan_data_dir}"\\n')
     handle.write('  omark: "${params.run_omark}"\\n')
     handle.write('  omark_data_dir: "${params.omark_data_dir}"\\n')
+    handle.write('  expression_validation: "${params.run_expression_validation}"\\n')
+    handle.write('  expression_support_min_tpm: "${params.expression_support_min_tpm}"\\n')
 PY
     """
 }

@@ -13,6 +13,7 @@ include { omark } from '../modules/omark'
 include { agat_stats } from '../modules/agat_stats'
 include { ncrna_annotation_qc } from '../modules/ncrna_annotation_qc'
 include { multiqc_report } from '../modules/multiqc_report'
+include { final_transcriptome_index; final_expression_quant; expression_support_summary } from '../modules/final_expression_validation'
 include { trnascan_se } from '../modules/trnascan_se'
 include { rfam_split_genome; infernal_rfam_search; infernal_rfam_merge } from '../modules/infernal_rfam'
 include { lncrna_candidate_annotation } from '../modules/lncrna_candidate_annotation'
@@ -367,6 +368,22 @@ workflow TITAN {
         file("${projectDir}/scripts/validate_final_annotation.py")
     )
 
+    final_transcriptome_index_results = final_transcriptome_index(
+        new_assembly,
+        aegis.out.aegis_gff
+    )
+
+    final_expression_quant_results = final_expression_quant(
+        evidence_data.trimmed_fastqs,
+        final_transcriptome_index_results.index
+    )
+
+    expression_support_results = expression_support_summary(
+        aegis.out.aegis_gff,
+        final_expression_quant_results.quant_dir.map { sample_ID, quant_dir -> quant_dir }.collect(),
+        file("${projectDir}/scripts/summarize_expression_support.py")
+    )
+
     // ----------------------------------------------------------------------------------------
     //     Final annotation quality report: BUSCO completeness, AGAT structural
     //     stats and every fastp trimming report, aggregated with MultiQC.
@@ -391,6 +408,7 @@ workflow TITAN {
         ncrna_qc_results.multiqc_tsv,
         lncrna_results.multiqc_tsv,
         sqanti3_multiqc_results.multiqc_tsv,
+        expression_support_results.multiqc_tsv,
         final_annotation_sources_qc_results.multiqc_tsv,
         validate_final_annotation.out.json_report
     )
@@ -446,11 +464,16 @@ workflow TITAN {
         aegis.out.interproscan_versions,
         omark_results.versions,
         validate_final_annotation.out.versions,
+        final_transcriptome_index_results.versions,
+        final_expression_quant_results.versions.collect(),
+        expression_support_results.versions,
         aegis.out.eggnog_annotations_all,
         aegis.out.eggnog_annotations_main,
         aegis.out.interproscan_all_tsv,
         aegis.out.interproscan_main_tsv,
         omark_results.detailed_summary,
-        omark_results.summary
+        omark_results.summary,
+        expression_support_results.json_summary,
+        expression_support_results.tpm_matrix
     )
 }

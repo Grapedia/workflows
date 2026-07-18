@@ -172,6 +172,15 @@
       "$ref": "#/definitions/path_or_false",
       "description": "Directory containing the offline OMAmer database file omamer.h5. Required when run_omark is true."
     },
+    "run_expression_validation": {
+      "type": "boolean",
+      "description": "Quantify expression against the final AEGIS transcriptome with Salmon and report gene-level support in MultiQC."
+    },
+    "expression_support_min_tpm": {
+      "type": "number",
+      "minimum": 0,
+      "description": "Minimum gene-level TPM in at least one sample required to count a final gene as expression-supported."
+    },
     "run_trnascan": {
       "type": "boolean",
       "description": "Run tRNAscan-SE on the target genome to annotate tRNA genes under additional_annotations/ncrna/trna."

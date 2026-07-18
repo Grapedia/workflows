@@ -500,6 +500,8 @@ Publié sous `${params.output_dir}/quality_report/omark/`.
 
 ## Phase 9 — Validation par expression (aucun nouvel outil)
 
+**Statut TITAN codex-dev — 2026-07-18** : Phase 9 implémentée et activée par défaut. TITAN extrait un transcriptome final depuis `final_annotation.gff3`, construit un index Salmon dédié, quantifie tous les FASTQ courts trimmés, agrège le support par gène avec seuil TPM configurable et ajoute `expression_support_summary_mqc.tsv` au MultiQC final.
+
 **But** : vérifier que chaque gène prédit dans `final_annotation.gff3` a un support transcriptomique réel — exactement le contrôle explicitement fait pour PN40024.v5.1 ("gènes avec support transcriptomique significatif").
 **Pourquoi** : réutilise entièrement l'infrastructure déjà présente dans TITAN (fastp, salmon, alignements STAR/HISAT2) — aucune nouvelle image à pinner, juste une étape de comptage/synthèse en plus.
 **Position dans le graphe** : après AEGIS, en parallèle de `validate_final_annotation`.
@@ -533,14 +535,16 @@ scripts/summarize_expression_support.py \
 **Output** :
 - `expression_support_summary.json` (publié — `% genes avec ≥1 échantillon TPM>0.5`, liste des gènes sans support, matrice TPM complète en intermédiaire)
 - `expression_support_summary_mqc.tsv` (custom content MultiQC)
+- `gene_tpm_matrix.tsv` (matrice TPM gène x échantillon)
+- `final_transcripts.fasta` (transcriptome final indexé par Salmon)
 
 Publié sous `${params.output_dir}/quality_report/expression_validation/`.
 
 **Jalons**
-1. M1 — Élargir `generate_evidence_data.nf` pour émettre les FASTQ trimmés (pas seulement les JSON) — modification du bloc `emit:` uniquement, donc sans risque de cache comme pour `fastp_json_reports` déjà fait.
-2. M2 — `modules/final_transcriptome_index.nf` + `modules/final_expression_quant.nf` + `scripts/summarize_expression_support.py` créés, `stub:` couvrant le graphe.
-3. M3 — `scripts/summarize_expression_support.py` testé unitairement sur une petite matrice TPM + GFF3 fixtures.
-4. M4 — Intégré, publié, ajouté au rapport `quality_report/`.
+1. ✅ M1 — `generate_evidence_data.nf` émet maintenant les FASTQ trimmés via `trimmed_fastqs`.
+2. ✅ M2 — `modules/final_expression_validation.nf` et `scripts/summarize_expression_support.py` créés, `stub:` couvrant le graphe.
+3. ✅ M3 — `scripts/test_summarize_expression_support.py` ajouté et intégré à `scripts/run-tests.sh`.
+4. ✅ M4 — Intégré, publié, ajouté au rapport `quality_report/` et à MultiQC.
 
 **Validation**
 - Le `%` de gènes sans support transcriptomique doit être documenté et comparé à l'écart connu entre PN40024.v4 (11 508 gènes uniques sans preuve) et v5.1 (17 208 gènes avec support significatif) — l'objectif n'est pas 100 % (des gènes réels sont silencieux dans les tissus/conditions échantillonnés) mais une amélioration mesurable et traçable par rapport à la version précédente.

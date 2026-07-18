@@ -17,6 +17,7 @@ process multiqc_report {
     path(ncrna_qc_reports, stageAs: "ncrna_qc/*")
     path(lncrna_qc_tsv)
     path(sqanti3_qc_tsv)
+    path(expression_support_mqc_tsv)
     path(final_annotation_sources_qc_tsv)
     path(validation_json)
 
@@ -38,6 +39,7 @@ process multiqc_report {
     cp ncrna_qc/* mqc_input/ 2>/dev/null || true
     cp ${lncrna_qc_tsv} mqc_input/ 2>/dev/null || true
     cp ${sqanti3_qc_tsv} mqc_input/ 2>/dev/null || true
+    cp ${expression_support_mqc_tsv} mqc_input/ 2>/dev/null || true
     cp ${final_annotation_sources_qc_tsv} mqc_input/ 2>/dev/null || true
     cp ${validation_json} mqc_input/ 2>/dev/null || true
 

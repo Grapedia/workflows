@@ -283,9 +283,15 @@ OMArk is an optional final protein-set QC branch (`--run_omark true`) complement
 
 TITAN publishes `proteins_main_detailed_summary.txt`, `proteins_main_omark.sum`, `proteins_main.omamer` and `omark_mqc.tsv`. The `omark_mqc.tsv` custom-content table is included in the final MultiQC report.
 
+## Expression Support Validation
+
+TITAN validates transcriptomic support for the final AEGIS gene set by default (`--run_expression_validation true`). It extracts a transcript FASTA from `final_annotation.gff3`, builds a dedicated Salmon index, quantifies all trimmed short-read RNA-seq samples against that final transcriptome, then aggregates gene-level TPM support with `--expression_support_min_tpm` (default `0.5`).
+
+Outputs are published under `${output_dir}/quality_report/expression_validation/`: `expression_support_summary.json`, `expression_support_summary_mqc.tsv`, `gene_tpm_matrix.tsv`, `final_transcripts.fasta` and optional per-sample quant directories when intermediates are published. The MultiQC report includes the supported/unsupported gene counts, and the JSON lists unsupported gene IDs for manual audit.
+
 ## Quality report (BUSCO, AGAT stats, MultiQC)
 
-TITAN closes the run with a `quality_report/` step: BUSCO gene-set completeness (protein mode) on AEGIS `final_annotation_proteins_main.fasta`, optional OMArk protein-set consistency/contamination QC, structural statistics on AEGIS `final_annotation.gff3` via `agat_sp_statistics.pl`, optional ncRNA summaries, optional SQANTI3 long-read isoform QC, the optional AEGIS-vs-Mikado final source comparison, and every per-sample fastp trimming report, all aggregated into one MultiQC HTML.
+TITAN closes the run with a `quality_report/` step: BUSCO gene-set completeness (protein mode) on AEGIS `final_annotation_proteins_main.fasta`, optional OMArk protein-set consistency/contamination QC, final-gene expression support validation, structural statistics on AEGIS `final_annotation.gff3` via `agat_sp_statistics.pl`, optional ncRNA summaries, optional SQANTI3 long-read isoform QC, the optional AEGIS-vs-Mikado final source comparison, and every per-sample fastp trimming report, all aggregated into one MultiQC HTML.
 
 BUSCO needs an offline lineage dataset TITAN does not download itself. To enable it:
 
@@ -353,8 +359,9 @@ Main public output families:
 | Diamond2GO | `final_annotation_proteins_all.diamond2go.tsv`, `final_annotation_proteins_main.diamond2go.tsv` | `${output_dir}/Diamond2GO_outputs` |
 | eggNOG-mapper | `final_annotation_proteins_all.emapper.annotations`, `final_annotation_proteins_main.emapper.annotations` | `${output_dir}/EggNOG_outputs` (only when `--run_eggnog_mapper true`) |
 | InterProScan | `final_annotation_proteins_all.tsv`/`.gff3`/`.json`, `final_annotation_proteins_main.tsv`/`.gff3`/`.json` | `${output_dir}/InterProScan_outputs` (only when `--run_interproscan true`) |
-| Quality report | `busco_short_summary.txt`, `proteins_main_omark.sum`, `agat_stats.txt`, `ncrna_annotation_counts_mqc.tsv`, `final_annotation_sources_mqc.tsv`, `titan_multiqc_report.html` | `${output_dir}/quality_report/` |
+| Quality report | `busco_short_summary.txt`, `proteins_main_omark.sum`, `expression_support_summary.json`, `agat_stats.txt`, `ncrna_annotation_counts_mqc.tsv`, `final_annotation_sources_mqc.tsv`, `titan_multiqc_report.html` | `${output_dir}/quality_report/` |
 | OMArk | `proteins_main.omamer`, `proteins_main_detailed_summary.txt`, `proteins_main_omark.sum`, `omark_mqc.tsv` | `${output_dir}/quality_report/omark` (only populated with real QC when `--run_omark true`) |
+| Expression validation | `expression_support_summary.json`, `expression_support_summary_mqc.tsv`, `gene_tpm_matrix.tsv`, `final_transcripts.fasta` | `${output_dir}/quality_report/expression_validation` |
 | Helixer | `helixer.gff3` | `${output_dir}/additional_annotations/helixer` (only when `--run_helixer true`); also passed to AEGIS as optional merge evidence |
 | FLAIR | `flair_isoforms.gtf`, `flair_isoforms.fa`, per-sample `.flair.isoforms.gtf`/`.fa` files | `${output_dir}/additional_annotations/flair` (only populated with isoforms when `--run_flair true` and long reads are present); also passed to AEGIS and Mikado as optional transcript evidence |
 | SQANTI3 | `*.sqanti3_classification.txt`, `*.sqanti3_corrected.gtf`, `*.sqanti3_report.html`, `sqanti3_long_read_isoform_qc_mqc.tsv` | `${output_dir}/additional_annotations/sqanti3` and `${output_dir}/quality_report/sqanti3` (only populated with classifications when `--run_sqanti3 true` and long reads are present) |

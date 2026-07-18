@@ -49,6 +49,7 @@ run_step "$PYTHON_BIN" scripts/test_rfam_tblout_to_gff3.py
 run_step "$PYTHON_BIN" scripts/test_build_lncrna_candidates.py
 run_step "$PYTHON_BIN" scripts/test_make_mikado_list.py
 run_step "$PYTHON_BIN" scripts/test_compare_final_annotations.py
+run_step "$PYTHON_BIN" scripts/test_summarize_expression_support.py
 run_step bash scripts/test_download_cpat_plant_lncpipe.sh
 
 run_step nextflow config -profile test

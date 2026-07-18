@@ -336,5 +336,6 @@ workflow generate_evidence_data {
         long_reads_alt_gtf = merged_long_reads_alt_args_gtf
         flair_isoforms_gtf = merged_flair_isoforms_gtf
         flair_isoforms_fasta = merged_flair_isoforms_fasta
+        trimmed_fastqs = trimmed_reads.trimmed_reads
         fastp_json_reports = trimmed_reads.fastp_json.collect()
 }
