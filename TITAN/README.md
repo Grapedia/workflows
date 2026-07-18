@@ -165,22 +165,23 @@ Detailed behavior, setup notes and outputs are in [docs/reference/tools.md](docs
 
 | Tool or branch | Default | Purpose |
 | --- | --- | --- |
-| [Liftoff](docs/reference/tools.md#liftoff) | on | Transfers previous annotation. |
-| [EDTA](docs/reference/tools.md#edta) | on | Produces the hard-masked genome for AEGIS. |
-| [EGAPx](docs/reference/tools.md#egapx) | on | Adds official NCBI annotation evidence. |
+| [Input validation](docs/reference/tools.md#input-validation) | on | Checks inputs before heavy work starts. |
+| [tRNAscan-SE](docs/reference/tools.md#trnascan-se) | off | Optional tRNA annotation. |
+| [Infernal/Rfam](docs/reference/tools.md#infernalrfam-ncrna) | off | Optional ncRNA family search. |
 | [RNA-seq evidence](docs/reference/tools.md#rna-seq-evidence) | on | Builds STAR/HISAT2/Minimap2 transcript evidence. |
+| [Liftoff](docs/reference/tools.md#liftoff) | on | Transfers previous annotation. |
+| [EGAPx](docs/reference/tools.md#egapx) | on | Adds official NCBI annotation evidence. |
+| [FLAIR](docs/reference/tools.md#flair-long-read-isoforms) | off | Optional long-read isoform evidence. |
+| [EDTA](docs/reference/tools.md#edta) | on | Produces the hard-masked genome for AEGIS. |
 | [BRAKER3](docs/reference/tools.md#braker3) | on | Generates ab initio gene predictions. |
+| [Helixer](docs/reference/tools.md#helixer) | off | Optional deep-learning prediction evidence. |
 | [AEGIS](docs/reference/tools.md#aegis) | on | Integrates evidence into the primary annotation. |
+| [Mikado + TransDecoder](docs/reference/tools.md#mikado-final-annotation-source) | off | Optional alternative final annotation source. |
+| [lncRNA candidates](docs/reference/tools.md#lncrna-candidates) | off | Optional CPAT-plant candidate layer. |
+| [SQANTI3](docs/reference/tools.md#sqanti3-long-read-isoform-qc) | off | Optional long-read isoform QC. |
 | [Diamond2GO](docs/reference/tools.md#diamond2go) | on | Annotates final AEGIS proteins. |
 | [eggNOG-mapper](docs/reference/tools.md#eggnog-mapper) | off | Optional orthology/function. |
 | [InterProScan](docs/reference/tools.md#interproscan) | off | Optional domains, GO and pathways. |
-| [Helixer](docs/reference/tools.md#helixer) | off | Optional deep-learning prediction evidence. |
-| [tRNAscan-SE](docs/reference/tools.md#trnascan-se) | off | Optional tRNA annotation. |
-| [Infernal/Rfam](docs/reference/tools.md#infernalrfam-ncrna) | off | Optional ncRNA family search. |
-| [lncRNA candidates](docs/reference/tools.md#lncrna-candidates) | off | Optional CPAT-plant candidate layer. |
-| [Mikado + TransDecoder](docs/reference/tools.md#mikado-final-annotation-source) | off | Optional alternative final annotation source. |
-| [FLAIR](docs/reference/tools.md#flair-long-read-isoforms) | off | Optional long-read isoform evidence. |
-| [SQANTI3](docs/reference/tools.md#sqanti3-long-read-isoform-qc) | off | Optional long-read isoform QC. |
 | [Quality report](docs/reference/tools.md#quality-report) | mixed | BUSCO, OMArk, AGAT, expression and MultiQC. |
 
 ## Profiles
