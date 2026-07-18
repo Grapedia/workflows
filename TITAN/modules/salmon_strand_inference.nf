@@ -53,10 +53,10 @@ process salmon_strand_inference {
     if [[ "\$strand_type" == "IU" || "\$strand_type" == "U" ]]; then
         strand_info="unstranded"
         echo "[\$DATE] $sample_ID is classified as unstranded"
-    elif [[ "\$strand_type" == "ISR" || "\$strand_type" == "FR" ]]; then
+    elif [[ "\$strand_type" == "ISF" || "\$strand_type" == "SF" || "\$strand_type" == "FR" ]]; then
         strand_info="stranded_forward"
         echo "[\$DATE] $sample_ID is classified as stranded_forward"
-    elif [[ "\$strand_type" == "ISF" || "\$strand_type" == "RF" ]]; then
+    elif [[ "\$strand_type" == "ISR" || "\$strand_type" == "SR" || "\$strand_type" == "RF" ]]; then
         strand_info="stranded_reverse"
         echo "[\$DATE] $sample_ID is classified as stranded_reverse"
     else
