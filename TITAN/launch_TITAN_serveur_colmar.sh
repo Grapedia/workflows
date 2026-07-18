@@ -31,6 +31,15 @@ OUTPUT_DIR="${TITAN_OUTPUT_DIR:-$PROJECT_DIR/data/titan_prod_out}"
 WORK_DIR="${TITAN_WORK_DIR:-$PROJECT_DIR/data/work}"
 CONFIG_FILE="${TITAN_CONFIG_FILE:-$PROJECT_DIR/data/slurm_apptainer.config}"
 PROFILE="${TITAN_PROFILE:-slurm,apptainer}"
+# Plain `-resume` (no argument) resumes from whatever session is most recent
+# in .nextflow/history - including unrelated one-off `nextflow run` commands
+# (e.g. a `-stub-run`/`-preview` sanity check) run from this same project
+# directory after the last real production attempt. That silently detaches
+# the resume chain from the actual production cache and reruns everything
+# from scratch. Set TITAN_RESUME_ID to the session UUID of the last real
+# production run (see the 6th column of `.nextflow/history`, or `nextflow
+# log`) to pin resume to it explicitly instead of trusting "most recent".
+RESUME_ID="${TITAN_RESUME_ID:-}"
 PREPARE_EGAPX_CACHE="${TITAN_PREPARE_EGAPX_CACHE:-false}"
 EGAPX_CACHE_DIR="${TITAN_EGAPX_CACHE_DIR:-$PROJECT_DIR/.egapx_cache}"
 EGAPX_RUNNER_DIR="${TITAN_EGAPX_RUNNER_DIR:-$PROJECT_DIR/.egapx_runner}"
@@ -251,6 +260,11 @@ if [[ "$PREPARE_OMARK_DATA" == true ]]; then
   prepare_omark_data
 fi
 
+resume_args=(-resume)
+if [[ -n "$RESUME_ID" ]]; then
+  resume_args=(-resume "$RESUME_ID")
+fi
+
 cmd=(
   nextflow -c "$CONFIG_FILE" run main.nf
   -profile "$PROFILE"
@@ -265,7 +279,7 @@ cmd=(
   # enabled. -with-dag does not need runtime metrics and is safe to keep.
   -with-dag "$OUTPUT_DIR/nextflow_reports/${RUN_NAME}.dag.html"
   -ansi-log false
-  -resume
+  "${resume_args[@]}"
   --egapx_runner_dir "$EGAPX_RUNNER_DIR"
   --egapx_local_cache_dir "$EGAPX_CACHE_DIR"
   --eggnog_data_dir "$EGGNOG_DATA_DIR"
@@ -291,6 +305,7 @@ echo "Helixer model dir: $HELIXER_MODEL_DIR (lineage: $HELIXER_LINEAGE)"
 echo "InterProScan data dir: $INTERPROSCAN_DATA_DIR"
 echo "Rfam data dir:     $RFAM_DATA_DIR"
 echo "OMArk data dir:    $OMARK_DATA_DIR"
+echo "Resume ID:         ${RESUME_ID:-<latest Nextflow session>}"
 echo
 echo "Command:"
 quote_cmd "${cmd[@]}"
