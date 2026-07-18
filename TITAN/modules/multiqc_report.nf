@@ -1,6 +1,6 @@
 // Aggregates run-wide QC (fastp trimming reports across every RNA-seq
 // sample) with final-annotation quality signals (BUSCO completeness, AGAT
-// structural stats, optional ncRNA annotation QC and the structural
+// structural stats, optional ncRNA/SQANTI3 annotation QC and the structural
 // validation report) into one HTML report.
 process multiqc_report {
   label 'process_low'
@@ -15,6 +15,7 @@ process multiqc_report {
     path(agat_stats_txt)
     path(ncrna_qc_reports, stageAs: "ncrna_qc/*")
     path(lncrna_qc_tsv)
+    path(sqanti3_qc_tsv)
     path(final_annotation_sources_qc_tsv)
     path(validation_json)
 
@@ -34,6 +35,7 @@ process multiqc_report {
     cp ${agat_stats_txt} mqc_input/ 2>/dev/null || true
     cp ncrna_qc/* mqc_input/ 2>/dev/null || true
     cp ${lncrna_qc_tsv} mqc_input/ 2>/dev/null || true
+    cp ${sqanti3_qc_tsv} mqc_input/ 2>/dev/null || true
     cp ${final_annotation_sources_qc_tsv} mqc_input/ 2>/dev/null || true
     cp ${validation_json} mqc_input/ 2>/dev/null || true
 

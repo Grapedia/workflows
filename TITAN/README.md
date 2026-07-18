@@ -271,9 +271,15 @@ FLAIR is an optional long-read transcript isoform branch (`--run_flair true`). I
 
 The merged `flair_isoforms.gtf` is passed as an additional transcript evidence source to both AEGIS and Mikado. It complements the existing Minimap2/StringTie long-read transcript evidence rather than replacing it.
 
+## SQANTI3 long-read isoform QC
+
+SQANTI3 is an optional long-read isoform QC branch (`--run_sqanti3 true`). It runs after AEGIS and evaluates both long-read transcript assemblies against the final AEGIS annotation and target genome: `merged_minimap2_stringtie_long_reads_default.gtf` from StringTie/Minimap2 and `flair_isoforms.gtf` from FLAIR. When long reads are absent, or when one source has no isoforms, TITAN emits zero-count sentinel summaries so MultiQC remains stable.
+
+SQANTI3 outputs are published under `${output_dir}/additional_annotations/sqanti3/stringtie_long_reads/` and `${output_dir}/additional_annotations/sqanti3/flair_isoforms/`. TITAN also creates `quality_report/sqanti3/sqanti3_long_read_isoform_qc_mqc.tsv` and includes the structural-category summary in the final MultiQC report.
+
 ## Quality report (BUSCO, AGAT stats, MultiQC)
 
-TITAN closes the run with a `quality_report/` step: BUSCO gene-set completeness (protein mode) on AEGIS `final_annotation_proteins_main.fasta`, structural statistics on AEGIS `final_annotation.gff3` via `agat_sp_statistics.pl`, optional ncRNA summaries, the optional AEGIS-vs-Mikado final source comparison, and every per-sample fastp trimming report, all aggregated into one MultiQC HTML.
+TITAN closes the run with a `quality_report/` step: BUSCO gene-set completeness (protein mode) on AEGIS `final_annotation_proteins_main.fasta`, structural statistics on AEGIS `final_annotation.gff3` via `agat_sp_statistics.pl`, optional ncRNA summaries, optional SQANTI3 long-read isoform QC, the optional AEGIS-vs-Mikado final source comparison, and every per-sample fastp trimming report, all aggregated into one MultiQC HTML.
 
 BUSCO needs an offline lineage dataset TITAN does not download itself. To enable it:
 
@@ -344,6 +350,7 @@ Main public output families:
 | Quality report | `busco_short_summary.txt`, `agat_stats.txt`, `ncrna_annotation_counts_mqc.tsv`, `final_annotation_sources_mqc.tsv`, `titan_multiqc_report.html` | `${output_dir}/quality_report/` |
 | Helixer | `helixer.gff3` | `${output_dir}/additional_annotations/helixer` (only when `--run_helixer true`); also passed to AEGIS as optional merge evidence |
 | FLAIR | `flair_isoforms.gtf`, `flair_isoforms.fa`, per-sample `.flair.isoforms.gtf`/`.fa` files | `${output_dir}/additional_annotations/flair` (only populated with isoforms when `--run_flair true` and long reads are present); also passed to AEGIS and Mikado as optional transcript evidence |
+| SQANTI3 | `*.sqanti3_classification.txt`, `*.sqanti3_corrected.gtf`, `*.sqanti3_report.html`, `sqanti3_long_read_isoform_qc_mqc.tsv` | `${output_dir}/additional_annotations/sqanti3` and `${output_dir}/quality_report/sqanti3` (only populated with classifications when `--run_sqanti3 true` and long reads are present) |
 | tRNAscan-SE | `trna.gff3`, `trnascan.out`, `trnascan.struct`, `trnascan.stats` | `${output_dir}/additional_annotations/ncrna/trna` (only populated with predictions when `--run_trnascan true`) |
 | Infernal/Rfam | `rfam_ncrna.gff3`, `rfam_hits.tbl`, `rfam_search.out` | `${output_dir}/additional_annotations/ncrna/rfam` (only populated with predictions when `--run_rfam true`) |
 | lncRNA candidates | `lncrna_candidates.gff3`, `lncrna_candidates.gtf`, `lncrna_candidates.fasta`, `cpat_plant.output.ORF_prob.best.tsv`, `lncrna_classification_summary.tsv` | `${output_dir}/additional_annotations/ncrna/lncrna` (only populated with candidates when `--run_lncrna true`) |

@@ -28,6 +28,7 @@ REQUIRED_PARAMS = {
     "container_psiclass_samtools",
     "container_python",
     "container_salmon",
+    "container_sqanti3",
     "container_star",
     "container_stringtie",
     "container_trnascan",

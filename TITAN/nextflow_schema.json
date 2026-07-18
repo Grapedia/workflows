@@ -228,6 +228,10 @@
       "type": "boolean",
       "description": "Run FLAIR on long-read RNA-seq samples and pass merged isoforms as optional evidence to AEGIS and Mikado."
     },
+    "run_sqanti3": {
+      "type": "boolean",
+      "description": "Run SQANTI3 QC on both long-read transcript assemblies: Minimap2/StringTie and FLAIR, and add the structural-category summary to MultiQC."
+    },
     "egapx_version": {
       "type": "string",
       "description": "EGAPx version recorded in provenance."
@@ -358,6 +362,9 @@
       "$ref": "#/definitions/container_digest"
     },
     "container_flair": {
+      "$ref": "#/definitions/container_digest"
+    },
+    "container_sqanti3": {
       "$ref": "#/definitions/container_digest"
     },
     "container_braker3": {

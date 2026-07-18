@@ -17,6 +17,7 @@ include { rfam_split_genome; infernal_rfam_search; infernal_rfam_merge } from '.
 include { lncrna_candidate_annotation } from '../modules/lncrna_candidate_annotation'
 include { mikado_prepare; mikado_serialise; mikado_pick; final_annotation_sources_qc } from '../modules/mikado'
 include { transdecoder_longorfs; transdecoder_predict } from '../modules/transdecoder'
+include { sqanti3_qc as sqanti3_qc_stringtie; sqanti3_qc as sqanti3_qc_flair; sqanti3_qc_multiqc } from '../modules/sqanti3_qc'
 
 def isMissingParam(value) {
     return value == null || value == true || value == false || value.toString().trim() == '' || value.toString().trim().equalsIgnoreCase('true') || value.toString().trim().equalsIgnoreCase('false')
@@ -305,6 +306,27 @@ workflow TITAN {
         file("${projectDir}/scripts/download_cpat_plant_lncpipe.sh")
     )
 
+    sqanti3_stringtie_results = sqanti3_qc_stringtie(
+        'stringtie_long_reads',
+        evidence_data.long_reads_default_gtf,
+        new_assembly,
+        aegis.out.aegis_gff,
+        has_long_reads
+    )
+
+    sqanti3_flair_results = sqanti3_qc_flair(
+        'flair_isoforms',
+        evidence_data.flair_isoforms_gtf,
+        new_assembly,
+        aegis.out.aegis_gff,
+        has_long_reads
+    )
+
+    sqanti3_multiqc_results = sqanti3_qc_multiqc(
+        sqanti3_stringtie_results.summary_tsv,
+        sqanti3_flair_results.summary_tsv
+    )
+
     additional_annotations_provenance(
         workflow.revision ?: '',
         workflow.commitId ?: '',
@@ -323,7 +345,17 @@ workflow TITAN {
         lncrna_results.summary_tsv,
         lncrna_results.cpat_best,
         lncrna_results.cpat_log,
-        lncrna_results.versions
+        lncrna_results.versions,
+        sqanti3_stringtie_results.summary_tsv,
+        sqanti3_stringtie_results.classification,
+        sqanti3_stringtie_results.corrected_gtf,
+        sqanti3_stringtie_results.versions,
+        sqanti3_flair_results.summary_tsv,
+        sqanti3_flair_results.classification,
+        sqanti3_flair_results.corrected_gtf,
+        sqanti3_flair_results.versions,
+        sqanti3_multiqc_results.multiqc_tsv,
+        sqanti3_multiqc_results.versions
     )
 
     validate_final_annotation(
@@ -354,6 +386,7 @@ workflow TITAN {
         agat_stats_results.stats_txt,
         ncrna_qc_results.multiqc_tsv,
         lncrna_results.multiqc_tsv,
+        sqanti3_multiqc_results.multiqc_tsv,
         final_annotation_sources_qc_results.multiqc_tsv,
         validate_final_annotation.out.json_report
     )

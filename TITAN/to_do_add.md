@@ -407,6 +407,8 @@ Publié sous `${params.output_dir}/additional_annotations/flair/`. Le GTF mergé
 
 ## Phase 7 — SQANTI3 (QC isoformes long-read)
 
+**Statut TITAN codex-dev — 2026-07-18** : Phase 7 implémentée comme QC post-AEGIS optionnel sur les deux assemblages long reads : StringTie/Minimap2 (`long_reads_default_gtf`) et FLAIR (`flair_isoforms_gtf`). Les classifications/corrected GTF/rapports HTML sont publiés sous `additional_annotations/sqanti3/`, un résumé structural combiné est publié sous `quality_report/sqanti3/` et injecté dans MultiQC.
+
 **But** : caractériser et classifier les modèles de transcrits long-read (structural categories : FSM, ISM, NIC, NNC, etc.), avant de leur faire confiance.
 **Pourquoi** : SQANTI3 est l'outil de référence pour le QC d'isoformes long-read ; utile pour juger la qualité de FLAIR (Phase 6) et/ou de l'assemblage long-read déjà produit par TITAN.
 **Position dans le graphe** : après FLAIR (Phase 6) et/ou après le merge long-reads existant, **et** après AEGIS — validation post-hoc de `final_annotation.gff3` contre les isoformes long-read réelles est plus informatif qu'une comparaison contre Liftoff seul.
@@ -416,7 +418,8 @@ Publié sous `${params.output_dir}/additional_annotations/flair/`. Le GTF mergé
 - Label : `process_transcriptome`
 
 **Input** :
-- `${sample_ID}.flair.isoforms.gtf` (Phase 6) ou, si FLAIR désactivé, `merged_transcriptomes.minimap2.long_reads.default_args.gtf`.
+- `merged_transcriptomes.minimap2.long_reads.default_args.gtf` / `long_reads_default_gtf` (StringTie/Minimap2 long reads).
+- `flair_isoforms.gtf` / `flair_isoforms_gtf` (Phase 6 ; zéro feature si FLAIR désactivé ou absent).
 - `aegis.out.aegis_gff` (référence, pour validation post-hoc de l'annotation finale elle-même).
 - `params.new_assembly`.
 
@@ -432,16 +435,16 @@ sqanti3_qc.py \
 ```
 
 **Output** :
-- `titan_sqanti3_classification.txt` (publié — catégorie structurale par isoforme)
-- `titan_sqanti3_corrected.gtf` (publié)
-- rapport HTML SQANTI3 (à intégrer en lien depuis `quality_report/` si le format le permet, sinon publié tel quel)
+- `stringtie_long_reads.sqanti3_classification.txt`, `.sqanti3_corrected.gtf`, `.sqanti3_report.html`, `.sqanti3_summary.tsv`
+- `flair_isoforms.sqanti3_classification.txt`, `.sqanti3_corrected.gtf`, `.sqanti3_report.html`, `.sqanti3_summary.tsv`
+- `sqanti3_long_read_isoform_qc_mqc.tsv` (résumé combiné MultiQC)
 
-Publié sous `${params.output_dir}/additional_annotations/sqanti3/`.
+Publié sous `${params.output_dir}/additional_annotations/sqanti3/` et `${params.output_dir}/quality_report/sqanti3/`.
 
 **Jalons**
-1. M1 — `modules/sqanti3_qc.nf` créé avec `stub:`.
-2. M2 — Run sur les isoformes FLAIR réelles (dépend de la Phase 6).
-3. M3 — Intégré, résumé des catégories structurales ajouté au rapport `quality_report/` (comme "custom content" MultiQC, même pattern que `agat_stats.txt`).
+1. ✅ M1 — `modules/sqanti3_qc.nf` créé avec `stub:` pour les deux sources et résumé MultiQC combiné.
+2. ⏳ M2 — Run sur les isoformes long-read réelles non exécuté dans codex-dev ; validation actuelle faite en `-profile test -stub-run`.
+3. ✅ M3 — Intégré, résumé des catégories structurales ajouté au rapport `quality_report/` comme custom content MultiQC.
 
 **Validation**
 - La majorité des isoformes qui chevauchent un gène `final_annotation.gff3` doivent être classées FSM (Full Splice Match) ou ISM — un taux élevé de NNC (Novel Not in Catalog) sur les gènes déjà bien supportés par ailleurs est un signal d'alerte sur la qualité de l'annotation finale, pas juste une statistique descriptive à ignorer.

@@ -24,6 +24,16 @@ process additional_annotations_provenance {
     path(lncrna_cpat_best)
     path(lncrna_cpat_log)
     path(lncrna_versions, stageAs: "module_versions/lncrna_versions.yml")
+    path(sqanti3_stringtie_summary)
+    path(sqanti3_stringtie_classification)
+    path(sqanti3_stringtie_corrected_gtf)
+    path(sqanti3_stringtie_versions, stageAs: "module_versions/sqanti3_stringtie_versions.yml")
+    path(sqanti3_flair_summary)
+    path(sqanti3_flair_classification)
+    path(sqanti3_flair_corrected_gtf)
+    path(sqanti3_flair_versions, stageAs: "module_versions/sqanti3_flair_versions.yml")
+    path(sqanti3_multiqc_tsv)
+    path(sqanti3_multiqc_versions, stageAs: "module_versions/sqanti3_multiqc_versions.yml")
 
   output:
     path "additional_annotations_manifest.json", emit: manifest
@@ -83,6 +93,8 @@ manifest = {
         "cpat_model_flavour": "${params.cpat_model_flavour}",
         "cpat_plant_cutoff": "${params.cpat_plant_cutoff}",
         "container_cpat": "${params.container_cpat}",
+        "run_sqanti3": "${params.run_sqanti3}",
+        "container_sqanti3": "${params.container_sqanti3}",
     },
     "outputs": [
         file_record("helixer_gff3", "${helixer_gff3}"),
@@ -96,12 +108,22 @@ manifest = {
         file_record("lncrna_summary", "${lncrna_summary}"),
         file_record("lncrna_cpat_best", "${lncrna_cpat_best}"),
         file_record("lncrna_cpat_log", "${lncrna_cpat_log}"),
+        file_record("sqanti3_stringtie_summary", "${sqanti3_stringtie_summary}"),
+        file_record("sqanti3_stringtie_classification", "${sqanti3_stringtie_classification}"),
+        file_record("sqanti3_stringtie_corrected_gtf", "${sqanti3_stringtie_corrected_gtf}"),
+        file_record("sqanti3_flair_summary", "${sqanti3_flair_summary}"),
+        file_record("sqanti3_flair_classification", "${sqanti3_flair_classification}"),
+        file_record("sqanti3_flair_corrected_gtf", "${sqanti3_flair_corrected_gtf}"),
+        file_record("sqanti3_multiqc_tsv", "${sqanti3_multiqc_tsv}"),
     ],
     "module_versions": [
         file_record("helixer_versions", "${helixer_versions}"),
         file_record("trnascan_versions", "${trnascan_versions}"),
         file_record("rfam_versions", "${rfam_versions}"),
         file_record("lncrna_versions", "${lncrna_versions}"),
+        file_record("sqanti3_stringtie_versions", "${sqanti3_stringtie_versions}"),
+        file_record("sqanti3_flair_versions", "${sqanti3_flair_versions}"),
+        file_record("sqanti3_multiqc_versions", "${sqanti3_multiqc_versions}"),
     ],
 }
 
@@ -117,6 +139,7 @@ with open("versions.yml", "w", encoding="utf-8") as handle:
     handle.write('  trnascan: "${params.run_trnascan}"\\n')
     handle.write('  rfam: "${params.run_rfam}"\\n')
     handle.write('  lncrna: "${params.run_lncrna}"\\n')
+    handle.write('  sqanti3: "${params.run_sqanti3}"\\n')
 PY
     """
 }
