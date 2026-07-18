@@ -253,6 +253,12 @@ Infernal/Rfam is an optional ncRNA annotation branch run directly on the target 
 
 TITAN splits the target FASTA by sequence/chromosome, runs `cmsearch --cut_ga --rfam --nohmmonly` independently on each split so the search can parallelize, then merges all `rfam_hits.tbl` fragments and converts once to `rfam_ncrna.gff3` with `scripts/rfam_tblout_to_gff3.py`. Outputs are published under `${output_dir}/additional_annotations/ncrna/rfam/` and recorded in `provenance/additional_annotations_manifest.json`. Rfam ncRNA annotations are not merged into the AEGIS coding annotation automatically. TITAN also runs AGAT structural statistics on the Rfam GFF3 and includes the feature count in the final MultiQC report under `quality_report/ncrna_annotations/`.
 
+## lncRNA candidates
+
+TITAN can build preliminary lncRNA candidates from merged transcript evidence after AEGIS, tRNAscan-SE and Infernal/Rfam complete. It is disabled by default (`--run_lncrna false`). When enabled, candidates are filtered by `--lncrna_min_length` and excluded when they overlap coding CDS, tRNA or Rfam ncRNA intervals. Outputs are published under `${output_dir}/additional_annotations/ncrna/lncrna/` as `lncrna_candidates.gff3`, `.gtf`, `.fasta` and summary TSV files, and the count summary is included in MultiQC.
+
+This is deliberately a candidate layer, not a final lncRNA annotation. CPAT's official prebuilt models cover animal model species only; TITAN therefore records `--cpat_model_dir`, `--cpat_model_flavour` and `--cpat_plant_cutoff` for provenance and can require Plant-LncPipe CPAT-plant files (`Plant_Hexamer.tsv`, `Plant.logit.RData`) with `--lncrna_require_cpat_model true`. A Vitis-trained CPAT model is still preferred before promoting candidates to `final_lncrna.gff3`.
+
 ## Quality report (BUSCO, AGAT stats, MultiQC)
 
 TITAN closes the run with a `quality_report/` step: BUSCO gene-set completeness (protein mode) on `final_annotation_proteins_main.fasta`, structural statistics on `final_annotation.gff3` via `agat_sp_statistics.pl`, and every per-sample fastp trimming report, all aggregated into one MultiQC HTML.
@@ -326,6 +332,7 @@ Main public output families:
 | Helixer | `helixer.gff3` | `${output_dir}/additional_annotations/helixer` (only when `--run_helixer true`); also passed to AEGIS as optional merge evidence |
 | tRNAscan-SE | `trna.gff3`, `trnascan.out`, `trnascan.struct`, `trnascan.stats` | `${output_dir}/additional_annotations/ncrna/trna` (only populated with predictions when `--run_trnascan true`) |
 | Infernal/Rfam | `rfam_ncrna.gff3`, `rfam_hits.tbl`, `rfam_search.out` | `${output_dir}/additional_annotations/ncrna/rfam` (only populated with predictions when `--run_rfam true`) |
+| lncRNA candidates | `lncrna_candidates.gff3`, `lncrna_candidates.gtf`, `lncrna_candidates.fasta`, `lncrna_classification_summary.tsv` | `${output_dir}/additional_annotations/ncrna/lncrna` (only populated with candidates when `--run_lncrna true`) |
 | Provenance | `evidence_manifest.json`, `additional_annotations_manifest.json`, `versions.yml` | `${output_dir}/provenance` |
 | Final validation | `final_annotation_validation.json`, `final_annotation_validation.txt` | `${output_dir}/validation` |
 | Reports | Nextflow report, timeline, trace and DAG | `${output_dir}/nextflow_reports` when using the launcher |

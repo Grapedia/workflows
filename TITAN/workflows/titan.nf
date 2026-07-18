@@ -14,6 +14,7 @@ include { ncrna_annotation_qc } from '../modules/ncrna_annotation_qc'
 include { multiqc_report } from '../modules/multiqc_report'
 include { trnascan_se } from '../modules/trnascan_se'
 include { rfam_split_genome; infernal_rfam_search; infernal_rfam_merge } from '../modules/infernal_rfam'
+include { lncrna_candidate_annotation } from '../modules/lncrna_candidate_annotation'
 
 def isMissingParam(value) {
     return value == null || value == true || value == false || value.toString().trim() == '' || value.toString().trim().equalsIgnoreCase('true') || value.toString().trim().equalsIgnoreCase('false')
@@ -224,22 +225,6 @@ workflow TITAN {
 
     helixer_results = helixer_prediction(evidence_data.masked_genome)
 
-    additional_annotations_provenance(
-        workflow.revision ?: '',
-        workflow.commitId ?: '',
-        workflow.commandLine ?: '',
-        helixer_results.gff3,
-        helixer_results.versions,
-        trnascan_results.gff3,
-        trnascan_results.raw_table,
-        trnascan_results.stats,
-        trnascan_results.versions,
-        rfam_results.gff3,
-        rfam_results.tblout,
-        rfam_results.search_log,
-        rfam_results.versions
-    )
-
     println "Running Aegis from generated named evidence; EDTA masked genome is passed as a direct channel input."
 
     aegis(
@@ -258,6 +243,36 @@ workflow TITAN {
         evidence_data.long_reads_alt_gtf,
         has_long_reads,
         helixer_results.gff3
+    )
+
+    lncrna_results = lncrna_candidate_annotation(
+        new_assembly,
+        aegis.out.aegis_gff,
+        trnascan_results.gff3,
+        rfam_results.gff3,
+        evidence_data.star_stringtie_stranded_default_gtf,
+        evidence_data.hisat2_stringtie_stranded_default_gtf,
+        evidence_data.long_reads_default_gtf,
+        file("${projectDir}/scripts/build_lncrna_candidates.py")
+    )
+
+    additional_annotations_provenance(
+        workflow.revision ?: '',
+        workflow.commitId ?: '',
+        workflow.commandLine ?: '',
+        helixer_results.gff3,
+        helixer_results.versions,
+        trnascan_results.gff3,
+        trnascan_results.raw_table,
+        trnascan_results.stats,
+        trnascan_results.versions,
+        rfam_results.gff3,
+        rfam_results.tblout,
+        rfam_results.search_log,
+        rfam_results.versions,
+        lncrna_results.gff3,
+        lncrna_results.summary_tsv,
+        lncrna_results.versions
     )
 
     validate_final_annotation(
@@ -287,6 +302,7 @@ workflow TITAN {
         busco_results.short_summary,
         agat_stats_results.stats_txt,
         ncrna_qc_results.multiqc_tsv,
+        lncrna_results.multiqc_tsv,
         validate_final_annotation.out.json_report
     )
 

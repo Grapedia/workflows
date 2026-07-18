@@ -19,6 +19,9 @@ process additional_annotations_provenance {
     path(rfam_tblout)
     path(rfam_search_log)
     path(rfam_versions, stageAs: "module_versions/rfam_versions.yml")
+    path(lncrna_gff3)
+    path(lncrna_summary)
+    path(lncrna_versions, stageAs: "module_versions/lncrna_versions.yml")
 
   output:
     path "additional_annotations_manifest.json", emit: manifest
@@ -70,6 +73,13 @@ manifest = {
         "run_rfam": "${params.run_rfam}",
         "rfam_data_dir": "${params.rfam_data_dir}",
         "container_infernal": "${params.container_infernal}",
+        "run_lncrna": "${params.run_lncrna}",
+        "lncrna_min_length": "${params.lncrna_min_length}",
+        "lncrna_min_fpkm": "${params.lncrna_min_fpkm}",
+        "lncrna_require_cpat_model": "${params.lncrna_require_cpat_model}",
+        "cpat_model_dir": "${params.cpat_model_dir}",
+        "cpat_model_flavour": "${params.cpat_model_flavour}",
+        "cpat_plant_cutoff": "${params.cpat_plant_cutoff}",
     },
     "outputs": [
         file_record("helixer_gff3", "${helixer_gff3}"),
@@ -79,11 +89,14 @@ manifest = {
         file_record("rfam_gff3", "${rfam_gff3}"),
         file_record("rfam_tblout", "${rfam_tblout}"),
         file_record("rfam_search_log", "${rfam_search_log}"),
+        file_record("lncrna_gff3", "${lncrna_gff3}"),
+        file_record("lncrna_summary", "${lncrna_summary}"),
     ],
     "module_versions": [
         file_record("helixer_versions", "${helixer_versions}"),
         file_record("trnascan_versions", "${trnascan_versions}"),
         file_record("rfam_versions", "${rfam_versions}"),
+        file_record("lncrna_versions", "${lncrna_versions}"),
     ],
 }
 
@@ -98,6 +111,7 @@ with open("versions.yml", "w", encoding="utf-8") as handle:
     handle.write('  helixer: "${params.run_helixer}"\\n')
     handle.write('  trnascan: "${params.run_trnascan}"\\n')
     handle.write('  rfam: "${params.run_rfam}"\\n')
+    handle.write('  lncrna: "${params.run_lncrna}"\\n')
 PY
     """
 }

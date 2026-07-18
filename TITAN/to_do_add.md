@@ -153,6 +153,15 @@ Publié sous `${params.output_dir}/additional_annotations/ncrna/rfam/`.
 
 ## Phase 3 — lncRNA (FEELnc + CPC2 + CPAT)
 
+**Décision CPAT — 2026-07-18** : aucun modèle CPAT spécifique *Vitis vinifera* prêt à télécharger n'a été identifié. Le dépôt Plant-LncPipe fournit un modèle CPAT-plant générique (`Plant_Hexamer.tsv`, `Plant.logit.RData`, cutoff 0.46), accepté comme mode dégradé/provenancé via `params.cpat_model_dir`, mais la sortie TITAN reste `lncrna_candidates.gff3` tant qu'un modèle CPAT *Vitis* n'est pas entraîné et validé.
+
+**Statut TITAN codex-dev — 2026-07-18** : couche candidate implémentée et validée en `-profile test -stub-run`.
+
+- ✅ M1 : `modules/lncrna_candidate_annotation.nf` créé avec `stub:`, sortie candidate publiée sous `additional_annotations/ncrna/lncrna/`, résumé MultiQC ajouté.
+- ⚠️ M2 : modèle CPAT *Vitis* non disponible ; CPAT-plant Plant-LncPipe supporté comme provenance/prérequis de mode dégradé, pas comme validation finale *Vitis*.
+- ⚠️ M3/M4 : test 1 chromosome et run complet production non exécutés dans cette passe.
+- ✅ M5 : intégré dans `workflows/titan.nf`, provenance additionnelle et MultiQC final mis à jour, validations `scripts/run-tests.sh`, `nextflow run main.nf -profile test -stub-run`, `-resume` et `--run_lncrna true --lncrna_require_cpat_model false` passées.
+
 **But** : reproduire la méthodologie publiée pour PN40024.v5.1 — annotation des lncRNA à partir des assemblages transcriptomiques déjà produits par TITAN.
 **Pourquoi** : c'est très exactement l'écart identifié entre ce pipeline et l'annotation officielle "complète" du même génome (7 934 gènes non-codants publiés via *"un pipeline parallèle"* non présent dans ce code).
 **Position dans le graphe** : après `generate_evidence_data` (a besoin des GTF mergés StringTie/PsiCLASS/long-reads) et après `aegis` (a besoin de `final_annotation.gff3` pour exclure les loci déjà codants), avant le rapport qualité final.
@@ -161,7 +170,7 @@ Publié sous `${params.output_dir}/additional_annotations/ncrna/rfam/`.
   - FEELnc : `quay.io/biocontainers/feelnc@sha256:de4aaf80de1af3fd90d3ad5f7e3a24ba8cb22aa5a1a8e429d7584fb0eae7c07b` (0.1.1)
   - CPC2 : `quay.io/biocontainers/cpc2@sha256:5736c1c5187a3a681bba566e63a1b78c10946468f0cf798d117712b265e07c80` (1.0.1)
   - CPAT : `quay.io/biocontainers/cpat@sha256:87366fff67d441f64e0ac4681ccbaf1147f2c0601f3df86bb99f228d7f9a9000` (3.0.5)
-- Paramètres : `params.run_lncrna = false`, `params.container_feelnc`, `params.container_cpc2`, `params.container_cpat`, `params.lncrna_min_length = 200`, `params.lncrna_min_fpkm = 0.5`
+- Paramètres : `params.run_lncrna = false`, `params.lncrna_min_length = 200`, `params.lncrna_min_fpkm = 0.5`, `params.cpat_model_dir = false`, `params.cpat_model_flavour = "plant_lncpipe"`, `params.cpat_plant_cutoff = 0.46`, `params.lncrna_require_cpat_model = true`
 - Label : `process_transcriptome` pour FEELnc (le plus lourd des trois), `process_medium` pour CPC2/CPAT.
 
 **Input** :
@@ -208,10 +217,10 @@ FEELnc_classifier.pl -i final_lncrna_candidates.gtf -a final_annotation.gtf > fi
 scripts/gtf_to_gff3.py final_lncrna.gtf > final_lncrna.gff3
 ```
 
-**Point d'attention majeur** : CPAT n'a pas de modèle pré-entraîné pour les plantes (seulement humain/souris/poisson-zèbre/mouche livrés par défaut). Il faut entraîner un modèle logit spécifique à *Vitis* à partir des CDS connus (AEGIS) et d'un jeu de séquences non-codantes de référence (ex. régions intergéniques, ou lncRNA déjà publiés pour PN40024.v4/v5.1 si récupérables) — prévoir ceci comme un jalon dédié avant M3 ci-dessous, pas comme un détail d'implémentation mineur.
+**Point d'attention majeur** : CPAT officiel ne fournit que des modèles humain/souris/poisson-zèbre/mouche. Plant-LncPipe fournit un modèle CPAT-plant générique téléchargeable, mais pas spécifique *Vitis*. Il faut entraîner un modèle logit spécifique à *Vitis* à partir des CDS connus (AEGIS) et d'un jeu de séquences non-codantes de référence avant de promouvoir les candidats en annotation finale — prévoir ceci comme un jalon dédié avant M3 ci-dessous, pas comme un détail d'implémentation mineur.
 
 **Output** :
-- `final_lncrna.gff3` (publié)
+- `lncrna_candidates.gff3` (publié ; candidat préliminaire, non final tant que CPAT *Vitis* n'est pas disponible)
 - `feelnc_codpot_out/`, `cpc2_result`, `cpat_result` (intermédiaires, `publish_intermediates`)
 - `lncrna_classification_summary.tsv` (comptage par classe)
 
@@ -225,7 +234,7 @@ Publié sous `${params.output_dir}/additional_annotations/ncrna/lncrna/`.
 5. M5 — Intégré dans `workflows/titan.nf`, publié, ajouté au rapport MultiQC.
 
 **Validation**
-- `final_lncrna.gff3` valide structurellement (même contrôle que Phases 1-2).
+- `lncrna_candidates.gff3` valide structurellement (même contrôle que Phases 1-2) ; ne pas le renommer en `final_lncrna.gff3` tant que CPAT *Vitis* et les validations réelles ne sont pas disponibles.
 - Aucun chevauchement >50 % avec un CDS de `final_annotation.gff3` (sinon la Phase FEELnc_filter a un bug).
 - Aucun chevauchement avec `trna.gff3`/`rfam_ncrna.gff3` (l'étape 6 `--exclude-ncrna` doit le garantir — tester explicitement).
 - Distribution de longueur des lncRNA cohérente avec la littérature (médiane généralement <1kb, plus courte que les mRNA).

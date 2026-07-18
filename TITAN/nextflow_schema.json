@@ -176,6 +176,38 @@
       "$ref": "#/definitions/path_or_false",
       "description": "Directory containing pre-fetched and cmpress-indexed Rfam.cm plus Rfam.clanin. Required when run_rfam is true."
     },
+    "run_lncrna": {
+      "type": "boolean",
+      "description": "Build preliminary lncRNA candidates from transcript assemblies after coding/ncRNA overlap filters."
+    },
+    "lncrna_min_length": {
+      "type": "integer",
+      "minimum": 1,
+      "description": "Minimum transcript length retained as a preliminary lncRNA candidate."
+    },
+    "lncrna_min_fpkm": {
+      "type": "number",
+      "minimum": 0,
+      "description": "Reserved expression threshold for the stricter FEELnc/CPC2/CPAT phase; recorded for provenance."
+    },
+    "lncrna_require_cpat_model": {
+      "type": "boolean",
+      "description": "Require cpat_model_dir with CPAT-plant files when run_lncrna is true."
+    },
+    "cpat_model_dir": {
+      "$ref": "#/definitions/path_or_false",
+      "description": "Directory containing CPAT-plant model files Plant_Hexamer.tsv and Plant.logit.RData. A Vitis-specific model is preferred when available."
+    },
+    "cpat_model_flavour": {
+      "type": "string",
+      "description": "CPAT model provenance label, e.g. plant_lncpipe or vitis_trained."
+    },
+    "cpat_plant_cutoff": {
+      "type": "number",
+      "minimum": 0,
+      "maximum": 1,
+      "description": "Coding probability cutoff documented for CPAT-plant; CP >= cutoff is coding."
+    },
     "egapx_version": {
       "type": "string",
       "description": "EGAPx version recorded in provenance."

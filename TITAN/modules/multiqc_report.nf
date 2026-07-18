@@ -14,6 +14,7 @@ process multiqc_report {
     path(busco_short_summary)
     path(agat_stats_txt)
     path(ncrna_qc_reports, stageAs: "ncrna_qc/*")
+    path(lncrna_qc_tsv)
     path(validation_json)
 
   output:
@@ -31,6 +32,7 @@ process multiqc_report {
     cp ${busco_short_summary} mqc_input/ 2>/dev/null || true
     cp ${agat_stats_txt} mqc_input/ 2>/dev/null || true
     cp ncrna_qc/* mqc_input/ 2>/dev/null || true
+    cp ${lncrna_qc_tsv} mqc_input/ 2>/dev/null || true
     cp ${validation_json} mqc_input/ 2>/dev/null || true
 
     multiqc mqc_input --filename titan_multiqc_report.html --force
