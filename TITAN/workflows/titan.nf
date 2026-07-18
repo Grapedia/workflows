@@ -9,8 +9,17 @@ include { validate_inputs } from '../modules/validate_inputs'
 include { helixer_prediction } from '../modules/helixer_prediction'
 include { additional_annotations_provenance } from '../modules/additional_annotations_provenance'
 include { busco } from '../modules/busco'
+include { omark } from '../modules/omark'
 include { agat_stats } from '../modules/agat_stats'
+include { ncrna_annotation_qc } from '../modules/ncrna_annotation_qc'
 include { multiqc_report } from '../modules/multiqc_report'
+include { final_transcriptome_index; final_expression_quant; expression_support_summary } from '../modules/final_expression_validation'
+include { trnascan_se } from '../modules/trnascan_se'
+include { rfam_split_genome; infernal_rfam_search; infernal_rfam_merge } from '../modules/infernal_rfam'
+include { lncrna_candidate_annotation } from '../modules/lncrna_candidate_annotation'
+include { mikado_prepare; mikado_serialise; mikado_pick; final_annotation_sources_qc } from '../modules/mikado'
+include { transdecoder_longorfs; transdecoder_predict } from '../modules/transdecoder'
+include { sqanti3_qc as sqanti3_qc_stringtie; sqanti3_qc as sqanti3_qc_flair; sqanti3_qc_multiqc } from '../modules/sqanti3_qc'
 
 def isMissingParam(value) {
     return value == null || value == true || value == false || value.toString().trim() == '' || value.toString().trim().equalsIgnoreCase('true') || value.toString().trim().equalsIgnoreCase('false')
@@ -146,6 +155,25 @@ workflow TITAN {
     protein_samplesheet = input_validation.ok.map { file(params.protein_samplesheet) }
     egapx_paramfile = input_validation.ok.map { file(params.egapx_paramfile) }
 
+    trnascan_results = trnascan_se(
+        new_assembly,
+        file("${projectDir}/scripts/trnascan_to_gff3.py")
+    )
+
+    rfam_split = rfam_split_genome(new_assembly)
+    rfam_search_inputs = rfam_split.fasta_parts
+        .flatten()
+        .map { fasta_part -> tuple(fasta_part.baseName, fasta_part) }
+    rfam_search_results = infernal_rfam_search(rfam_search_inputs)
+    rfam_search_files = rfam_search_results.search_results
+        .map { sequence_id, tblout, search_log -> [tblout, search_log] }
+        .flatten()
+        .collect()
+    rfam_results = infernal_rfam_merge(
+        rfam_search_files,
+        file("${projectDir}/scripts/rfam_tblout_to_gff3.py")
+    )
+
     rnaseq_rows = rnaseq_samplesheet
        .splitCsv(header: true, sep: ',')
        .map { row -> [ row.sampleID, row.SRA_or_FASTQ, row.library_layout, rnaseqLocalFiles(row) ] }
@@ -202,14 +230,6 @@ workflow TITAN {
 
     helixer_results = helixer_prediction(evidence_data.masked_genome)
 
-    additional_annotations_provenance(
-        workflow.revision ?: '',
-        workflow.commitId ?: '',
-        workflow.commandLine ?: '',
-        helixer_results.gff3,
-        helixer_results.versions
-    )
-
     println "Running Aegis from generated named evidence; EDTA masked genome is passed as a direct channel input."
 
     aegis(
@@ -226,8 +246,118 @@ workflow TITAN {
         evidence_data.star_stringtie_unstranded_alt_gtf,
         evidence_data.long_reads_default_gtf,
         evidence_data.long_reads_alt_gtf,
+        evidence_data.flair_isoforms_gtf,
         has_long_reads,
         helixer_results.gff3
+    )
+
+    mikado_prepared = mikado_prepare(
+        evidence_data.masked_genome,
+        evidence_data.braker_augustus_gff3,
+        evidence_data.braker_genemark_gtf,
+        evidence_data.liftoff_gff3,
+        evidence_data.egapx_gff3,
+        evidence_data.star_stringtie_stranded_default_gtf,
+        evidence_data.star_stringtie_stranded_alt_gtf,
+        evidence_data.star_psiclass_stranded_gtf,
+        evidence_data.star_psiclass_unstranded_gtf,
+        evidence_data.star_stringtie_unstranded_default_gtf,
+        evidence_data.star_stringtie_unstranded_alt_gtf,
+        evidence_data.hisat2_stringtie_stranded_default_gtf,
+        evidence_data.hisat2_stringtie_stranded_alt_gtf,
+        evidence_data.hisat2_stringtie_unstranded_default_gtf,
+        evidence_data.hisat2_stringtie_unstranded_alt_gtf,
+        evidence_data.long_reads_default_gtf,
+        evidence_data.long_reads_alt_gtf,
+        evidence_data.flair_isoforms_gtf,
+        helixer_results.gff3,
+        file("${projectDir}/scripts/make_mikado_list.py")
+    )
+
+    transdecoder_longorfs_results = transdecoder_longorfs(mikado_prepared.fasta)
+    transdecoder_predict_results = transdecoder_predict(
+        mikado_prepared.fasta,
+        transdecoder_longorfs_results.longorfs_dir
+    )
+    mikado_serialise_results = mikado_serialise(
+        mikado_prepared.config,
+        mikado_prepared.fasta,
+        transdecoder_predict_results.bed
+    )
+    mikado_results = mikado_pick(
+        evidence_data.masked_genome,
+        mikado_prepared.config,
+        mikado_serialise_results.database
+    )
+
+    final_annotation_sources_qc_results = final_annotation_sources_qc(
+        aegis.out.aegis_gff,
+        mikado_results.gff3,
+        file("${projectDir}/scripts/compare_final_annotations.py")
+    )
+
+    lncrna_results = lncrna_candidate_annotation(
+        new_assembly,
+        aegis.out.aegis_gff,
+        trnascan_results.gff3,
+        rfam_results.gff3,
+        evidence_data.star_stringtie_stranded_default_gtf,
+        evidence_data.hisat2_stringtie_stranded_default_gtf,
+        evidence_data.long_reads_default_gtf,
+        file("${projectDir}/scripts/build_lncrna_candidates.py"),
+        file("${projectDir}/scripts/download_cpat_plant_lncpipe.sh")
+    )
+
+    sqanti3_stringtie_results = sqanti3_qc_stringtie(
+        'stringtie_long_reads',
+        evidence_data.long_reads_default_gtf,
+        new_assembly,
+        aegis.out.aegis_gff,
+        has_long_reads
+    )
+
+    sqanti3_flair_results = sqanti3_qc_flair(
+        'flair_isoforms',
+        evidence_data.flair_isoforms_gtf,
+        new_assembly,
+        aegis.out.aegis_gff,
+        has_long_reads
+    )
+
+    sqanti3_multiqc_results = sqanti3_qc_multiqc(
+        sqanti3_stringtie_results.summary_tsv,
+        sqanti3_flair_results.summary_tsv
+    )
+
+    additional_annotations_provenance(
+        workflow.revision ?: '',
+        workflow.commitId ?: '',
+        workflow.commandLine ?: '',
+        helixer_results.gff3,
+        helixer_results.versions,
+        trnascan_results.gff3,
+        trnascan_results.raw_table,
+        trnascan_results.stats,
+        trnascan_results.versions,
+        rfam_results.gff3,
+        rfam_results.tblout,
+        rfam_results.search_log,
+        rfam_results.versions,
+        lncrna_results.gff3,
+        lncrna_results.summary_tsv,
+        lncrna_results.cpat_best,
+        lncrna_results.cpat_log,
+        lncrna_results.versions,
+        sqanti3_stringtie_results.summary_tsv,
+        sqanti3_stringtie_results.classification,
+        sqanti3_stringtie_results.corrected_gtf,
+        sqanti3_stringtie_results.versions,
+        sqanti3_flair_results.summary_tsv,
+        sqanti3_flair_results.classification,
+        sqanti3_flair_results.corrected_gtf,
+        sqanti3_flair_results.versions,
+        sqanti3_multiqc_results.multiqc_tsv,
+        sqanti3_multiqc_results.versions
     )
 
     validate_final_annotation(
@@ -238,6 +368,22 @@ workflow TITAN {
         file("${projectDir}/scripts/validate_final_annotation.py")
     )
 
+    final_transcriptome_index_results = final_transcriptome_index(
+        new_assembly,
+        aegis.out.aegis_gff
+    )
+
+    final_expression_quant_results = final_expression_quant(
+        evidence_data.trimmed_fastqs,
+        final_transcriptome_index_results.index
+    )
+
+    expression_support_results = expression_support_summary(
+        aegis.out.aegis_gff,
+        final_expression_quant_results.quant_dir.map { sample_ID, quant_dir -> quant_dir }.collect(),
+        file("${projectDir}/scripts/summarize_expression_support.py")
+    )
+
     // ----------------------------------------------------------------------------------------
     //     Final annotation quality report: BUSCO completeness, AGAT structural
     //     stats and every fastp trimming report, aggregated with MultiQC.
@@ -245,12 +391,25 @@ workflow TITAN {
 
     busco_results = busco(aegis.out.aegis_proteins_main)
 
+    omark_results = omark(aegis.out.aegis_proteins_main)
+
     agat_stats_results = agat_stats(aegis.out.aegis_gff)
+
+    ncrna_qc_results = ncrna_annotation_qc(
+        trnascan_results.gff3,
+        rfam_results.gff3
+    )
 
     multiqc_report(
         evidence_data.fastp_json_reports,
         busco_results.short_summary,
+        omark_results.multiqc_tsv,
         agat_stats_results.stats_txt,
+        ncrna_qc_results.multiqc_tsv,
+        lncrna_results.multiqc_tsv,
+        sqanti3_multiqc_results.multiqc_tsv,
+        expression_support_results.multiqc_tsv,
+        final_annotation_sources_qc_results.multiqc_tsv,
         validate_final_annotation.out.json_report
     )
 
@@ -291,6 +450,7 @@ workflow TITAN {
         evidence_data.hisat2_stringtie_unstranded_alt_gtf,
         evidence_data.long_reads_default_gtf,
         evidence_data.long_reads_alt_gtf,
+        evidence_data.flair_isoforms_gtf,
         helixer_results.gff3,
         aegis.out.aegis_gff,
         aegis.out.aegis_proteins_all,
@@ -302,10 +462,18 @@ workflow TITAN {
         aegis.out.diamond2go_versions,
         aegis.out.eggnog_versions,
         aegis.out.interproscan_versions,
+        omark_results.versions,
         validate_final_annotation.out.versions,
+        final_transcriptome_index_results.versions,
+        final_expression_quant_results.versions.collect(),
+        expression_support_results.versions,
         aegis.out.eggnog_annotations_all,
         aegis.out.eggnog_annotations_main,
         aegis.out.interproscan_all_tsv,
-        aegis.out.interproscan_main_tsv
+        aegis.out.interproscan_main_tsv,
+        omark_results.detailed_summary,
+        omark_results.summary,
+        expression_support_results.json_summary,
+        expression_support_results.tpm_matrix
     )
 }

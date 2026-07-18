@@ -31,6 +31,13 @@ Objectif: aller vers une annotation "complète" du génome T2T de la vigne (PN40
 
 ## Phase 1 — tRNA (tRNAscan-SE)
 
+**Statut TITAN codex-dev — 2026-07-18** : implémentation Nextflow validée en `-profile test -stub-run`.
+
+- ✅ M1 : `modules/trnascan_se.nf` créé, publié sous `additional_annotations/ncrna/trna/`, `versions.yml` émis, stub GFF3 à 1 feature.
+- ✅ M2 : `scripts/trnascan_to_gff3.py` créé avec fixture `test-data/minimal/valid/trnascan.out` et test unitaire `scripts/test_trnascan_to_gff3.py`.
+- ⚠️ M3 : run réel Apptainer sur le génome T2T PN40024 non exécuté dans cette passe ; validation limitée aux fixtures et stub-runs locaux.
+- ✅ M4 : intégré dans `workflows/titan.nf`, paramètres et conteneur pinné ajoutés, provenance additionnelle mise à jour, AGAT/MultiQC final branchés via `modules/ncrna_annotation_qc.nf`, validations `scripts/run-tests.sh`, `nextflow run main.nf -profile test -stub-run`, `-resume` et `--run_trnascan true` passées.
+
 **But** : détecter et annoter tous les gènes de tRNA du génome T2T.
 **Pourquoi** : composante standard de toute annotation ncRNA complète (utilisé explicitement dans l'annotation officielle PN40024.v5.1) ; tRNAscan-SE 2.0 est l'outil de référence (99-100 % de détection, <1 faux positif/15 Gb).
 **Position dans le graphe** : branche indépendante, en parallèle de `generate_evidence_data`, sur `params.new_assembly` directement (pas besoin d'attendre AEGIS).
@@ -79,6 +86,14 @@ Publié sous `${params.output_dir}/additional_annotations/ncrna/trna/`.
 
 ## Phase 2 — rRNA / snRNA / snoRNA (Infernal + Rfam)
 
+**Statut TITAN codex-dev — 2026-07-18** : implémentation Nextflow validée en `-profile test -stub-run`.
+
+- ✅ M1 : `modules/infernal_rfam.nf` créé, publié sous `additional_annotations/ncrna/rfam/`, `versions.yml` émis, stub GFF3 à 1 feature.
+- ✅ M2 : `scripts/rfam_tblout_to_gff3.py` créé avec fixture `test-data/minimal/valid/rfam_hits.tbl` et test unitaire `scripts/test_rfam_tblout_to_gff3.py`.
+- ⚠️ M3 : téléchargement/indexation Rfam et test `cmsearch` sur petit contig non exécutés dans cette passe ; dépend d'un `rfam_data_dir` réel préparé hors pipeline.
+- ⚠️ M4 : estimation temps réel sur génome T2T complet non exécutée ; à faire sur infrastructure cible avant run complet, avec décision éventuelle de split par chromosome.
+- ✅ M5 : intégré dans `workflows/titan.nf`, avec split FASTA par séquence/chromosome, `cmsearch` parallélisé par split, merge des `rfam_hits.tbl` puis conversion finale unique ; paramètres, label `process_rfam`, bind Apptainer et conteneur pinné ajoutés, provenance additionnelle mise à jour, AGAT/MultiQC final branchés via `modules/ncrna_annotation_qc.nf`, validations `scripts/run-tests.sh`, `nextflow run main.nf -profile test -stub-run`, `-resume` et `--run_rfam true` passées.
+
 **But** : annoter les gènes d'ARN non-codants couverts par les modèles de covariance Rfam (rRNA, snRNA, snoRNA, et autres familles Rfam pertinentes chez les plantes).
 **Pourquoi** : composante standard de toute annotation ncRNA complète (mentionnée explicitement dans la méthodologie PN40024.v5.1 pour filtrer les faux lncRNA). Approche standard de l'industrie (Ensembl, NCBI) : BLASTN Rfam en pré-filtre, puis `cmsearch` Infernal ciblé pour réduire le coût de calcul.
 **Position dans le graphe** : branche indépendante, sur `params.new_assembly`, en parallèle de la Phase 1.
@@ -126,7 +141,7 @@ Publié sous `${params.output_dir}/additional_annotations/ncrna/rfam/`.
 4. M4 — Estimation du temps réel sur le génome T2T complet (hors pipeline, avec `time cmsearch ...` sur le vrai génome) : si >24h même à 32 cpus, prévoir un split par chromosome avant intégration (voir note ci-dessous).
 5. M5 — Intégré dans `workflows/titan.nf`, publié.
 
-**Note sur la charge de calcul** : `cmsearch --rfam` full-genome contre l'intégralité de Rfam (~4000 familles) est le poste de calcul le plus lourd de ce document après FCS-GX. Si le M4 révèle un temps prohibitif, découper le run par chromosome (`splitFasta` + `.collect()` sur les résultats) est la parade standard plutôt que de réduire la couverture Rfam.
+**Note sur la charge de calcul** : `cmsearch --rfam` full-genome contre l'intégralité de Rfam (~4000 familles) est le poste de calcul le plus lourd de ce document après FCS-GX. TITAN découpe maintenant le run par séquence/chromosome et collecte les résultats avant conversion GFF3 finale, afin de paralléliser le calcul sans réduire la couverture Rfam.
 
 **Validation**
 - `rfam_ncrna.gff3` valide (même contrôle GFF3 que Phase 1).
@@ -136,25 +151,32 @@ Publié sous `${params.output_dir}/additional_annotations/ncrna/rfam/`.
 
 ---
 
-## Phase 3 — lncRNA (FEELnc + CPC2 + CPAT)
+## Phase 3 — lncRNA (CPAT)
+
+**Décision CPAT — 2026-07-18** : aucun modèle CPAT spécifique *Vitis vinifera* prêt à télécharger n'a été identifié. Le dépôt Plant-LncPipe fournit un modèle CPAT-plant générique (`Plant_Hexamer.tsv`, `Plant.logit.RData`, cutoff 0.46) ; ces fichiers sont maintenant intégrés sous `resources/cpat_plant_lncpipe/` et utilisés comme mode dégradé/provenancé via `params.cpat_model_dir`, mais la sortie TITAN reste `lncrna_candidates.gff3` tant qu'un modèle CPAT *Vitis* n'est pas entraîné et validé.
+
+**Statut TITAN codex-dev — 2026-07-18** : couche candidate implémentée avec filtrage CPAT-plant et téléchargement automatique idempotent des modèles manquants, validée en `-profile test -stub-run`. Seul CPAT a été implémenté (pas FEELnc ni CPC2 — voir note ci-dessous) : les paramètres et modules réels ne portent que sur CPAT.
+
+- ✅ M1 : `modules/lncrna_candidate_annotation.nf` créé avec `stub:`, sortie candidate publiée sous `additional_annotations/ncrna/lncrna/`, résumé MultiQC ajouté.
+- ✅ M2 partiel : modèle CPAT *Vitis* non disponible ; CPAT-plant Plant-LncPipe téléchargé, checksumé, retéléchargé automatiquement si absent, utilisé et tracé comme mode dégradé, pas comme validation finale *Vitis*.
+- ⚠️ M3/M4 : test 1 chromosome et run complet production non exécutés dans cette passe.
+- ✅ M5 : intégré dans `workflows/titan.nf`, provenance additionnelle et MultiQC final mis à jour, validations `scripts/run-tests.sh`, `nextflow run main.nf -profile test -stub-run`, `-resume` et `--run_lncrna true` avec modèle CPAT-plant requis passées.
 
 **But** : reproduire la méthodologie publiée pour PN40024.v5.1 — annotation des lncRNA à partir des assemblages transcriptomiques déjà produits par TITAN.
 **Pourquoi** : c'est très exactement l'écart identifié entre ce pipeline et l'annotation officielle "complète" du même génome (7 934 gènes non-codants publiés via *"un pipeline parallèle"* non présent dans ce code).
 **Position dans le graphe** : après `generate_evidence_data` (a besoin des GTF mergés StringTie/PsiCLASS/long-reads) et après `aegis` (a besoin de `final_annotation.gff3` pour exclure les loci déjà codants), avant le rapport qualité final.
 
-- Images :
-  - FEELnc : `quay.io/biocontainers/feelnc@sha256:de4aaf80de1af3fd90d3ad5f7e3a24ba8cb22aa5a1a8e429d7584fb0eae7c07b` (0.1.1)
-  - CPC2 : `quay.io/biocontainers/cpc2@sha256:5736c1c5187a3a681bba566e63a1b78c10946468f0cf798d117712b265e07c80` (1.0.1)
-  - CPAT : `quay.io/biocontainers/cpat@sha256:87366fff67d441f64e0ac4681ccbaf1147f2c0601f3df86bb99f228d7f9a9000` (3.0.5)
-- Paramètres : `params.run_lncrna = false`, `params.container_feelnc`, `params.container_cpc2`, `params.container_cpat`, `params.lncrna_min_length = 200`, `params.lncrna_min_fpkm = 0.5`
-- Label : `process_transcriptome` pour FEELnc (le plus lourd des trois), `process_medium` pour CPC2/CPAT.
+- Image : CPAT : `quay.io/biocontainers/cpat@sha256:87366fff67d441f64e0ac4681ccbaf1147f2c0601f3df86bb99f228d7f9a9000` (3.0.5)
+  - FEELnc (`quay.io/biocontainers/feelnc@sha256:de4aaf80de1af3fd90d3ad5f7e3a24ba8cb22aa5a1a8e429d7584fb0eae7c07b`, 0.1.1) et CPC2 (`quay.io/biocontainers/cpc2@sha256:5736c1c5187a3a681bba566e63a1b78c10946468f0cf798d117712b265e07c80`, 1.0.1) restent dans l'audit original ci-dessous comme validation croisée future, mais **n'ont pas été implémentés** dans `codex-dev` — seul CPAT tourne réellement aujourd'hui.
+- Paramètres réels : `params.run_lncrna = false`, `params.lncrna_min_length = 200`, `params.lncrna_min_fpkm = 0.5`, `params.cpat_model_dir = "${projectDir}/resources/cpat_plant_lncpipe"`, `params.cpat_model_flavour = "plant_lncpipe"`, `params.cpat_plant_cutoff = 0.46`, `params.lncrna_require_cpat_model = true`
+- Label : `process_transcriptome` pour FEELnc (le plus lourd des trois, non implémenté), `process_medium` pour CPC2/CPAT.
 
 **Input** :
 - Les GTF déjà mergés par TITAN : `merged_star_stringtie_stranded_default.gtf`, `merged_hisat2_stringtie_stranded_default.gtf`, `merged_transcriptomes.minimap2.long_reads.default_args.gtf` (si `has_long_reads`) — à concaténer/dédupliquer en un seul `candidate_transcripts.gtf` (via `gffcompare` ou `agat_sp_merge_annotations.pl`, déjà présent dans le conteneur AGAT pinné).
 - `aegis.out.aegis_gff` (référence codante, pour exclusion).
 - `params.new_assembly`.
 
-**Commande** :
+**Commande** (audit original FEELnc+CPC2+CPAT, non implémentée intégralement — voir ci-dessus pour ce qui tourne réellement) :
 ```bash
 # 1. filtrage longueur/expression (AGAT deja pinne, container_agat)
 agat_sp_filter_feature_by_attribute_value.pl --gff candidate_transcripts.gtf \
@@ -193,11 +215,11 @@ FEELnc_classifier.pl -i final_lncrna_candidates.gtf -a final_annotation.gtf > fi
 scripts/gtf_to_gff3.py final_lncrna.gtf > final_lncrna.gff3
 ```
 
-**Point d'attention majeur** : CPAT n'a pas de modèle pré-entraîné pour les plantes (seulement humain/souris/poisson-zèbre/mouche livrés par défaut). Il faut entraîner un modèle logit spécifique à *Vitis* à partir des CDS connus (AEGIS) et d'un jeu de séquences non-codantes de référence (ex. régions intergéniques, ou lncRNA déjà publiés pour PN40024.v4/v5.1 si récupérables) — prévoir ceci comme un jalon dédié avant M3 ci-dessous, pas comme un détail d'implémentation mineur.
+**Point d'attention majeur** : CPAT officiel ne fournit que des modèles humain/souris/poisson-zèbre/mouche. Plant-LncPipe fournit un modèle CPAT-plant générique téléchargeable, mais pas spécifique *Vitis*. Il faut entraîner un modèle logit spécifique à *Vitis* à partir des CDS connus (AEGIS) et d'un jeu de séquences non-codantes de référence (ex. régions intergéniques, ou lncRNA déjà publiés pour PN40024.v4/v5.1 si récupérables) avant de promouvoir les candidats en annotation finale — prévoir ceci comme un jalon dédié avant M3 ci-dessous, pas comme un détail d'implémentation mineur.
 
 **Output** :
-- `final_lncrna.gff3` (publié)
-- `feelnc_codpot_out/`, `cpc2_result`, `cpat_result` (intermédiaires, `publish_intermediates`)
+- `lncrna_candidates.gff3` (publié ; candidat préliminaire, non final tant que CPAT *Vitis* n'est pas disponible)
+- `feelnc_codpot_out/`, `cpc2_result`, `cpat_result` (intermédiaires, `publish_intermediates` — FEELnc/CPC2 non implémentés, voir ci-dessus)
 - `lncrna_classification_summary.tsv` (comptage par classe)
 
 Publié sous `${params.output_dir}/additional_annotations/ncrna/lncrna/`.
@@ -210,19 +232,21 @@ Publié sous `${params.output_dir}/additional_annotations/ncrna/lncrna/`.
 5. M5 — Intégré dans `workflows/titan.nf`, publié, ajouté au rapport MultiQC.
 
 **Validation**
-- `final_lncrna.gff3` valide structurellement (même contrôle que Phases 1-2).
+- `lncrna_candidates.gff3` valide structurellement (même contrôle que Phases 1-2) ; ne pas le renommer en `final_lncrna.gff3` tant que CPAT *Vitis* et les validations réelles ne sont pas disponibles.
 - Aucun chevauchement >50 % avec un CDS de `final_annotation.gff3` (sinon la Phase FEELnc_filter a un bug).
 - Aucun chevauchement avec `trna.gff3`/`rfam_ncrna.gff3` (l'étape 6 `--exclude-ncrna` doit le garantir — tester explicitement).
 - Distribution de longueur des lncRNA cohérente avec la littérature (médiane généralement <1kb, plus courte que les mRNA).
 - Le nombre total de lncRNA + tRNA + rRNA/snRNA/snoRNA doit être du même ordre de grandeur que les 7 934 gènes non-codants publiés (à documenter, pas à forcer).
-- Chaque outil (FEELnc/CPC2/CPAT) doit avoir un taux d'accord >70 % sur les cas non-ambigus — un désaccord massif entre les trois signale un problème de modèle (notamment CPAT mal entraîné) plutôt qu'un vrai résultat biologique incertain.
+- Chaque outil (FEELnc/CPC2/CPAT) doit avoir un taux d'accord >70 % sur les cas non-ambigus — un désaccord massif entre les trois signale un problème de modèle (notamment CPAT mal entraîné) plutôt qu'un vrai résultat biologique incertain. *(Ne s'applique qu'une fois FEELnc/CPC2 effectivement implémentés — pour l'instant seul CPAT est en place.)*
 
 ---
 
 ## Phase 4 — Mikado (sélection consensus de transcrits)
 
+**Statut TITAN codex-dev — 2026-07-18** : Phase 4 implémentée avec la Phase 5 comme branche finale parallèle à AEGIS. Mikado consomme les mêmes familles d'évidences qu'AEGIS et publie un second GFF3 final sous `final_annotations/mikado/`, sans fusion automatique avec `aegis_outputs/final_annotation.gff3`.
+
 **But** : sélectionner le meilleur modèle de transcrit par locus parmi StringTie, PsiCLASS et les GTF long-reads.
-**Pourquoi** : Mikado consolide plusieurs assemblages transcriptomiques et choisit un modèle par locus avec un score explicable — plus robuste qu'un simple merge de GTF pour produire une annotation RNA-seq candidate à comparer avec AEGIS.
+**Pourquoi** : Mikado consolide plusieurs sources d'évidence et choisit un modèle par locus avec un score explicable — c'est une source finale GFF3 alternative à AEGIS, à comparer avec AEGIS plutôt qu'à fusionner automatiquement.
 **Position dans le graphe** : après les merges STAR/StringTie, STAR/PsiCLASS, HISAT2/StringTie et long-reads ; **avant** la Phase 5 (TransDecoder), dont Mikado a besoin en entrée pour le score de la 3e passe (`mikado serialise --orfs`).
 
 - Image : `quay.io/biocontainers/mikado@sha256:dd6f5a2a2d7fdbab73c835cd0f49bd1444ecaddf8e4cd96fbf0fe24f5ecf5f22` (2.3.4, tag stable — pas la 2.3.5rc3 disponible en release candidate).
@@ -230,7 +254,7 @@ Publié sous `${params.output_dir}/additional_annotations/ncrna/lncrna/`.
 - Label : `process_transcriptome`
 
 **Input** :
-- `merged_star_stringtie_stranded_default.gtf`, `merged_star_stringtie_stranded_alt.gtf`, `merged_hisat2_stringtie_stranded_default.gtf`, `star_psiclass_stranded_gtf`, `merged_transcriptomes.minimap2.long_reads.default_args.gtf` (si `has_long_reads`) — tous déjà produits par `generate_evidence_data`.
+- Même périmètre de sources que l'appel AEGIS : Liftoff, EGAPx, BRAKER3/AUGUSTUS/Genemark, STAR/StringTie, HISAT2/StringTie, STAR/PsiCLASS, long-reads si présents, Helixer si activé, FLAIR si activé.
 - `params.new_assembly`.
 - Protéines externes optionnelles : `protein_samplesheet` (déjà utilisé par BRAKER3).
 - CDS/ORFs de la Phase 5 (dépendance croisée).
@@ -239,10 +263,13 @@ Publié sous `${params.output_dir}/additional_annotations/ncrna/lncrna/`.
 ```bash
 # 0. Générer la liste des GTF sources (script dans scripts/, pas de closure Groovy complexe)
 scripts/make_mikado_list.py \
-  --star-stringtie merged_star_stringtie_stranded_default.gtf:star_stringtie:True \
-  --hisat2-stringtie merged_hisat2_stringtie_stranded_default.gtf:hisat2_stringtie:True \
-  --star-psiclass star_psiclass_stranded.gtf:star_psiclass:True \
-  --long-reads merged_long_reads_default.gtf:minimap2_stringtie:True \
+  --source liftoff.gff3:liftoff:False:10:True \
+  --source egapx.gff3:egapx:False:9:True \
+  --source braker_augustus.gff3:braker_augustus:False:8:False \
+  --source merged_star_stringtie_stranded_default.gtf:star_stringtie:True:5:False \
+  --source merged_hisat2_stringtie_stranded_default.gtf:hisat2_stringtie:True:5:False \
+  --source star_psiclass_stranded.gtf:star_psiclass:True:5:False \
+  --source merged_long_reads_default.gtf:minimap2_stringtie:False:6:False \
   -o transcript_inputs.tsv
 
 mikado configure \
@@ -267,18 +294,18 @@ mikado pick --json-conf configuration.yaml \
 ```
 
 **Output** :
-- `mikado.loci.gff3` (publié, l'annotation RNA-seq consensus)
+- `final_mikado_annotation.gff3` et `mikado.loci.gff3` (publiés, annotation finale Mikado alternative à AEGIS)
 - `mikado.subloci.gff3` (intermédiaire, pour audit des loci ambigus)
 - `mikado_prepared.fasta` (transcrits consolidés, entrée de la Phase 5)
 
-Publié sous `${params.output_dir}/additional_annotations/mikado/`.
+Publié sous `${params.output_dir}/final_annotations/mikado/`.
 
 **Jalons**
-1. M1 — `modules/mikado_prepare.nf`, `modules/mikado_serialise.nf`, `modules/mikado_pick.nf` créés avec `stub:`.
-2. M2 — `scripts/make_mikado_list.py` écrit + testé unitairement (génère bien le TSV attendu par `mikado configure --list`).
-3. M3 — Run complet `mikado configure`+`prepare` seul (sans TransDecoder) pour valider la consolidation des GTF avant d'ajouter la dépendance croisée avec la Phase 5.
-4. M4 — Intégration complète avec TransDecoder (Phase 5), run `serialise`+`pick` de bout en bout.
-5. M5 — Comparaison `mikado.loci.gff3` vs `aegis.out.aegis_gff` (combien de loci Mikado chevauchent un gène AEGIS existant vs sont nouveaux) — reporté dans le rapport qualité, pas fusionné automatiquement dans AEGIS (cf. règle d'architecture : rester en `additional_annotations/` tant que non validé biologiquement).
+1. ✅ M1 — `modules/mikado.nf` créé avec `mikado_prepare`, `mikado_serialise`, `mikado_pick` et `stub:`.
+2. ✅ M2 — `scripts/make_mikado_list.py` écrit + testé unitairement.
+3. ⚠️ M3 — Run réel `mikado configure`+`prepare` sur données complètes non exécuté dans cette passe.
+4. ✅ M4 — Intégration complète avec TransDecoder (Phase 5), `serialise`+`pick` validés en `-profile test -stub-run --run_mikado true`.
+5. ✅ M5 — Comparaison `final_mikado_annotation.gff3` vs `aegis.out.aegis_gff` ajoutée au rapport qualité MultiQC.
 
 **Validation**
 - `mikado.loci.gff3` valide structurellement.
@@ -290,12 +317,14 @@ Publié sous `${params.output_dir}/additional_annotations/mikado/`.
 
 ## Phase 5 — TransDecoder (ORF/CDS)
 
+**Statut TITAN codex-dev — 2026-07-18** : Phase 5 implémentée entre `mikado_prepare` et `mikado_serialise`; elle suit `run_mikado` et fournit le `.bed` ORF consommé par Mikado.
+
 **But** : prédire les régions codantes (CDS/protéines) dans les transcrits consolidés par Mikado.
 **Pourquoi** : nécessaire à `mikado serialise --orfs` (Phase 4) et produit une évidence protéique RNA-seq indépendante de BRAKER3/EGAPx pour comparaison.
 **Position dans le graphe** : entre `mikado prepare` et `mikado serialise` (Phase 4).
 
 - Image : `quay.io/biocontainers/transdecoder@sha256:c70f3a30cc8f3aecccb1d8978b9a49865d3994ebd7885361ab4c9dd820bd17f5` (6.0.0)
-- Paramètres : `params.run_transdecoder = false` (suit `params.run_mikado`, pas de sens de l'activer seul), `params.container_transdecoder`
+- Paramètres : `params.run_transdecoder = true` (effectif seulement si `params.run_mikado = true`, pas de sens de l'activer seul), `params.container_transdecoder`
 - Label : `process_medium`
 
 **Input** : `mikado_prepared.fasta` (sortie de `mikado prepare`, Phase 4).
@@ -312,12 +341,12 @@ TransDecoder.Predict -t mikado_prepared.fasta --single_best_only
 - `mikado_prepared.fasta.transdecoder.pep` (protéines, publiées pour audit)
 - `mikado_prepared.fasta.transdecoder.gff3` (publié)
 
-Publié sous `${params.output_dir}/additional_annotations/transdecoder/`.
+Publié sous `${params.output_dir}/final_annotations/mikado/transdecoder/`.
 
 **Jalons**
-1. M1 — `modules/transdecoder_longorfs.nf` + `modules/transdecoder_predict.nf` créés avec `stub:`.
-2. M2 — Run sur `mikado_prepared.fasta` réel (dépend donc du M3 de la Phase 4), validation du `.bed` produit contre le format attendu par `mikado serialise`.
-3. M3 — Intégré dans le graphe Mikado complet (Phase 4, M4).
+1. ✅ M1 — `modules/transdecoder.nf` créé avec `transdecoder_longorfs`, `transdecoder_predict` et `stub:`.
+2. ⚠️ M2 — Run réel sur `mikado_prepared.fasta` complet non exécuté dans cette passe.
+3. ✅ M3 — Intégré dans le graphe Mikado complet (Phase 4, M4), validé en `-profile test -stub-run --run_mikado true`.
 
 **Validation**
 - Le `.bed` TransDecoder est directement consommable par `mikado serialise` sans erreur de parsing (le test d'intégration EST la Phase 4 M4).
@@ -327,6 +356,8 @@ Publié sous `${params.output_dir}/additional_annotations/transdecoder/`.
 ---
 
 ## Phase 6 — FLAIR (isoformes long-read)
+
+**Statut TITAN codex-dev — 2026-07-18** : Phase 6 implémentée comme branche long-read optionnelle. Les isoformes FLAIR sont mergées dans `flair_isoforms.gtf`/`.fa`, publiées sous `additional_annotations/flair/`, enregistrées dans la provenance et passées comme évidences transcriptomiques additionnelles à AEGIS et Mikado.
 
 **But** : produire une annotation isoforme long-read alternative à StringTie long reads, avec correction des jonctions d'épissage contre le génome.
 **Pourquoi** : FLAIR est spécialisé pour la correction, la définition d'isoformes et l'analyse de splicing sur reads longs PacBio/ONT — plus précis que StringTie seul sur ce type de données.
@@ -356,13 +387,14 @@ flair collapse -g ${genome} -r ${reads} \
 **Output** :
 - `${sample_ID}.flair.isoforms.gtf` (publié)
 - `${sample_ID}.flair.isoforms.fa` (publié)
+- `flair_isoforms.gtf` et `flair_isoforms.fa` mergés (publiés)
 
-Publié sous `${params.output_dir}/additional_annotations/flair/`.
+Publié sous `${params.output_dir}/additional_annotations/flair/`. Le GTF mergé est transmis à AEGIS (`flair_isoforms_gtf`) et à Mikado (`flair_isoforms`) comme évidence nouvelle.
 
 **Jalons**
-1. M1 — `modules/flair_align.nf`, `modules/flair_correct.nf`, `modules/flair_collapse.nf` créés avec `stub:`, conditionnés par `has_long_reads` comme le reste de la branche long-reads existante.
-2. M2 — Test sur le sample long-read réel du projet (`hq_transcripts.RI_rmv_Antonio`).
-3. M3 — Intégré, publié.
+1. ✅ M1 — `modules/flair.nf` créé avec `flair_isoforms`, `flair_merge_isoforms`, `flair_empty_evidence` et `stub:`, conditionné par `has_long_reads` comme le reste de la branche long-reads existante.
+2. ⏳ M2 — Test sur le sample long-read réel du projet (`hq_transcripts.RI_rmv_Antonio`) non exécuté dans codex-dev ; validation actuelle faite en `-profile test -stub-run`.
+3. ✅ M3 — Intégré, publié, ajouté à AEGIS et Mikado comme évidence optionnelle.
 
 **Validation**
 - `.isoforms.gtf` valide structurellement.
@@ -373,6 +405,8 @@ Publié sous `${params.output_dir}/additional_annotations/flair/`.
 
 ## Phase 7 — SQANTI3 (QC isoformes long-read)
 
+**Statut TITAN codex-dev — 2026-07-18** : Phase 7 implémentée comme QC post-AEGIS optionnel sur les deux assemblages long reads : StringTie/Minimap2 (`long_reads_default_gtf`) et FLAIR (`flair_isoforms_gtf`). Les classifications/corrected GTF/rapports HTML sont publiés sous `additional_annotations/sqanti3/`, un résumé structural combiné est publié sous `quality_report/sqanti3/` et injecté dans MultiQC.
+
 **But** : caractériser et classifier les modèles de transcrits long-read (structural categories : FSM, ISM, NIC, NNC, etc.), avant de leur faire confiance.
 **Pourquoi** : SQANTI3 est l'outil de référence pour le QC d'isoformes long-read ; utile pour juger la qualité de FLAIR (Phase 6) et/ou de l'assemblage long-read déjà produit par TITAN.
 **Position dans le graphe** : après FLAIR (Phase 6) et/ou après le merge long-reads existant, **et** après AEGIS — validation post-hoc de `final_annotation.gff3` contre les isoformes long-read réelles est plus informatif qu'une comparaison contre Liftoff seul.
@@ -382,7 +416,8 @@ Publié sous `${params.output_dir}/additional_annotations/flair/`.
 - Label : `process_transcriptome`
 
 **Input** :
-- `${sample_ID}.flair.isoforms.gtf` (Phase 6) ou, si FLAIR désactivé, `merged_transcriptomes.minimap2.long_reads.default_args.gtf`.
+- `merged_transcriptomes.minimap2.long_reads.default_args.gtf` / `long_reads_default_gtf` (StringTie/Minimap2 long reads).
+- `flair_isoforms.gtf` / `flair_isoforms_gtf` (Phase 6 ; zéro feature si FLAIR désactivé ou absent).
 - `aegis.out.aegis_gff` (référence, pour validation post-hoc de l'annotation finale elle-même).
 - `params.new_assembly`.
 
@@ -398,16 +433,16 @@ sqanti3_qc.py \
 ```
 
 **Output** :
-- `titan_sqanti3_classification.txt` (publié — catégorie structurale par isoforme)
-- `titan_sqanti3_corrected.gtf` (publié)
-- rapport HTML SQANTI3 (à intégrer en lien depuis `quality_report/` si le format le permet, sinon publié tel quel)
+- `stringtie_long_reads.sqanti3_classification.txt`, `.sqanti3_corrected.gtf`, `.sqanti3_report.html`, `.sqanti3_summary.tsv`
+- `flair_isoforms.sqanti3_classification.txt`, `.sqanti3_corrected.gtf`, `.sqanti3_report.html`, `.sqanti3_summary.tsv`
+- `sqanti3_long_read_isoform_qc_mqc.tsv` (résumé combiné MultiQC)
 
-Publié sous `${params.output_dir}/additional_annotations/sqanti3/`.
+Publié sous `${params.output_dir}/additional_annotations/sqanti3/` et `${params.output_dir}/quality_report/sqanti3/`.
 
 **Jalons**
-1. M1 — `modules/sqanti3_qc.nf` créé avec `stub:`.
-2. M2 — Run sur les isoformes FLAIR réelles (dépend de la Phase 6).
-3. M3 — Intégré, résumé des catégories structurales ajouté au rapport `quality_report/` (comme "custom content" MultiQC, même pattern que `agat_stats.txt`).
+1. ✅ M1 — `modules/sqanti3_qc.nf` créé avec `stub:` pour les deux sources et résumé MultiQC combiné.
+2. ⏳ M2 — Run sur les isoformes long-read réelles non exécuté dans codex-dev ; validation actuelle faite en `-profile test -stub-run`.
+3. ✅ M3 — Intégré, résumé des catégories structurales ajouté au rapport `quality_report/` comme custom content MultiQC.
 
 **Validation**
 - La majorité des isoformes qui chevauchent un gène `final_annotation.gff3` doivent être classées FSM (Full Splice Match) ou ISM — un taux élevé de NNC (Novel Not in Catalog) sur les gènes déjà bien supportés par ailleurs est un signal d'alerte sur la qualité de l'annotation finale, pas juste une statistique descriptive à ignorer.
@@ -416,6 +451,8 @@ Publié sous `${params.output_dir}/additional_annotations/sqanti3/`.
 ---
 
 ## Phase 8 — OMArk (QC complémentaire à BUSCO)
+
+**Statut TITAN codex-dev — 2026-07-18** : Phase 8 implémentée comme QC protéome final optionnel après AEGIS/BUSCO. OMArk consomme `final_annotation_proteins_main.fasta`, publie les sorties sous `quality_report/omark/`, enregistre les sorties dans la provenance principale et ajoute `omark_mqc.tsv` au rapport MultiQC final.
 
 **But** : évaluer non seulement la complétude du jeu de gènes mais aussi sa cohérence par rapport aux espèces proches, et détecter des indices de contamination.
 **Pourquoi** : complémentaire à BUSCO (déjà implémenté) — OMArk considère les familles de gènes conservées multi-copies (BUSCO les exclut), et rapporte explicitement des signaux de contamination absents de BUSCO.
@@ -442,13 +479,15 @@ omark -f proteins_main.omamer \
 **Output** :
 - `omark_out/proteins_main_detailed_summary.txt` (publié — complétude + cohérence + contamination)
 - `omark_out/proteins_main_omark.sum` (publié, résumé condensé)
+- `proteins_main.omamer` (résultat OMAmer intermédiaire publié pour traçabilité)
+- `omark_mqc.tsv` (résumé custom-content MultiQC)
 
 Publié sous `${params.output_dir}/quality_report/omark/`.
 
 **Jalons**
-1. M1 — `modules/omark.nf` créé avec `stub:`, suit exactement le pattern `busco.nf` (déjà écrit, à dupliquer/adapter).
-2. M2 — Base OMAmer téléchargée et smoke-testée offline (même méthode que pour BUSCO : `apptainer exec` direct hors Nextflow avant intégration).
-3. M3 — Intégré, ajouté au `multiqc_report` comme custom content (OMArk n'a pas de module MultiQC natif contrairement à BUSCO — même traitement "texte brut" que prévu pour `agat_stats.txt`).
+1. ✅ M1 — `modules/omark.nf` créé avec `stub:`, sur le même pattern que `busco.nf`.
+2. ⏳ M2 — Base OMAmer réelle non téléchargée/smoke-testée dans codex-dev ; validation actuelle faite en `-profile test -stub-run`.
+3. ✅ M3 — Intégré, ajouté au `multiqc_report` comme custom content via `omark_mqc.tsv`.
 
 **Validation**
 - Complétude OMArk et complétude BUSCO doivent être cohérentes entre elles (à quelques points de pourcentage près) — un grand écart signale que l'un des deux est mal configuré (mauvaise lignée/base).
@@ -458,6 +497,8 @@ Publié sous `${params.output_dir}/quality_report/omark/`.
 ---
 
 ## Phase 9 — Validation par expression (aucun nouvel outil)
+
+**Statut TITAN codex-dev — 2026-07-18** : Phase 9 implémentée et activée par défaut. TITAN extrait un transcriptome final depuis `final_annotation.gff3`, construit un index Salmon dédié, quantifie tous les FASTQ courts trimmés, agrège le support par gène avec seuil TPM configurable et ajoute `expression_support_summary_mqc.tsv` au MultiQC final.
 
 **But** : vérifier que chaque gène prédit dans `final_annotation.gff3` a un support transcriptomique réel — exactement le contrôle explicitement fait pour PN40024.v5.1 ("gènes avec support transcriptomique significatif").
 **Pourquoi** : réutilise entièrement l'infrastructure déjà présente dans TITAN (fastp, salmon, alignements STAR/HISAT2) — aucune nouvelle image à pinner, juste une étape de comptage/synthèse en plus.
@@ -492,14 +533,16 @@ scripts/summarize_expression_support.py \
 **Output** :
 - `expression_support_summary.json` (publié — `% genes avec ≥1 échantillon TPM>0.5`, liste des gènes sans support, matrice TPM complète en intermédiaire)
 - `expression_support_summary_mqc.tsv` (custom content MultiQC)
+- `gene_tpm_matrix.tsv` (matrice TPM gène x échantillon)
+- `final_transcripts.fasta` (transcriptome final indexé par Salmon)
 
 Publié sous `${params.output_dir}/quality_report/expression_validation/`.
 
 **Jalons**
-1. M1 — Élargir `generate_evidence_data.nf` pour émettre les FASTQ trimmés (pas seulement les JSON) — modification du bloc `emit:` uniquement, donc sans risque de cache comme pour `fastp_json_reports` déjà fait.
-2. M2 — `modules/final_transcriptome_index.nf` + `modules/final_expression_quant.nf` + `scripts/summarize_expression_support.py` créés, `stub:` couvrant le graphe.
-3. M3 — `scripts/summarize_expression_support.py` testé unitairement sur une petite matrice TPM + GFF3 fixtures.
-4. M4 — Intégré, publié, ajouté au rapport `quality_report/`.
+1. ✅ M1 — `generate_evidence_data.nf` émet maintenant les FASTQ trimmés via `trimmed_fastqs`.
+2. ✅ M2 — `modules/final_expression_validation.nf` et `scripts/summarize_expression_support.py` créés, `stub:` couvrant le graphe.
+3. ✅ M3 — `scripts/test_summarize_expression_support.py` ajouté et intégré à `scripts/run-tests.sh`.
+4. ✅ M4 — Intégré, publié, ajouté au rapport `quality_report/` et à MultiQC.
 
 **Validation**
 - Le `%` de gènes sans support transcriptomique doit être documenté et comparé à l'écart connu entre PN40024.v4 (11 508 gènes uniques sans preuve) et v5.1 (17 208 gènes avec support significatif) — l'objectif n'est pas 100 % (des gènes réels sont silencieux dans les tissus/conditions échantillonnés) mais une amélioration mesurable et traçable par rapport à la version précédente.

@@ -42,6 +42,7 @@ process titan_provenance {
     path(hisat2_stringtie_alt_unstranded)
     path(long_reads_default)
     path(long_reads_alt)
+    path(flair_isoforms_gtf)
     path(helixer_gff3)
     path(aegis_gff)
     path(aegis_proteins_all)
@@ -53,11 +54,19 @@ process titan_provenance {
     path(diamond2go_versions, stageAs: "module_versions/diamond2go_versions.yml")
     path(eggnog_versions, stageAs: "module_versions/eggnog_versions.yml")
     path(interproscan_versions, stageAs: "module_versions/interproscan_versions.yml")
+    path(omark_versions, stageAs: "module_versions/omark_versions.yml")
     path(final_validation_versions, stageAs: "module_versions/final_validation_versions.yml")
+    path(final_transcriptome_index_versions, stageAs: "module_versions/final_transcriptome_index_versions.yml")
+    path(expression_quant_versions, stageAs: "module_versions/expression_quant_versions/*")
+    path(expression_support_versions, stageAs: "module_versions/expression_support_versions.yml")
     path(eggnog_annotations_all)
     path(eggnog_annotations_main)
     path(interproscan_annotations_all)
     path(interproscan_annotations_main)
+    path(omark_detailed_summary)
+    path(omark_summary)
+    path(expression_support_summary_json)
+    path(expression_gene_tpm_matrix)
 
   output:
     path "evidence_manifest.json", emit: evidence_manifest
@@ -109,6 +118,14 @@ manifest = {
         "egapx_data_version": "${egapx_data_version}",
         "aegis_version": "${aegis_version}",
         "aegis_container": "${aegis_container}",
+        "run_flair": "${params.run_flair}",
+        "container_flair": "${params.container_flair}",
+        "run_omark": "${params.run_omark}",
+        "omark_data_dir": "${params.omark_data_dir}",
+        "container_omark": "${params.container_omark}",
+        "run_expression_validation": "${params.run_expression_validation}",
+        "expression_support_min_tpm": "${params.expression_support_min_tpm}",
+        "container_salmon": "${params.container_salmon}",
     },
     "inputs": [
         file_record("new_assembly", "${new_assembly}"),
@@ -136,6 +153,7 @@ manifest = {
         file_record("hisat2_stringtie_alt_unstranded", "${hisat2_stringtie_alt_unstranded}"),
         file_record("long_reads_default", "${long_reads_default}"),
         file_record("long_reads_alt", "${long_reads_alt}"),
+        file_record("flair_isoforms_gtf", "${flair_isoforms_gtf}"),
         file_record("helixer_gff3", "${helixer_gff3}"),
     ],
     "outputs": [
@@ -146,6 +164,10 @@ manifest = {
         file_record("eggnog_annotations_main", "${eggnog_annotations_main}"),
         file_record("interproscan_annotations_all", "${interproscan_annotations_all}"),
         file_record("interproscan_annotations_main", "${interproscan_annotations_main}"),
+        file_record("omark_detailed_summary", "${omark_detailed_summary}"),
+        file_record("omark_summary", "${omark_summary}"),
+        file_record("expression_support_summary_json", "${expression_support_summary_json}"),
+        file_record("expression_gene_tpm_matrix", "${expression_gene_tpm_matrix}"),
     ],
     "module_versions": [
         file_record("edta_versions", "${edta_versions}"),
@@ -155,9 +177,15 @@ manifest = {
         file_record("diamond2go_versions", "${diamond2go_versions}"),
         file_record("eggnog_versions", "${eggnog_versions}"),
         file_record("interproscan_versions", "${interproscan_versions}"),
+        file_record("omark_versions", "${omark_versions}"),
         file_record("final_validation_versions", "${final_validation_versions}"),
+        file_record("final_transcriptome_index_versions", "${final_transcriptome_index_versions}"),
+        file_record("expression_support_versions", "${expression_support_versions}"),
     ],
 }
+
+for version_file in sorted(Path("module_versions/expression_quant_versions").glob("*")):
+    manifest["module_versions"].append(file_record(f"expression_quant_versions/{version_file.name}", version_file))
 
 with open("evidence_manifest.json", "w", encoding="utf-8") as handle:
     json.dump(manifest, handle, indent=2, sort_keys=True)
@@ -178,9 +206,14 @@ with open("versions.yml", "w", encoding="utf-8") as handle:
     handle.write('  eggnog_mapper: "${params.run_eggnog_mapper}"\\n')
     handle.write('  eggnog_data_dir: "${params.eggnog_data_dir}"\\n')
     handle.write('  helixer: "${params.run_helixer}"\\n')
+    handle.write('  flair: "${params.run_flair}"\\n')
     handle.write('  helixer_model: "${params.helixer_model}"\\n')
     handle.write('  interproscan: "${params.run_interproscan}"\\n')
     handle.write('  interproscan_data_dir: "${params.interproscan_data_dir}"\\n')
+    handle.write('  omark: "${params.run_omark}"\\n')
+    handle.write('  omark_data_dir: "${params.omark_data_dir}"\\n')
+    handle.write('  expression_validation: "${params.run_expression_validation}"\\n')
+    handle.write('  expression_support_min_tpm: "${params.expression_support_min_tpm}"\\n')
 PY
     """
 }

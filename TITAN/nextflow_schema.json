@@ -164,6 +164,91 @@
       "$ref": "#/definitions/path_or_false",
       "description": "Directory containing the pre-fetched BUSCO lineage dataset (via `busco --download <lineage> --download_path <dir>`), used offline. Required when run_busco is true."
     },
+    "run_omark": {
+      "type": "boolean",
+      "description": "Run OMArk/OMAmer protein-set QC on the final AEGIS main protein FASTA and add the summary to MultiQC."
+    },
+    "omark_data_dir": {
+      "$ref": "#/definitions/path_or_false",
+      "description": "Directory containing the offline OMAmer database file omamer.h5. Required when run_omark is true."
+    },
+    "run_expression_validation": {
+      "type": "boolean",
+      "description": "Quantify expression against the final AEGIS transcriptome with Salmon and report gene-level support in MultiQC."
+    },
+    "expression_support_min_tpm": {
+      "type": "number",
+      "minimum": 0,
+      "description": "Minimum gene-level TPM in at least one sample required to count a final gene as expression-supported."
+    },
+    "run_trnascan": {
+      "type": "boolean",
+      "description": "Run tRNAscan-SE on the target genome to annotate tRNA genes under additional_annotations/ncrna/trna."
+    },
+    "run_rfam": {
+      "type": "boolean",
+      "description": "Run Infernal cmsearch against offline Rfam covariance models to annotate ncRNA families under additional_annotations/ncrna/rfam."
+    },
+    "rfam_data_dir": {
+      "$ref": "#/definitions/path_or_false",
+      "description": "Directory containing pre-fetched and cmpress-indexed Rfam.cm plus Rfam.clanin. Required when run_rfam is true."
+    },
+    "run_lncrna": {
+      "type": "boolean",
+      "description": "Build preliminary lncRNA candidates from transcript assemblies after coding/ncRNA overlap filters."
+    },
+    "lncrna_min_length": {
+      "type": "integer",
+      "minimum": 1,
+      "description": "Minimum transcript length retained as a preliminary lncRNA candidate."
+    },
+    "lncrna_min_fpkm": {
+      "type": "number",
+      "minimum": 0,
+      "description": "Reserved expression threshold for the stricter FEELnc/CPC2/CPAT phase; recorded for provenance."
+    },
+    "lncrna_require_cpat_model": {
+      "type": "boolean",
+      "description": "Require cpat_model_dir with CPAT-plant files when run_lncrna is true."
+    },
+    "cpat_model_dir": {
+      "$ref": "#/definitions/path_or_false",
+      "description": "Directory containing CPAT-plant model files Plant_Hexamer.tsv and Plant.logit.RData. Defaults to bundled Plant-LncPipe model files; a Vitis-specific model is preferred when available."
+    },
+    "cpat_model_flavour": {
+      "type": "string",
+      "description": "CPAT model provenance label, e.g. plant_lncpipe or vitis_trained."
+    },
+    "cpat_plant_cutoff": {
+      "type": "number",
+      "minimum": 0,
+      "maximum": 1,
+      "description": "Coding probability cutoff documented for CPAT-plant; CP >= cutoff is coding."
+    },
+    "run_mikado": {
+      "type": "boolean",
+      "description": "Run Mikado as a parallel final GFF3 annotation source using the same annotation evidence inputs as AEGIS."
+    },
+    "run_transdecoder": {
+      "type": "boolean",
+      "description": "Run TransDecoder on Mikado prepared transcripts before Mikado serialise/pick. Effective only when run_mikado is true."
+    },
+    "mikado_mode": {
+      "type": "string",
+      "description": "Mikado configure mode, e.g. permissive."
+    },
+    "mikado_scoring": {
+      "type": "string",
+      "description": "Mikado scoring file or bundled scoring profile, e.g. plant.yaml."
+    },
+    "run_flair": {
+      "type": "boolean",
+      "description": "Run FLAIR on long-read RNA-seq samples and pass merged isoforms as optional evidence to AEGIS and Mikado."
+    },
+    "run_sqanti3": {
+      "type": "boolean",
+      "description": "Run SQANTI3 QC on both long-read transcript assemblies: Minimap2/StringTie and FLAIR, and add the structural-category summary to MultiQC."
+    },
     "egapx_version": {
       "type": "string",
       "description": "EGAPx version recorded in provenance."
@@ -275,7 +360,31 @@
     "container_busco": {
       "$ref": "#/definitions/container_digest"
     },
+    "container_omark": {
+      "$ref": "#/definitions/container_digest"
+    },
+    "container_cpat": {
+      "$ref": "#/definitions/container_digest"
+    },
     "container_multiqc": {
+      "$ref": "#/definitions/container_digest"
+    },
+    "container_trnascan": {
+      "$ref": "#/definitions/container_digest"
+    },
+    "container_infernal": {
+      "$ref": "#/definitions/container_digest"
+    },
+    "container_mikado": {
+      "$ref": "#/definitions/container_digest"
+    },
+    "container_transdecoder": {
+      "$ref": "#/definitions/container_digest"
+    },
+    "container_flair": {
+      "$ref": "#/definitions/container_digest"
+    },
+    "container_sqanti3": {
       "$ref": "#/definitions/container_digest"
     },
     "container_braker3": {

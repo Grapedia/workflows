@@ -241,9 +241,57 @@ Helixer runs on CPU by default. Set `--helixer_use_gpu true` to request a GPU (A
 
 Fetch a lineage model once with `scripts/download_helixer_model.sh --model-dir /absolute/path/to/helixer_models --container <container_helixer> --lineage land_plant`. Helixer's own `Helixer.py` does not auto-download models and fails fast with a clear error if the model is missing; the download script also pre-creates the directories Helixer itself expects to already exist. It skips the fetch if the model is already present. Both launcher scripts can run this step with `--prepare-helixer-model` (`launch_TITAN_example.sh`) or by passing `run_helixer = true` in `data/slurm_apptainer.config` plus `--prepare-helixer-model` (`launch_TITAN_serveur_colmar.sh`). See [docs/user/installation.md](docs/user/installation.md#9-helixer-optional) for full details.
 
+## tRNAscan-SE
+
+tRNAscan-SE is an optional ncRNA annotation branch run directly on the target genome, in parallel with the main evidence-generation graph. It is disabled by default (`--run_trnascan false`). To enable it, set `--run_trnascan true`; TITAN runs tRNAscan-SE in eukaryotic mode, keeps the raw table/structure/isotype/statistics files, and converts the raw table to a standardized `trna.gff3` with `scripts/trnascan_to_gff3.py`.
+
+Outputs are published under `${output_dir}/additional_annotations/ncrna/trna/` and recorded in `provenance/additional_annotations_manifest.json`. The tRNA GFF3 is not merged into the AEGIS coding annotation automatically. TITAN also runs AGAT structural statistics on the tRNA GFF3 and includes a compact count table in the final MultiQC report under `quality_report/ncrna_annotations/`.
+
+## Infernal/Rfam ncRNA
+
+Infernal/Rfam is an optional ncRNA annotation branch run directly on the target genome, in parallel with tRNAscan-SE and the main evidence-generation graph. It is disabled by default (`--run_rfam false`). To enable it, stage Rfam offline once (`Rfam.cm`, `Rfam.clanin`, and the `cmpress` indexes) and set `--run_rfam true --rfam_data_dir /absolute/path/to/rfam_data`.
+
+TITAN splits the target FASTA by sequence/chromosome, runs `cmsearch --cut_ga --rfam --nohmmonly` independently on each split so the search can parallelize, then merges all `rfam_hits.tbl` fragments and converts once to `rfam_ncrna.gff3` with `scripts/rfam_tblout_to_gff3.py`. Outputs are published under `${output_dir}/additional_annotations/ncrna/rfam/` and recorded in `provenance/additional_annotations_manifest.json`. Rfam ncRNA annotations are not merged into the AEGIS coding annotation automatically. TITAN also runs AGAT structural statistics on the Rfam GFF3 and includes the feature count in the final MultiQC report under `quality_report/ncrna_annotations/`.
+
+## lncRNA candidates
+
+TITAN can build preliminary lncRNA candidates from merged transcript evidence after AEGIS, tRNAscan-SE and Infernal/Rfam complete. It is disabled by default (`--run_lncrna false`). When enabled, candidates are filtered by `--lncrna_min_length`, excluded when they overlap coding CDS, tRNA or Rfam ncRNA intervals, then filtered with the bundled Plant-LncPipe CPAT-plant model using `--cpat_plant_cutoff 0.46`. Outputs are published under `${output_dir}/additional_annotations/ncrna/lncrna/` as `lncrna_candidates.gff3`, `.gtf`, `.fasta`, CPAT raw TSV/log files and summary TSV files, and the count summary is included in MultiQC.
+
+This is deliberately a candidate layer, not a final lncRNA annotation. CPAT's official prebuilt models cover animal model species only; TITAN bundles Plant-LncPipe CPAT-plant files under `resources/cpat_plant_lncpipe/` and records `--cpat_model_dir`, `--cpat_model_flavour`, `--cpat_plant_cutoff` and `--container_cpat` for provenance. If `--run_lncrna true` and the CPAT-plant files are missing from `--cpat_model_dir`, TITAN runs `scripts/download_cpat_plant_lncpipe.sh` automatically before CPAT. A Vitis-trained CPAT model is still preferred before promoting candidates to `final_lncrna.gff3`.
+
+## Mikado final annotation source
+
+TITAN can also produce a Mikado final GFF3 annotation source in parallel with AEGIS (`--run_mikado true`). Mikado receives the same evidence families as AEGIS: Liftoff, EGAPx, BRAKER3/AUGUSTUS/Genemark, STAR/StringTie, HISAT2/StringTie, STAR/PsiCLASS, optional long-read StringTie, optional FLAIR isoforms and optional Helixer. The graph runs `mikado configure`/`prepare`, then TransDecoder (`--run_transdecoder true` by default, effective only with Mikado), then `mikado serialise --orfs` and `mikado pick`.
+
+Mikado outputs are published under `${output_dir}/final_annotations/mikado/` as `final_mikado_annotation.gff3`, `mikado.loci.gff3`, `mikado.subloci.gff3`, intermediate prepared transcripts and TransDecoder ORF/protein files. AEGIS remains published under `${output_dir}/aegis_outputs/`; these are two separate final GFF3 sources, not automatically merged. TITAN adds an AEGIS-vs-Mikado gene-overlap summary to MultiQC under `quality_report/final_annotation_sources/`.
+
+## FLAIR long-read isoforms
+
+FLAIR is an optional long-read transcript isoform branch (`--run_flair true`). It runs only when long-read samples are present, uses Liftoff as the splice-junction correction annotation to avoid a circular dependency on AEGIS, then publishes per-sample and merged isoform GTF/FASTA files under `${output_dir}/additional_annotations/flair/`.
+
+The merged `flair_isoforms.gtf` is passed as an additional transcript evidence source to both AEGIS and Mikado. It complements the existing Minimap2/StringTie long-read transcript evidence rather than replacing it.
+
+## SQANTI3 long-read isoform QC
+
+SQANTI3 is an optional long-read isoform QC branch (`--run_sqanti3 true`). It runs after AEGIS and evaluates both long-read transcript assemblies against the final AEGIS annotation and target genome: `merged_minimap2_stringtie_long_reads_default.gtf` from StringTie/Minimap2 and `flair_isoforms.gtf` from FLAIR. When long reads are absent, or when one source has no isoforms, TITAN emits zero-count sentinel summaries so MultiQC remains stable.
+
+SQANTI3 outputs are published under `${output_dir}/additional_annotations/sqanti3/stringtie_long_reads/` and `${output_dir}/additional_annotations/sqanti3/flair_isoforms/`. TITAN also creates `quality_report/sqanti3/sqanti3_long_read_isoform_qc_mqc.tsv` and includes the structural-category summary in the final MultiQC report.
+
+## OMArk protein-set QC
+
+OMArk is an optional final protein-set QC branch (`--run_omark true`) complementary to BUSCO. It runs OMAmer on AEGIS `final_annotation_proteins_main.fasta`, then reports OMArk completeness, consistency and contamination signals under `${output_dir}/quality_report/omark/`. It requires an offline OMAmer database at `--omark_data_dir /absolute/path` containing `omamer.h5`.
+
+TITAN publishes `proteins_main_detailed_summary.txt`, `proteins_main_omark.sum`, `proteins_main.omamer` and `omark_mqc.tsv`. The `omark_mqc.tsv` custom-content table is included in the final MultiQC report.
+
+## Expression Support Validation
+
+TITAN validates transcriptomic support for the final AEGIS gene set by default (`--run_expression_validation true`). It extracts a transcript FASTA from `final_annotation.gff3`, builds a dedicated Salmon index, quantifies all trimmed short-read RNA-seq samples against that final transcriptome, then aggregates gene-level TPM support with `--expression_support_min_tpm` (default `0.5`).
+
+Outputs are published under `${output_dir}/quality_report/expression_validation/`: `expression_support_summary.json`, `expression_support_summary_mqc.tsv`, `gene_tpm_matrix.tsv`, `final_transcripts.fasta` and optional per-sample quant directories when intermediates are published. The MultiQC report includes the supported/unsupported gene counts, and the JSON lists unsupported gene IDs for manual audit.
+
 ## Quality report (BUSCO, AGAT stats, MultiQC)
 
-TITAN closes the run with a `quality_report/` step: BUSCO gene-set completeness (protein mode) on `final_annotation_proteins_main.fasta`, structural statistics on `final_annotation.gff3` via `agat_sp_statistics.pl`, and every per-sample fastp trimming report, all aggregated into one MultiQC HTML.
+TITAN closes the run with a `quality_report/` step: BUSCO gene-set completeness (protein mode) on AEGIS `final_annotation_proteins_main.fasta`, optional OMArk protein-set consistency/contamination QC, final-gene expression support validation, structural statistics on AEGIS `final_annotation.gff3` via `agat_sp_statistics.pl`, optional ncRNA summaries, optional SQANTI3 long-read isoform QC, the optional AEGIS-vs-Mikado final source comparison, and every per-sample fastp trimming report, all aggregated into one MultiQC HTML.
 
 BUSCO needs an offline lineage dataset TITAN does not download itself. To enable it:
 
@@ -287,6 +335,7 @@ Resource policy is centralized in [conf/base.config](conf/base.config). Active m
 | `process_prediction` | EDTA, EGAPx and BRAKER3 prediction steps |
 | `process_merge` | StringTie and GFFCompare merge steps |
 | `process_aegis` | AEGIS and final functional annotation |
+| `process_rfam` | full-genome Infernal/Rfam covariance-model search |
 
 `process_medium` and `process_high` are reserved generic labels for future modules and site-specific profile overrides. Current workflow modules should prefer the domain-specific labels above.
 
@@ -306,11 +355,19 @@ Main public output families:
 | Transcript evidence | merged STAR/StringTie, STAR/PsiCLASS and optional Minimap2/StringTie long-read GTFs | `${output_dir}` |
 | EGAPx | `egapx.complete.genomic.gff3`, GTF, protein, CDS, transcript, ASN and `egapx_out/` | `${output_dir}/egapx` |
 | AEGIS | `final_annotation.gff3`, `final_annotation_proteins_all.fasta`, `final_annotation_proteins_main.fasta` | `${output_dir}/aegis_outputs` |
+| Mikado | `final_mikado_annotation.gff3`, `mikado.loci.gff3`, `mikado.subloci.gff3`, TransDecoder ORF/protein files | `${output_dir}/final_annotations/mikado` (only populated as a final source when `--run_mikado true`) |
 | Diamond2GO | `final_annotation_proteins_all.diamond2go.tsv`, `final_annotation_proteins_main.diamond2go.tsv` | `${output_dir}/Diamond2GO_outputs` |
 | eggNOG-mapper | `final_annotation_proteins_all.emapper.annotations`, `final_annotation_proteins_main.emapper.annotations` | `${output_dir}/EggNOG_outputs` (only when `--run_eggnog_mapper true`) |
 | InterProScan | `final_annotation_proteins_all.tsv`/`.gff3`/`.json`, `final_annotation_proteins_main.tsv`/`.gff3`/`.json` | `${output_dir}/InterProScan_outputs` (only when `--run_interproscan true`) |
-| Quality report | `busco_short_summary.txt`, `agat_stats.txt`, `titan_multiqc_report.html` | `${output_dir}/quality_report/` |
+| Quality report | `busco_short_summary.txt`, `proteins_main_omark.sum`, `expression_support_summary.json`, `agat_stats.txt`, `ncrna_annotation_counts_mqc.tsv`, `final_annotation_sources_mqc.tsv`, `titan_multiqc_report.html` | `${output_dir}/quality_report/` |
+| OMArk | `proteins_main.omamer`, `proteins_main_detailed_summary.txt`, `proteins_main_omark.sum`, `omark_mqc.tsv` | `${output_dir}/quality_report/omark` (only populated with real QC when `--run_omark true`) |
+| Expression validation | `expression_support_summary.json`, `expression_support_summary_mqc.tsv`, `gene_tpm_matrix.tsv`, `final_transcripts.fasta` | `${output_dir}/quality_report/expression_validation` |
 | Helixer | `helixer.gff3` | `${output_dir}/additional_annotations/helixer` (only when `--run_helixer true`); also passed to AEGIS as optional merge evidence |
+| FLAIR | `flair_isoforms.gtf`, `flair_isoforms.fa`, per-sample `.flair.isoforms.gtf`/`.fa` files | `${output_dir}/additional_annotations/flair` (only populated with isoforms when `--run_flair true` and long reads are present); also passed to AEGIS and Mikado as optional transcript evidence |
+| SQANTI3 | `*.sqanti3_classification.txt`, `*.sqanti3_corrected.gtf`, `*.sqanti3_report.html`, `sqanti3_long_read_isoform_qc_mqc.tsv` | `${output_dir}/additional_annotations/sqanti3` and `${output_dir}/quality_report/sqanti3` (only populated with classifications when `--run_sqanti3 true` and long reads are present) |
+| tRNAscan-SE | `trna.gff3`, `trnascan.out`, `trnascan.struct`, `trnascan.stats` | `${output_dir}/additional_annotations/ncrna/trna` (only populated with predictions when `--run_trnascan true`) |
+| Infernal/Rfam | `rfam_ncrna.gff3`, `rfam_hits.tbl`, `rfam_search.out` | `${output_dir}/additional_annotations/ncrna/rfam` (only populated with predictions when `--run_rfam true`) |
+| lncRNA candidates | `lncrna_candidates.gff3`, `lncrna_candidates.gtf`, `lncrna_candidates.fasta`, `cpat_plant.output.ORF_prob.best.tsv`, `lncrna_classification_summary.tsv` | `${output_dir}/additional_annotations/ncrna/lncrna` (only populated with candidates when `--run_lncrna true`) |
 | Provenance | `evidence_manifest.json`, `additional_annotations_manifest.json`, `versions.yml` | `${output_dir}/provenance` |
 | Final validation | `final_annotation_validation.json`, `final_annotation_validation.txt` | `${output_dir}/validation` |
 | Reports | Nextflow report, timeline, trace and DAG | `${output_dir}/nextflow_reports` when using the launcher |
