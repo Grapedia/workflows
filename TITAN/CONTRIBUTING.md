@@ -42,3 +42,25 @@ container policy or resource labels:
 `nf-test` specs are the preferred direction for future module-level tests once
 contracts are stable. Until then, TITAN uses Python/static checks plus the full
 `test` profile stub run in `scripts/run-tests.sh`.
+
+## Validation And CI
+
+Local quick validation:
+
+```bash
+scripts/run-tests.sh
+```
+
+Targeted validation:
+
+```bash
+python3 scripts/validate_container_pins.py
+python3 scripts/validate_profiles.py
+python3 scripts/validate_minimal_test_data.py
+python3 scripts/test_validate_inputs.py
+python3 scripts/test_validate_final_annotation.py
+nextflow run main.nf -profile test -stub-run -ansi-log false
+```
+
+GitHub Actions runs the same quick suite when files under `TITAN/**` or the
+TITAN CI workflow change.

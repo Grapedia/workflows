@@ -23,6 +23,10 @@ today, and what to do. Priority order matches the numbered sections.
 - [done] Section 2 broken/stale README references fixed.
 - [done] Section 3 developer references cleaned and linked from
   `CONTRIBUTING.md`.
+- [done] Section 4 README restructured with badges, overview, diagram,
+  compact tool matrix, and detailed tool reference moved to
+  `docs/reference/tools.md`.
+- [done] Section 5 Mermaid pipeline diagram added to `README.md`.
 
 ---
 
@@ -115,172 +119,39 @@ Plan:
 1. [done] **Move "Developer Quality Contract" to `CONTRIBUTING.md`**
    (see section 3). A user citing TITAN in a methods section does not need
    to know the module-authoring conventions.
-2. **Add the pipeline diagram right after the intro** (section 5 below),
+2. [done] **Add the pipeline diagram right after the intro** (section 5 below),
    before "Quick Start" — a reader (colleague or reviewer) should see the
    whole graph before reading setup instructions.
-3. **Move the 14 per-tool paragraphs (lines 224-305) to a new
+3. [done] **Move the 14 per-tool paragraphs to a new
    `docs/reference/tools.md`**, one section per tool, keep the same content
    (it's good, accurate, current — just too long for the README itself).
    Replace them in `README.md` with a compact table: tool name, flag,
    default, one-line purpose, link to the detail section. This is the
    biggest single length reduction available (roughly 80 lines → a
    15-row table).
-4. **Keep in `README.md`**: intro/contributors, Current Contract, Quick
+4. [done] **Keep in `README.md`**: intro/contributors, Current Contract, Quick
    Start, Requirements, Input Files, RNA-seq/Protein samplesheet formats,
    EGAPx input, Profiles, the compact tool table from point 3, the Outputs
    table (it's the single most useful reference for a new user and is
    already reasonably tight), Resume/Re-runs, Troubleshooting, Limitations,
    Tool References (citations — useful for a methods section).
-5. **Move "Validation and CI" section to `CONTRIBUTING.md`** — it's about
+5. [done] **Move "Validation and CI" section to `CONTRIBUTING.md`** — it's about
    running the dev test suite, not about using the pipeline.
 
-Target: `README.md` under ~250 lines, `docs/reference/tools.md` holding the
-detailed per-tool behavior, `CONTRIBUTING.md` holding the module-authoring
-contract + test/validation instructions.
+[done] `README.md` now holds the main user entrypoint, diagram and compact
+reference tables. `docs/reference/tools.md` holds detailed per-tool behavior,
+and `CONTRIBUTING.md` holds the module-authoring contract plus test/validation
+instructions.
 
 ---
 
 ## 5. New: full pipeline diagram
 
-This is the "graphe total de toutes les étapes avec outils, options, comment
-c'est liés" the README needs. Use a Mermaid flowchart (renders natively on
-GitHub, stays text-diffable in git — no binary image to regenerate and go
-stale like the dead `TITAN_diagram.jpg`).
-
-Draft below, organized by subgraph to stay readable. Optional
-branches (anything gated by a `--run_*` flag defaulting to `false`, plus
-`run_helixer`/`run_eggnog_mapper`/`run_interproscan`/`run_busco`/
-`run_omark` which also default `false`, and `run_transdecoder` which
-defaults `true` but only matters when `run_mikado true`) are styled
-distinctly from the mandatory path. This draft should be reviewed against
-`workflows/titan.nf` / `subworkflows/*.nf` once more before it goes into the
-README — it was built from today's audit of the graph, not re-verified line
-by line against the current DSL.
-
-```mermaid
-flowchart TD
-    classDef mandatory fill:#dbe9ff,stroke:#3366cc,color:#111
-    classDef optional fill:#fff3cd,stroke:#cc9900,color:#111,stroke-dasharray: 4 3
-    classDef qc fill:#e6f4ea,stroke:#2e7d32,color:#111
-
-    NEW[new_assembly FASTA]:::mandatory
-    PREV[previous_assembly + previous_annotations]:::mandatory
-    RNASEQ[RNAseq_samplesheet]:::mandatory
-    PROT[protein_samplesheet]:::mandatory
-    EGAPXIN[egapx_paramfile]:::mandatory
-
-    subgraph EV["Evidence generation (mandatory)"]
-        LIFTOFF[Liftoff\nprevious annotation to new assembly]:::mandatory
-        EDTA[EDTA\nrepeat masking]:::mandatory
-        EGAPX[EGAPx\nNCBI annotation pipeline]:::mandatory
-        FASTP[fastp trimming]:::mandatory
-        STARIDX[STAR / HISAT2 / Minimap2\ngenome indices]:::mandatory
-        STARALN[STAR + StringTie]:::mandatory
-        STARPSI[STAR + PsiCLASS]:::mandatory
-        HISAT[HISAT2 + StringTie]:::mandatory
-        MM2[Minimap2 + StringTie\nlong reads, if present]:::mandatory
-        BRAKER[BRAKER3\nAUGUSTUS + GeneMark]:::mandatory
-        SALMON_STRAND[Salmon\nstrand inference]:::mandatory
-    end
-
-    subgraph NCRNA["ncRNA branches (optional, parallel to evidence generation)"]
-        TRNA["tRNAscan-SE\n--run_trnascan"]:::optional
-        RFAM["Infernal / Rfam\n--run_rfam --rfam_data_dir"]:::optional
-        HELIXER["Helixer ab initio\n--run_helixer --helixer_model_dir"]:::optional
-        FLAIR["FLAIR long-read isoforms\n--run_flair"]:::optional
-    end
-
-    NEW --> LIFTOFF
-    PREV --> LIFTOFF
-    NEW --> EDTA
-    EGAPXIN --> EGAPX
-    RNASEQ --> FASTP --> STARIDX --> STARALN & STARPSI & HISAT & MM2
-    PROT --> BRAKER
-    EDTA --> BRAKER
-    STARALN & HISAT --> SALMON_STRAND
-    NEW --> TRNA
-    NEW --> RFAM
-    EDTA --> HELIXER
-    MM2 --> FLAIR
-    LIFTOFF -.splice-junction correction.-> FLAIR
-
-    subgraph AEGIS_MERGE["AEGIS integration (mandatory)"]
-        AEGIS["AEGIS merge\nrenames to Vitvi... scheme"]:::mandatory
-        FINALGFF[final_annotation.gff3\nfinal_annotation_proteins_*.fasta]:::mandatory
-    end
-
-    LIFTOFF --> AEGIS
-    EGAPX --> AEGIS
-    BRAKER --> AEGIS
-    STARALN & STARPSI & HISAT & MM2 --> AEGIS
-    HELIXER -.optional evidence.-> AEGIS
-    FLAIR -.optional evidence.-> AEGIS
-    AEGIS --> FINALGFF
-
-    subgraph FUNC["Functional annotation (AEGIS proteins)"]
-        DIAMOND[Diamond2GO]:::mandatory
-        EGGNOG["eggNOG-mapper\n--run_eggnog_mapper"]:::optional
-        IPS["InterProScan\n--run_interproscan"]:::optional
-    end
-
-    FINALGFF --> DIAMOND
-    FINALGFF -.-> EGGNOG
-    FINALGFF -.-> IPS
-
-    subgraph LNC["lncRNA candidates (optional)"]
-        CPAT["CPAT-plant filter\n--run_lncrna --cpat_model_dir"]:::optional
-    end
-
-    FINALGFF --> CPAT
-    TRNA -.exclude tRNA overlap.-> CPAT
-    RFAM -.exclude ncRNA overlap.-> CPAT
-    STARALN & STARPSI & HISAT & MM2 -.candidate transcripts.-> CPAT
-
-    subgraph MIKADO_BRANCH["Mikado alternative final source (optional)"]
-        MIKPREP["mikado configure + prepare\n--run_mikado"]:::optional
-        TD["TransDecoder\n--run_transdecoder (default true, needs run_mikado)"]:::optional
-        MIKSER["mikado serialise --orfs"]:::optional
-        MIKPICK["mikado pick"]:::optional
-        MIKGFF["final_mikado_annotation.gff3"]:::optional
-    end
-
-    LIFTOFF & EGAPX & BRAKER & HELIXER & FLAIR --> MIKPREP
-    STARALN & STARPSI & HISAT & MM2 --> MIKPREP
-    MIKPREP --> TD --> MIKSER --> MIKPICK --> MIKGFF
-
-    subgraph QUALITY["Quality report (mandatory shell, contents mostly optional)"]
-        BUSCO["BUSCO\n--run_busco (Vitis default: on)"]:::optional
-        OMARK["OMArk\n--run_omark --omark_data_dir"]:::optional
-        AGATSTATS[AGAT structural stats]:::mandatory
-        NCRNAQC[ncRNA count summary]:::mandatory
-        SQANTI["SQANTI3\n--run_sqanti3"]:::optional
-        EXPR["Expression support validation\nSalmon on final transcripts (default: on)"]:::mandatory
-        SRCQC["AEGIS vs Mikado comparison"]:::optional
-        MULTIQC[MultiQC HTML report]:::mandatory
-    end
-
-    FINALGFF --> BUSCO & AGATSTATS & EXPR
-    DIAMOND & EGGNOG & IPS --> MULTIQC
-    TRNA & RFAM --> NCRNAQC
-    MM2 & FLAIR --> SQANTI
-    FINALGFF --> SQANTI
-    FINALGFF --> OMARK
-    FINALGFF & MIKGFF --> SRCQC
-    BUSCO & OMARK & AGATSTATS & NCRNAQC & SQANTI & EXPR & SRCQC --> MULTIQC
-```
-
-Legend to include next to the diagram in the README:
-
-* Blue, solid border = always runs.
-* Yellow, dashed border = optional, off by default unless noted, enabled
-  with the `--run_*` flag shown.
-* Green = quality-report step.
-
-This diagram intentionally omits fine-grained sub-steps (e.g. individual
-STAR/HISAT2 per-sample fan-out, the four StringTie stranded/unstranded
-variants) to stay readable — it documents the tool-level graph, not the
-per-task DAG (Nextflow's own `-with-dag` output already covers that at
-full resolution per run).
+[done] A Mermaid workflow graph now appears near the top of `README.md`. It
+shows the core graph, optional branches, functional annotation, alternative
+Mikado final source and quality-report aggregation. The detailed per-sample
+task fan-out remains available from each production run's Nextflow `-with-dag`
+report.
 
 ---
 
@@ -334,14 +205,14 @@ session note (dates, job IDs, "we found that...", "confirmed empirically").
 
 ## Suggested order of execution
 
-1. Section 1 deletions (`dev.md`, `prompt.md`, `docs/development/audit.md`,
+1. [done] Section 1 deletions (`dev.md`, `prompt.md`, `docs/development/audit.md`,
    `docs/development/p0-hardening.md`) — fast, unambiguous, zero risk once
    confirmed.
 2. Section 7 (`data/slurm_apptainer.config` / `conf/slurm.config` comment
    cleanup) — mechanical, no structural change, safe to do independently.
-3. Section 3 (`architecture-audit.md` → `ARCHITECTURE.md` rewrite,
+3. [done] Section 3 (`architecture-audit.md` → `ARCHITECTURE.md` rewrite,
    `CONTRIBUTING.md` creation).
-4. Section 4 + 5 together (`README.md` restructure needs the diagram to
+4. [done] Section 4 + 5 together (`README.md` restructure needs the diagram to
    land in the same pass, otherwise the README is briefly missing the thing
    it's being restructured to showcase).
 5. Section 6 (`docs/user/installation.md` new tool sections) — independent,
