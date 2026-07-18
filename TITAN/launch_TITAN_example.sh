@@ -54,6 +54,24 @@ Production-oriented options:
                                  Default: TITAN_INTERPROSCAN_DATA_DIR or <project-dir>/.interproscan_data
   --enable-interproscan          Pass --run_interproscan true and --interproscan_data_dir to Nextflow
                                  Default: TITAN_RUN_INTERPROSCAN or false
+  --prepare-rfam-data            Download and index the Rfam covariance-model library
+                                 Default: TITAN_PREPARE_RFAM_DATA or false
+  --rfam-data-dir PATH           Persistent Rfam data directory
+                                 Default: TITAN_RFAM_DATA_DIR or <project-dir>/.rfam_data
+  --enable-rfam                  Pass --run_rfam true and --rfam_data_dir to Nextflow
+                                 Default: TITAN_RUN_RFAM or false
+  --prepare-omark-data           Download the OMAmer database used by OMArk
+                                 Default: TITAN_PREPARE_OMARK_DATA or false
+  --omark-data-dir PATH          Persistent OMArk data directory
+                                 Default: TITAN_OMARK_DATA_DIR or <project-dir>/.omark_data
+  --enable-omark                 Pass --run_omark true and --omark_data_dir to Nextflow
+                                 Default: TITAN_RUN_OMARK or false
+  --prepare-cpat-model           Download the CPAT Plant-LncPipe model
+                                 Default: TITAN_PREPARE_CPAT_MODEL or false
+  --cpat-model-dir PATH          Persistent CPAT model directory
+                                 Default: TITAN_CPAT_MODEL_DIR or <project-dir>/resources/cpat_plant_lncpipe
+  --enable-lncrna                Pass --run_lncrna true and --cpat_model_dir to Nextflow
+                                 Default: TITAN_RUN_LNCRNA or false
   --resume                       Add -resume
   --force                        Allow writing into a non-empty output directory without --resume
   --dry-run                      Print the command instead of executing it
@@ -140,6 +158,15 @@ HELIXER_USE_GPU="${TITAN_HELIXER_USE_GPU:-false}"
 PREPARE_INTERPROSCAN_DATA="${TITAN_PREPARE_INTERPROSCAN_DATA:-false}"
 INTERPROSCAN_DATA_DIR="${TITAN_INTERPROSCAN_DATA_DIR:-}"
 RUN_INTERPROSCAN="${TITAN_RUN_INTERPROSCAN:-false}"
+PREPARE_RFAM_DATA="${TITAN_PREPARE_RFAM_DATA:-false}"
+RFAM_DATA_DIR="${TITAN_RFAM_DATA_DIR:-}"
+RUN_RFAM="${TITAN_RUN_RFAM:-false}"
+PREPARE_OMARK_DATA="${TITAN_PREPARE_OMARK_DATA:-false}"
+OMARK_DATA_DIR="${TITAN_OMARK_DATA_DIR:-}"
+RUN_OMARK="${TITAN_RUN_OMARK:-false}"
+PREPARE_CPAT_MODEL="${TITAN_PREPARE_CPAT_MODEL:-false}"
+CPAT_MODEL_DIR="${TITAN_CPAT_MODEL_DIR:-}"
+RUN_LNCRNA="${TITAN_RUN_LNCRNA:-false}"
 RESUME=false
 FORCE=false
 DRY_RUN=false
@@ -173,6 +200,15 @@ while [[ $# -gt 0 ]]; do
     --prepare-interproscan-data) PREPARE_INTERPROSCAN_DATA=true; shift ;;
     --interproscan-data-dir) INTERPROSCAN_DATA_DIR="${2:-}"; shift 2 ;;
     --enable-interproscan) RUN_INTERPROSCAN=true; shift ;;
+    --prepare-rfam-data) PREPARE_RFAM_DATA=true; shift ;;
+    --rfam-data-dir) RFAM_DATA_DIR="${2:-}"; shift 2 ;;
+    --enable-rfam) RUN_RFAM=true; shift ;;
+    --prepare-omark-data) PREPARE_OMARK_DATA=true; shift ;;
+    --omark-data-dir) OMARK_DATA_DIR="${2:-}"; shift 2 ;;
+    --enable-omark) RUN_OMARK=true; shift ;;
+    --prepare-cpat-model) PREPARE_CPAT_MODEL=true; shift ;;
+    --cpat-model-dir) CPAT_MODEL_DIR="${2:-}"; shift 2 ;;
+    --enable-lncrna) RUN_LNCRNA=true; shift ;;
     --resume) RESUME=true; shift ;;
     --force) FORCE=true; shift ;;
     --dry-run) DRY_RUN=true; shift ;;
@@ -221,6 +257,15 @@ HELIXER_MODEL_DIR="$(abs_path "$HELIXER_MODEL_DIR")"
 INTERPROSCAN_DATA_DIR="${INTERPROSCAN_DATA_DIR:-$PROJECT_DIR/.interproscan_data}"
 mkdir -p "$INTERPROSCAN_DATA_DIR"
 INTERPROSCAN_DATA_DIR="$(abs_path "$INTERPROSCAN_DATA_DIR")"
+RFAM_DATA_DIR="${RFAM_DATA_DIR:-$PROJECT_DIR/.rfam_data}"
+mkdir -p "$RFAM_DATA_DIR"
+RFAM_DATA_DIR="$(abs_path "$RFAM_DATA_DIR")"
+OMARK_DATA_DIR="${OMARK_DATA_DIR:-$PROJECT_DIR/.omark_data}"
+mkdir -p "$OMARK_DATA_DIR"
+OMARK_DATA_DIR="$(abs_path "$OMARK_DATA_DIR")"
+CPAT_MODEL_DIR="${CPAT_MODEL_DIR:-$PROJECT_DIR/resources/cpat_plant_lncpipe}"
+mkdir -p "$CPAT_MODEL_DIR"
+CPAT_MODEL_DIR="$(abs_path "$CPAT_MODEL_DIR")"
 
 if [[ "$RESUME" == false && "$FORCE" == false ]] && find "$OUTPUT_DIR" -mindepth 1 -maxdepth 1 | grep -q .; then
   die "Output directory is not empty: ${OUTPUT_DIR}. Use --resume to continue or --force to start a new run there."
@@ -323,6 +368,32 @@ if [[ "$PREPARE_INTERPROSCAN_DATA" == true ]]; then
   prepare_interproscan_data
 fi
 
+prepare_rfam_data() {
+  "$PROJECT_DIR/scripts/download_rfam_data.sh" \
+    --data-dir "$RFAM_DATA_DIR" \
+    --container "$(config_value container_infernal)"
+}
+
+if [[ "$PREPARE_RFAM_DATA" == true ]]; then
+  prepare_rfam_data
+fi
+
+prepare_omark_data() {
+  "$PROJECT_DIR/scripts/download_omark_data.sh" --data-dir "$OMARK_DATA_DIR"
+}
+
+if [[ "$PREPARE_OMARK_DATA" == true ]]; then
+  prepare_omark_data
+fi
+
+prepare_cpat_model() {
+  "$PROJECT_DIR/scripts/download_cpat_plant_lncpipe.sh" --model-dir "$CPAT_MODEL_DIR"
+}
+
+if [[ "$PREPARE_CPAT_MODEL" == true ]]; then
+  prepare_cpat_model
+fi
+
 cmd=(
   nextflow run main.nf
   -profile "$PROFILE"
@@ -364,6 +435,18 @@ if [[ "$RUN_INTERPROSCAN" == true ]]; then
   cmd+=(--run_interproscan true --interproscan_data_dir "$INTERPROSCAN_DATA_DIR")
 fi
 
+if [[ "$RUN_RFAM" == true ]]; then
+  cmd+=(--run_rfam true --rfam_data_dir "$RFAM_DATA_DIR")
+fi
+
+if [[ "$RUN_OMARK" == true ]]; then
+  cmd+=(--run_omark true --omark_data_dir "$OMARK_DATA_DIR")
+fi
+
+if [[ "$RUN_LNCRNA" == true ]]; then
+  cmd+=(--run_lncrna true --cpat_model_dir "$CPAT_MODEL_DIR")
+fi
+
 if [[ "$RESUME" == true ]]; then
   cmd+=(-resume)
 fi
@@ -386,6 +469,15 @@ if [[ "$RUN_HELIXER" == true ]]; then
 fi
 if [[ "$RUN_INTERPROSCAN" == true ]]; then
   echo "InterProScan:      enabled, data dir $INTERPROSCAN_DATA_DIR"
+fi
+if [[ "$RUN_RFAM" == true ]]; then
+  echo "Rfam:              enabled, data dir $RFAM_DATA_DIR"
+fi
+if [[ "$RUN_OMARK" == true ]]; then
+  echo "OMArk:             enabled, data dir $OMARK_DATA_DIR"
+fi
+if [[ "$RUN_LNCRNA" == true ]]; then
+  echo "lncRNA:            enabled, CPAT model dir $CPAT_MODEL_DIR"
 fi
 if [[ "${TITAN_APPTAINER_CACHEDIR:-}" ]]; then
   echo "Apptainer cache:   $TITAN_APPTAINER_CACHEDIR"

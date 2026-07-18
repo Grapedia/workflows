@@ -116,7 +116,9 @@ cd workflows/TITAN
 scripts/run-tests.sh
 ```
 
-Production runs should go through the launcher:
+Production runs should go through the launcher. The base command runs the
+mandatory graph: Liftoff, RNA-seq evidence, EDTA, EGAPx, BRAKER3, AEGIS,
+Diamond2GO and default quality checks.
 
 ```bash
 ./launch_TITAN_example.sh \
@@ -132,6 +134,35 @@ Production runs should go through the launcher:
   --run-name titan_target_v1 \
   --resume
 ```
+
+Add optional branches when their reference data are available, or let the
+launcher prepare supported datasets before the run:
+
+```bash
+./launch_TITAN_example.sh \
+  --profile slurm,apptainer \
+  --output-dir /absolute/path/to/project/titan_out \
+  --previous-assembly /absolute/path/to/project/assemblies/previous.fa \
+  --new-assembly /absolute/path/to/project/assemblies/target.fa \
+  --previous-annotations /absolute/path/to/project/annotations/previous.gff3 \
+  --rnaseq-samplesheet /absolute/path/to/project/rnaseq/RNAseq_samplesheet.csv \
+  --rnaseq-data-dir /absolute/path/to/project/rnaseq \
+  --protein-samplesheet /absolute/path/to/project/proteins/protein_samplesheet.csv \
+  --egapx-paramfile /absolute/path/to/project/egapx/input_egapx.yaml \
+  --run-name titan_target_v1 \
+  --prepare-egapx-cache \
+  --enable-eggnog-mapper --prepare-eggnog-data \
+  --enable-helixer --prepare-helixer-model --helixer-lineage land_plant \
+  --enable-interproscan --prepare-interproscan-data \
+  --enable-rfam --prepare-rfam-data \
+  --enable-omark --prepare-omark-data \
+  --enable-lncrna --prepare-cpat-model \
+  --resume
+```
+
+Options without dedicated launcher flags, such as BUSCO, Mikado, FLAIR or
+SQANTI3, can be passed after `--` as native Nextflow parameters; see the
+installation guide for required data directories.
 
 The launcher resolves paths, checks profile/container contracts, validates
 inputs and writes Nextflow reports under `${output_dir}/nextflow_reports`.
