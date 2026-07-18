@@ -33,6 +33,13 @@ process trnascan_se {
         exit 1
     fi
 
+    # Nextflow's task wrapper re-exports TMPDIR from the pipeline-wide env{}
+    # block (a single shared host path) right before this script runs, so a
+    # containerOptions --env TMPDIR override alone gets clobbered. Re-export
+    # it here, last, to point tRNAscan-SE's scratch files (tscanN.fpass) at
+    # /tmp, which conf/apptainer.config binds to this task's own workDir.
+    export TMPDIR=/tmp
+
     tRNAscan-SE -E \\
       -o trnascan.out \\
       -f trnascan.struct \\
