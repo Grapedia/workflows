@@ -23,7 +23,7 @@ Objectif: aller vers une annotation "complète" du génome T2T de la vigne (PN40
 - Chaque outil a `params.run_<tool> = false` par défaut (opt-in), sauf s'il est très léger et sans dépendance de données externes (auquel cas il peut tourner par défaut, comme `agat_stats`/`multiqc_report` aujourd'hui).
 - Chaque module émet `versions.yml`.
 - Toute image conteneur **doit être pinnée par digest** (`registry/image@sha256:...`), jamais par tag mobile — vérifié via `scripts/validate_container_pins.py`.
-- Toute donnée offline externe (bases Rfam, Infernal, OMAmer, FCS-GX gxdb, référentiels MITOS/PGA...) suit le pattern déjà utilisé pour `eggnog_data_dir`/`interproscan_data_dir`/`busco_data_dir` : un paramètre `params.<tool>_data_dir = false`, jamais téléchargée automatiquement par un run de production, bind-mountée explicitement dans `conf/apptainer.config`.
+- Toute donnée offline externe (bases Rfam, Infernal, OMAmer...) suit le pattern déjà utilisé pour `eggnog_data_dir`/`interproscan_data_dir`/`busco_data_dir` : un paramètre `params.<tool>_data_dir = false`, jamais téléchargée automatiquement par un run de production, bind-mountée explicitement dans `conf/apptainer.config`.
 - Chaque module a un bloc `stub:` minimal pour que `scripts/run-tests.sh` (`-stub-run`) continue de couvrir tout le graphe.
 - Ajouter la vérification correspondante dans `scripts/validate_profiles.py` (`RESOURCE_LABELS`) si un nouveau label est introduit.
 
@@ -101,7 +101,7 @@ Publié sous `${params.output_dir}/additional_annotations/ncrna/trna/`.
 - Image : `quay.io/biocontainers/infernal@sha256:05ae1ca6cc76c27180524bc38c5b1e17adf9377be5b8c644d3e8e707848d4d99` (1.1.5) — fournit aussi `cmpress`, `cmscan`
 - Données offline : `params.rfam_data_dir` (Rfam.cm + Rfam.clanin depuis `ftp.ebi.ac.uk/pub/databases/Rfam/CURRENT/`), à indexer une fois avec `cmpress Rfam.cm` — même pattern que `busco_data_dir`.
 - Paramètres : `params.run_rfam = false`, `params.container_infernal`, `params.rfam_data_dir = false`
-- Label : nouveau `process_rfam` (32 cpus, 96 GB, 48h en prod) — `cmsearch` full-genome contre tout Rfam est le poste le plus lourd de tout ce document en dehors de FCS-GX.
+- Label : nouveau `process_rfam` (32 cpus, 96 GB, 48h en prod) — `cmsearch` full-genome contre tout Rfam est le poste le plus lourd restant dans ce document.
 
 **Input** : `params.new_assembly` (FASTA génome complet).
 
@@ -141,7 +141,7 @@ Publié sous `${params.output_dir}/additional_annotations/ncrna/rfam/`.
 4. M4 — Estimation du temps réel sur le génome T2T complet (hors pipeline, avec `time cmsearch ...` sur le vrai génome) : si >24h même à 32 cpus, prévoir un split par chromosome avant intégration (voir note ci-dessous).
 5. M5 — Intégré dans `workflows/titan.nf`, publié.
 
-**Note sur la charge de calcul** : `cmsearch --rfam` full-genome contre l'intégralité de Rfam (~4000 familles) est le poste de calcul le plus lourd de ce document après FCS-GX. TITAN découpe maintenant le run par séquence/chromosome et collecte les résultats avant conversion GFF3 finale, afin de paralléliser le calcul sans réduire la couverture Rfam.
+**Note sur la charge de calcul** : `cmsearch --rfam` full-genome contre l'intégralité de Rfam (~4000 familles) est le poste de calcul le plus lourd restant dans ce document. TITAN découpe maintenant le run par séquence/chromosome et collecte les résultats avant conversion GFF3 finale, afin de paralléliser le calcul sans réduire la couverture Rfam.
 
 **Validation**
 - `rfam_ncrna.gff3` valide (même contrôle GFF3 que Phase 1).
@@ -550,187 +550,6 @@ Publié sous `${params.output_dir}/quality_report/expression_validation/`.
 - Le `%` de gènes sans support transcriptomique doit être documenté et comparé à l'écart connu entre PN40024.v4 (11 508 gènes uniques sans preuve) et v5.1 (17 208 gènes avec support significatif) — l'objectif n'est pas 100 % (des gènes réels sont silencieux dans les tissus/conditions échantillonnés) mais une amélioration mesurable et traçable par rapport à la version précédente.
 - `expression_support_summary.json` doit lister explicitement les gènes sans support (pas seulement un pourcentage agrégé), pour permettre un audit manuel ciblé plus tard.
 
----
-
-## Phase 10 — Centromères / satellites (ModDotPlot + HiCAT)
-
-**But** : caractériser la structure des répétitions en ordre supérieur (HOR) dans les régions centromériques/péricentromériques, propres à un assemblage T2T.
-**Pourquoi** : EDTA (déjà utilisé par TITAN) est un annotateur de TE généraliste qui caractérise mal les réseaux de satellites en HOR — un T2T expose ces régions pour la première fois de bout en bout, donc les laisser sous-caractérisées revient à ignorer une partie de ce que le T2T apporte spécifiquement.
-**Position dans le graphe** : branche indépendante sur `params.new_assembly`, en parallèle du reste — pas de dépendance avec AEGIS.
-
-**⚠️ Ni ModDotPlot ni HiCAT n'ont d'image BioContainers/Quay publiée** — contrairement à tous les outils précédents de ce document, ceux-ci nécessitent d'écrire un `dockerfiles/moddotplot/Dockerfile` et un `dockerfiles/hicat/Dockerfile` (même situation que Helixer à l'origine, cf. audit v1). StainedGlass a été délibérément exclu de ce document : ModDotPlot couvre le même besoin avec un coût de calcul très inférieur d'après la littérature 2026, ajouter les deux serait redondant.
-
-- ModDotPlot : `pip install moddotplot` (pas de conda/bioconda) — Dockerfile à construire sur une image Python de base.
-- HiCAT : `conda install -c xjtuomics hicat` (canal conda tiers, pas bioconda) — Dockerfile à construire sur une image conda/miniforge de base.
-- Paramètres : `params.run_centromere_analysis = false`, `params.container_moddotplot`, `params.container_hicat`
-- Label : `process_medium`
-
-**Input** : `params.new_assembly` (ModDotPlot, dot-plot self-alignment sur tout le génome) + une région candidate par chromosome (HiCAT — a besoin d'un monomère de répétition de référence, à découvrir au préalable, voir jalon M2 ci-dessous).
-
-**Commande** :
-```bash
-# ModDotPlot : heatmap de similarite k-mer, tout le genome, rapide
-moddotplot static -f ${genome} --output-dir moddotplot_out -k 21 --identity 90
-
-# HiCAT : necessite d'abord un monomere candidat par region centromerique.
-# Etape prealable (pas d'outil dedie standard) : Tandem Repeats Finder (TRF,
-# deja courant, a pinner separement) sur chaque candidat centromere identifie
-# via le pic de densite ModDotPlot, puis clustering des unites repetees pour
-# obtenir un monomere consensus par chromosome.
-hicat -i ${candidate_centromere_region.fa} -t ${consensus_monomer.fa} -o hicat_out
-```
-
-**Output** :
-- `moddotplot_out/*.png` + `*.bed` (publié — carte de similarité par fenêtre, coordonnées des blocs à haute identité)
-- `hicat_out/*.hor_summary.tsv` (publié — unités HOR, tailles, nombres de copies par chromosome)
-
-Publié sous `${params.output_dir}/additional_annotations/centromeres/`.
-
-**Jalons**
-1. M1 — Écrire et valider `dockerfiles/moddotplot/Dockerfile` et `dockerfiles/hicat/Dockerfile` localement (build + smoke test manuel, hors Nextflow), les publier dans le registre du projet (même mécanisme que les images `avelt/*` déjà utilisées ailleurs dans `nextflow.config`).
-2. M2 — Étape préalable de découverte de monomère candidat (TRF + clustering) : à spécifier plus précisément une fois M1 fait, car HiCAT sans monomère de référence pertinent pour *Vitis* ne produira rien d'exploitable.
-3. M3 — `modules/moddotplot.nf` (indépendant, pas besoin de M2) créé et testé — c'est la partie "gratuite" de cette phase, à faire en premier.
-4. M4 — `modules/hicat.nf` créé et testé une fois M2 résolu.
-5. M5 — Intégré, publié.
-
-**Validation**
-- ModDotPlot doit faire ressortir des blocs à très haute identité (>95 %) sur des fenêtres contiguës correspondant aux régions péricentromériques attendues (comparer visuellement aux coordonnées centromériques déjà connues pour PN40024 si publiées).
-- HiCAT doit rapporter une unité HOR de taille plausible pour un satellite végétal (typiquement quelques centaines de bp à quelques kb selon l'espèce — pas de règle universelle, à documenter empiriquement pour *Vitis* plutôt qu'assumé).
-- Cette phase est exploratoire par nature (contrairement aux précédentes) : la validation porte sur la cohérence interne des résultats et leur plausibilité biologique, pas sur un critère de succès binaire.
-
----
-
-## Phase 11 — FCS-GX (dépistage de contamination)
-
-**But** : détecter toute séquence contaminante (organismes non-cibles, vecteurs, adaptateurs résiduels) dans l'assemblage avant de lui faire confiance pour l'annotation.
-**Pourquoi** : c'est désormais le standard NCBI pour tout dépôt de génome ; particulièrement pertinent pour un assemblage T2T où la continuité complète peut aussi bien signifier "aucun trou" que "un contig contaminant assemblé proprement par erreur".
-**Position dans le graphe** : en amont de tout le reste, sur `params.new_assembly` — c'est un contrôle qualité de l'assemblage, pas de l'annotation ; idéalement à exécuter avant même `validate_inputs`, mais peut aussi tourner en parallèle sans bloquer le reste du graphe au premier ajout.
-
-**⚠️ Infrastructure la plus lourde de tout ce document** : la base de données FCS-GX (`gxdb`) pèse environ **470 Go**, et son utilisation recommandée est 32-64 CPU / 512 Go de RAM. À évaluer sérieusement contre l'espace disque et la RAM réellement disponibles sur le cluster Colmar avant de s'engager sur cette phase — c'est un ordre de grandeur au-dessus de tout le reste (InterProScan 7,4 Go, BUSCO 255 Mo).
-
-- Image : `docker.io/ncbi/fcs-gx@sha256:df6e3ca2c81277fbdb2fe9856bb65b4f7c399e8036c498261b5426bc1915088f` (0.5.5)
-- Données offline : `params.fcsgx_db_dir` (gxdb, ~470 Go, téléchargeable via le script officiel `sync_files.py` documenté par NCBI)
-- Paramètres : `params.run_fcsgx = false`, `params.container_fcsgx`, `params.fcsgx_db_dir = false`, `params.fcsgx_taxid` (NCBI taxid de *Vitis vinifera* = 29760, déjà utilisé ailleurs dans le projet pour EGAPx)
-- Label : nouveau `process_fcsgx` (64 cpus, 512 GB — probablement à restreindre au(x) seul(s) nœud(s) du cluster disposant d'assez de RAM, même mécanisme que `slurm_nodelist_prediction` déjà utilisé pour EDTA/egapx).
-
-**Input** : `params.new_assembly` (FASTA génome complet).
-
-**Commande** :
-```bash
-python3 fcs.py screen genome \
-  --fasta ${genome} \
-  --out-dir fcsgx_out \
-  --gx-db ${params.fcsgx_db_dir}/gxdb \
-  --tax-id ${params.fcsgx_taxid}
-```
-
-**Output** :
-- `fcsgx_out/*.fcs_gx_report.txt` (publié — séquences signalées, taxon suspecté, action recommandée : EXCLUDE/TRIM/REVIEW)
-- `fcsgx_out/*.taxonomy.rpt` (publié)
-
-Publié sous `${params.output_dir}/quality_report/fcsgx/`.
-
-**Jalons**
-1. M1 — Vérifier concrètement l'espace disque disponible (470 Go) et la RAM (512 Go recommandés) sur le cluster Colmar **avant tout développement** — c'est un go/no-go, pas un détail d'implémentation.
-2. M2 — Si M1 est validé : téléchargement de `gxdb` (opération longue, à documenter avec le même pattern `--prepare-fcsgx-db` que les autres launcher flags existants).
-3. M3 — `modules/fcsgx.nf` créé avec `stub:`.
-4. M4 — Run réel sur le génome de production, hors Nextflow d'abord (comme fait pour BUSCO), pour valider la commande et le temps réel avant intégration.
-5. M5 — Intégré, publié.
-
-**Validation**
-- `fcs_gx_report.txt` ne doit signaler aucune séquence en `EXCLUDE` sur les chromosomes principaux (un contig entier signalé contaminant sur un assemblage T2T publié serait une découverte majeure à vérifier manuellement, pas à ignorer silencieusement).
-- Si des séquences mineures (scaffolds non-placés, s'il y en a) sont signalées, croiser avec leur taille et leur contenu en gènes annotés avant de décider d'une action.
-- Le run entier doit rester dans le temps annoncé par NCBI (0.1-10 minutes de calcul effectif hors I/O du téléchargement initial de la base) — un temps très supérieur signale un problème d'indexation de la base plutôt qu'un vrai run.
-
----
-
-## Phase 12 — Annotation des génomes organellaires (MITOS2 + PGA)
-
-**But** : annoter séparément les génomes chloroplastique et mitochondrial, si l'assemblage T2T les inclut.
-**Pourquoi** : les outils nucléaires de TITAN (EDTA/BRAKER3/AEGIS) ne sont pas conçus pour les modèles géniques organellaires (code génétique différent pour la mitochondrie, structure en opérons pour le chloroplaste, pas d'introns spliceosomaux) — les annoter avec le pipeline nucléaire produirait des résultats faux ou vides plutôt que simplement sous-optimaux.
-**Position dans le graphe** : branche indépendante, **conditionnelle à la présence réelle de séquences organellaires dans `params.new_assembly`** — jalon M1 ci-dessous à valider avant tout développement.
-
-- Mitochondrie : `quay.io/biocontainers/mitos@sha256:36541c15ec4d3f0e2e7da6f41cb511b9ea08c08708eece4c3d67b48bc866148a` (2.1.10, MITOS2)
-- Chloroplaste : PGA (Plastid Genome Annotator) — **pas d'image BioContainers**, outil Perl, nécessite `dockerfiles/pga/Dockerfile` (même situation que ModDotPlot/HiCAT, Phase 10).
-- Paramètres : `params.run_organelle_annotation = false`, `params.container_mitos`, `params.container_pga`, `params.mitos_refdata_dir` (base de référence MITOS, téléchargeable depuis le site MITOS), `params.pga_reference_dir` (GenBank de référence chloroplastique *Vitis vinifera* existant sur NCBI)
-- Label : `process_low` (les génomes organellaires sont petits, quelques dizaines à centaines de kb)
-
-**Input** : le(s) contig(s)/scaffold(s) de `params.new_assembly` identifié(s) comme organellaires.
-
-**Prérequis non trivial** : il faut d'abord **identifier lesquels des contigs de l'assemblage sont organellaires** (le T2T ne les distingue pas nativement). Approche standard : BLAST des contigs contre un chloroplaste/mitochondrie *Vitis* déjà publié sur NCBI, ou heuristique de couverture (les organelles ont typiquement une couverture de lecture beaucoup plus élevée que le nucléaire du fait de leur nombre de copies).
-
-**Commande** :
-```bash
-# Mitochondrie (code genetique standard = 1 chez les plantes, contrairement
-# aux animaux qui utilisent le code 2)
-runmitos.py -i mito_contig.fasta -c 1 -o mitos_out \
-  -r ${params.mitos_refdata_dir} --refseqver refseq89f
-
-# Chloroplaste (PGA, annotation par homologie batch contre une reference)
-perl PGA.pl -r ${params.pga_reference_dir} -t chloro_contig_dir/ -o pga_out/
-```
-
-**Output** :
-- `mitos_out/result.gff3` (publié)
-- `pga_out/*.gff3` (publié)
-
-Publié sous `${params.output_dir}/additional_annotations/organelles/`.
-
-**Jalons**
-1. M1 — **Vérifier d'abord si l'assemblage T2T PN40024 contient effectivement des contigs organellaires assemblés séparément** (contacter les auteurs de l'assemblage ou inspecter les métadonnées/taille/couverture des contigs). Si non : cette phase entière n'a pas d'objet et doit être retirée de la feuille de route plutôt que développée dans le vide.
-2. M2 — Si M1 positif : identifier précisément le(s) contig(s) organellaire(s) par BLAST contre les références NCBI existantes.
-3. M3 — `dockerfiles/pga/Dockerfile` construit et testé.
-4. M4 — `modules/mitos_annotation.nf` + `modules/pga_annotation.nf` créés, testés sur les contigs identifiés en M2.
-5. M5 — Intégré, publié.
-
-**Validation**
-- Le nombre de gènes mitochondriaux/chloroplastiques annotés doit correspondre à ce qui est connu pour *Vitis vinifera* (le chloroplaste des plantes a un contenu génique très conservé, de l'ordre de ~110-130 gènes ; toute annotation avec un nombre très différent signale un problème, pas une découverte).
-- Comparaison directe avec l'annotation chloroplastique *Vitis vinifera* déjà publiée sur NCBI (RefSeq) — devrait être quasi-identique en contenu génique.
-
----
-
-## Phase 13 — Comparaison au pangénome *Vitis* (analyse, pas un nouvel outil)
-
-**But** : croiser le jeu de gènes final avec les ressources pangénomiques *Vitis* actives (Gramene Vitis PanGenome, Super Pangenome Vitis) pour valider l'orthologie/synténie et repérer les gènes présents/absents spécifiques à ce cultivar.
-**Pourquoi** : le champ de la génomique de la vigne est désormais fortement structuré autour du pangénome (super-pangénome 2025 sur 72 accessions, Gramene v2 avec 11 génomes de référence) — une annotation "parfaite" en 2026 se positionne par rapport à ces ressources plutôt qu'en isolation.
-**Position dans le graphe** : tout à la fin, après `titan_provenance` — c'est un rapport comparatif, pas une étape de calcul lourde.
-
-- Pas de nouveau conteneur dédié : script Python (`container_python`, déjà pinné) + réutilisation de `container_agat`/minimap2 déjà pinnés pour la synténie.
-- Données : `params.vitis_pangenome_dir` (jeux de protéines/GFF3 publics téléchargés une fois depuis Gramene/le dépôt du super-pangénome — vérifier les conditions de réutilisation/licence avant automatisation).
-- Paramètres : `params.run_pangenome_compare = false`
-
-**Input** : `aegis.out.aegis_proteins_main`, `aegis.out.aegis_gff`, jeux pangénomiques téléchargés dans `params.vitis_pangenome_dir`.
-
-**Commande** (esquisse, à préciser une fois le format exact des données Gramene/super-pangénome confirmé) :
-```bash
-# Orthologie proteique (reutilise diamond deja disponible via container_diamond2go)
-diamond blastp --query final_annotation_proteins_main.fasta \
-  --db ${params.vitis_pangenome_dir}/pangenome_proteins.dmnd \
-  --out orthology_hits.tsv --outfmt 6 --threads ${task.cpus}
-
-scripts/summarize_pangenome_overlap.py \
-  --orthology orthology_hits.tsv \
-  --gff final_annotation.gff3 \
-  -o pangenome_comparison_summary.json
-```
-
-**Output** :
-- `pangenome_comparison_summary.json` (publié — `% gènes orthologues au core pangénomique`, liste des gènes potentiellement spécifiques au cultivar/nouveaux)
-
-Publié sous `${params.output_dir}/quality_report/pangenome_comparison/`.
-
-**Jalons**
-1. M1 — Confirmer le format et les conditions de réutilisation des données Gramene Vitis PanGenome / Super Pangenome Vitis (licence, format de téléchargement en masse vs accès web uniquement).
-2. M2 — `scripts/summarize_pangenome_overlap.py` écrit et testé unitairement sur un petit jeu de données fixture.
-3. M3 — `modules/pangenome_compare.nf` créé, testé sur les données réelles.
-4. M4 — Intégré, publié.
-
-**Validation**
-- La très large majorité des gènes AEGIS doit trouver un orthologue dans le pangénome *Vitis* (c'est le même genre biologique, une faible correspondance signalerait un problème d'annotation, pas une originalité génomique).
-- Les gènes sans correspondance doivent être examinés individuellement (support d'expression de la Phase 9, présence de domaines InterProScan/eggNOG déjà calculés) avant d'être considérés comme de vrais gènes spécifiques au cultivar plutôt que des artefacts.
-
----
-
 ## Ordre d'implémentation recommandé
 
 1. **Phase 1 (tRNA) + Phase 2 (rRNA/snRNA/snoRNA)** — les plus simples, aucune dépendance croisée entre elles ni avec le reste du graphe, comblent directement le manque prouvé par la publication v5.1.
@@ -739,6 +558,3 @@ Publié sous `${params.output_dir}/quality_report/pangenome_comparison/`.
 4. **Phase 8 (OMArk)** — suit directement le pattern de `busco.nf` déjà écrit, faible effort d'implémentation.
 5. **Phase 4 + Phase 5 (Mikado + TransDecoder)** — dépendance croisée entre les deux, à traiter ensemble.
 6. **Phase 6 + Phase 7 (FLAIR + SQANTI3)** — dépendantes l'une de l'autre et de `has_long_reads`.
-7. **Phase 11 (FCS-GX)** — go/no-go sur l'infrastructure (470 Go) à trancher tôt même si l'implémentation vient plus tard, pour ne pas découvrir un blocage matériel en fin de parcours.
-8. **Phase 10 (centromères/satellites)** et **Phase 12 (organelles)** — nécessitent toutes deux la construction de Dockerfiles maison et des prérequis d'investigation (monomère de référence / présence réelle de contigs organellaires) avant tout développement ; à traiter en dernier, en parallèle si les deux sont retenues.
-9. **Phase 13 (comparaison pangénome)** — dépend de la disponibilité/licence des données externes, à confirmer avant de s'engager, logiquement en toute fin car elle consomme le résultat final déjà validé par toutes les phases précédentes.
