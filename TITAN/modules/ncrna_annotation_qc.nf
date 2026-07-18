@@ -46,7 +46,7 @@ process ncrna_annotation_qc {
     cat > ncrna_annotation_counts_mqc.tsv <<EOF
 # id: titan_ncrna_annotations
 # section_name: 'TITAN ncRNA annotations'
-# description: 'Counts of optional ncRNA annotations from tRNAscan-SE and Infernal/Rfam. AGAT structural stats are published under quality_report/ncrna_annotations.'
+# description: 'Counts of optional tRNAscan-SE and Infernal/Rfam annotations.'
 # plot_type: 'table'
 Tool	GFF3 features	AGAT stats
 tRNAscan-SE	\${trna_count}	trna_agat_stats.txt
@@ -65,7 +65,7 @@ EOF
     cat > ncrna_annotation_counts_mqc.tsv <<'EOF'
 # id: titan_ncrna_annotations
 # section_name: 'TITAN ncRNA annotations'
-# description: 'Counts of optional ncRNA annotations from tRNAscan-SE and Infernal/Rfam. AGAT structural stats are published under quality_report/ncrna_annotations.'
+# description: 'Counts of optional tRNAscan-SE and Infernal/Rfam annotations.'
 # plot_type: 'table'
 Tool	GFF3 features	AGAT stats
 tRNAscan-SE	1	trna_agat_stats.txt

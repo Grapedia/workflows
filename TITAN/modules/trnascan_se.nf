@@ -33,12 +33,7 @@ process trnascan_se {
         exit 1
     fi
 
-    # Nextflow's task wrapper re-exports TMPDIR from the pipeline-wide env{}
-    # block (a single shared host path) right before this script runs, so a
-    # per-process container option to set TMPDIR alone gets clobbered.
-    # Re-export it here, last, to point tRNAscan-SE's scratch files
-    # (tscanN.fpass) at /tmp, which conf/apptainer.config binds to this
-    # task's own workDir.
+    # Point tRNAscan-SE scratch files at the task-private /tmp bind.
     export TMPDIR=/tmp
 
     tRNAscan-SE -E \\
@@ -66,9 +61,7 @@ process trnascan_se {
     """
 }
 
-// GFF3 conversion split into its own process: the pinned tRNAscan-SE biocontainer
-// ships no Python interpreter at all, so scripts/trnascan_to_gff3.py must run in a
-// separate, Python-capable container instead of alongside tRNAscan-SE itself.
+// Convert in a Python-capable container; the tRNAscan-SE image has no Python.
 process trnascan_to_gff3 {
   label 'process_low'
 

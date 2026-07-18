@@ -1,8 +1,4 @@
-// Previous annotations will be lifted over (mapped) on the new assembly. It takes in ...
-// ... input:
-//   * the reference assembly
-//   * the target assembly
-// * the annotations to lift over the target assembly
+// Lift the previous annotation onto the target assembly.
 process liftoff_annotations {
   label 'process_low'
 

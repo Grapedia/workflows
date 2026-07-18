@@ -348,7 +348,7 @@ process {
 EOF
 
 cat > "${OUT_DIR}/README.md" <<EOF
-# TITAN realistic lite fixture from PN40024 data
+# TITAN realistic-lite fixture from local production inputs
 
 This fixture is generated from the real \`data/\` inputs, reduced to \`${CHROMOSOME}\`
 and a small but non-trivial RNA/protein evidence set.

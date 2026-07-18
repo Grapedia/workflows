@@ -53,7 +53,7 @@ copy_required_output() {
     local destination="$2"
     if [[ ! -s "$source" ]]; then
         log "ERROR: required BRAKER3 output is missing or empty: ${source}"
-        log "Top-level files available after BRAKER3 failure/debug:"
+        log "Top-level files available after BRAKER3 failure:"
         find . -maxdepth 2 -type f | sort | sed 's#^./#  #'
         exit 1
     fi

@@ -63,15 +63,10 @@ process sqanti3_qc {
       exit 0
     fi
 
-    # sqanti3_qc.py requires --isoforms/--refGTF/--refFasta (not positional args), and
-    # --refGTF strictly rejects GFF3 ("is not a GTF file. Abort!") despite TITAN's
-    # reference annotation being GFF3 elsewhere; convert with gffread (bundled in the
-    # sqanti3 container) first.
+    # SQANTI3 requires GTF reference input.
     gffread "${reference_gff3}" -T -o reference.sqanti3.gtf
 
-    # Some SQANTI3 containers ship libbz2 with a versioned filename but not
-    # the SONAME required by gtfToGenePred. Use a configurable container-side
-    # path and create the compatibility symlink in the task work directory.
+    # Provide libbz2.so.1 for gtfToGenePred when the image lacks that SONAME.
     sqanti3_libbz2_path="${params.sqanti3_libbz2_path}"
     if [[ -n "\${sqanti3_libbz2_path}" && "\${sqanti3_libbz2_path}" != "false" ]]; then
       if [[ ! -s "\${sqanti3_libbz2_path}" ]]; then
@@ -206,7 +201,7 @@ PY
     cat > sqanti3_long_read_isoform_qc_mqc.tsv <<'EOF'
 # id: titan_sqanti3_long_read_isoforms
 # section_name: 'TITAN SQANTI3 long-read isoform QC'
-# description: 'SQANTI3 structural-category summary for StringTie/Minimap2 long-read and FLAIR isoform assemblies.'
+# description: 'SQANTI3 structural categories for long-read isoforms.'
 # plot_type: 'table'
 Source	Status	Total isoforms	FSM	ISM	NIC	NNC	Other
 stringtie_long_reads	stub	1	1	0	0	0	0

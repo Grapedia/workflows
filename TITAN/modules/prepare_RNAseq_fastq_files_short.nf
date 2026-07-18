@@ -1,6 +1,4 @@
-// We check that if the samples are of type FASTQ they exist in params.RNAseq_data_dir.
-// If the samples are SRA, we'll resolve ENA FASTQ URLs and download gzipped FASTQ files.
-// Once done, the RNAseq samples are ready for transcriptome assembly.
+// Prepare short-read RNA-seq inputs from local FASTQ files or ENA-resolved SRA accessions.
 
 process prepare_RNAseq_fastq_files_short {
   label 'process_low'

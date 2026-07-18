@@ -1,6 +1,5 @@
 nextflow.enable.dsl = 2
 
-// Include subworkflows
 include { generate_evidence_data } from '../subworkflows/generate_evidence_data'
 include { aegis } from '../subworkflows/aegis'
 include { titan_provenance } from '../modules/titan_provenance'
@@ -225,10 +224,6 @@ workflow TITAN {
         has_long_reads
     )
 
-    // ----------------------------------------------------------------------------------------
-    //     Helixer ab initio prediction, independent of AEGIS evidence generation
-    // ----------------------------------------------------------------------------------------
-
     helixer_results = helixer_prediction(evidence_data.masked_genome)
 
     println "Running Aegis from generated named evidence; EDTA masked genome is passed as a direct channel input."
@@ -384,11 +379,6 @@ workflow TITAN {
         final_expression_quant_results.quant_dir.map { sample_ID, quant_dir -> quant_dir }.collect(),
         file("${projectDir}/scripts/summarize_expression_support.py")
     )
-
-    // ----------------------------------------------------------------------------------------
-    //     Final annotation quality report: BUSCO completeness, AGAT structural
-    //     stats and every fastp trimming report, aggregated with MultiQC.
-    // ----------------------------------------------------------------------------------------
 
     busco_results = busco(aegis.out.aegis_proteins_main)
 

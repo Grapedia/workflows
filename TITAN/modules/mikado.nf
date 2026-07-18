@@ -51,10 +51,7 @@ process mikado_prepare {
       exit 0
     fi
 
-    # liftoff_previous_annotations.gff3 has been observed to contain a handful of
-    # free-text Apollo curator notes that leaked in as malformed (non-9-column) lines;
-    # Mikado's strict GFF3 parser aborts the whole prepare step on the first one found,
-    # so drop them defensively before use.
+    # Keep only valid GFF3/comment lines before Mikado's strict parser.
     awk -F'\\t' 'NF == 9 || /^#/' "${liftoff_gff3}" > liftoff_sanitized.gff3
 
     python3 "${make_mikado_list}" \\

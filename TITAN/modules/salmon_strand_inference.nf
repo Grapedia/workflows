@@ -3,10 +3,7 @@ process salmon_strand_inference {
   label 'process_low'
   tag "Executing salmon strand inference on $sample_ID"
   container params.container_salmon
-  // read_1/read_2 are the same fastp-trimmed FASTQs already published by
-  // trimming_fastq (they're only re-emitted here to chain into
-  // star/hisat2_alignment) - exclude them so publishDir doesn't duplicate
-  // several GB per sample a second time under salmon_strand/.
+  // Avoid republishing the trimmed FASTQs re-emitted for downstream alignment.
   publishDir "${params.output_dir}/intermediate_files/salmon_strand/", mode: "copy", enabled: params.publish_intermediates, saveAs: { filename ->
     filename.endsWith('.trimmed.fastq.gz') ? null : filename
   }

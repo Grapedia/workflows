@@ -1,6 +1,4 @@
-// Structural statistics (gene/mRNA/exon counts and lengths) of the final
-// AEGIS annotation, using the same AGAT image already pinned for CDS
-// extraction elsewhere in the pipeline.
+// Structural statistics for the final AEGIS annotation.
 process agat_stats {
   label 'process_low'
 

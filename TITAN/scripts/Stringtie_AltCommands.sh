@@ -19,12 +19,8 @@ usage() {
 		__EOF__
 }
 
-# Eval command line arguments given in input
 ARGS=$(getopt -o "t:o:b:r:h" --long "threads:,output:,bam:,read:,help" -- $@ 2> /dev/null)
 
-# Check if the return code of the previous command is not equal to 0 (command ...
-# ... didn't work)
-# >&2 send the message to standard error (stderr) instead of standard out (stdout)
 if [ $? -ne 0 ]; then
 	echo "Error in the argument list. Use -h or --help to display the help." >&2
 	exit 1

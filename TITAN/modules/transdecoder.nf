@@ -20,8 +20,7 @@ process transdecoder_longorfs {
       exit 0
     fi
 
-    # /usr/local/bin/TransDecoder.* symlinks are broken in this pinned image (point to a
-    # nonexistent ../opt/transdecoder/TransDecoder.* target); the real scripts live under util/.
+    # Use the real scripts; the image's /usr/local/bin symlinks are broken.
     export PATH="/usr/local/opt/transdecoder/util:/usr/local/opt/transdecoder:\${PATH}"
 
     cp "${prepared_fasta}" mikado_prepared.fasta
@@ -73,8 +72,7 @@ process transdecoder_predict {
       exit 0
     fi
 
-    # /usr/local/bin/TransDecoder.* symlinks are broken in this pinned image (point to a
-    # nonexistent ../opt/transdecoder/TransDecoder.* target); the real scripts live under util/.
+    # Use the real scripts; the image's /usr/local/bin symlinks are broken.
     export PATH="/usr/local/opt/transdecoder/util:/usr/local/opt/transdecoder:\${PATH}"
 
     cp "${prepared_fasta}" mikado_prepared.fasta

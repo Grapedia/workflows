@@ -1,7 +1,4 @@
-// Aggregates run-wide QC (fastp trimming reports across every RNA-seq
-// sample) with final-annotation quality signals (BUSCO completeness, AGAT
-// structural stats, optional ncRNA/SQANTI3 annotation QC and the structural
-// validation report) into one HTML report.
+// Aggregate run-wide and final-annotation QC into one MultiQC report.
 process multiqc_report {
   label 'process_low'
 

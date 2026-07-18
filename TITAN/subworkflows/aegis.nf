@@ -1,6 +1,5 @@
 nextflow.enable.dsl=2
 
-// Include various processing modules
 include { aegis_merge } from "../modules/aegis_merge"
 include { diamond2go } from "../modules/diamond2go"
 include { eggnog_mapper } from "../modules/eggnog_mapper"
@@ -9,9 +8,7 @@ include { interproscan } from "../modules/interproscan"
 workflow aegis {
 
   take:
-    // Named evidence files consumed by AEGIS. Long-read GTF inputs may be empty
-    // sentinel files when no long-read branch is active; the short-read module
-    // ignores them by construction.
+    // Long-read GTF inputs may be empty sentinel files.
     masked_genome
     braker_augustus_gff
     braker_genemark_gtf
@@ -27,17 +24,13 @@ workflow aegis {
     long_reads_alt
     flair_isoforms_gtf
     has_long_reads
-    // Optional: Helixer ab initio GFF3, empty when run_helixer is false.
+    // Empty when run_helixer is false.
     helixer_gff3
 
   main:
 
     def aegis_mode = has_long_reads ? 'short_and_long_reads' : 'short_reads'
     def aegis_merge_script = file("${projectDir}/scripts/run_aegis_merge.sh")
-
-    // ----------------------------------------------------------------------------------------
-    //     AEGIS CLI merge over all named annotation evidence
-    // ----------------------------------------------------------------------------------------
 
     merged_annotation = aegis_merge(
       aegis_mode,
@@ -59,38 +52,21 @@ workflow aegis {
       aegis_merge_script
     )
 
-    // ----------------------------------------------------------------------------------------
-    //               Diamond2GO on proteins predicted with TITAN/Aegis
-    // ----------------------------------------------------------------------------------------
-
     functional_annotation = diamond2go(
       merged_annotation.aegis_proteins_all,
       merged_annotation.aegis_proteins_main
     )
-
-    // ----------------------------------------------------------------------------------------
-    //     eggNOG-mapper on the same AEGIS-derived proteins
-    // ----------------------------------------------------------------------------------------
-    // Always invoked, like diamond2go; the module itself emits placeholder
-    // outputs and skips emapper.py when params.run_eggnog_mapper is false.
 
     eggnog_annotation = eggnog_mapper(
       merged_annotation.aegis_proteins_all,
       merged_annotation.aegis_proteins_main
     )
 
-    // ----------------------------------------------------------------------------------------
-    //     InterProScan on the same AEGIS-derived proteins
-    // ----------------------------------------------------------------------------------------
-    // Always invoked, like diamond2go/eggnog_mapper; the module itself emits placeholder
-    // outputs and skips interproscan.sh when params.run_interproscan is false.
-
     interproscan_annotation = interproscan(
       merged_annotation.aegis_proteins_all,
       merged_annotation.aegis_proteins_main
     )
 
-  // Outputs
   emit:
     aegis_gff            = merged_annotation.aegis_gff
     aegis_proteins_all   = merged_annotation.aegis_proteins_all

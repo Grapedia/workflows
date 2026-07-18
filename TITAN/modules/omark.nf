@@ -38,7 +38,7 @@ process omark {
       cat > omark_mqc.tsv <<EOF
 # id: titan_omark
 # section_name: 'TITAN OMArk protein-set QC'
-# description: 'OMArk completeness, consistency and contamination QC for the final AEGIS main protein set.'
+# description: 'OMArk QC for the final AEGIS main protein set.'
 # plot_type: 'table'
 Metric	Value
 Status	\${status}
@@ -132,7 +132,7 @@ PY
     cat > omark_mqc.tsv <<'EOF'
 # id: titan_omark
 # section_name: 'TITAN OMArk protein-set QC'
-# description: 'OMArk completeness, consistency and contamination QC for the final AEGIS main protein set.'
+# description: 'OMArk QC for the final AEGIS main protein set.'
 # plot_type: 'table'
 Metric	Value
 Status	stub

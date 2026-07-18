@@ -1,6 +1,5 @@
 nextflow.enable.dsl = 2
 
-// Include various processing modules
 include { prepare_RNAseq_fastq_files_short } from "../modules/prepare_RNAseq_fastq_files_short"
 include { prepare_RNAseq_fastq_files_long } from "../modules/prepare_RNAseq_fastq_files_long"
 include { trimming_fastq } from "../modules/trimming_fastq"
@@ -86,7 +85,6 @@ workflow generate_evidence_data {
         has_long_reads
 
     main:
-        // Prepare RNAseq short reads for processing
         short_reads_prepared = prepare_RNAseq_fastq_files_short(
             samples_list_short_reads,
             download_sra_fastq_script,
@@ -96,23 +94,19 @@ workflow generate_evidence_data {
             ena_verify_md5
         )
 
-        // Trim Illumina short reads
         trimmed_reads = trimming_fastq(short_reads_prepared.prepared_fastqs)
 
-        // Lift over previous annotations to new assembly
         previous_annotations = liftoff_annotations(
             new_assembly,
             previous_assembly,
             previous_annotations_file
         )
 
-        // GTF version of the liftoff annotation for FLAIR (flair correct -f requires GTF,
-        // not GFF3 - see modules/agat_convert_gff3_to_gtf.nf)
+        // FLAIR correction requires GTF splice-junction evidence.
         liftoff_gtf_for_flair = agat_convert_gff3_to_gtf(
             previous_annotations.liftoff_previous_annotations
         )
 
-        // EGAPx annotation pipeline on new assembly
         egapx_annotations = egapx(egapx_paramfile)
 
         cleaned_liftoff_gff3 = clean_liftoff_gff3_for_agat(
@@ -120,24 +114,18 @@ workflow generate_evidence_data {
             clean_liftoff_gff3_script
         )
 
-        // Convert cleaned GFF3 to CDS FASTA for Salmon strand inference
         gff_cds = agat_convert_gff3_to_cds_fasta(
             new_assembly,
             cleaned_liftoff_gff3.cleaned_gff3
         )
 
-        // Salmon index and strand inference.
-        // Emits tuple val(sample_ID), val(library_layout), path(read_1), path(read_2), val(strand_type).
         salmon_index_result = salmon_index(gff_cds.cds_fasta)
         strand_inference = salmon_strand_inference(trimmed_reads.trimmed_reads, salmon_index_result.index)
 
-        // Salmon emits the inferred strand as a value and keeps logs/classification as debug outputs.
         salmon_output_processed = strand_inference.strand_inference_result.map { sample_ID, library_layout, read_1, read_2, strand_info ->
             return [sample_ID, library_layout, read_1, read_2, strand_info]
         }
 
-        // Process STAR alignments.
-        // Emits tuple val(sample_ID), path(bam_file), val(strand_type).
         star_indices = star_genome_indices(
             new_assembly,
             new_assembly_name,
@@ -151,14 +139,12 @@ workflow generate_evidence_data {
           .collect()
           .set{ concat_star_bams_BRAKER3 }
 
-        // Process HISAT2 alignments
         hisat2_indices = hisat2_genome_indices(
             new_assembly,
             new_assembly_name
         )
         hisat2_aligned = hisat2_alignment(hisat2_indices.index, salmon_output_processed, new_assembly_name)
 
-        // Process hisat2 assemblies
         hisat2_assemblies_stringtie = assembly_transcriptome_hisat2_stringtie(
             hisat2_aligned.samples_aligned,
             stringtie_script,
@@ -187,9 +173,7 @@ workflow generate_evidence_data {
             merged_flair_isoforms_fasta = empty_flair.fasta
         }
 
-        // Process minimap2 alignments for long reads
         if (has_long_reads) {
-            // Prepare long reads (if any) for processing
             long_reads_prepared = prepare_RNAseq_fastq_files_long(
                 samples_list_long_reads,
                 download_sra_fastq_script,
@@ -210,7 +194,6 @@ workflow generate_evidence_data {
               .collect()
               .set { concat_minimap2_bams_BRAKER3 }
 
-            // Process long read assemblies
             long_reads_assemblies = assembly_transcriptome_minimap2_stringtie(
                 minimap2_aligned.samples_aligned,
                 stringtie_script,
@@ -245,7 +228,6 @@ workflow generate_evidence_data {
             merged_flair_isoforms_fasta = flair_merged.fasta
         }
 
-        // Process short read assemblies
         star_assemblies_stringtie = assembly_transcriptome_star_stringtie(
             star_aligned.samples_aligned,
             stringtie_script,
@@ -263,7 +245,6 @@ workflow generate_evidence_data {
         star_unstranded_default_gtfs = collectTranscriptGtfs(star_assemblies_stringtie.star_stringtie_transcriptomes, 'unstranded', 1, empty_default_gtf)
         star_unstranded_alt_gtfs = collectTranscriptGtfs(star_assemblies_stringtie.star_stringtie_transcriptomes, 'unstranded', 2, empty_alt_gtf)
 
-        // Merge assemblies
         merged_star_stringtie = Stringtie_merging_short_reads_STAR(
             star_stranded_default_gtfs,
             star_stranded_alt_gtfs,
@@ -274,10 +255,9 @@ workflow generate_evidence_data {
         star_psiclass_stranded_gtfs = collectPsiclassGtfs(star_assemblies_psiclass.psiclass_assemblies, 'stranded')
         star_psiclass_unstranded_gtfs = collectPsiclassGtfs(star_assemblies_psiclass.psiclass_assemblies, 'unstranded', empty_psiclass_gtf)
 
-        // GFFcompare to merge PsiCLASS transcriptomes
         gffcompare_out = gffcompare(star_psiclass_stranded_gtfs, star_psiclass_unstranded_gtfs)
 
-        // EDTA is mandatory: Aegis requires the hard-masked genome.
+        // EDTA is mandatory because AEGIS consumes the hard-masked genome.
         edta_results = EDTA(
             new_assembly,
             new_assembly_name,
@@ -293,7 +273,6 @@ workflow generate_evidence_data {
           .collect()
           .ifEmpty { error "protein_samplesheet must contain at least one protein FASTA" }
 
-        // Run BRAKER3
         if (has_long_reads) {
             braker3_results = braker3_prediction_with_long_reads(
                 new_assembly,

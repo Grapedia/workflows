@@ -15,10 +15,7 @@ process agat_convert_gff3_to_gtf {
   script:
     """
     set -euo pipefail
-    # A handful of free-text Apollo curator notes have been observed leaking into
-    # liftoff_previous_annotations.gff3 as malformed (non-9-column) lines; AGAT's
-    # strict GFF3 parser aborts the whole conversion on the first one found, so
-    # drop them defensively before use (same guard as modules/mikado.nf).
+    # Keep only valid GFF3/comment lines before AGAT's strict parser.
     awk -F'\\t' 'NF == 9 || /^#/' "${gff3}" > sanitized.gff3
     agat_convert_sp_gff2gtf.pl --gff sanitized.gff3 -o "${gff3.simpleName}.gtf"
     printf '"%s":\n  container: "%s"\n' "${task.process}" "${task.container}" > versions.yml
