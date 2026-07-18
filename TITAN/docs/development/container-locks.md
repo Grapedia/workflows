@@ -34,23 +34,32 @@ This checks:
 | InterProScan | `container_interproscan` | `docker.io/interpro/interproscan@sha256:dc58b7c147fbbf00c2dd4f5ced42121fc1e8841fcbc7cc2c484380248ff76d11` |
 | Liftoff | `container_liftoff` | `quay.io/biocontainers/liftoff@sha256:460d5e82b0c59e8348633f3e0b9a19cf29f9227f7457e90bd7f1d1a2403b3555` |
 | Minimap2 + samtools | `container_minimap2_samtools` | `avelt/minimap2_samtools@sha256:70dcb87bb8021c90fc5eb660bbe1e6fc6bedadbf85c552c66704d27957b1f4ba` |
+| Mikado | `container_mikado` | `quay.io/biocontainers/mikado@sha256:dd6f5a2a2d7fdbab73c835cd0f49bd1444ecaddf8e4cd96fbf0fe24f5ecf5f22` |
+| MultiQC | `container_multiqc` | `quay.io/biocontainers/multiqc@sha256:b65e3fe879df27b92334dda0fd987a6e21bdee09a2848551d4f287099a93b7ac` |
+| OMArk | `container_omark` | `quay.io/biocontainers/omark@sha256:84413cc19053c5d6452fbff245c9e6980b3f16aabdf991f9e51d7b9f2e0e0843` |
 | PsiCLASS + samtools | `container_psiclass_samtools` | `avelt/psiclass_samtools@sha256:5cad8ecfd81293287bb6612ac8a6daaf17e626339016d326cf79615606acb285` |
 | Python | `container_python` | `docker.io/library/python@sha256:57cd7c3a7a273101a6485ba99423ee568157882804b1124b4dd04266317710de` |
 | Salmon | `container_salmon` | `quay.io/biocontainers/salmon@sha256:71ffc3b4961971159a6a2327d55686fb499c43335644ea5623476a082e826fc0` |
+| SQANTI3 | `container_sqanti3` | `quay.io/biocontainers/sqanti3@sha256:3bd6ec96b3f1c9cae69cfef54ba0522b7d99efa7ebb0ff6a611841aa6784f74c` |
 | STAR | `container_star` | `quay.io/biocontainers/star@sha256:f5910f39a9f5bc171a51fe7400d33e7586cb353c47d759a7c190562322150067` |
 | StringTie | `container_stringtie` | `avelt/stringtie@sha256:856395c26e0c36544ef5c66e24badcac4f68fd5fa51864a0f964a737250545bb` |
+| TransDecoder | `container_transdecoder` | `quay.io/biocontainers/transdecoder@sha256:c70f3a30cc8f3aecccb1d8978b9a49865d3994ebd7885361ab4c9dd820bd17f5` |
 | tRNAscan-SE | `container_trnascan` | `quay.io/biocontainers/trnascan-se@sha256:e573090368974ff1228e6894828c6c8a132dfecc3198f5e9fb76832f8f434f29` |
+| CPAT | `container_cpat` | `quay.io/biocontainers/cpat@sha256:87366fff67d441f64e0ac4681ccbaf1147f2c0601f3df86bb99f228d7f9a9000` |
+| FLAIR | `container_flair` | `quay.io/biocontainers/flair@sha256:187e2e22535d73ecc724afc7e474d9908b6e43a55f8588e8566db3bea2eba79e` |
+| BUSCO | `container_busco` | `quay.io/biocontainers/busco@sha256:d55ad622a5cafcd63c42fc309108688ab255bb9586ee756a5149e249d418c8bd` |
 
 ## Dockerfile base images
 
-The local Dockerfiles are not used by the default workflow, but their base images are locked too:
+Only Dockerfiles used to build TITAN-maintained `avelt/*` images are tracked.
+They are not used by the default workflow at runtime, but their base images are
+locked too:
 
 | Original base | Locked base |
 | --- | --- |
 | `ubuntu:24.10` | `ubuntu@sha256:f995e05e8adc3292853cc37e6edda72351f8002ce7469a29322d19e01529cb9f` |
 | `ubuntu:20.04` | `ubuntu@sha256:c664f8f86ed5a386b0a340d981b8f81714e21a8b9c73f658c4bea56aa179d54a` |
 | `rockylinux:9` | `rockylinux@sha256:d644d203142cd5b54ad2a83a203e1dee68af2229f8fe32f52a30c6e1d3c3a9e0` |
-| `ncbi/egapx:0.3.2-alpha` | `ncbi/egapx@sha256:48671cc0364501240576ce0e692b1c386961463caab7aed6f27305e17e4672db` |
 
 ## Test scope
 
