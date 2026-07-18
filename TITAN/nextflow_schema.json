@@ -249,6 +249,13 @@
       "type": "boolean",
       "description": "Run SQANTI3 QC on both long-read transcript assemblies: Minimap2/StringTie and FLAIR, and add the structural-category summary to MultiQC."
     },
+    "sqanti3_libbz2_path": {
+      "type": [
+        "string",
+        "boolean"
+      ],
+      "description": "Container-visible libbz2.so.1.* file used to create a task-local libbz2.so.1 compatibility symlink for SQANTI3/gtfToGenePred. Set to false only when the SQANTI3 image already provides libbz2.so.1."
+    },
     "egapx_version": {
       "type": "string",
       "description": "EGAPx version recorded in provenance."

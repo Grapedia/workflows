@@ -69,12 +69,20 @@ process sqanti3_qc {
     # sqanti3 container) first.
     gffread "${reference_gff3}" -T -o reference.sqanti3.gtf
 
-    # gtfToGenePred (bundled in this pinned image, invoked internally by sqanti3_qc.py)
-    # is linked against libbz2.so.1, but the image only ships libbz2.so.1.0.8 without
-    # the SONAME symlink; provide it via a local dir prepended to LD_LIBRARY_PATH.
-    mkdir -p .libfix
-    ln -sf /usr/local/lib/libbz2.so.1.0.8 .libfix/libbz2.so.1
-    export LD_LIBRARY_PATH="\$(pwd)/.libfix:\${LD_LIBRARY_PATH:-}"
+    # Some SQANTI3 containers ship libbz2 with a versioned filename but not
+    # the SONAME required by gtfToGenePred. Use a configurable container-side
+    # path and create the compatibility symlink in the task work directory.
+    sqanti3_libbz2_path="${params.sqanti3_libbz2_path}"
+    if [[ -n "\${sqanti3_libbz2_path}" && "\${sqanti3_libbz2_path}" != "false" ]]; then
+      if [[ ! -s "\${sqanti3_libbz2_path}" ]]; then
+        echo "ERROR: SQANTI3 libbz2 compatibility file not found inside the container: \${sqanti3_libbz2_path}" >&2
+        echo "Set --sqanti3_libbz2_path to the container-visible libbz2.so.1.* path, or false if the SQANTI3 image already provides libbz2.so.1." >&2
+        exit 1
+      fi
+      mkdir -p .libfix
+      ln -sf "\${sqanti3_libbz2_path}" .libfix/libbz2.so.1
+      export LD_LIBRARY_PATH="\$(pwd)/.libfix:\${LD_LIBRARY_PATH:-}"
+    fi
 
     sqanti3_qc.py \\
       --isoforms "${isoforms_gtf}" \\
@@ -84,8 +92,11 @@ process sqanti3_qc {
       --output "${source_label}.sqanti3" \\
       --cpus ${task.cpus}
 
-    test -s "\${classification}"
-    test -s "\${corrected_gtf}"
+    if [[ ! -s "\${classification}" || ! -s "\${corrected_gtf}" ]]; then
+      echo "ERROR: SQANTI3 finished without required outputs for ${source_label}." >&2
+      echo "Expected non-empty files: \${classification}, \${corrected_gtf}" >&2
+      exit 1
+    fi
     [[ -s "\${html_report}" ]] || printf "<html><body>SQANTI3 report for %s</body></html>\\n" "${source_label}" > "\${html_report}"
 
     python3 - <<'PY'

@@ -183,6 +183,13 @@ AEGIS annotation and target genome. When long reads are absent, or when one
 source has no isoforms, TITAN emits zero-count sentinel summaries so MultiQC
 remains stable.
 
+The pinned SQANTI3 image needs a task-local `libbz2.so.1` compatibility
+symlink for `gtfToGenePred`; TITAN creates it from the container-visible path
+configured by `--sqanti3_libbz2_path` (default
+`/usr/local/lib/libbz2.so.1.0.8`). This is deliberately not a host bind path.
+Set the parameter to `false` only when a replacement SQANTI3 image already
+ships `libbz2.so.1`.
+
 Outputs are published under `${output_dir}/additional_annotations/sqanti3` and
 `${output_dir}/quality_report/sqanti3`.
 

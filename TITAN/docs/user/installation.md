@@ -647,8 +647,11 @@ Defaults:
 
 ```text
 run_sqanti3 = false
+sqanti3_libbz2_path = /usr/local/lib/libbz2.so.1.0.8
 container_sqanti3 = quay.io/biocontainers/sqanti3@sha256:3bd6ec96b3f1c9cae69cfef54ba0522b7d99efa7ebb0ff6a611841aa6784f74c
 ```
+
+The default `sqanti3_libbz2_path` is a path inside the pinned SQANTI3 container, not a host path. TITAN uses it only to create a task-local `libbz2.so.1` compatibility symlink for `gtfToGenePred`. If you change `container_sqanti3`, either set `--sqanti3_libbz2_path` to the matching container-visible `libbz2.so.1.*` file or set it to `false` when the image already provides `libbz2.so.1`.
 
 Outputs are published under `${output_dir}/additional_annotations/sqanti3` and `${output_dir}/quality_report/sqanti3`. See the [SQANTI3 tool reference](../reference/tools.md#sqanti3-long-read-isoform-qc).
 
