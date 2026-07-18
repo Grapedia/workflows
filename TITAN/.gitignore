@@ -20,6 +20,10 @@ __pycache__/
 .omark_data/
 resources/
 data_example/
+/launch_TITAN_serveur_colmar.sh
+/data/slurm_apptainer.config
+/dockerfiles/aegis/
+/dockerfiles/aegis_v.2025_05_20/
 .tmp/
 TITAN_colmar-*.log
 busco_downloads/

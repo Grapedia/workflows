@@ -14,6 +14,7 @@ Velt, Camille Rustenholz and Marco Moretto.
 Full setup details are in [docs/user/installation.md](docs/user/installation.md).
 Tool details are in [docs/reference/tools.md](docs/reference/tools.md).
 Contributor guidance is in [CONTRIBUTING.md](CONTRIBUTING.md).
+Site-specific examples are kept under [examples/](examples/).
 
 ## What TITAN Produces
 
