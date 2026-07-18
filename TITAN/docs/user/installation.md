@@ -283,6 +283,8 @@ Important EGAPx notes:
 
 EGAPx can run online, but production HPC runs are more reproducible when its support data are pre-staged in a local cache and passed to TITAN with `--egapx_local_cache_dir`.
 
+TITAN does not hardcode EGAPx reference-data URLs. Reference discovery and downloads are handled by the pinned EGAPx runner and the selected `--egapx_data_version`; TITAN only passes the cache directory and version through to that runner.
+
 EGAPx has two cache download modes:
 
 ```bash
@@ -691,7 +693,7 @@ TITAN validates that `--omark_data_dir` contains `omamer.h5` whenever `--run_oma
 
 BUSCO adds protein-mode completeness metrics to the quality report. It is disabled by default (`run_busco = false`) and needs a local BUSCO lineage dataset.
 
-Prepare the lineage outside TITAN using BUSCO's own downloader, for example:
+TITAN does not provide a `--prepare-busco-data` launcher flag or bundled BUSCO data downloader. Prepare the lineage outside TITAN using BUSCO's own downloader, for example:
 
 ```bash
 busco --download eudicotyledons_odb12.2 --download_path /absolute/path/to/project/busco_data
