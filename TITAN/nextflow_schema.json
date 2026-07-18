@@ -168,6 +168,14 @@
       "type": "boolean",
       "description": "Run tRNAscan-SE on the target genome to annotate tRNA genes under additional_annotations/ncrna/trna."
     },
+    "run_rfam": {
+      "type": "boolean",
+      "description": "Run Infernal cmsearch against offline Rfam covariance models to annotate ncRNA families under additional_annotations/ncrna/rfam."
+    },
+    "rfam_data_dir": {
+      "$ref": "#/definitions/path_or_false",
+      "description": "Directory containing pre-fetched and cmpress-indexed Rfam.cm plus Rfam.clanin. Required when run_rfam is true."
+    },
     "egapx_version": {
       "type": "string",
       "description": "EGAPx version recorded in provenance."
@@ -283,6 +291,9 @@
       "$ref": "#/definitions/container_digest"
     },
     "container_trnascan": {
+      "$ref": "#/definitions/container_digest"
+    },
+    "container_infernal": {
       "$ref": "#/definitions/container_digest"
     },
     "container_braker3": {

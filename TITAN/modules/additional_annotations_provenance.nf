@@ -15,6 +15,10 @@ process additional_annotations_provenance {
     path(trnascan_raw_table)
     path(trnascan_stats)
     path(trnascan_versions, stageAs: "module_versions/trnascan_versions.yml")
+    path(rfam_gff3)
+    path(rfam_tblout)
+    path(rfam_search_log)
+    path(rfam_versions, stageAs: "module_versions/rfam_versions.yml")
 
   output:
     path "additional_annotations_manifest.json", emit: manifest
@@ -63,16 +67,23 @@ manifest = {
         "container_helixer": "${params.container_helixer}",
         "run_trnascan": "${params.run_trnascan}",
         "container_trnascan": "${params.container_trnascan}",
+        "run_rfam": "${params.run_rfam}",
+        "rfam_data_dir": "${params.rfam_data_dir}",
+        "container_infernal": "${params.container_infernal}",
     },
     "outputs": [
         file_record("helixer_gff3", "${helixer_gff3}"),
         file_record("trnascan_gff3", "${trnascan_gff3}"),
         file_record("trnascan_raw_table", "${trnascan_raw_table}"),
         file_record("trnascan_stats", "${trnascan_stats}"),
+        file_record("rfam_gff3", "${rfam_gff3}"),
+        file_record("rfam_tblout", "${rfam_tblout}"),
+        file_record("rfam_search_log", "${rfam_search_log}"),
     ],
     "module_versions": [
         file_record("helixer_versions", "${helixer_versions}"),
         file_record("trnascan_versions", "${trnascan_versions}"),
+        file_record("rfam_versions", "${rfam_versions}"),
     ],
 }
 
@@ -86,6 +97,7 @@ with open("versions.yml", "w", encoding="utf-8") as handle:
     handle.write('  container: "${task.container}"\\n')
     handle.write('  helixer: "${params.run_helixer}"\\n')
     handle.write('  trnascan: "${params.run_trnascan}"\\n')
+    handle.write('  rfam: "${params.run_rfam}"\\n')
 PY
     """
 }

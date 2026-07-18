@@ -45,6 +45,7 @@ run_step "$PYTHON_BIN" scripts/test_download_sra_fastq.py
 run_step "$PYTHON_BIN" scripts/test_shared_shell_scripts.py
 run_step "$PYTHON_BIN" scripts/test_clean_liftoff_gff3_for_agat.py
 run_step "$PYTHON_BIN" scripts/test_trnascan_to_gff3.py
+run_step "$PYTHON_BIN" scripts/test_rfam_tblout_to_gff3.py
 
 run_step nextflow config -profile test
 run_step nextflow run main.nf -profile test -stub-run -ansi-log false

@@ -14,6 +14,7 @@ REQUIRED_PARAMS = {
     "container_eggnog_mapper",
     "container_helixer",
     "container_interproscan",
+    "container_infernal",
     "container_edta",
     "container_egapx",
     "container_fastp",

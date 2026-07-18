@@ -15,6 +15,7 @@ RESOURCE_LABELS = {
     "process_prediction",
     "process_merge",
     "process_aegis",
+    "process_rfam",
 }
 
 

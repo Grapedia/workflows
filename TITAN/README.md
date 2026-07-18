@@ -247,6 +247,12 @@ tRNAscan-SE is an optional ncRNA annotation branch run directly on the target ge
 
 Outputs are published under `${output_dir}/additional_annotations/ncrna/trna/` and recorded in `provenance/additional_annotations_manifest.json`. The tRNA GFF3 is not merged into the AEGIS coding annotation automatically.
 
+## Infernal/Rfam ncRNA
+
+Infernal/Rfam is an optional ncRNA annotation branch run directly on the target genome, in parallel with tRNAscan-SE and the main evidence-generation graph. It is disabled by default (`--run_rfam false`). To enable it, stage Rfam offline once (`Rfam.cm`, `Rfam.clanin`, and the `cmpress` indexes) and set `--run_rfam true --rfam_data_dir /absolute/path/to/rfam_data`.
+
+TITAN runs `cmsearch --cut_ga --rfam --nohmmonly` against the staged Rfam covariance models and converts `rfam_hits.tbl` to `rfam_ncrna.gff3` with `scripts/rfam_tblout_to_gff3.py`. Outputs are published under `${output_dir}/additional_annotations/ncrna/rfam/` and recorded in `provenance/additional_annotations_manifest.json`. Rfam ncRNA annotations are not merged into the AEGIS coding annotation automatically.
+
 ## Quality report (BUSCO, AGAT stats, MultiQC)
 
 TITAN closes the run with a `quality_report/` step: BUSCO gene-set completeness (protein mode) on `final_annotation_proteins_main.fasta`, structural statistics on `final_annotation.gff3` via `agat_sp_statistics.pl`, and every per-sample fastp trimming report, all aggregated into one MultiQC HTML.
@@ -293,6 +299,7 @@ Resource policy is centralized in [conf/base.config](conf/base.config). Active m
 | `process_prediction` | EDTA, EGAPx and BRAKER3 prediction steps |
 | `process_merge` | StringTie and GFFCompare merge steps |
 | `process_aegis` | AEGIS and final functional annotation |
+| `process_rfam` | full-genome Infernal/Rfam covariance-model search |
 
 `process_medium` and `process_high` are reserved generic labels for future modules and site-specific profile overrides. Current workflow modules should prefer the domain-specific labels above.
 
@@ -318,6 +325,7 @@ Main public output families:
 | Quality report | `busco_short_summary.txt`, `agat_stats.txt`, `titan_multiqc_report.html` | `${output_dir}/quality_report/` |
 | Helixer | `helixer.gff3` | `${output_dir}/additional_annotations/helixer` (only when `--run_helixer true`); also passed to AEGIS as optional merge evidence |
 | tRNAscan-SE | `trna.gff3`, `trnascan.out`, `trnascan.struct`, `trnascan.stats` | `${output_dir}/additional_annotations/ncrna/trna` (only populated with predictions when `--run_trnascan true`) |
+| Infernal/Rfam | `rfam_ncrna.gff3`, `rfam_hits.tbl`, `rfam_search.out` | `${output_dir}/additional_annotations/ncrna/rfam` (only populated with predictions when `--run_rfam true`) |
 | Provenance | `evidence_manifest.json`, `additional_annotations_manifest.json`, `versions.yml` | `${output_dir}/provenance` |
 | Final validation | `final_annotation_validation.json`, `final_annotation_validation.txt` | `${output_dir}/validation` |
 | Reports | Nextflow report, timeline, trace and DAG | `${output_dir}/nextflow_reports` when using the launcher |

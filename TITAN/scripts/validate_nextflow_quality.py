@@ -114,6 +114,7 @@ for required_param in [
     "container_eggnog_mapper",
     "container_helixer",
     "container_interproscan",
+    "container_infernal",
     "container_trnascan",
 ]:
     if required_param not in schema.get("properties", {}):
