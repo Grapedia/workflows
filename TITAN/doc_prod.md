@@ -7,10 +7,9 @@ AI-agent prompts, audit logs), no duplicated/contradictory content, a single
 place to start reading, and one diagram that actually shows every step,
 every tool and every option currently in the graph.
 
-This file is a plan, not the rewrite itself. Nothing below has been executed
-except the one item marked `[done]`. Each section names the exact file(s),
-what is wrong with them today, and what to do. Priority order matches the
-numbered sections.
+This file is a plan, not the rewrite itself. Completed items are marked
+`[done]`. Each section names the exact file(s), what is wrong with them
+today, and what to do. Priority order matches the numbered sections.
 
 ---
 
@@ -19,6 +18,9 @@ numbered sections.
 - [done] `to_do_add.md` deleted (`git rm`). It was a personal development
   roadmap/status log (13 phases, dated "Statut TITAN codex-dev" entries,
   milestone tracking) with zero value to an external reader.
+- [done] Section 1 development-session artifacts removed. Durable architecture
+  rationale was rewritten into `docs/development/ARCHITECTURE.md`.
+- [done] Section 2 broken/stale README references fixed.
 
 ---
 
@@ -61,11 +63,11 @@ gets cut.
 
 ## 2. Delete or fix — broken/stale references
 
-- **`README.md` "Workflow Diagram" section** (`![Workflow Diagram](data_example/TITAN_diagram.jpg)`):
+- [done] **`README.md` "Workflow Diagram" section** (`![Workflow Diagram](data_example/TITAN_diagram.jpg)`):
   this file does not exist on disk — it's a dead image link right now. Being
   replaced by the Mermaid diagram in section 4 below, so remove the `<img>`
   reference entirely once that lands rather than trying to regenerate the jpg.
-- **`README.md` line 7**: "Development audits and implementation notes are
+- [done] **`README.md` line 7**: "Development audits and implementation notes are
   under `docs/development`" — update this pointer once section 1/3 lands
   (fewer, cleaner files there), and reword it as a contributor pointer, not
   a "here's our dev history" pointer.

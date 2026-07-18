@@ -4,7 +4,7 @@ TITAN is a Nextflow pipeline for eukaryotic genome annotation. It combines trans
 
 Contributors: David Navarro, Antonio Santiago, Jose Tomas Matus, Amandine Velt, Camille Rustenholz and Marco Moretto.
 
-Full setup details are in [docs/user/installation.md](docs/user/installation.md). Development audits and implementation notes are under [docs/development](docs/development).
+Full setup details are in [docs/user/installation.md](docs/user/installation.md). Contributor architecture and development conventions are under [docs/development](docs/development).
 
 ## Current Contract
 
@@ -455,10 +455,6 @@ Real Slurm and Apptainer behavior must still be validated on the target cluster 
 SRA inputs are downloaded through ENA FASTQ metadata with internal retry and optional MD5 verification. Local FASTQ/FASTA files are still preferred when inputs must be frozen before production.
 
 Final validation currently covers structural consistency: GFF3 format, coordinates, seqids, Parent links, CDS phase and protein FASTA integrity. Deeper biological quality assessment and historical annotation comparison remain separate scientific review work.
-
-## Workflow Diagram
-
-![Workflow Diagram](data_example/TITAN_diagram.jpg)
 
 ## Tool References
 
