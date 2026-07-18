@@ -359,6 +359,8 @@ Publié sous `${params.output_dir}/final_annotations/mikado/transdecoder/`.
 
 ## Phase 6 — FLAIR (isoformes long-read)
 
+**Statut TITAN codex-dev — 2026-07-18** : Phase 6 implémentée comme branche long-read optionnelle. Les isoformes FLAIR sont mergées dans `flair_isoforms.gtf`/`.fa`, publiées sous `additional_annotations/flair/`, enregistrées dans la provenance et passées comme évidences transcriptomiques additionnelles à AEGIS et Mikado.
+
 **But** : produire une annotation isoforme long-read alternative à StringTie long reads, avec correction des jonctions d'épissage contre le génome.
 **Pourquoi** : FLAIR est spécialisé pour la correction, la définition d'isoformes et l'analyse de splicing sur reads longs PacBio/ONT — plus précis que StringTie seul sur ce type de données.
 **Position dans le graphe** : branche long reads, uniquement si `has_long_reads == true`. Après préparation des FASTQ/FASTA long reads.
@@ -387,13 +389,14 @@ flair collapse -g ${genome} -r ${reads} \
 **Output** :
 - `${sample_ID}.flair.isoforms.gtf` (publié)
 - `${sample_ID}.flair.isoforms.fa` (publié)
+- `flair_isoforms.gtf` et `flair_isoforms.fa` mergés (publiés)
 
-Publié sous `${params.output_dir}/additional_annotations/flair/`.
+Publié sous `${params.output_dir}/additional_annotations/flair/`. Le GTF mergé est transmis à AEGIS (`flair_isoforms_gtf`) et à Mikado (`flair_isoforms`) comme évidence nouvelle.
 
 **Jalons**
-1. M1 — `modules/flair_align.nf`, `modules/flair_correct.nf`, `modules/flair_collapse.nf` créés avec `stub:`, conditionnés par `has_long_reads` comme le reste de la branche long-reads existante.
-2. M2 — Test sur le sample long-read réel du projet (`hq_transcripts.RI_rmv_Antonio`).
-3. M3 — Intégré, publié.
+1. ✅ M1 — `modules/flair.nf` créé avec `flair_isoforms`, `flair_merge_isoforms`, `flair_empty_evidence` et `stub:`, conditionné par `has_long_reads` comme le reste de la branche long-reads existante.
+2. ⏳ M2 — Test sur le sample long-read réel du projet (`hq_transcripts.RI_rmv_Antonio`) non exécuté dans codex-dev ; validation actuelle faite en `-profile test -stub-run`.
+3. ✅ M3 — Intégré, publié, ajouté à AEGIS et Mikado comme évidence optionnelle.
 
 **Validation**
 - `.isoforms.gtf` valide structurellement.

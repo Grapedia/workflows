@@ -42,6 +42,7 @@ process titan_provenance {
     path(hisat2_stringtie_alt_unstranded)
     path(long_reads_default)
     path(long_reads_alt)
+    path(flair_isoforms_gtf)
     path(helixer_gff3)
     path(aegis_gff)
     path(aegis_proteins_all)
@@ -109,6 +110,8 @@ manifest = {
         "egapx_data_version": "${egapx_data_version}",
         "aegis_version": "${aegis_version}",
         "aegis_container": "${aegis_container}",
+        "run_flair": "${params.run_flair}",
+        "container_flair": "${params.container_flair}",
     },
     "inputs": [
         file_record("new_assembly", "${new_assembly}"),
@@ -136,6 +139,7 @@ manifest = {
         file_record("hisat2_stringtie_alt_unstranded", "${hisat2_stringtie_alt_unstranded}"),
         file_record("long_reads_default", "${long_reads_default}"),
         file_record("long_reads_alt", "${long_reads_alt}"),
+        file_record("flair_isoforms_gtf", "${flair_isoforms_gtf}"),
         file_record("helixer_gff3", "${helixer_gff3}"),
     ],
     "outputs": [
@@ -178,6 +182,7 @@ with open("versions.yml", "w", encoding="utf-8") as handle:
     handle.write('  eggnog_mapper: "${params.run_eggnog_mapper}"\\n')
     handle.write('  eggnog_data_dir: "${params.eggnog_data_dir}"\\n')
     handle.write('  helixer: "${params.run_helixer}"\\n')
+    handle.write('  flair: "${params.run_flair}"\\n')
     handle.write('  helixer_model: "${params.helixer_model}"\\n')
     handle.write('  interproscan: "${params.run_interproscan}"\\n')
     handle.write('  interproscan_data_dir: "${params.interproscan_data_dir}"\\n')

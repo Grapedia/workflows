@@ -29,6 +29,7 @@ include { braker3_prediction } from "../modules/braker3_prediction"
 include { braker3_prediction_with_long_reads } from "../modules/braker3_prediction_with_long_reads"
 include { normalize_protein_fastas } from "../modules/normalize_protein_fastas"
 include { empty_long_read_evidence } from "../modules/empty_long_read_evidence"
+include { flair_isoforms; flair_merge_isoforms; flair_empty_evidence } from "../modules/flair"
 
 def collectTranscriptGtfs(transcript_channel, String target_strand, Integer file_index, fallback_gtf = null) {
     def collected = transcript_channel
@@ -174,6 +175,9 @@ workflow generate_evidence_data {
             empty_long_reads = empty_long_read_evidence(empty_default_gtf, empty_alt_gtf)
             merged_long_reads_default_args_gtf = empty_long_reads.default_args_gtf
             merged_long_reads_alt_args_gtf = empty_long_reads.alt_args_gtf
+            empty_flair = flair_empty_evidence(empty_default_gtf)
+            merged_flair_isoforms_gtf = empty_flair.gtf
+            merged_flair_isoforms_fasta = empty_flair.fasta
         }
 
         // Process minimap2 alignments for long reads
@@ -220,6 +224,18 @@ workflow generate_evidence_data {
             merged_long_reads = Stringtie_merging_long_reads(minimap2_default_gtfs, minimap2_alt_gtfs)
             merged_long_reads_default_args_gtf = merged_long_reads.default_args_gtf
             merged_long_reads_alt_args_gtf = merged_long_reads.alt_args_gtf
+
+            flair_results = flair_isoforms(
+                long_reads_prepared.prepared_fastqs,
+                new_assembly,
+                previous_annotations.liftoff_previous_annotations
+            )
+            flair_merged = flair_merge_isoforms(
+                flair_results.isoforms.map { sample_ID, gtf, fasta -> gtf }.collect(),
+                flair_results.isoforms.map { sample_ID, gtf, fasta -> fasta }.collect()
+            )
+            merged_flair_isoforms_gtf = flair_merged.gtf
+            merged_flair_isoforms_fasta = flair_merged.fasta
         }
 
         // Process short read assemblies
@@ -318,5 +334,7 @@ workflow generate_evidence_data {
         star_psiclass_unstranded_gtf = gffcompare_out.star_psiclass_unstranded
         long_reads_default_gtf = merged_long_reads_default_args_gtf
         long_reads_alt_gtf = merged_long_reads_alt_args_gtf
+        flair_isoforms_gtf = merged_flair_isoforms_gtf
+        flair_isoforms_fasta = merged_flair_isoforms_fasta
         fastp_json_reports = trimmed_reads.fastp_json.collect()
 }

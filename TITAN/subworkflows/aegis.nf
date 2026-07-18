@@ -25,6 +25,7 @@ workflow aegis {
     star_stringtie_alt_unstranded
     long_reads_default
     long_reads_alt
+    flair_isoforms_gtf
     has_long_reads
     // Optional: Helixer ab initio GFF3, empty when run_helixer is false.
     helixer_gff3
@@ -47,6 +48,7 @@ workflow aegis {
       egapx_gff3,
       long_reads_default,
       long_reads_alt,
+      flair_isoforms_gtf,
       star_stringtie_default_stranded,
       star_stringtie_alt_stranded,
       star_psiclass_stranded,

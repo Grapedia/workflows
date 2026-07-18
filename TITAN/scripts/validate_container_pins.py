@@ -19,6 +19,7 @@ REQUIRED_PARAMS = {
     "container_edta",
     "container_egapx",
     "container_fastp",
+    "container_flair",
     "container_gffcompare",
     "container_hisat2",
     "container_liftoff",

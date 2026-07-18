@@ -25,6 +25,7 @@ process aegis_merge {
     path(egapx_gff3)
     path(long_reads_default_args)
     path(long_reads_alt_args)
+    path(flair_isoforms_gtf)
     path(stranded_default_args)
     path(stranded_alt_args)
     path(gffcompare_stranded)
@@ -66,6 +67,7 @@ process aegis_merge {
       ${gffcompare_stranded} \\
       ${long_reads_default_args} \\
       ${long_reads_alt_args} \\
+      ${flair_isoforms_gtf} \\
       ${gffcompare_unstranded} \\
       ${unstranded_default_args} \\
       ${unstranded_alt_args} \\

@@ -27,6 +27,7 @@ process mikado_prepare {
     path(hisat2_stringtie_alt_unstranded)
     path(long_reads_default)
     path(long_reads_alt)
+    path(flair_isoforms_gtf)
     path(helixer_gff3)
     path(make_mikado_list)
 
@@ -67,6 +68,7 @@ process mikado_prepare {
       --source "${hisat2_stringtie_alt_unstranded}:hisat2_stringtie_alt_unstranded:False:2:False" \\
       --source "${long_reads_default}:long_reads_default:False:6:False" \\
       --source "${long_reads_alt}:long_reads_alt:False:5:False" \\
+      --source "${flair_isoforms_gtf}:flair_isoforms:False:6:False" \\
       --source "${helixer_gff3}:helixer:False:4:False" \\
       -o transcript_inputs.tsv
 

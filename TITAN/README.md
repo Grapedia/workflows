@@ -261,9 +261,15 @@ This is deliberately a candidate layer, not a final lncRNA annotation. CPAT's of
 
 ## Mikado final annotation source
 
-TITAN can also produce a Mikado final GFF3 annotation source in parallel with AEGIS (`--run_mikado true`). Mikado receives the same evidence families as AEGIS: Liftoff, EGAPx, BRAKER3/AUGUSTUS/Genemark, STAR/StringTie, HISAT2/StringTie, STAR/PsiCLASS, optional long-read StringTie and optional Helixer. The graph runs `mikado configure`/`prepare`, then TransDecoder (`--run_transdecoder true` by default, effective only with Mikado), then `mikado serialise --orfs` and `mikado pick`.
+TITAN can also produce a Mikado final GFF3 annotation source in parallel with AEGIS (`--run_mikado true`). Mikado receives the same evidence families as AEGIS: Liftoff, EGAPx, BRAKER3/AUGUSTUS/Genemark, STAR/StringTie, HISAT2/StringTie, STAR/PsiCLASS, optional long-read StringTie, optional FLAIR isoforms and optional Helixer. The graph runs `mikado configure`/`prepare`, then TransDecoder (`--run_transdecoder true` by default, effective only with Mikado), then `mikado serialise --orfs` and `mikado pick`.
 
 Mikado outputs are published under `${output_dir}/final_annotations/mikado/` as `final_mikado_annotation.gff3`, `mikado.loci.gff3`, `mikado.subloci.gff3`, intermediate prepared transcripts and TransDecoder ORF/protein files. AEGIS remains published under `${output_dir}/aegis_outputs/`; these are two separate final GFF3 sources, not automatically merged. TITAN adds an AEGIS-vs-Mikado gene-overlap summary to MultiQC under `quality_report/final_annotation_sources/`.
+
+## FLAIR long-read isoforms
+
+FLAIR is an optional long-read transcript isoform branch (`--run_flair true`). It runs only when long-read samples are present, uses Liftoff as the splice-junction correction annotation to avoid a circular dependency on AEGIS, then publishes per-sample and merged isoform GTF/FASTA files under `${output_dir}/additional_annotations/flair/`.
+
+The merged `flair_isoforms.gtf` is passed as an additional transcript evidence source to both AEGIS and Mikado. It complements the existing Minimap2/StringTie long-read transcript evidence rather than replacing it.
 
 ## Quality report (BUSCO, AGAT stats, MultiQC)
 
@@ -337,6 +343,7 @@ Main public output families:
 | InterProScan | `final_annotation_proteins_all.tsv`/`.gff3`/`.json`, `final_annotation_proteins_main.tsv`/`.gff3`/`.json` | `${output_dir}/InterProScan_outputs` (only when `--run_interproscan true`) |
 | Quality report | `busco_short_summary.txt`, `agat_stats.txt`, `ncrna_annotation_counts_mqc.tsv`, `final_annotation_sources_mqc.tsv`, `titan_multiqc_report.html` | `${output_dir}/quality_report/` |
 | Helixer | `helixer.gff3` | `${output_dir}/additional_annotations/helixer` (only when `--run_helixer true`); also passed to AEGIS as optional merge evidence |
+| FLAIR | `flair_isoforms.gtf`, `flair_isoforms.fa`, per-sample `.flair.isoforms.gtf`/`.fa` files | `${output_dir}/additional_annotations/flair` (only populated with isoforms when `--run_flair true` and long reads are present); also passed to AEGIS and Mikado as optional transcript evidence |
 | tRNAscan-SE | `trna.gff3`, `trnascan.out`, `trnascan.struct`, `trnascan.stats` | `${output_dir}/additional_annotations/ncrna/trna` (only populated with predictions when `--run_trnascan true`) |
 | Infernal/Rfam | `rfam_ncrna.gff3`, `rfam_hits.tbl`, `rfam_search.out` | `${output_dir}/additional_annotations/ncrna/rfam` (only populated with predictions when `--run_rfam true`) |
 | lncRNA candidates | `lncrna_candidates.gff3`, `lncrna_candidates.gtf`, `lncrna_candidates.fasta`, `cpat_plant.output.ORF_prob.best.tsv`, `lncrna_classification_summary.tsv` | `${output_dir}/additional_annotations/ncrna/lncrna` (only populated with candidates when `--run_lncrna true`) |

@@ -224,6 +224,10 @@
       "type": "string",
       "description": "Mikado scoring file or bundled scoring profile, e.g. plant.yaml."
     },
+    "run_flair": {
+      "type": "boolean",
+      "description": "Run FLAIR on long-read RNA-seq samples and pass merged isoforms as optional evidence to AEGIS and Mikado."
+    },
     "egapx_version": {
       "type": "string",
       "description": "EGAPx version recorded in provenance."
@@ -351,6 +355,9 @@
       "$ref": "#/definitions/container_digest"
     },
     "container_transdecoder": {
+      "$ref": "#/definitions/container_digest"
+    },
+    "container_flair": {
       "$ref": "#/definitions/container_digest"
     },
     "container_braker3": {

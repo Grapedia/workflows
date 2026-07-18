@@ -243,6 +243,7 @@ workflow TITAN {
         evidence_data.star_stringtie_unstranded_alt_gtf,
         evidence_data.long_reads_default_gtf,
         evidence_data.long_reads_alt_gtf,
+        evidence_data.flair_isoforms_gtf,
         has_long_reads,
         helixer_results.gff3
     )
@@ -265,6 +266,7 @@ workflow TITAN {
         evidence_data.hisat2_stringtie_unstranded_alt_gtf,
         evidence_data.long_reads_default_gtf,
         evidence_data.long_reads_alt_gtf,
+        evidence_data.flair_isoforms_gtf,
         helixer_results.gff3,
         file("${projectDir}/scripts/make_mikado_list.py")
     )
@@ -393,6 +395,7 @@ workflow TITAN {
         evidence_data.hisat2_stringtie_unstranded_alt_gtf,
         evidence_data.long_reads_default_gtf,
         evidence_data.long_reads_alt_gtf,
+        evidence_data.flair_isoforms_gtf,
         helixer_results.gff3,
         aegis.out.aegis_gff,
         aegis.out.aegis_proteins_all,
