@@ -20,6 +20,10 @@ process transdecoder_longorfs {
       exit 0
     fi
 
+    # /usr/local/bin/TransDecoder.* symlinks are broken in this pinned image (point to a
+    # nonexistent ../opt/transdecoder/TransDecoder.* target); the real scripts live under util/.
+    export PATH="/usr/local/opt/transdecoder/util:/usr/local/opt/transdecoder:\${PATH}"
+
     cp "${prepared_fasta}" mikado_prepared.fasta
     TransDecoder.LongOrfs -t mikado_prepared.fasta
     TransDecoder.LongOrfs --version 2>&1 | sed 's/^/  transdecoder_longorfs: "/; s/\$/"/' | {
@@ -68,6 +72,10 @@ process transdecoder_predict {
       printf '"%s":\n  transdecoder_predict: "skipped"\n  container: "%s"\n' "${task.process}" "${task.container}" > versions.yml
       exit 0
     fi
+
+    # /usr/local/bin/TransDecoder.* symlinks are broken in this pinned image (point to a
+    # nonexistent ../opt/transdecoder/TransDecoder.* target); the real scripts live under util/.
+    export PATH="/usr/local/opt/transdecoder/util:/usr/local/opt/transdecoder:\${PATH}"
 
     cp "${prepared_fasta}" mikado_prepared.fasta
     cp -r "${longorfs_dir}" mikado_prepared.fasta.transdecoder_dir

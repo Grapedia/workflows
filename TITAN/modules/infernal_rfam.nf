@@ -103,7 +103,6 @@ process infernal_rfam_search {
 
     cmsearch --cpu ${task.cpus} \\
       --tblout "${sequence_id}.rfam_hits.tbl" \\
-      --fmt 2 \\
       --cut_ga \\
       --rfam \\
       --nohmmonly \\

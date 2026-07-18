@@ -35,8 +35,9 @@ Objectif: aller vers une annotation "complète" du génome T2T de la vigne (PN40
 
 - ✅ M1 : `modules/trnascan_se.nf` créé, publié sous `additional_annotations/ncrna/trna/`, `versions.yml` émis, stub GFF3 à 1 feature.
 - ✅ M2 : `scripts/trnascan_to_gff3.py` créé avec fixture `test-data/minimal/valid/trnascan.out` et test unitaire `scripts/test_trnascan_to_gff3.py`.
-- ⚠️ M3 : run réel Apptainer sur le génome T2T PN40024 non exécuté dans cette passe ; validation limitée aux fixtures et stub-runs locaux.
+- ✅ M3 (2026-07-18) : run réel Apptainer (conteneur pinné `quay.io/biocontainers/trnascan-se@sha256:e573...` via `srun`+`apptainer exec`, hors Nextflow) sur le génome T2T PN40024 complet (`data/assemblies/T2T_ref.fasta`, 20 séquences, 504 Mb), `tRNAscan-SE -E`. Résultat : 1550 candidats premier passage, 1254 tRNA confirmés par Infernal (155 pseudogènes), tous les isotypes standards représentés (Ala 54, Arg 90, Asn 62, Asp 58, Cys 37, Gln 55, Glu 69, Gly 62, His 36, Ile 26, Leu 140, Lys 33, Met/iMet 96, Phe 46, Pro 54, Ser 98, Thr 69, Trp 27, Tyr 50, Val 58 ; SeC 0, 2 suppresseurs), fourchette biologiquement plausible pour un génome de plante diploïde de cette taille. Temps réel : ~26 min de calcul total (scan CPU + Infernal CPU) sur 8 CPU. Commande + logs bruts (`trnascan.out`, `trnascan.stats`) conservés.
 - ✅ M4 : intégré dans `workflows/titan.nf`, paramètres et conteneur pinné ajoutés, provenance additionnelle mise à jour, AGAT/MultiQC final branchés via `modules/ncrna_annotation_qc.nf`, validations `scripts/run-tests.sh`, `nextflow run main.nf -profile test -stub-run`, `-resume` et `--run_trnascan true` passées.
+- ✅ Activé par défaut en production (`run_trnascan = true` dans `data/slurm_apptainer.config`) à partir du 2026-07-18, suite à la validation M3 ci-dessus.
 
 **But** : détecter et annoter tous les gènes de tRNA du génome T2T.
 **Pourquoi** : composante standard de toute annotation ncRNA complète (utilisé explicitement dans l'annotation officielle PN40024.v5.1) ; tRNAscan-SE 2.0 est l'outil de référence (99-100 % de détection, <1 faux positif/15 Gb).
@@ -116,7 +117,6 @@ cmpress Rfam.cm
 # Dans le module :
 cmsearch --cpu ${task.cpus} \
   --tblout rfam_hits.tbl \
-  --fmt 2 \
   --cut_ga \
   --rfam \
   --nohmmonly \
@@ -159,7 +159,8 @@ Publié sous `${params.output_dir}/additional_annotations/ncrna/rfam/`.
 
 - ✅ M1 : `modules/lncrna_candidate_annotation.nf` créé avec `stub:`, sortie candidate publiée sous `additional_annotations/ncrna/lncrna/`, résumé MultiQC ajouté.
 - ✅ M2 partiel : modèle CPAT *Vitis* non disponible ; CPAT-plant Plant-LncPipe téléchargé, checksumé, retéléchargé automatiquement si absent, utilisé et tracé comme mode dégradé, pas comme validation finale *Vitis*.
-- ⚠️ M3/M4 : test 1 chromosome et run complet production non exécutés dans cette passe.
+- ✅ M3 partiel (2026-07-18) : `cpat.py` (conteneur pinné `quay.io/biocontainers/cpat@sha256:87366fff...`, via `srun`+`apptainer exec`, hors Nextflow) exécuté réellement avec le modèle Plant-LncPipe bundlé sur 100 transcrits réels (sous-ensemble d'exons fusionnés extraits par AGAT depuis l'annotation de référence `v4_3_just_ref.gff3`/`v4_genome_ref.fasta`). Résultat : ORF trouvé pour 98/100 séquences, 69 classées codantes / 29 non-codantes au seuil 0,46 — cohérent avec un jeu dominé par des gènes protéiques connus. Valide que la commande `cpat.py -x Plant_Hexamer.tsv -d Plant.logit.RData -g ... -o ...` fonctionne de bout en bout avec le modèle réel. Ce test valide uniquement l'appel CPAT isolé, pas la chaîne complète `build_lncrna_candidates.py` (filtrage longueur + exclusion tRNA/Rfam + GTF mergés), qui dépend de sorties AEGIS/StringTie pas encore produites par le run de production en cours.
+- ⚠️ M4 : run complet production non exécuté dans cette passe (nécessite AEGIS terminé).
 - ✅ M5 : intégré dans `workflows/titan.nf`, provenance additionnelle et MultiQC final mis à jour, validations `scripts/run-tests.sh`, `nextflow run main.nf -profile test -stub-run`, `-resume` et `--run_lncrna true` avec modèle CPAT-plant requis passées.
 
 **But** : reproduire la méthodologie publiée pour PN40024.v5.1 — annotation des lncRNA à partir des assemblages transcriptomiques déjà produits par TITAN.
@@ -345,7 +346,7 @@ Publié sous `${params.output_dir}/final_annotations/mikado/transdecoder/`.
 
 **Jalons**
 1. ✅ M1 — `modules/transdecoder.nf` créé avec `transdecoder_longorfs`, `transdecoder_predict` et `stub:`.
-2. ⚠️ M2 — Run réel sur `mikado_prepared.fasta` complet non exécuté dans cette passe.
+2. ✅ M2 (2026-07-18) : run réel (conteneur pinné `quay.io/biocontainers/transdecoder@sha256:c70f3a30...`, via `srun`+`apptainer exec`, hors Nextflow) de `TransDecoder.LongOrfs` puis `TransDecoder.Predict --single_best_only` sur 300 transcrits réels (même source AGAT/v4 que la Phase 3). Résultat : 175/300 CDS prédits (58 %), fichiers `.bed`/`.pep`/`.gff3`/`.cds` non vides et bien formés. **Bug de conteneur découvert et corrigé** : dans ce digest pinné, `/usr/local/bin/TransDecoder.LongOrfs` et `/usr/local/bin/TransDecoder.Predict` sont des liens symboliques cassés (cible `../opt/transdecoder/TransDecoder.LongOrfs` inexistante — les vrais scripts sont dans `/usr/local/opt/transdecoder/util/`) ; sans correctif, l'étape échouait immédiatement avec `command not found` (exit 127). `modules/transdecoder.nf` a été corrigé pour exporter `PATH="/usr/local/opt/transdecoder/util:/usr/local/opt/transdecoder:$PATH"` avant l'appel, dans les deux process (`transdecoder_longorfs`, `transdecoder_predict`) — sans ce correctif, l'étape aurait échoué en production dès le premier run réel, alors que `run_transdecoder = true` est déjà la valeur par défaut de `nextflow.config`.
 3. ✅ M3 — Intégré dans le graphe Mikado complet (Phase 4, M4), validé en `-profile test -stub-run --run_mikado true`.
 
 **Validation**
@@ -486,8 +487,9 @@ Publié sous `${params.output_dir}/quality_report/omark/`.
 
 **Jalons**
 1. ✅ M1 — `modules/omark.nf` créé avec `stub:`, sur le même pattern que `busco.nf`.
-2. ⏳ M2 — Base OMAmer réelle non téléchargée/smoke-testée dans codex-dev ; validation actuelle faite en `-profile test -stub-run`.
-3. ✅ M3 — Intégré, ajouté au `multiqc_report` comme custom content via `omark_mqc.tsv`.
+2. ✅ M2 (2026-07-18) : base OMAmer réelle téléchargée en production (`scripts/download_omark_data.sh`) — LUCA.h5 complète (9,4 Go, recommandée par le README OMArk plutôt qu'une base restreinte à Viridiplantae, pour ne pas limiter la détection de contamination). `omamer search` puis `omark` (conteneur pinné `quay.io/biocontainers/omark@sha256:84413cc...`, via `srun`+`apptainer exec`, hors Nextflow) exécutés sur un jeu réel de 500 protéines *Vitis* (sous-ensemble UniProt/SwissProt *Vitis vinifera*/*V. rotundifolia*, pas encore le protéome prédit par le pipeline lui-même — celui-ci n'existe pas tant qu'AEGIS n'a pas terminé). Résultat : clade détecté "rosids", espèce identifiée correctement à 97,40 % comme *Vitis vinifera* (taxid 29760), 92,20 % de protéines "Consistent" (dont 14,20 % partial hits, 11,40 % fragmented), 5,20 % "Inconsistent", **0,00 % "Likely Contamination"**, 2,60 % "Unknown" — comportement attendu et cohérent pour un identifiant correct d'espèce, confirme que la chaîne `omamer`→`omark` fonctionne de bout en bout avec la base réelle. Reste à faire (M3 ci-dessous) : le même run sur le protéome réellement prédit par TITAN, une fois disponible.
+3. ⚠️ M3 — Run sur `final_annotation_proteins_main.fasta` réellement produit par AEGIS non exécuté (AEGIS/Mikado pas encore terminés sur ce run de production) ; à faire dès que ces sorties existent. Intégration Nextflow (module, `multiqc_report`, `omark_mqc.tsv`) déjà faite indépendamment de ce jalon.
+4. ✅ Activé par défaut en production (`run_omark = true`, `omark_data_dir = "${projectDir}/.omark_data"` dans `data/slurm_apptainer.config`) à partir du 2026-07-18, suite à la validation M2 ci-dessus (la validation M3 sur le protéome réel se fera automatiquement à la prochaine reprise du run une fois AEGIS terminé).
 
 **Validation**
 - Complétude OMArk et complétude BUSCO doivent être cohérentes entre elles (à quelques points de pourcentage près) — un grand écart signale que l'un des deux est mal configuré (mauvaise lignée/base).

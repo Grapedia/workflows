@@ -23,3 +23,4 @@ TITAN/dockerfiles/egapx/local_cache
 TITAN/dfs_work
 TITAN/dfs_out
 TITAN/test_egapx.sh
+.claude-worktrees/
