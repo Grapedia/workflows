@@ -56,7 +56,7 @@ The local Dockerfiles are not used by the default workflow, but their base image
 
 The minimal dataset under `test-data/minimal` is realistic for contracts: assemblies, Liftoff annotation, RNA-seq single/paired/long reads, protein samplesheet, EGAPx YAML and AEGIS evidence fixtures.
 
-P1-008 validation uses:
+Validate container pinning and profile resolution with:
 
 ```bash
 python3 scripts/validate_container_pins.py
