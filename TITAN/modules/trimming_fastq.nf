@@ -1,6 +1,6 @@
 // Trimming RNAseq data with fastp (much faster than Trimmomatic)
 process trimming_fastq {
-  label 'process_alignment'
+  label 'process_trim'
 
     tag "FASTP on $sample_ID"
     container params.container_fastp
