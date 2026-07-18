@@ -14,7 +14,7 @@ include { agat_stats } from '../modules/agat_stats'
 include { ncrna_annotation_qc } from '../modules/ncrna_annotation_qc'
 include { multiqc_report } from '../modules/multiqc_report'
 include { final_transcriptome_index; final_expression_quant; expression_support_summary } from '../modules/final_expression_validation'
-include { trnascan_se } from '../modules/trnascan_se'
+include { trnascan_se; trnascan_to_gff3 } from '../modules/trnascan_se'
 include { rfam_split_genome; infernal_rfam_search; infernal_rfam_merge } from '../modules/infernal_rfam'
 include { lncrna_candidate_annotation } from '../modules/lncrna_candidate_annotation'
 include { mikado_prepare; mikado_serialise; mikado_pick; final_annotation_sources_qc } from '../modules/mikado'
@@ -155,8 +155,9 @@ workflow TITAN {
     protein_samplesheet = input_validation.ok.map { file(params.protein_samplesheet) }
     egapx_paramfile = input_validation.ok.map { file(params.egapx_paramfile) }
 
-    trnascan_results = trnascan_se(
-        new_assembly,
+    trnascan_results = trnascan_se(new_assembly)
+    trnascan_gff3 = trnascan_to_gff3(
+        trnascan_results.raw_table,
         file("${projectDir}/scripts/trnascan_to_gff3.py")
     )
 
@@ -299,7 +300,7 @@ workflow TITAN {
     lncrna_results = lncrna_candidate_annotation(
         new_assembly,
         aegis.out.aegis_gff,
-        trnascan_results.gff3,
+        trnascan_gff3.gff3,
         rfam_results.gff3,
         evidence_data.star_stringtie_stranded_default_gtf,
         evidence_data.hisat2_stringtie_stranded_default_gtf,
@@ -335,7 +336,7 @@ workflow TITAN {
         workflow.commandLine ?: '',
         helixer_results.gff3,
         helixer_results.versions,
-        trnascan_results.gff3,
+        trnascan_gff3.gff3,
         trnascan_results.raw_table,
         trnascan_results.stats,
         trnascan_results.versions,
@@ -396,7 +397,7 @@ workflow TITAN {
     agat_stats_results = agat_stats(aegis.out.aegis_gff)
 
     ncrna_qc_results = ncrna_annotation_qc(
-        trnascan_results.gff3,
+        trnascan_gff3.gff3,
         rfam_results.gff3
     )
 

@@ -8,14 +8,12 @@ process trnascan_se {
 
   input:
     path(genome)
-    path(trnascan_to_gff3)
 
   output:
     path "trnascan.out", emit: raw_table
     path "trnascan.struct", emit: structures
     path "trnascan.isotype", emit: isotypes
     path "trnascan.stats", emit: stats
-    path "trna.gff3", emit: gff3
     path "versions.yml", emit: versions
 
   script:
@@ -25,7 +23,6 @@ process trnascan_se {
     if [[ "${params.run_trnascan}" != "true" ]]; then
         printf "Sequence Name\\ttRNA #\\tBegin\\tEnd\\tType\\tAnticodon\\tIntron Begin\\tIntron End\\tScore\\n" > trnascan.out
         touch trnascan.struct trnascan.isotype trnascan.stats
-        printf "##gff-version 3\\n" > trna.gff3
         printf '"%s":\n  trnascan_se: "skipped"\n  container: "%s"\n' \\
             "${task.process}" "${task.container}" > versions.yml
         exit 0
@@ -44,9 +41,6 @@ process trnascan_se {
       --thread ${task.cpus} \\
       "${genome}"
 
-    python3 "${trnascan_to_gff3}" trnascan.out > trna.gff3
-    test -s trna.gff3
-
     version=\$(tRNAscan-SE -h 2>&1 | head -n 1 | sed 's/"/\\\\\\"/g')
     printf '"%s":\n  trnascan_se: "%s"\n  container: "%s"\n' \\
         "${task.process}" "\${version}" "${task.container}" > versions.yml
@@ -60,7 +54,41 @@ process trnascan_se {
     printf ">chrStub.trna1 stub\\n" > trnascan.struct
     printf "Ala\\t1\\n" > trnascan.isotype
     printf "Total tRNAs\\t1\\n" > trnascan.stats
-    printf "##gff-version 3\\nchrStub\\ttRNAscan-SE\\ttRNA\\t10\\t80\\t72.4\\t+\\t.\\tID=trnascan.chrStub.tRNA1;Name=chrStub.tRNA1;product=tRNA-Ala;anticodon=TGC\\n" > trna.gff3
     printf '"%s":\n  trnascan_se: "stub"\n' "${task.process}" > versions.yml
+    """
+}
+
+// GFF3 conversion split into its own process: the pinned tRNAscan-SE biocontainer
+// ships no Python interpreter at all, so scripts/trnascan_to_gff3.py must run in a
+// separate, Python-capable container instead of alongside tRNAscan-SE itself.
+process trnascan_to_gff3 {
+  label 'process_low'
+
+  tag "Convert tRNAscan-SE output to GFF3"
+  container params.container_python
+  publishDir "${params.output_dir}/additional_annotations/ncrna/trna", mode: 'copy'
+
+  input:
+    path(trnascan_out)
+    path(trnascan_to_gff3_script)
+
+  output:
+    path "trna.gff3", emit: gff3
+    path "versions.yml", emit: versions
+
+  script:
+    """
+    set -euo pipefail
+    python3 "${trnascan_to_gff3_script}" "${trnascan_out}" > trna.gff3
+    test -s trna.gff3
+    printf '"%s":\n  trnascan_to_gff3: "python-stdlib"\n  container: "%s"\n' \\
+        "${task.process}" "${task.container}" > versions.yml
+    """
+
+  stub:
+    """
+    set -euo pipefail
+    printf "##gff-version 3\\nchrStub\\ttRNAscan-SE\\ttRNA\\t10\\t80\\t72.4\\t+\\t.\\tID=trnascan.chrStub.tRNA1;Name=chrStub.tRNA1;product=tRNA-Ala;anticodon=TGC\\n" > trna.gff3
+    printf '"%s":\n  trnascan_to_gff3: "stub"\n' "${task.process}" > versions.yml
     """
 }
