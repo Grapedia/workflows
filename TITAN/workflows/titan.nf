@@ -10,6 +10,7 @@ include { helixer_prediction } from '../modules/helixer_prediction'
 include { additional_annotations_provenance } from '../modules/additional_annotations_provenance'
 include { busco } from '../modules/busco'
 include { agat_stats } from '../modules/agat_stats'
+include { ncrna_annotation_qc } from '../modules/ncrna_annotation_qc'
 include { multiqc_report } from '../modules/multiqc_report'
 include { trnascan_se } from '../modules/trnascan_se'
 include { rfam_split_genome; infernal_rfam_search; infernal_rfam_merge } from '../modules/infernal_rfam'
@@ -276,10 +277,16 @@ workflow TITAN {
 
     agat_stats_results = agat_stats(aegis.out.aegis_gff)
 
+    ncrna_qc_results = ncrna_annotation_qc(
+        trnascan_results.gff3,
+        rfam_results.gff3
+    )
+
     multiqc_report(
         evidence_data.fastp_json_reports,
         busco_results.short_summary,
         agat_stats_results.stats_txt,
+        ncrna_qc_results.multiqc_tsv,
         validate_final_annotation.out.json_report
     )
 

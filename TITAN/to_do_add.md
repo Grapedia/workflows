@@ -36,7 +36,7 @@ Objectif: aller vers une annotation "complète" du génome T2T de la vigne (PN40
 - ✅ M1 : `modules/trnascan_se.nf` créé, publié sous `additional_annotations/ncrna/trna/`, `versions.yml` émis, stub GFF3 à 1 feature.
 - ✅ M2 : `scripts/trnascan_to_gff3.py` créé avec fixture `test-data/minimal/valid/trnascan.out` et test unitaire `scripts/test_trnascan_to_gff3.py`.
 - ⚠️ M3 : run réel Apptainer sur le génome T2T PN40024 non exécuté dans cette passe ; validation limitée aux fixtures et stub-runs locaux.
-- ✅ M4 : intégré dans `workflows/titan.nf`, paramètres et conteneur pinné ajoutés, provenance additionnelle mise à jour, validations `scripts/run-tests.sh`, `nextflow run main.nf -profile test -stub-run`, `-resume` et `--run_trnascan true` passées.
+- ✅ M4 : intégré dans `workflows/titan.nf`, paramètres et conteneur pinné ajoutés, provenance additionnelle mise à jour, AGAT/MultiQC final branchés via `modules/ncrna_annotation_qc.nf`, validations `scripts/run-tests.sh`, `nextflow run main.nf -profile test -stub-run`, `-resume` et `--run_trnascan true` passées.
 
 **But** : détecter et annoter tous les gènes de tRNA du génome T2T.
 **Pourquoi** : composante standard de toute annotation ncRNA complète (utilisé explicitement dans l'annotation officielle PN40024.v5.1) ; tRNAscan-SE 2.0 est l'outil de référence (99-100 % de détection, <1 faux positif/15 Gb).
@@ -92,7 +92,7 @@ Publié sous `${params.output_dir}/additional_annotations/ncrna/trna/`.
 - ✅ M2 : `scripts/rfam_tblout_to_gff3.py` créé avec fixture `test-data/minimal/valid/rfam_hits.tbl` et test unitaire `scripts/test_rfam_tblout_to_gff3.py`.
 - ⚠️ M3 : téléchargement/indexation Rfam et test `cmsearch` sur petit contig non exécutés dans cette passe ; dépend d'un `rfam_data_dir` réel préparé hors pipeline.
 - ⚠️ M4 : estimation temps réel sur génome T2T complet non exécutée ; à faire sur infrastructure cible avant run complet, avec décision éventuelle de split par chromosome.
-- ✅ M5 : intégré dans `workflows/titan.nf`, avec split FASTA par séquence/chromosome, `cmsearch` parallélisé par split, merge des `rfam_hits.tbl` puis conversion finale unique ; paramètres, label `process_rfam`, bind Apptainer et conteneur pinné ajoutés, provenance additionnelle mise à jour, validations `scripts/run-tests.sh`, `nextflow run main.nf -profile test -stub-run`, `-resume` et `--run_rfam true` passées.
+- ✅ M5 : intégré dans `workflows/titan.nf`, avec split FASTA par séquence/chromosome, `cmsearch` parallélisé par split, merge des `rfam_hits.tbl` puis conversion finale unique ; paramètres, label `process_rfam`, bind Apptainer et conteneur pinné ajoutés, provenance additionnelle mise à jour, AGAT/MultiQC final branchés via `modules/ncrna_annotation_qc.nf`, validations `scripts/run-tests.sh`, `nextflow run main.nf -profile test -stub-run`, `-resume` et `--run_rfam true` passées.
 
 **But** : annoter les gènes d'ARN non-codants couverts par les modèles de covariance Rfam (rRNA, snRNA, snoRNA, et autres familles Rfam pertinentes chez les plantes).
 **Pourquoi** : composante standard de toute annotation ncRNA complète (mentionnée explicitement dans la méthodologie PN40024.v5.1 pour filtrer les faux lncRNA). Approche standard de l'industrie (Ensembl, NCBI) : BLASTN Rfam en pré-filtre, puis `cmsearch` Infernal ciblé pour réduire le coût de calcul.
