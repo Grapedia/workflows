@@ -157,7 +157,7 @@ report.
 
 ## 6. `docs/user/installation.md` — gap to fill
 
-589 lines, well-organized (14 numbered sections), no development-session
+589 lines before this pass, well-organized (14 numbered sections), no development-session
 traces found. Genuinely good user documentation. **One real gap**: sections
 8-10 cover eggNOG-mapper/Helixer/InterProScan offline-data setup, but there
 is no equivalent section for the 8 tools added since (tRNAscan-SE, Rfam,
@@ -167,10 +167,12 @@ following this guide today would have no instructions for
 corresponding `--prepare-rfam-data` / `--prepare-omark-data` launcher flags,
 even though `README.md` documents the tools themselves.
 
-Action: add sections 8a-8h (or renumber) following the exact pattern of the
-existing eggNOG-mapper/Helixer/InterProScan sections (what the tool does,
-how to fetch offline data once, which flags enable it, link to the
-`README.md` tool-reference entry once section 4 lands).
+[done] Added sections 10a-10h for tRNAscan-SE, Infernal/Rfam, lncRNA/CPAT,
+Mikado/TransDecoder, FLAIR, SQANTI3, OMArk and BUSCO. The guide now states
+which tools need offline data, which bundled preparation scripts to run, which
+Nextflow flags enable each branch, what the Colmar launcher prepares, and
+where outputs are published. The production checklist and references were
+updated to match.
 
 ---
 
@@ -215,8 +217,9 @@ session note (dates, job IDs, "we found that...", "confirmed empirically").
 4. [done] Section 4 + 5 together (`README.md` restructure needs the diagram to
    land in the same pass, otherwise the README is briefly missing the thing
    it's being restructured to showcase).
-5. Section 6 (`docs/user/installation.md` new tool sections) — independent,
-   can happen any time after section 4 gives it something to link to.
+5. [done] Section 6 (`docs/user/installation.md` new tool sections) —
+   independent, can happen any time after section 4 gives it something to
+   link to.
 
 Everything above is additive/reversible through git except the section 1
 deletions, which is why those are listed as a plan here rather than already

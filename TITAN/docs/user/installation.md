@@ -482,6 +482,240 @@ container_interproscan = docker.io/interpro/interproscan@sha256:dc58b7c147fbbf00
 
 TITAN validates `--interproscan_data_dir` before heavy execution whenever `--run_interproscan true` is set (directory exists and contains a `pfam` subdirectory), and fails fast otherwise. Outputs are published under `${output_dir}/InterProScan_outputs`.
 
+## 10a. tRNAscan-SE (optional)
+
+tRNAscan-SE adds tRNA annotation directly from `--new_assembly`. It is disabled by default (`run_trnascan = false`) and does not require an offline database beyond the pinned container image.
+
+Enable it in a direct Nextflow command with:
+
+```bash
+--run_trnascan true
+```
+
+On the Colmar production launcher, set `run_trnascan = true` in `data/slurm_apptainer.config`. No `--prepare-*` step is needed.
+
+Defaults:
+
+```text
+run_trnascan = false
+container_trnascan = quay.io/biocontainers/trnascan-se@sha256:e573090368974ff1228e6894828c6c8a132dfecc3198f5e9fb76832f8f434f29
+```
+
+Outputs are published under `${output_dir}/additional_annotations/ncrna/trna`. The resulting GFF3 is used by the lncRNA candidate filter and ncRNA quality summaries, but TITAN does not merge tRNAs into the final AEGIS coding annotation. See the [tRNAscan-SE tool reference](../reference/tools.md#trnascan-se).
+
+## 10b. Infernal/Rfam ncRNA (optional)
+
+Infernal/Rfam adds ncRNA family annotation directly from `--new_assembly`. It is disabled by default (`run_rfam = false`) because it needs a local Rfam covariance-model library.
+
+Download and index the Rfam data once with the bundled script:
+
+```bash
+scripts/download_rfam_data.sh \
+  --data-dir /absolute/path/to/project/rfam_data \
+  --container quay.io/biocontainers/infernal@sha256:05ae1ca6cc76c27180524bc38c5b1e17adf9377be5b8c644d3e8e707848d4d99
+```
+
+The script downloads `Rfam.cm.gz` and `Rfam.clanin` from the current Rfam FTP directory, decompresses `Rfam.cm`, and runs `cmpress` inside the pinned Infernal container. It skips work when the indexed files are already present.
+
+Enable it in a direct Nextflow command with:
+
+```bash
+--run_rfam true \
+--rfam_data_dir /absolute/path/to/project/rfam_data
+```
+
+The Colmar production launcher can run the preparation step:
+
+```bash
+./launch_TITAN_serveur_colmar.sh --prepare-rfam-data
+```
+
+For that launcher, keep `run_rfam = true` and `rfam_data_dir = "${projectDir}/.rfam_data"` in `data/slurm_apptainer.config`, or override `TITAN_RFAM_DATA_DIR` before launching.
+
+Defaults:
+
+```text
+run_rfam = false
+rfam_data_dir = false
+container_infernal = quay.io/biocontainers/infernal@sha256:05ae1ca6cc76c27180524bc38c5b1e17adf9377be5b8c644d3e8e707848d4d99
+```
+
+TITAN validates that `--rfam_data_dir` contains `Rfam.cm` and `Rfam.clanin` whenever `--run_rfam true` is set. Outputs are published under `${output_dir}/additional_annotations/ncrna/rfam`, used by lncRNA filtering and ncRNA quality summaries, and kept separate from the final AEGIS coding annotation. See the [Infernal/Rfam tool reference](../reference/tools.md#infernalrfam-ncrna).
+
+## 10c. lncRNA/CPAT candidates (optional)
+
+The lncRNA branch builds candidate non-coding transcripts from merged transcript evidence after AEGIS, tRNAscan-SE and Infernal/Rfam have completed. It is disabled by default (`run_lncrna = false`) and is best used together with `--run_trnascan true` and `--run_rfam true`, because those annotations help remove tRNA and known ncRNA overlaps from the candidate set.
+
+TITAN uses the Plant-LncPipe CPAT-plant model by default. The default model directory is tracked as:
+
+```text
+cpat_model_dir = ${projectDir}/resources/cpat_plant_lncpipe
+```
+
+If the model files are missing and `lncrna_require_cpat_model = true`, TITAN downloads them during input validation with:
+
+```bash
+scripts/download_cpat_plant_lncpipe.sh --model-dir /absolute/path/to/project/resources/cpat_plant_lncpipe
+```
+
+You can also run that command manually before production, which is preferable on restricted HPC login nodes.
+
+Enable the branch with:
+
+```bash
+--run_lncrna true \
+--cpat_model_dir /absolute/path/to/project/resources/cpat_plant_lncpipe
+```
+
+Defaults:
+
+```text
+run_lncrna = false
+lncrna_require_cpat_model = true
+cpat_model_dir = ${projectDir}/resources/cpat_plant_lncpipe
+cpat_model_flavour = plant_lncpipe
+cpat_plant_cutoff = 0.46
+container_cpat = quay.io/biocontainers/cpat@sha256:87366fff67d441f64e0ac4681ccbaf1147f2c0601f3df86bb99f228d7f9a9000
+```
+
+Outputs are published under `${output_dir}/additional_annotations/ncrna/lncrna`. They are candidate lncRNA annotations and are not treated as a validated final lncRNA annotation layer. See the [lncRNA candidate tool reference](../reference/tools.md#lncrna-candidates).
+
+## 10d. Mikado and TransDecoder (optional)
+
+Mikado produces an alternative final annotation source from the same major evidence families as AEGIS: Liftoff, EGAPx, BRAKER3, STAR/StringTie, HISAT2/StringTie, STAR/PsiCLASS, optional long-read StringTie, optional FLAIR and optional Helixer. It is disabled by default (`run_mikado = false`).
+
+Enable Mikado with:
+
+```bash
+--run_mikado true
+```
+
+TransDecoder is enabled by default when Mikado is enabled. Disable it only if you intentionally want a Mikado run without ORF prediction:
+
+```bash
+--run_mikado true \
+--run_transdecoder false
+```
+
+Defaults:
+
+```text
+run_mikado = false
+run_transdecoder = true
+container_mikado = quay.io/biocontainers/mikado@sha256:dd6f5a2a2d7fdbab73c835cd0f49bd1444ecaddf8e4cd96fbf0fe24f5ecf5f22
+container_transdecoder = quay.io/biocontainers/transdecoder@sha256:c70f3a30cc8f3aecccb1d8978b9a49865d3994ebd7885361ab4c9dd820bd17f5
+```
+
+Outputs are published under `${output_dir}/final_annotations/mikado`. AEGIS remains the primary final annotation path; Mikado is kept as a separate final annotation source and compared against AEGIS in the quality report when enabled. See the [Mikado tool reference](../reference/tools.md#mikado-final-annotation-source).
+
+## 10e. FLAIR long-read isoforms (optional)
+
+FLAIR improves long-read isoform evidence. It is disabled by default (`run_flair = false`) and only produces biological outputs when the RNA-seq samplesheet contains at least one `library_layout=long` row.
+
+Enable it with:
+
+```bash
+--run_flair true
+```
+
+FLAIR uses Minimap2 long-read alignments and Liftoff-derived splice-junction correction evidence. Its merged isoforms are passed to AEGIS and Mikado as optional transcript evidence.
+
+Defaults:
+
+```text
+run_flair = false
+container_flair = quay.io/biocontainers/flair@sha256:187e2e22535d73ecc724afc7e474d9908b6e43a55f8588e8566db3bea2eba79e
+```
+
+Outputs are published under `${output_dir}/additional_annotations/flair`. See the [FLAIR tool reference](../reference/tools.md#flair-long-read-isoforms).
+
+## 10f. SQANTI3 long-read isoform QC (optional)
+
+SQANTI3 evaluates long-read transcript models against the final AEGIS annotation and target genome. It is disabled by default (`run_sqanti3 = false`) and is useful only for runs with long-read evidence and, ideally, FLAIR enabled.
+
+Enable it with:
+
+```bash
+--run_sqanti3 true
+```
+
+When long reads are absent, or when a long-read source has no isoforms, TITAN writes zero-count sentinel summaries so downstream MultiQC aggregation remains stable.
+
+Defaults:
+
+```text
+run_sqanti3 = false
+container_sqanti3 = quay.io/biocontainers/sqanti3@sha256:3bd6ec96b3f1c9cae69cfef54ba0522b7d99efa7ebb0ff6a611841aa6784f74c
+```
+
+Outputs are published under `${output_dir}/additional_annotations/sqanti3` and `${output_dir}/quality_report/sqanti3`. See the [SQANTI3 tool reference](../reference/tools.md#sqanti3-long-read-isoform-qc).
+
+## 10g. OMArk (optional)
+
+OMArk adds proteome consistency, completeness and contamination checks to the quality report. It is disabled by default (`run_omark = false`) because it requires an offline OMAmer database.
+
+Download the OMAmer database once with:
+
+```bash
+scripts/download_omark_data.sh --data-dir /absolute/path/to/project/omark_data
+```
+
+The default script downloads the full LUCA database to `omamer.h5`. This is a large multi-GB download, but it only needs to be staged once.
+
+Enable OMArk with:
+
+```bash
+--run_omark true \
+--omark_data_dir /absolute/path/to/project/omark_data
+```
+
+The Colmar production launcher can run the preparation step:
+
+```bash
+./launch_TITAN_serveur_colmar.sh --prepare-omark-data
+```
+
+For that launcher, keep `run_omark = true` and `omark_data_dir = "${projectDir}/.omark_data"` in `data/slurm_apptainer.config`, or override `TITAN_OMARK_DATA_DIR` before launching.
+
+Defaults:
+
+```text
+run_omark = false
+omark_data_dir = false
+container_omark = quay.io/biocontainers/omark@sha256:84413cc19053c5d6452fbff245c9e6980b3f16aabdf991f9e51d7b9f2e0e0843
+```
+
+TITAN validates that `--omark_data_dir` contains `omamer.h5` whenever `--run_omark true` is set. Outputs are published under `${output_dir}/quality_report/omark`. See the [quality-report tool reference](../reference/tools.md#quality-report).
+
+## 10h. BUSCO (optional)
+
+BUSCO adds protein-mode completeness metrics to the quality report. It is disabled by default (`run_busco = false`) and needs a local BUSCO lineage dataset.
+
+Prepare the lineage outside TITAN using BUSCO's own downloader, for example:
+
+```bash
+busco --download eudicotyledons_odb12.2 --download_path /absolute/path/to/project/busco_data
+```
+
+Then enable BUSCO with:
+
+```bash
+--run_busco true \
+--busco_data_dir /absolute/path/to/project/busco_data \
+--busco_lineage eudicotyledons_odb12.2
+```
+
+Defaults:
+
+```text
+run_busco = false
+busco_lineage = eudicotyledons_odb12.2
+busco_data_dir = false
+container_busco = quay.io/biocontainers/busco@sha256:d55ad622a5cafcd63c42fc309108688ab255bb9586ee756a5149e249d418c8bd
+```
+
+TITAN requires `--busco_data_dir` whenever `--run_busco true` is set. Outputs are published under `${output_dir}/quality_report/busco`. See the [quality-report tool reference](../reference/tools.md#quality-report).
+
 ## 11. Validate with the built-in test profile
 
 Before running production, verify the local workflow bootstrap:
@@ -565,6 +799,13 @@ Before launching a long run:
 * If enabling eggNOG-mapper, run `--prepare-eggnog-data` (or `scripts/download_eggnog_data.sh`) at least once and confirm `eggnog_data_dir` points to a populated database directory.
 * If enabling Helixer, run `--prepare-helixer-model` (or `scripts/download_helixer_model.sh`) at least once and confirm `helixer_model_dir` contains the requested lineage; only set `helixer_use_gpu = true` if a GPU is actually visible on the node running that process.
 * If enabling InterProScan, run `--prepare-interproscan-data` (or `scripts/download_interproscan_data.sh`) at least once and confirm `interproscan_data_dir` contains a populated `pfam` subdirectory; plan for the extra runtime (all analyses, on both protein FASTAs, is the heaviest of the three functional annotation steps).
+* If enabling tRNAscan-SE, confirm the pinned `trnascan-se` image is available; no offline data directory is required.
+* If enabling Infernal/Rfam, run `--prepare-rfam-data` on the Colmar launcher (or `scripts/download_rfam_data.sh`) at least once and confirm `rfam_data_dir` contains `Rfam.cm`, `Rfam.clanin` and the `cmpress` index files.
+* If enabling lncRNA candidates, stage the CPAT Plant-LncPipe model with `scripts/download_cpat_plant_lncpipe.sh` or confirm TITAN can download it during validation; enable tRNAscan-SE and Rfam for the cleanest candidate filtering.
+* If enabling Mikado, keep `run_transdecoder = true` unless you intentionally want a transcript-only Mikado run, and plan for a separate final annotation output under `final_annotations/mikado`.
+* If enabling FLAIR or SQANTI3, confirm the RNA-seq samplesheet contains at least one `library_layout=long` sample.
+* If enabling OMArk, run `--prepare-omark-data` on the Colmar launcher (or `scripts/download_omark_data.sh`) at least once and confirm `omark_data_dir` contains `omamer.h5`.
+* If enabling BUSCO, pre-stage the selected lineage dataset and confirm `busco_data_dir` points to the directory containing that lineage.
 * Confirm `TITAN_APPTAINER_CACHEDIR` points to a writable shared filesystem when using `slurm,apptainer`.
 * Run a `-stub-run` after every config/profile edit.
 * Use `-resume` for restart after interrupted runs.
@@ -587,3 +828,16 @@ For quick troubleshooting and the current limitations of stub tests, CI, SRA han
 * InterProScan member database data download: <https://ftp.ebi.ac.uk/pub/software/unix/iprscan/5/>
 * Helixer repository and usage: <https://github.com/weberlab-hhu/Helixer>
 * Helixer Docker image: <https://hub.docker.com/r/gglyptodon/helixer-docker>
+* tRNAscan-SE repository and usage: <https://github.com/UCSC-LoweLab/tRNAscan-SE>
+* Infernal repository and usage: <http://eddylab.org/infernal/>
+* Rfam database downloads: <https://ftp.ebi.ac.uk/pub/databases/Rfam/CURRENT/>
+* CPAT repository and usage: <https://github.com/liguowang/cpat>
+* Plant-LncPipe CPAT plant model source: <https://github.com/xuechantian/Plant-LncRNA-pipline>
+* Mikado repository and usage: <https://github.com/EI-CoreBioinformatics/mikado>
+* TransDecoder repository and usage: <https://github.com/TransDecoder/TransDecoder>
+* FLAIR repository and usage: <https://github.com/BrooksLabUCSC/flair>
+* SQANTI3 repository and usage: <https://github.com/ConesaLab/SQANTI3>
+* OMArk repository and usage: <https://github.com/DessimozLab/OMArk>
+* OMAmer database downloads: <https://omabrowser.org/All/>
+* BUSCO repository and usage: <https://gitlab.com/ezlab/busco>
+* MultiQC repository and usage: <https://github.com/MultiQC/MultiQC>
