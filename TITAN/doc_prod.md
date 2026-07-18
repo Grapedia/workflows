@@ -27,6 +27,8 @@ today, and what to do. Priority order matches the numbered sections.
   compact tool matrix, and detailed tool reference moved to
   `docs/reference/tools.md`.
 - [done] Section 5 Mermaid pipeline diagram added to `README.md`.
+- [done] Section 6 installation guide optional-tool setup gap filled.
+- [done] Section 7 Slurm/Apptainer config comments cleaned.
 
 ---
 
@@ -203,6 +205,10 @@ This is a low-risk, mechanical pass: read every comment in both files,
 keep the technical conclusion, cut anything written like a debugging
 session note (dates, job IDs, "we found that...", "confirmed empirically").
 
+[done] Comments in `data/slurm_apptainer.config` and `conf/slurm.config` now
+state the stable cluster/resource rationale without dates, job IDs, task-plan
+references or debugging-session wording. Runtime settings were not changed.
+
 ---
 
 ## Suggested order of execution
@@ -210,8 +216,9 @@ session note (dates, job IDs, "we found that...", "confirmed empirically").
 1. [done] Section 1 deletions (`dev.md`, `prompt.md`, `docs/development/audit.md`,
    `docs/development/p0-hardening.md`) — fast, unambiguous, zero risk once
    confirmed.
-2. Section 7 (`data/slurm_apptainer.config` / `conf/slurm.config` comment
-   cleanup) — mechanical, no structural change, safe to do independently.
+2. [done] Section 7 (`data/slurm_apptainer.config` / `conf/slurm.config`
+   comment cleanup) — mechanical, no structural change, safe to do
+   independently.
 3. [done] Section 3 (`architecture-audit.md` → `ARCHITECTURE.md` rewrite,
    `CONTRIBUTING.md` creation).
 4. [done] Section 4 + 5 together (`README.md` restructure needs the diagram to
