@@ -11,7 +11,10 @@ reproducible graph.
 Contributors: David Navarro, Antonio Santiago, Jose Tomas Matus, Amandine
 Velt, Camille Rustenholz and Marco Moretto.
 
-Full setup details are in [docs/user/installation.md](docs/user/installation.md).
+Installation is in [docs/user/installation.md](docs/user/installation.md).
+Input formats are in [docs/user/inputs.md](docs/user/inputs.md), reference
+data preparation is in [docs/user/reference-data.md](docs/user/reference-data.md),
+and production operations are in [docs/user/production-run.md](docs/user/production-run.md).
 Tool details are in [docs/reference/tools.md](docs/reference/tools.md).
 Contributor guidance is in [CONTRIBUTING.md](CONTRIBUTING.md).
 Site-specific examples are kept under [examples/](examples/).
@@ -161,8 +164,9 @@ launcher prepare supported datasets before the run:
 ```
 
 Options without dedicated launcher flags, such as BUSCO, Mikado, FLAIR or
-SQANTI3, can be passed after `--` as native Nextflow parameters; see the
-installation guide for required data directories.
+SQANTI3, can be passed after `--` as native Nextflow parameters; see
+[reference-data.md](docs/user/reference-data.md) and
+[production-run.md](docs/user/production-run.md).
 
 The launcher resolves paths, checks profile/container contracts, validates
 inputs and writes Nextflow reports under `${output_dir}/nextflow_reports`.
