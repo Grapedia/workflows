@@ -8,6 +8,7 @@ include { liftoff_annotations } from "../modules/liftoff_annotations"
 include { egapx } from "../modules/egapx"
 include { clean_liftoff_gff3_for_agat } from "../modules/clean_liftoff_gff3_for_agat"
 include { agat_convert_gff3_to_cds_fasta } from "../modules/agat_convert_gff3_to_cds_fasta"
+include { agat_convert_gff3_to_gtf } from "../modules/agat_convert_gff3_to_gtf"
 include { salmon_index } from "../modules/salmon_index"
 include { salmon_strand_inference } from "../modules/salmon_strand_inference"
 include { star_genome_indices } from "../modules/star_genome_indices"
@@ -103,6 +104,12 @@ workflow generate_evidence_data {
             new_assembly,
             previous_assembly,
             previous_annotations_file
+        )
+
+        // GTF version of the liftoff annotation for FLAIR (flair correct -f requires GTF,
+        // not GFF3 - see modules/agat_convert_gff3_to_gtf.nf)
+        liftoff_gtf_for_flair = agat_convert_gff3_to_gtf(
+            previous_annotations.liftoff_previous_annotations
         )
 
         // EGAPx annotation pipeline on new assembly
@@ -228,7 +235,7 @@ workflow generate_evidence_data {
             flair_results = flair_isoforms(
                 long_reads_prepared.prepared_fastqs,
                 new_assembly,
-                previous_annotations.liftoff_previous_annotations
+                liftoff_gtf_for_flair.gtf
             )
             flair_merged = flair_merge_isoforms(
                 flair_results.isoforms.map { sample_ID, gtf, fasta -> gtf }.collect(),

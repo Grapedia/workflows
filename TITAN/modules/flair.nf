@@ -12,7 +12,7 @@ process flair_isoforms {
   input:
     tuple val(sample_ID), val(SRA_or_FASTQ), val(library_layout), val(read_format), path(reads_fastq), path(reads_fasta)
     path(genome)
-    path(liftoff_gff3)
+    path(liftoff_gtf)
 
   output:
     tuple val(sample_ID), path("${sample_ID}.flair.isoforms.gtf"), path("${sample_ID}.flair.isoforms.fa"), emit: isoforms
@@ -39,9 +39,12 @@ process flair_isoforms {
       exit 1
     fi
 
+    # flair correct has no genome (-g) argument in this pinned version, and -f/--gtf
+    # strictly requires GTF (liftoff_gtf is pre-converted from GFF3 upstream; see
+    # modules/agat_convert_gff3_to_gtf.nf).
     {
       flair align -g "${genome}" -r "\${reads}" -o "${sample_ID}.flair" --threads ${task.cpus}
-      flair correct -q "${sample_ID}.flair.bed" -g "${genome}" -f "${liftoff_gff3}" -o "${sample_ID}.flair.corrected" --threads ${task.cpus}
+      flair correct -q "${sample_ID}.flair.bed" -f "${liftoff_gtf}" -o "${sample_ID}.flair.corrected" --threads ${task.cpus}
       flair collapse -g "${genome}" -r "\${reads}" -q "${sample_ID}.flair.corrected_all_corrected.bed" -o "${sample_ID}.flair" --threads ${task.cpus}
     } 2>&1 | tee "${sample_ID}.flair.log"
 

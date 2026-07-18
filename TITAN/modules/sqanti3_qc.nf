@@ -63,10 +63,23 @@ process sqanti3_qc {
       exit 0
     fi
 
+    # sqanti3_qc.py requires --isoforms/--refGTF/--refFasta (not positional args), and
+    # --refGTF strictly rejects GFF3 ("is not a GTF file. Abort!") despite TITAN's
+    # reference annotation being GFF3 elsewhere; convert with gffread (bundled in the
+    # sqanti3 container) first.
+    gffread "${reference_gff3}" -T -o reference.sqanti3.gtf
+
+    # gtfToGenePred (bundled in this pinned image, invoked internally by sqanti3_qc.py)
+    # is linked against libbz2.so.1, but the image only ships libbz2.so.1.0.8 without
+    # the SONAME symlink; provide it via a local dir prepended to LD_LIBRARY_PATH.
+    mkdir -p .libfix
+    ln -sf /usr/local/lib/libbz2.so.1.0.8 .libfix/libbz2.so.1
+    export LD_LIBRARY_PATH="\$(pwd)/.libfix:\${LD_LIBRARY_PATH:-}"
+
     sqanti3_qc.py \\
-      "${isoforms_gtf}" \\
-      "${reference_gff3}" \\
-      "${genome}" \\
+      --isoforms "${isoforms_gtf}" \\
+      --refGTF reference.sqanti3.gtf \\
+      --refFasta "${genome}" \\
       --dir . \\
       --output "${source_label}.sqanti3" \\
       --cpus ${task.cpus}
