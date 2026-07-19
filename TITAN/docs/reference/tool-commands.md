@@ -166,7 +166,7 @@ PY
 
 The split allows one Infernal task per chromosome/contig.
 
-Rfam reference data source used for TITAN validation:
+External data note:
 
 * Dataset: global Rfam covariance-model library, not a `Vitis vinifera`
   species-specific resource.
@@ -357,6 +357,18 @@ Module: `modules/egapx.nf`
 EGAPx is mandatory. TITAN launches the official nested EGAPx runner outside a
 normal process container, because it must control the host Docker/Apptainer or
 Nextflow executor.
+
+External data note:
+
+* Required run description: `--egapx_paramfile`.
+* Recommended pre-staged runner: `--egapx_runner_dir`; if absent, TITAN
+  downloads the requested `--egapx_revision` from the official NCBI EGAPx
+  GitHub archive.
+* EGAPx reference/cache data: `--egapx_local_cache_dir`, used by the nested
+  EGAPx run through `-lc`, plus `--egapx_data_version` for the selected support
+  data version.
+* Optional site configuration: `--egapx_config_dir`, passed to the nested EGAPx
+  runner with `-c`.
 
 If `--egapx_runner_dir` is provided:
 
@@ -946,6 +958,16 @@ Module: `modules/helixer_prediction.nf`
 
 Runs when `--run_helixer true`; otherwise TITAN emits an empty `helixer.gff3`.
 
+External data note:
+
+* Required when Helixer is enabled: a pre-trained model under
+  `<params.helixer_model_dir>/<params.helixer_model>/`, with one or more `.h5`
+  files.
+* Preparation script:
+  [`scripts/download_helixer_model.sh`](../../scripts/download_helixer_model.sh)
+* The lineage passed with `--helixer_model` must match the staged model
+  directory, for example `land_plant`.
+
 ```bash
 export OMP_NUM_THREADS=<cpus>
 export TF_NUM_INTRAOP_THREADS=<cpus>
@@ -1089,6 +1111,17 @@ Module: `modules/eggnog_mapper.nf`
 Runs when `--run_eggnog_mapper true`; otherwise TITAN emits empty annotation
 files.
 
+External data note:
+
+* Required when eggNOG-mapper is enabled: `eggnog.db`,
+  `eggnog_proteins.dmnd` and `eggnog.taxa.db` inside
+  `--eggnog_data_dir`.
+* Preparation script:
+  [`scripts/download_eggnog_data.sh`](../../scripts/download_eggnog_data.sh)
+* TITAN validation used the emapperdb `5.0.2` source served from
+  `http://eggnog5.embl.de/download/emapperdb-5.0.2`, because the downloader in
+  the pinned eggNOG-mapper container points to a retired host.
+
 ```bash
 emapper.py \
   -i <proteins.fa> \
@@ -1126,6 +1159,18 @@ Module: `modules/interproscan.nf`
 
 Runs when `--run_interproscan true`; otherwise TITAN emits empty TSV/GFF3/JSON
 files.
+
+External data note:
+
+* Required when InterProScan is enabled: the InterProScan member database data
+  mounted as `/opt/interproscan/data` inside the container.
+* The staged directory passed with `--interproscan_data_dir` should contain
+  member database subdirectories such as `pfam/`, `cdd/`, `gene3d/` and
+  `panther/` directly, with no extra top-level nesting.
+* Preparation script:
+  [`scripts/download_interproscan_data.sh`](../../scripts/download_interproscan_data.sh)
+* The data version must match `--container_interproscan`; TITAN validation used
+  the InterProScan `5.78-109.0` data bundle from the EBI FTP.
 
 ```bash
 /opt/interproscan/interproscan.sh \
@@ -1251,6 +1296,15 @@ Module: `modules/lncrna_candidate_annotation.nf`
 
 Runs when `--run_lncrna true`; otherwise TITAN emits empty candidate and CPAT
 outputs.
+
+External data note:
+
+* Optional CPAT plant model data are read from `--cpat_model_dir`.
+* Expected model files are `Plant_Hexamer.tsv` and `Plant.logit.RData`.
+* Preparation script:
+  [`scripts/download_cpat_plant_lncpipe.sh`](../../scripts/download_cpat_plant_lncpipe.sh)
+* If `--lncrna_require_cpat_model true`, these files become mandatory before
+  the lncRNA branch can run.
 
 Initial candidate build:
 
@@ -1432,6 +1486,16 @@ Module: `modules/busco.nf`
 
 Runs when `--run_busco true`; otherwise TITAN emits skipped sentinel outputs.
 
+External data note:
+
+* Required when BUSCO is enabled: an offline BUSCO lineage staged under
+  `--busco_data_dir`.
+* The lineage name passed with `--busco_lineage` must match the staged lineage,
+  for example `eudicotyledons_odb12.2` for the production plant run.
+* TITAN runs BUSCO with `--offline --download_path <params.busco_data_dir>`.
+  There is no TITAN helper script for BUSCO data; stage it with BUSCO's own
+  download tooling before launching an offline production run.
+
 ```bash
 busco \
   -i <final_annotation_proteins_main.fasta> \
@@ -1459,6 +1523,14 @@ Process: `omark`
 Module: `modules/omark.nf`
 
 Runs when `--run_omark true`; otherwise TITAN emits skipped sentinel outputs.
+
+External data note:
+
+* Required when OMArk is enabled: `<params.omark_data_dir>/omamer.h5`.
+* Preparation script:
+  [`scripts/download_omark_data.sh`](../../scripts/download_omark_data.sh)
+* The same OMAmer database is used by both `omamer search` and `omark`, so the
+  two steps stay synchronized.
 
 ```bash
 omamer search \
