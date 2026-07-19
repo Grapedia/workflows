@@ -1,7 +1,5 @@
 # PolyForm Noncommercial License 1.0.0
 
-Required Notice: Copyright (c) 2026 TITAN contributors: David Navarro, Antonio Santiago, Jose Tomas Matus, Amandine Velt, Camille Rustenholz and Marco Moretto (https://grapedia.org)
-
 ## Acceptance
 
 In order to get any license under these terms, you must agree to them as both
@@ -26,11 +24,9 @@ changes and new works permitted by Changes and New Works License.
 You must ensure that anyone who gets a copy of any part of the software from you
 also gets a copy of these terms or the URL for them above, as well as copies of
 any plain-text lines beginning with `Required Notice:` that the licensor
-provided with the software.
+provided with the software. For example:
 
-For this software, the required notice is:
-
-> Required Notice: Copyright (c) 2026 TITAN contributors: David Navarro, Antonio Santiago, Jose Tomas Matus, Amandine Velt, Camille Rustenholz and Marco Moretto (https://grapedia.org)
+> Required Notice: Copyright Yoyodyne, Inc. (http://example.com)
 
 ## Changes and New Works License
 
