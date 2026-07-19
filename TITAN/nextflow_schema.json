@@ -162,7 +162,7 @@
     },
     "busco_data_dir": {
       "$ref": "#/definitions/path_or_false",
-      "description": "Directory containing the pre-fetched BUSCO lineage dataset (via `busco --download <lineage> --download_path <dir>`), used offline. Required when run_busco is true."
+      "description": "Directory containing the pre-fetched BUSCO lineage dataset, prepared with `scripts/download_busco_data.sh` or equivalent `busco --download <lineage> --download_path <dir>`, used offline. Required when run_busco is true."
     },
     "run_omark": {
       "type": "boolean",

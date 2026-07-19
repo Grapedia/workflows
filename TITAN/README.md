@@ -177,14 +177,15 @@ launcher prepare supported datasets before the run:
   --enable-eggnog-mapper --prepare-eggnog-data \
   --enable-helixer --prepare-helixer-model --helixer-lineage land_plant \
   --enable-interproscan --prepare-interproscan-data \
+  --enable-busco --prepare-busco-data \
   --enable-rfam --prepare-rfam-data \
   --enable-omark --prepare-omark-data \
   --enable-lncrna --prepare-cpat-model \
   --resume
 ```
 
-Options without dedicated launcher flags, such as BUSCO, Mikado, FLAIR or
-SQANTI3, can be passed after `--` as native Nextflow parameters; see
+Options without dedicated launcher flags, such as Mikado, FLAIR or SQANTI3,
+can be passed after `--` as native Nextflow parameters; see
 [reference-data.md](docs/user/reference-data.md) and
 [production-run.md](docs/user/production-run.md).
 

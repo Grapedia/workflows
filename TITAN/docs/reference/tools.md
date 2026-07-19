@@ -244,7 +244,7 @@ optional branches:
 * AEGIS-vs-Mikado comparison when Mikado is enabled;
 * final MultiQC HTML aggregation.
 
-BUSCO needs an offline lineage dataset and currently has no
-`--prepare-busco-data` launcher flag. OMArk requires an offline OMAmer database
-at `--omark_data_dir` containing `omamer.h5`; the launchers can prepare it with
-`--prepare-omark-data`.
+BUSCO needs an offline lineage dataset at `--busco_data_dir`; the launchers can
+prepare it with `--prepare-busco-data`, which uses the pinned BUSCO container.
+OMArk requires an offline OMAmer database at `--omark_data_dir` containing
+`omamer.h5`; the launchers can prepare it with `--prepare-omark-data`.

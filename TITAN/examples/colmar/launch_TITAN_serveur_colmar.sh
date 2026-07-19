@@ -52,6 +52,9 @@ HELIXER_MODEL_DIR="${TITAN_HELIXER_MODEL_DIR:-$PROJECT_DIR/.helixer_models}"
 HELIXER_LINEAGE="${TITAN_HELIXER_LINEAGE:-land_plant}"
 PREPARE_INTERPROSCAN_DATA="${TITAN_PREPARE_INTERPROSCAN_DATA:-false}"
 INTERPROSCAN_DATA_DIR="${TITAN_INTERPROSCAN_DATA_DIR:-$PROJECT_DIR/.interproscan_data}"
+PREPARE_BUSCO_DATA="${TITAN_PREPARE_BUSCO_DATA:-false}"
+BUSCO_DATA_DIR="${TITAN_BUSCO_DATA_DIR:-$PROJECT_DIR/.busco_data}"
+BUSCO_LINEAGE="${TITAN_BUSCO_LINEAGE:-eudicotyledons_odb12.2}"
 PREPARE_RFAM_DATA="${TITAN_PREPARE_RFAM_DATA:-false}"
 RFAM_DATA_DIR="${TITAN_RFAM_DATA_DIR:-$PROJECT_DIR/.rfam_data}"
 PREPARE_OMARK_DATA="${TITAN_PREPARE_OMARK_DATA:-false}"
@@ -60,7 +63,7 @@ OMARK_DATA_DIR="${TITAN_OMARK_DATA_DIR:-$PROJECT_DIR/.omark_data}"
 usage() {
   cat <<'EOF'
 Usage:
-  ./launch_TITAN_serveur_colmar.sh [--prepare-egapx-cache] [--prepare-eggnog-data] [--prepare-helixer-model] [--prepare-interproscan-data] [--prepare-rfam-data] [--prepare-omark-data] [--dry-run] [-- no_more_nextflow_args]
+  ./launch_TITAN_serveur_colmar.sh [--prepare-egapx-cache] [--prepare-eggnog-data] [--prepare-helixer-model] [--prepare-interproscan-data] [--prepare-busco-data] [--prepare-rfam-data] [--prepare-omark-data] [--dry-run] [-- no_more_nextflow_args]
 
 Environment overrides:
   TITAN_OUTPUT_DIR, TITAN_WORK_DIR, TITAN_RUN_NAME, TITAN_CONFIG_FILE,
@@ -68,6 +71,7 @@ Environment overrides:
   TITAN_EGGNOG_DATA_DIR, TITAN_PREPARE_EGGNOG_DATA,
   TITAN_HELIXER_MODEL_DIR, TITAN_HELIXER_LINEAGE, TITAN_PREPARE_HELIXER_MODEL,
   TITAN_INTERPROSCAN_DATA_DIR, TITAN_PREPARE_INTERPROSCAN_DATA,
+  TITAN_BUSCO_DATA_DIR, TITAN_BUSCO_LINEAGE, TITAN_PREPARE_BUSCO_DATA,
   TITAN_RFAM_DATA_DIR, TITAN_PREPARE_RFAM_DATA,
   TITAN_OMARK_DATA_DIR, TITAN_PREPARE_OMARK_DATA.
 
@@ -89,6 +93,10 @@ is a large download (several GB compressed); it only needs to run once.
 To run Infernal/Rfam in production, set run_rfam = true in that config file
 and pass --prepare-rfam-data at least once to populate TITAN_RFAM_DATA_DIR
 (default <project-dir>/.rfam_data) with the indexed Rfam.cm/.clanin library.
+
+To run BUSCO in production, set run_busco = true in that config file and pass
+--prepare-busco-data at least once to populate TITAN_BUSCO_DATA_DIR (default
+<project-dir>/.busco_data) with the selected TITAN_BUSCO_LINEAGE dataset.
 
 To run OMArk in production, set run_omark = true in that config file and
 pass --prepare-omark-data at least once to populate TITAN_OMARK_DATA_DIR
@@ -115,6 +123,7 @@ while [[ $# -gt 0 ]]; do
     --prepare-eggnog-data) PREPARE_EGGNOG_DATA=true; shift ;;
     --prepare-helixer-model) PREPARE_HELIXER_MODEL=true; shift ;;
     --prepare-interproscan-data) PREPARE_INTERPROSCAN_DATA=true; shift ;;
+    --prepare-busco-data) PREPARE_BUSCO_DATA=true; shift ;;
     --prepare-rfam-data) PREPARE_RFAM_DATA=true; shift ;;
     --prepare-omark-data) PREPARE_OMARK_DATA=true; shift ;;
     --dry-run) DRY_RUN=true; shift ;;
@@ -150,6 +159,7 @@ mkdir -p \
   "$EGGNOG_DATA_DIR" \
   "$HELIXER_MODEL_DIR" \
   "$INTERPROSCAN_DATA_DIR" \
+  "$BUSCO_DATA_DIR" \
   "$RFAM_DATA_DIR" \
   "$OMARK_DATA_DIR" \
   "$PROJECT_DIR/.apptainer-cache" \
@@ -242,6 +252,17 @@ if [[ "$PREPARE_INTERPROSCAN_DATA" == true ]]; then
   prepare_interproscan_data
 fi
 
+prepare_busco_data() {
+  "$PROJECT_DIR/scripts/download_busco_data.sh" \
+    --data-dir "$BUSCO_DATA_DIR" \
+    --container "$(config_value container_busco)" \
+    --lineage "$BUSCO_LINEAGE"
+}
+
+if [[ "$PREPARE_BUSCO_DATA" == true ]]; then
+  prepare_busco_data
+fi
+
 prepare_rfam_data() {
   "$PROJECT_DIR/scripts/download_rfam_data.sh" \
     --data-dir "$RFAM_DATA_DIR" \
@@ -286,6 +307,8 @@ cmd=(
   --helixer_model_dir "$HELIXER_MODEL_DIR"
   --helixer_model "$HELIXER_LINEAGE"
   --interproscan_data_dir "$INTERPROSCAN_DATA_DIR"
+  --busco_data_dir "$BUSCO_DATA_DIR"
+  --busco_lineage "$BUSCO_LINEAGE"
   --rfam_data_dir "$RFAM_DATA_DIR"
   --omark_data_dir "$OMARK_DATA_DIR"
 )
@@ -303,6 +326,7 @@ echo "EGAPx cache:       $EGAPX_CACHE_DIR"
 echo "eggNOG data dir:   $EGGNOG_DATA_DIR"
 echo "Helixer model dir: $HELIXER_MODEL_DIR (lineage: $HELIXER_LINEAGE)"
 echo "InterProScan data dir: $INTERPROSCAN_DATA_DIR"
+echo "BUSCO data dir:    $BUSCO_DATA_DIR (lineage: $BUSCO_LINEAGE)"
 echo "Rfam data dir:     $RFAM_DATA_DIR"
 echo "OMArk data dir:    $OMARK_DATA_DIR"
 echo "Resume ID:         ${RESUME_ID:-<latest Nextflow session>}"

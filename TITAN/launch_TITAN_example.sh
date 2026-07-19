@@ -54,6 +54,14 @@ Production-oriented options:
                                  Default: TITAN_INTERPROSCAN_DATA_DIR or <project-dir>/.interproscan_data
   --enable-interproscan          Pass --run_interproscan true and --interproscan_data_dir to Nextflow
                                  Default: TITAN_RUN_INTERPROSCAN or false
+  --prepare-busco-data           Download the BUSCO lineage dataset using the pinned BUSCO container
+                                 Default: TITAN_PREPARE_BUSCO_DATA or false
+  --busco-data-dir PATH          Persistent BUSCO data directory
+                                 Default: TITAN_BUSCO_DATA_DIR or <project-dir>/.busco_data
+  --busco-lineage NAME           BUSCO lineage to fetch/use
+                                 Default: TITAN_BUSCO_LINEAGE or eudicotyledons_odb12.2
+  --enable-busco                 Pass --run_busco true, --busco_data_dir and --busco_lineage to Nextflow
+                                 Default: TITAN_RUN_BUSCO or false
   --prepare-rfam-data            Download and index the Rfam covariance-model library
                                  Default: TITAN_PREPARE_RFAM_DATA or false
   --rfam-data-dir PATH           Persistent Rfam data directory
@@ -158,6 +166,10 @@ HELIXER_USE_GPU="${TITAN_HELIXER_USE_GPU:-false}"
 PREPARE_INTERPROSCAN_DATA="${TITAN_PREPARE_INTERPROSCAN_DATA:-false}"
 INTERPROSCAN_DATA_DIR="${TITAN_INTERPROSCAN_DATA_DIR:-}"
 RUN_INTERPROSCAN="${TITAN_RUN_INTERPROSCAN:-false}"
+PREPARE_BUSCO_DATA="${TITAN_PREPARE_BUSCO_DATA:-false}"
+BUSCO_DATA_DIR="${TITAN_BUSCO_DATA_DIR:-}"
+BUSCO_LINEAGE="${TITAN_BUSCO_LINEAGE:-eudicotyledons_odb12.2}"
+RUN_BUSCO="${TITAN_RUN_BUSCO:-false}"
 PREPARE_RFAM_DATA="${TITAN_PREPARE_RFAM_DATA:-false}"
 RFAM_DATA_DIR="${TITAN_RFAM_DATA_DIR:-}"
 RUN_RFAM="${TITAN_RUN_RFAM:-false}"
@@ -200,6 +212,10 @@ while [[ $# -gt 0 ]]; do
     --prepare-interproscan-data) PREPARE_INTERPROSCAN_DATA=true; shift ;;
     --interproscan-data-dir) INTERPROSCAN_DATA_DIR="${2:-}"; shift 2 ;;
     --enable-interproscan) RUN_INTERPROSCAN=true; shift ;;
+    --prepare-busco-data) PREPARE_BUSCO_DATA=true; shift ;;
+    --busco-data-dir) BUSCO_DATA_DIR="${2:-}"; shift 2 ;;
+    --busco-lineage) BUSCO_LINEAGE="${2:-}"; shift 2 ;;
+    --enable-busco) RUN_BUSCO=true; shift ;;
     --prepare-rfam-data) PREPARE_RFAM_DATA=true; shift ;;
     --rfam-data-dir) RFAM_DATA_DIR="${2:-}"; shift 2 ;;
     --enable-rfam) RUN_RFAM=true; shift ;;
@@ -257,6 +273,9 @@ HELIXER_MODEL_DIR="$(abs_path "$HELIXER_MODEL_DIR")"
 INTERPROSCAN_DATA_DIR="${INTERPROSCAN_DATA_DIR:-$PROJECT_DIR/.interproscan_data}"
 mkdir -p "$INTERPROSCAN_DATA_DIR"
 INTERPROSCAN_DATA_DIR="$(abs_path "$INTERPROSCAN_DATA_DIR")"
+BUSCO_DATA_DIR="${BUSCO_DATA_DIR:-$PROJECT_DIR/.busco_data}"
+mkdir -p "$BUSCO_DATA_DIR"
+BUSCO_DATA_DIR="$(abs_path "$BUSCO_DATA_DIR")"
 RFAM_DATA_DIR="${RFAM_DATA_DIR:-$PROJECT_DIR/.rfam_data}"
 mkdir -p "$RFAM_DATA_DIR"
 RFAM_DATA_DIR="$(abs_path "$RFAM_DATA_DIR")"
@@ -368,6 +387,17 @@ if [[ "$PREPARE_INTERPROSCAN_DATA" == true ]]; then
   prepare_interproscan_data
 fi
 
+prepare_busco_data() {
+  "$PROJECT_DIR/scripts/download_busco_data.sh" \
+    --data-dir "$BUSCO_DATA_DIR" \
+    --container "$(config_value container_busco)" \
+    --lineage "$BUSCO_LINEAGE"
+}
+
+if [[ "$PREPARE_BUSCO_DATA" == true ]]; then
+  prepare_busco_data
+fi
+
 prepare_rfam_data() {
   "$PROJECT_DIR/scripts/download_rfam_data.sh" \
     --data-dir "$RFAM_DATA_DIR" \
@@ -435,6 +465,10 @@ if [[ "$RUN_INTERPROSCAN" == true ]]; then
   cmd+=(--run_interproscan true --interproscan_data_dir "$INTERPROSCAN_DATA_DIR")
 fi
 
+if [[ "$RUN_BUSCO" == true ]]; then
+  cmd+=(--run_busco true --busco_data_dir "$BUSCO_DATA_DIR" --busco_lineage "$BUSCO_LINEAGE")
+fi
+
 if [[ "$RUN_RFAM" == true ]]; then
   cmd+=(--run_rfam true --rfam_data_dir "$RFAM_DATA_DIR")
 fi
@@ -469,6 +503,9 @@ if [[ "$RUN_HELIXER" == true ]]; then
 fi
 if [[ "$RUN_INTERPROSCAN" == true ]]; then
   echo "InterProScan:      enabled, data dir $INTERPROSCAN_DATA_DIR"
+fi
+if [[ "$RUN_BUSCO" == true ]]; then
+  echo "BUSCO:             enabled, lineage $BUSCO_LINEAGE, data dir $BUSCO_DATA_DIR"
 fi
 if [[ "$RUN_RFAM" == true ]]; then
   echo "Rfam:              enabled, data dir $RFAM_DATA_DIR"

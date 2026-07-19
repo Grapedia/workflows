@@ -130,9 +130,9 @@ examples.
 ## 6. Prepare Reference Data
 
 Mandatory EGAPx support data and optional datasets should be staged before long
-HPC runs. The launcher can prepare EGAPx, eggNOG, Helixer, InterProScan, Rfam,
-OMArk and CPAT data; BUSCO lineage downloads are prepared outside TITAN with
-BUSCO's own downloader.
+HPC runs. The launcher can prepare EGAPx, eggNOG, Helixer, InterProScan, BUSCO,
+Rfam, OMArk and CPAT data; BUSCO preparation uses the same pinned BUSCO
+container image as the pipeline.
 
 See [reference-data.md](reference-data.md) for the full command list and the
 parameters passed back to TITAN.

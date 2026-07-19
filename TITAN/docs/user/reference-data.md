@@ -40,7 +40,7 @@ The container image pins themselves are documented in
 | FLAIR | off | None beyond container image and long-read evidence | No data step |
 | SQANTI3 | off | None beyond container image and long-read evidence | No data step |
 | OMArk | off | OMAmer `omamer.h5` database | Bundled script |
-| BUSCO | off | BUSCO lineage dataset | BUSCO downloader outside TITAN |
+| BUSCO | off | BUSCO lineage dataset | `scripts/download_busco_data.sh` |
 
 ## EGAPx
 
@@ -357,11 +357,13 @@ busco_lineage = eudicotyledons_odb12.2
 busco_data_dir = false
 ```
 
-TITAN does not bundle a BUSCO downloader. Prepare the selected lineage outside
-TITAN, for example:
+Prepare the selected lineage with the pinned BUSCO container used by TITAN:
 
 ```bash
-busco --download eudicotyledons_odb12.2 --download_path /absolute/path/to/project/busco_data
+scripts/download_busco_data.sh \
+  --data-dir /absolute/path/to/project/busco_data \
+  --container quay.io/biocontainers/busco@sha256:d55ad622a5cafcd63c42fc309108688ab255bb9586ee756a5149e249d418c8bd \
+  --lineage eudicotyledons_odb12.2
 ```
 
 Enable it:
@@ -374,6 +376,12 @@ Enable it:
 
 TITAN validates `--busco_data_dir` whenever `--run_busco true` is set.
 
+Launcher shortcut:
+
+```bash
+./launch_TITAN_example.sh --prepare-busco-data --enable-busco ...
+```
+
 ## Colmar Launcher
 
 The Colmar example launcher exposes preparation flags for the datasets TITAN
@@ -384,6 +392,7 @@ examples/colmar/launch_TITAN_serveur_colmar.sh --prepare-egapx-cache
 examples/colmar/launch_TITAN_serveur_colmar.sh --prepare-eggnog-data
 examples/colmar/launch_TITAN_serveur_colmar.sh --prepare-helixer-model
 examples/colmar/launch_TITAN_serveur_colmar.sh --prepare-interproscan-data
+examples/colmar/launch_TITAN_serveur_colmar.sh --prepare-busco-data
 examples/colmar/launch_TITAN_serveur_colmar.sh --prepare-rfam-data
 examples/colmar/launch_TITAN_serveur_colmar.sh --prepare-omark-data
 examples/colmar/launch_TITAN_serveur_colmar.sh --prepare-cpat-model

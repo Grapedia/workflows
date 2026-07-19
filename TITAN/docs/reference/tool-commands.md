@@ -1493,8 +1493,10 @@ External data note:
 * The lineage name passed with `--busco_lineage` must match the staged lineage,
   for example `eudicotyledons_odb12.2` for the production plant run.
 * TITAN runs BUSCO with `--offline --download_path <params.busco_data_dir>`.
-  There is no TITAN helper script for BUSCO data; stage it with BUSCO's own
-  download tooling before launching an offline production run.
+* Preparation script:
+  [`scripts/download_busco_data.sh`](../../scripts/download_busco_data.sh)
+* The helper runs `busco --download <lineage>` inside the same pinned
+  `--container_busco` image used by the pipeline.
 
 ```bash
 busco \

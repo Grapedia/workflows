@@ -54,6 +54,7 @@ The launcher can both prepare and enable these branches:
   --enable-eggnog-mapper --prepare-eggnog-data \
   --enable-helixer --prepare-helixer-model --helixer-lineage land_plant \
   --enable-interproscan --prepare-interproscan-data \
+  --enable-busco --prepare-busco-data \
   --enable-rfam --prepare-rfam-data \
   --enable-omark --prepare-omark-data \
   --enable-lncrna --prepare-cpat-model \
