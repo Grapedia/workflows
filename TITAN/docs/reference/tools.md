@@ -6,6 +6,9 @@ pipeline orchestration order in `workflows/titan.nf`: validation, early
 genome-wide optional branches, evidence generation, final integration,
 post-merge annotations, functional annotation and quality reporting.
 
+For the exact command lines launched by each process, see
+[tool-commands.md](tool-commands.md).
+
 ## Input Validation
 
 TITAN starts by rejecting deprecated public modes, checking required parameter

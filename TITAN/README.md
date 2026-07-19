@@ -17,7 +17,9 @@ Input formats are in [docs/user/inputs.md](docs/user/inputs.md), input/output
 tree layouts are in [docs/user/inputs_outputs.md](docs/user/inputs_outputs.md),
 reference data preparation is in [docs/user/reference-data.md](docs/user/reference-data.md),
 and production operations are in [docs/user/production-run.md](docs/user/production-run.md).
-Tool details are in [docs/reference/tools.md](docs/reference/tools.md).
+Tool details are in [docs/reference/tools.md](docs/reference/tools.md), and
+the command-line reference is in
+[docs/reference/tool-commands.md](docs/reference/tool-commands.md).
 Contributor guidance is in [CONTRIBUTING.md](CONTRIBUTING.md).
 Site-specific examples are kept under [examples/](examples/).
 
@@ -386,3 +388,7 @@ Functional annotation and quality reporting:
 [BUSCO](https://busco.ezlab.org/),
 [OMArk](https://github.com/DessimozLab/OMArk),
 [MultiQC](https://multiqc.info/).
+
+Internal TITAN references:
+[tool behavior](docs/reference/tools.md) and
+[tool command lines](docs/reference/tool-commands.md).
