@@ -12,8 +12,9 @@ Contributors: David Navarro, Antonio Santiago, Jose Tomas Matus, Amandine
 Velt, Camille Rustenholz and Marco Moretto.
 
 Installation is in [docs/user/installation.md](docs/user/installation.md).
-Input formats are in [docs/user/inputs.md](docs/user/inputs.md), reference
-data preparation is in [docs/user/reference-data.md](docs/user/reference-data.md),
+Input formats are in [docs/user/inputs.md](docs/user/inputs.md), input/output
+tree layouts are in [docs/user/inputs_outputs.md](docs/user/inputs_outputs.md),
+reference data preparation is in [docs/user/reference-data.md](docs/user/reference-data.md),
 and production operations are in [docs/user/production-run.md](docs/user/production-run.md).
 Tool details are in [docs/reference/tools.md](docs/reference/tools.md).
 Contributor guidance is in [CONTRIBUTING.md](CONTRIBUTING.md).
@@ -195,6 +196,57 @@ RNA-seq `library_layout` values are `single`, `paired` and `long`.
 resolved through ENA FASTQ metadata. Local files are inferred from `sampleID`.
 Absolute paths are recommended for production and HPC runs.
 
+## Input And Output Trees
+
+Recommended production input layout:
+
+```text
+project/
+  assemblies/
+    target.fa                    # --new_assembly
+    previous.fa                  # --previous_assembly
+  annotations/
+    previous.gff3                # --previous_annotations
+  rnaseq/
+    RNAseq_samplesheet.csv       # --RNAseq_samplesheet
+    <sample>.fastq.gz            # single-end short reads
+    <sample>_1.fastq.gz          # paired-end R1
+    <sample>_2.fastq.gz          # paired-end R2
+    <long_sample>.fastq.gz       # optional long-read RNA evidence
+  proteins/
+    protein_samplesheet.csv      # --protein_samplesheet
+    *.fa                         # protein evidence FASTAs
+  egapx/
+    input_egapx.yaml             # --egapx_paramfile
+  titan_out/                     # --output_dir
+```
+
+Main output layout after a complete run:
+
+```text
+${output_dir}/
+  aegis_outputs/                 # primary final annotation and proteins
+  assembly_masked.EDTA.fasta     # EDTA-masked target assembly
+  liftoff_previous_annotations.gff3
+  merged_*_stringtie*.gtf        # merged transcript evidence tracks
+  merged_star_psiclass_*.gtf
+  egapx/                         # EGAPx annotation products
+  additional_annotations/        # tRNA, Rfam, FLAIR, Helixer, lncRNA, SQANTI3
+  final_annotations/mikado/      # optional Mikado annotation
+  Diamond2GO_outputs/            # default functional annotation
+  EggNOG_outputs/                # optional eggNOG-mapper output
+  InterProScan_outputs/          # optional InterProScan output
+  quality_report/                # MultiQC and per-tool QC
+  validation/                    # final annotation validation reports
+  provenance/                    # manifests, checksums and software versions
+  intermediate_files/            # optional published intermediates
+  nextflow_reports/              # launcher DAG/progress/report files
+```
+
+See [docs/user/inputs_outputs.md](docs/user/inputs_outputs.md) for the full
+tree, including optional branches and files controlled by
+`--publish_intermediates`.
+
 ## Tool Matrix
 
 Detailed behavior, setup notes and outputs are in [docs/reference/tools.md](docs/reference/tools.md).
@@ -234,17 +286,15 @@ Resource policy is centralized in [conf/base.config](conf/base.config).
 
 ## Outputs
 
-| Output family | Main files | Location |
-| --- | --- | --- |
-| Primary annotation | `final_annotation.gff3`, `final_annotation_proteins_*.fasta` | `${output_dir}/aegis_outputs` |
-| Evidence tracks | Liftoff, EDTA, BRAKER3, transcript evidence and EGAPx outputs | `${output_dir}`, `${output_dir}/egapx` |
-| Functional annotation | Diamond2GO, optional eggNOG-mapper and InterProScan outputs | `${output_dir}/Diamond2GO_outputs`, `${output_dir}/EggNOG_outputs`, `${output_dir}/InterProScan_outputs` |
-| Optional annotations | Helixer, FLAIR, SQANTI3, tRNAscan-SE, Rfam, lncRNA and Mikado | `${output_dir}/additional_annotations`, `${output_dir}/final_annotations/mikado` |
-| Quality and provenance | BUSCO, OMArk, AGAT, expression support, MultiQC, manifests and validation reports | `${output_dir}/quality_report`, `${output_dir}/provenance`, `${output_dir}/validation` |
-| Nextflow reports | report, timeline, trace and DAG | `${output_dir}/nextflow_reports` when using the launcher |
+The primary files to inspect first are
+`${output_dir}/aegis_outputs/final_annotation.gff3`,
+`${output_dir}/aegis_outputs/final_annotation_proteins_all.fasta`,
+`${output_dir}/aegis_outputs/final_annotation_proteins_main.fasta` and
+`${output_dir}/quality_report/titan_multiqc_report.html`.
 
 Intermediate/debug outputs are controlled by `--publish_intermediates`
-(`true` by default for backward compatibility).
+(`true` by default for backward compatibility). The complete output map is in
+[docs/user/inputs_outputs.md](docs/user/inputs_outputs.md).
 
 ## Resume And Re-Runs
 

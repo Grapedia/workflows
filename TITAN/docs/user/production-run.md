@@ -150,13 +150,17 @@ preview run.
 Main result groups are published under `--output_dir`:
 
 ```text
-final_annotations/
+aegis_outputs/
+Diamond2GO_outputs/
+EggNOG_outputs/
+InterProScan_outputs/
 additional_annotations/
-functional_annotation/
+final_annotations/
 quality_report/
 validation/
 provenance/
 egapx/
+intermediate_files/
 nextflow_reports/
 ```
 
@@ -173,7 +177,8 @@ egapx.annotated_genome.asn
 
 `provenance/evidence_manifest.json` records main inputs, AEGIS evidence files,
 final AEGIS outputs, file sizes and SHA-256 checksums. Final structural
-validation reports are written under `validation/`.
+validation reports are written under `validation/`. See
+[inputs_outputs.md](inputs_outputs.md) for the complete input and output tree.
 
 ## Production Checklist
 
