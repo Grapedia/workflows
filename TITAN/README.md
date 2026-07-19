@@ -20,6 +20,22 @@ Tool details are in [docs/reference/tools.md](docs/reference/tools.md).
 Contributor guidance is in [CONTRIBUTING.md](CONTRIBUTING.md).
 Site-specific examples are kept under [examples/](examples/).
 
+## Table Of Contents
+
+- [What TITAN Produces](#what-titan-produces)
+- [Workflow Graph](#workflow-graph)
+- [Quick Start](#quick-start)
+- [Requirements](#requirements)
+- [Inputs](#inputs)
+- [Input And Output Trees](#input-and-output-trees)
+- [Tool Matrix](#tool-matrix)
+- [Profiles](#profiles)
+- [Outputs](#outputs)
+- [Resume And Re-Runs](#resume-and-re-runs)
+- [Troubleshooting](#troubleshooting)
+- [Limitations](#limitations)
+- [Tool References](#tool-references)
+
 ## What TITAN Produces
 
 TITAN has one public execution mode: evidence generation, EDTA, EGAPx and
