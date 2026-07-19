@@ -124,6 +124,29 @@ PY
 
 The split allows one Infernal task per chromosome/contig.
 
+Rfam reference data source used for TITAN validation:
+
+* Dataset: global Rfam covariance-model library, not a `Vitis vinifera`
+  species-specific resource.
+* Files required by TITAN: `Rfam.cm`, `Rfam.clanin` and the `cmpress` index
+  files generated from `Rfam.cm`.
+* Source URL used by the TITAN downloader and Vitis vinifera validation runs:
+  <https://ftp.ebi.ac.uk/pub/databases/Rfam/CURRENT>
+* Direct `Rfam.clanin` URL:
+  <https://ftp.ebi.ac.uk/pub/databases/Rfam/CURRENT/Rfam.clanin>
+* Preparation script:
+  [`scripts/download_rfam_data.sh`](../../scripts/download_rfam_data.sh)
+
+The same staged directory is then passed to TITAN with `--rfam_data_dir`; the
+Vitis vinifera run therefore uses `Rfam.clanin` from the EBI Rfam `CURRENT`
+release selected at download time.
+
+```bash
+scripts/download_rfam_data.sh \
+  --data-dir <rfam_data_dir> \
+  --container <params.container_infernal>
+```
+
 Process: `infernal_rfam_search`
 
 Runs when `--run_rfam true`; otherwise TITAN writes empty table/log files.
