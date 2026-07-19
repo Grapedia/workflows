@@ -2,11 +2,12 @@
 
 ![Nextflow](https://img.shields.io/badge/Nextflow-24.04.3-23aa62?logo=nextflow) ![DSL2](https://img.shields.io/badge/DSL2-workflow-4b7bec) ![Python](https://img.shields.io/badge/Python-3.x-3776ab?logo=python&logoColor=white) ![Bash](https://img.shields.io/badge/Bash-scripts-4eaa25?logo=gnubash&logoColor=white) ![Apptainer](https://img.shields.io/badge/Apptainer-HPC-6b46c1) ![Slurm](https://img.shields.io/badge/Slurm-ready-0f766e)
 
-TITAN is a Nextflow pipeline for eukaryotic genome annotation. It integrates
-transferred annotation, RNA-seq transcript evidence, protein-supported ab
-initio prediction, repeat masking, EGAPx, optional ncRNA/lncRNA and isoform
-branches, functional annotation, and final quality reporting into one
-reproducible graph.
+TITAN is a Nextflow pipeline for eukaryotic genome annotation centered on
+AEGIS-based evidence integration. It generates and harmonizes transferred
+annotation, RNA-seq transcript evidence, protein-supported ab initio
+prediction, repeat masking, EGAPx, optional ncRNA/lncRNA and isoform branches,
+then uses AEGIS to merge these evidence tracks into a final annotation with
+functional annotation and quality reporting in one reproducible graph.
 
 Contributors: David Navarro, Antonio Santiago, Jose Tomas Matus, Amandine
 Velt, Camille Rustenholz and Marco Moretto.
