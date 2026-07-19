@@ -761,6 +761,10 @@ stringtie --merge \
 If no long reads are present, `empty_long_read_evidence` copies empty sentinel
 GTFs instead of running StringTie.
 
+When long reads are present, these Minimap2/StringTie merged GTFs are the
+primary long-read transcript evidence passed to AEGIS and Mikado. They are
+produced regardless of `--run_flair`.
+
 ## GffCompare For PsiCLASS
 
 Process: `gffcompare`  
@@ -824,7 +828,11 @@ Important options:
 |---|---|---|
 | `flair align` | Align long-read isoforms. | Generates BED evidence for correction. |
 | `flair correct -f <liftoff_gtf>` | Correct splice junctions against transferred annotation. | Uses prior annotation to improve isoform confidence. |
-| `flair collapse` | Collapse corrected reads into isoforms. | Produces the GTF/FASTA evidence passed to AEGIS and Mikado. |
+| `flair collapse` | Collapse corrected reads into isoforms. | Produces an additional optional GTF/FASTA evidence track passed to AEGIS and Mikado when `--run_flair true`. |
+
+FLAIR does not replace the Minimap2/StringTie long-read evidence. If
+`--run_flair false`, AEGIS and Mikado still receive the merged
+Minimap2/StringTie long-read GTFs; the FLAIR input is just an empty sentinel.
 
 ## EDTA Repeat Annotation
 
