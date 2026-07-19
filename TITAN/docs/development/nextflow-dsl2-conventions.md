@@ -1,5 +1,12 @@
 # TITAN Nextflow DSL2 conventions
 
+## Table Of Contents
+
+- [Process naming](#process-naming)
+- [Module contracts](#module-contracts)
+- [Shared scripts](#shared-scripts)
+
+
 These conventions are intentionally conservative for the current codebase.
 
 ## Process naming

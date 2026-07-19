@@ -1,5 +1,16 @@
 # TITAN input preparation
 
+## Table Of Contents
+
+- [Required Inputs](#required-inputs)
+- [Assemblies](#assemblies)
+- [Previous Annotation](#previous-annotation)
+- [RNA-seq Samplesheet](#rna-seq-samplesheet)
+- [Protein Samplesheet](#protein-samplesheet)
+- [EGAPx YAML](#egapx-yaml)
+- [Input Validation](#input-validation)
+
+
 This page documents the files required by TITAN and the expected formats. Use
 absolute paths for production and HPC runs so paths remain valid on compute
 nodes and inside container bind mounts.

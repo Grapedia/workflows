@@ -1,5 +1,12 @@
 # Contributing To TITAN
 
+## Table Of Contents
+
+- [Development References](#development-references)
+- [Developer Quality Contract](#developer-quality-contract)
+- [Validation And CI](#validation-and-ci)
+
+
 TITAN uses Nextflow DSL2 modules and subworkflows with a stable public graph.
 Development changes should preserve the contracts below.
 

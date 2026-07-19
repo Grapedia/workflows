@@ -1,5 +1,47 @@
 # TITAN Tool Commands Reference
 
+## Table Of Contents
+
+- [Execution Order](#execution-order)
+- [Input Validation](#input-validation)
+- [tRNA Annotation](#trna-annotation)
+- [Rfam Annotation](#rfam-annotation)
+- [Short-Read Staging](#short-read-staging)
+- [Liftoff Transfer](#liftoff-transfer)
+- [AGAT Conversion For Liftoff Evidence](#agat-conversion-for-liftoff-evidence)
+- [EGAPx](#egapx)
+- [Salmon Strand Inference](#salmon-strand-inference)
+- [STAR Index And Alignment](#star-index-and-alignment)
+- [HISAT2 Index And Alignment](#hisat2-index-and-alignment)
+- [Long-Read Staging And Minimap2](#long-read-staging-and-minimap2)
+- [StringTie Transcript Assembly](#stringtie-transcript-assembly)
+- [PsiCLASS Transcript Assembly](#psiclass-transcript-assembly)
+- [Merging Transcript Assemblies](#merging-transcript-assemblies)
+- [GffCompare For PsiCLASS](#gffcompare-for-psiclass)
+- [FLAIR Isoforms](#flair-isoforms)
+- [EDTA Repeat Annotation](#edta-repeat-annotation)
+- [Protein FASTA Normalization](#protein-fasta-normalization)
+- [BRAKER3](#braker3)
+- [Helixer](#helixer)
+- [AEGIS Evidence Merge](#aegis-evidence-merge)
+- [Diamond2GO](#diamond2go)
+- [eggNOG-mapper](#eggnog-mapper)
+- [InterProScan](#interproscan)
+- [Mikado And TransDecoder](#mikado-and-transdecoder)
+- [lncRNA Candidate Annotation](#lncrna-candidate-annotation)
+- [SQANTI3 Long-Read QC](#sqanti3-long-read-qc)
+- [Final Annotation Validation](#final-annotation-validation)
+- [Final Transcriptome And Expression Support](#final-transcriptome-and-expression-support)
+- [BUSCO](#busco)
+- [OMArk](#omark)
+- [AGAT Structural Statistics](#agat-structural-statistics)
+- [ncRNA QC](#ncrna-qc)
+- [MultiQC](#multiqc)
+- [Provenance Manifests](#provenance-manifests)
+- [Skipped And Sentinel Processes](#skipped-and-sentinel-processes)
+- [Process Coverage Inventory](#process-coverage-inventory)
+
+
 This reference documents the commands launched by TITAN in logical workflow
 order. It is a technical companion to `docs/reference/tools.md`: that file
 explains what each tool contributes, while this file records the command lines,

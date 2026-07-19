@@ -1,5 +1,12 @@
 # TITAN container locks
 
+## Table Of Contents
+
+- [Runtime images](#runtime-images)
+- [Dockerfile base images](#dockerfile-base-images)
+- [Test scope](#test-scope)
+
+
 TITAN runtime containers are locked in `nextflow.config` with `image@sha256` references. Process modules must use `params.container_*` values instead of hardcoded image names.
 
 Validate the contract with:

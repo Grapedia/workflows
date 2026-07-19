@@ -1,5 +1,19 @@
 # TITAN input and output tree layouts
 
+## Table Of Contents
+
+- [Input Tree](#input-tree)
+- [Output Tree](#output-tree)
+- [Primary Annotation](#primary-annotation)
+- [Core Evidence Outputs](#core-evidence-outputs)
+- [EGAPx Outputs](#egapx-outputs)
+- [Additional Annotations](#additional-annotations)
+- [Optional Final Annotation Source](#optional-final-annotation-source)
+- [Functional Annotation](#functional-annotation)
+- [Quality, Validation And Provenance](#quality-validation-and-provenance)
+- [Intermediate And Runtime Outputs](#intermediate-and-runtime-outputs)
+
+
 This page gives a file-tree view of the inputs TITAN expects and the outputs it
 publishes. Paths are examples; use absolute paths for production and HPC runs.
 

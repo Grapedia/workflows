@@ -1,5 +1,24 @@
 # TITAN reference data
 
+## Table Of Contents
+
+- [Summary](#summary)
+- [EGAPx](#egapx)
+- [eggNOG-mapper](#eggnog-mapper)
+- [Helixer](#helixer)
+- [InterProScan](#interproscan)
+- [tRNAscan-SE](#trnascan-se)
+- [Infernal/Rfam](#infernalrfam)
+- [lncRNA/CPAT](#lncrnacpat)
+- [Mikado and TransDecoder](#mikado-and-transdecoder)
+- [FLAIR](#flair)
+- [SQANTI3](#sqanti3)
+- [OMArk](#omark)
+- [BUSCO](#busco)
+- [Colmar Launcher](#colmar-launcher)
+- [References](#references)
+
+
 This page lists external datasets and model downloads needed by TITAN modules.
 Keep these directories on a persistent filesystem visible to compute nodes.
 

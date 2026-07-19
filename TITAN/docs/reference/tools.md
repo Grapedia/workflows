@@ -1,5 +1,27 @@
 # TITAN Tool Reference
 
+## Table Of Contents
+
+- [Input Validation](#input-validation)
+- [tRNAscan-SE](#trnascan-se)
+- [Infernal/Rfam ncRNA](#infernalrfam-ncrna)
+- [RNA-Seq Evidence](#rna-seq-evidence)
+- [Liftoff](#liftoff)
+- [EGAPx](#egapx)
+- [FLAIR Long-Read Isoforms](#flair-long-read-isoforms)
+- [EDTA](#edta)
+- [BRAKER3](#braker3)
+- [Helixer](#helixer)
+- [AEGIS](#aegis)
+- [Mikado Final Annotation Source](#mikado-final-annotation-source)
+- [lncRNA Candidates](#lncrna-candidates)
+- [SQANTI3 Long-Read Isoform QC](#sqanti3-long-read-isoform-qc)
+- [Diamond2GO](#diamond2go)
+- [eggNOG-mapper](#eggnog-mapper)
+- [InterProScan](#interproscan)
+- [Quality Report](#quality-report)
+
+
 This reference keeps tool-specific behavior out of the README while preserving
 the operational details needed for production runs. Sections follow the
 pipeline orchestration order in `workflows/titan.nf`: validation, early

@@ -1,5 +1,18 @@
 # TITAN Architecture
 
+## Table Of Contents
+
+- [Workflow Shape](#workflow-shape)
+- [Evidence Contracts](#evidence-contracts)
+- [Mandatory Core Evidence](#mandatory-core-evidence)
+- [RNA-Seq And Long Reads](#rna-seq-and-long-reads)
+- [Additional Annotation Branches](#additional-annotation-branches)
+- [Staging And Publication](#staging-and-publication)
+- [Containers And Profiles](#containers-and-profiles)
+- [Validation And Test Data](#validation-and-test-data)
+- [Provenance](#provenance)
+
+
 This document records durable architecture decisions for TITAN. It is written
 for contributors who need to understand the workflow structure and the
 contracts between layers.

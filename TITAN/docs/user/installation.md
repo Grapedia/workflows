@@ -1,5 +1,17 @@
 # TITAN installation
 
+## Table Of Contents
+
+- [1. Requirements](#1-requirements)
+- [2. Clone](#2-clone)
+- [3. Validate the Checkout](#3-validate-the-checkout)
+- [4. Container Runtime](#4-container-runtime)
+- [5. Prepare Inputs](#5-prepare-inputs)
+- [6. Prepare Reference Data](#6-prepare-reference-data)
+- [7. First Launch](#7-first-launch)
+- [8. Next Steps](#8-next-steps)
+
+
 This page is the short setup path from a fresh clone to a runnable TITAN
 command. Data formats, reference database downloads and production operations
 are documented separately:

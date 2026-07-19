@@ -1,5 +1,17 @@
 # TITAN production run
 
+## Table Of Contents
+
+- [Launcher](#launcher)
+- [Optional Branches](#optional-branches)
+- [Profiles](#profiles)
+- [Slurm and Apptainer](#slurm-and-apptainer)
+- [Direct Nextflow Command](#direct-nextflow-command)
+- [Resume](#resume)
+- [Outputs](#outputs)
+- [Production Checklist](#production-checklist)
+
+
 This page documents the recommended production launch path, Slurm/Apptainer
 usage, resume behavior and final checklist. Install TITAN first with
 [installation.md](installation.md), then prepare inputs and reference data with
