@@ -33,6 +33,26 @@ process hisat2_alignment {
     BAM="${sample_ID}_Aligned.sort.bam"
     HISAT2_STRANDNESS=""
 
+    # samtools sort defaults to a single thread with a 768M buffer, so with no
+    # explicit -@/-m it becomes the bottleneck behind hisat2's ${task.cpus}
+    # threads: hisat2 blocks on the pipe and sort spills many merge passes to
+    # disk (observed as dozens of *.tmp.NNNN.bam chunks and a 24h SLURM
+    # timeout on a single sample). Split task.cpus so sort gets enough
+    # threads/memory to keep up instead of stalling the whole pipe.
+    TOTAL_CPUS=${task.cpus}
+    if [ "\$TOTAL_CPUS" -ge 8 ]; then
+      SORT_CPUS=4
+    elif [ "\$TOTAL_CPUS" -ge 4 ]; then
+      SORT_CPUS=2
+    else
+      SORT_CPUS=1
+    fi
+    HISAT2_CPUS=\$(( TOTAL_CPUS - SORT_CPUS ))
+    if [ "\$HISAT2_CPUS" -lt 1 ]; then
+      HISAT2_CPUS=1
+    fi
+    SORT_MEM="2G"
+
     if [[ "${library_layout}" == "paired" ]]; then
       case "${strand_type}" in
         unstranded) HISAT2_STRANDNESS="" ;;
@@ -43,9 +63,9 @@ process hisat2_alignment {
           exit 1
           ;;
       esac
-      CMD="/hisat2-2.2.1/hisat2 -p ${task.cpus} -x \${HISAT2_INDEX} \${HISAT2_STRANDNESS} -1 ${read_1} -2 ${read_2} | samtools sort -o \${BAM} -"
+      CMD="/hisat2-2.2.1/hisat2 -p \${HISAT2_CPUS} -x \${HISAT2_INDEX} \${HISAT2_STRANDNESS} -1 ${read_1} -2 ${read_2} | samtools sort -@ \${SORT_CPUS} -m \${SORT_MEM} -o \${BAM} -"
       echo "[\$DATE] Executing: \$CMD"
-      /hisat2-2.2.1/hisat2 -p ${task.cpus} -x "\${HISAT2_INDEX}" \${HISAT2_STRANDNESS} -1 ${read_1} -2 ${read_2} | samtools sort -o "\${BAM}" -
+      /hisat2-2.2.1/hisat2 -p "\${HISAT2_CPUS}" -x "\${HISAT2_INDEX}" \${HISAT2_STRANDNESS} -1 ${read_1} -2 ${read_2} | samtools sort -@ "\${SORT_CPUS}" -m "\${SORT_MEM}" -o "\${BAM}" -
     elif [[ "${library_layout}" == "single" ]]; then
       case "${strand_type}" in
         unstranded) HISAT2_STRANDNESS="" ;;
@@ -56,9 +76,9 @@ process hisat2_alignment {
           exit 1
           ;;
       esac
-      CMD="/hisat2-2.2.1/hisat2 -p ${task.cpus} -x \${HISAT2_INDEX} \${HISAT2_STRANDNESS} -U ${read_1} | samtools sort -o \${BAM} -"
+      CMD="/hisat2-2.2.1/hisat2 -p \${HISAT2_CPUS} -x \${HISAT2_INDEX} \${HISAT2_STRANDNESS} -U ${read_1} | samtools sort -@ \${SORT_CPUS} -m \${SORT_MEM} -o \${BAM} -"
       echo "[\$DATE] Executing: \$CMD"
-      /hisat2-2.2.1/hisat2 -p ${task.cpus} -x "\${HISAT2_INDEX}" \${HISAT2_STRANDNESS} -U ${read_1} | samtools sort -o "\${BAM}" -
+      /hisat2-2.2.1/hisat2 -p "\${HISAT2_CPUS}" -x "\${HISAT2_INDEX}" \${HISAT2_STRANDNESS} -U ${read_1} | samtools sort -@ "\${SORT_CPUS}" -m "\${SORT_MEM}" -o "\${BAM}" -
     else
       echo "Unsupported library_layout for HISAT2 alignment: ${library_layout}" >&2
       exit 1

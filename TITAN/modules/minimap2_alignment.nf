@@ -33,10 +33,26 @@ process minimap2_alignment {
       exit 1
     fi
 
-    CMD="minimap2 -t ${task.cpus} -ax splice:hq -uf ${minimap2_genome_indices} \${reads} | samtools sort -o ${sample_ID}_Aligned.sorted.bam -"
+    # samtools sort defaults to 1 thread / 768M buffer; give it a fair share
+    # of task.cpus so it doesn't stall the minimap2 pipe (see hisat2_alignment.nf).
+    TOTAL_CPUS=${task.cpus}
+    if [ "\$TOTAL_CPUS" -ge 8 ]; then
+      SORT_CPUS=4
+    elif [ "\$TOTAL_CPUS" -ge 4 ]; then
+      SORT_CPUS=2
+    else
+      SORT_CPUS=1
+    fi
+    MINIMAP2_CPUS=\$(( TOTAL_CPUS - SORT_CPUS ))
+    if [ "\$MINIMAP2_CPUS" -lt 1 ]; then
+      MINIMAP2_CPUS=1
+    fi
+    SORT_MEM="2G"
+
+    CMD="minimap2 -t \${MINIMAP2_CPUS} -ax splice:hq -uf ${minimap2_genome_indices} \${reads} | samtools sort -@ \${SORT_CPUS} -m \${SORT_MEM} -o ${sample_ID}_Aligned.sorted.bam -"
     echo "[\$DATE] Executing: \$CMD"
-    minimap2 -t ${task.cpus} -ax splice:hq -uf ${minimap2_genome_indices} "\${reads}" \\
-      | samtools sort -o ${sample_ID}_Aligned.sorted.bam -
+    minimap2 -t "\${MINIMAP2_CPUS}" -ax splice:hq -uf ${minimap2_genome_indices} "\${reads}" \\
+      | samtools sort -@ "\${SORT_CPUS}" -m "\${SORT_MEM}" -o ${sample_ID}_Aligned.sorted.bam -
     {
       printf '"%s":\n' "${task.process}"
       minimap2 --version | awk '{ printf "  minimap2: \\"%s\\"\\n", \$0 }'
