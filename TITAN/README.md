@@ -109,9 +109,8 @@ flowchart TD
     RNA -.long reads.-> FLAIR
     FASTP --> STRAND
     LIFT -.CDS-based index.-> STRAND
-    STRAND --> STAR & HISAT
-    IDX --> STAR & HISAT & MM2
-    STAR --> PSI
+    STRAND --> STAR & HISAT & PSI
+    IDX --> STAR & HISAT & MM2 & PSI
     PROT --> BRAKER
     STAR --> BRAKER
     MM2 -.long reads.-> BRAKER
@@ -196,9 +195,8 @@ flowchart TD
     RNA --> MM2
     FASTP --> STRAND
     LIFT -.CDS-based index.-> STRAND
-    STRAND --> STAR & HISAT
-    IDX --> STAR & HISAT & MM2
-    STAR --> PSI
+    STRAND --> STAR & HISAT & PSI
+    IDX --> STAR & HISAT & MM2 & PSI
     PROT --> BRAKER
     STAR --> BRAKER
     MM2 -.long reads.-> BRAKER
