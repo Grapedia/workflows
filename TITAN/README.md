@@ -150,6 +150,147 @@ groups; it does not consume alignment output. AEGIS merges STAR-based
 HISAT2/StringTie tracks feed Mikado only, not AEGIS. Nextflow's per-run
 `-with-dag` report shows the full per-sample task fan-out.
 
+### Decomposed Sub-Workflows
+
+The full graph above is dense because it overlays the mandatory pipeline,
+the optional evidence branches and the QC/reporting stage in one diagram.
+The three views below split it along those phases for easier reading; nodes
+and colors match the full graph.
+
+**1. Core pipeline** (always runs: Liftoff, RNA-seq alignment/assembly, EDTA,
+EGAPx, BRAKER3, AEGIS merge, functional annotation):
+
+```mermaid
+flowchart TD
+    classDef core fill:#dbe9ff,stroke:#3366cc,color:#111
+    classDef opt fill:#fff3cd,stroke:#cc9900,color:#111,stroke-dasharray:4 3
+
+    NEW[new_assembly FASTA]:::core
+    PREV[previous_assembly + previous_annotations]:::core
+    RNA[RNAseq_samplesheet]:::core
+    PROT[protein_samplesheet]:::core
+    EGCFG[egapx_paramfile]:::core
+
+    LIFT[Liftoff]:::core
+    EDTA[EDTA masking]:::core
+    EGAPX[EGAPx]:::core
+    FASTP[fastp]:::core
+    IDX[STAR / HISAT2 / Minimap2 indices]:::core
+    STRAND[Salmon strand inference]:::core
+    STAR[STAR + StringTie]:::core
+    PSI[STAR + PsiCLASS]:::core
+    HISAT[HISAT2 + StringTie]:::core
+    MM2[Minimap2 + StringTie long reads]:::core
+    BRAKER[BRAKER3 AUGUSTUS + GeneMark]:::core
+
+    AEGIS[AEGIS merge + Vitvi IDs]:::core
+    FINAL[final_annotation.gff3 + proteins]:::core
+    D2GO[Diamond2GO]:::core
+    EGG[eggNOG-mapper]:::opt
+    IPS[InterProScan]:::opt
+
+    NEW --> LIFT & EDTA & IDX & BRAKER
+    PREV --> LIFT
+    EGCFG --> EGAPX
+    RNA --> FASTP
+    RNA --> MM2
+    FASTP --> STRAND
+    LIFT -.CDS-based index.-> STRAND
+    STRAND --> STAR & HISAT
+    IDX --> STAR & HISAT & MM2
+    STAR --> PSI
+    PROT --> BRAKER
+    STAR --> BRAKER
+    MM2 -.long reads.-> BRAKER
+
+    LIFT & EGAPX & BRAKER & STAR & PSI & MM2 --> AEGIS
+    EDTA --> AEGIS
+    AEGIS --> FINAL --> D2GO
+    FINAL -.-> EGG & IPS
+```
+
+**2. Optional evidence branches** (Helixer, FLAIR, Mikado, lncRNA — enabled
+per-project when their reference data are available):
+
+```mermaid
+flowchart TD
+    classDef core fill:#dbe9ff,stroke:#3366cc,color:#111
+    classDef opt fill:#fff3cd,stroke:#cc9900,color:#111,stroke-dasharray:4 3
+
+    NEW[new_assembly FASTA]:::core
+    RNA[RNAseq_samplesheet]:::core
+    LIFT[Liftoff]:::core
+    EDTA[EDTA masking]:::core
+    EGAPX[EGAPx]:::core
+    STAR[STAR + StringTie]:::core
+    PSI[STAR + PsiCLASS]:::core
+    HISAT[HISAT2 + StringTie]:::core
+    MM2[Minimap2 + StringTie long reads]:::core
+    BRAKER[BRAKER3 AUGUSTUS + GeneMark]:::core
+    FINAL[final_annotation.gff3 + proteins]:::core
+    AEGIS[AEGIS merge + Vitvi IDs]:::core
+
+    TRNA[tRNAscan-SE]:::opt
+    RFAM[Infernal/Rfam]:::opt
+    HELIXER[Helixer]:::opt
+    FLAIR[FLAIR]:::opt
+    LNC[lncRNA candidates]:::opt
+    MIK[Mikado + TransDecoder]:::opt
+    MIKGFF[final_mikado_annotation.gff3]:::opt
+
+    NEW --> TRNA & RFAM & FLAIR
+    RNA -.long reads.-> FLAIR
+    LIFT -.splice correction.-> FLAIR
+    EDTA --> HELIXER
+    HELIXER & FLAIR -.optional evidence.-> AEGIS
+
+    FINAL --> LNC
+    TRNA & RFAM -.exclude ncRNA overlap.-> LNC
+    STAR & HISAT & MM2 -.candidate transcripts.-> LNC
+
+    LIFT & EGAPX & BRAKER & STAR & PSI & HISAT & MM2 & HELIXER & FLAIR --> MIK
+    EDTA --> MIK
+    MIK --> MIKGFF
+```
+
+**3. QC and reporting** (everything feeding the final MultiQC report):
+
+```mermaid
+flowchart TD
+    classDef core fill:#dbe9ff,stroke:#3366cc,color:#111
+    classDef opt fill:#fff3cd,stroke:#cc9900,color:#111,stroke-dasharray:4 3
+    classDef qc fill:#e6f4ea,stroke:#2e7d32,color:#111
+
+    FASTP[fastp]:::core
+    EDTA[EDTA masking]:::core
+    FINAL[final_annotation.gff3 + proteins]:::core
+    MM2[Minimap2 + StringTie long reads]:::core
+
+    TRNA[tRNAscan-SE]:::opt
+    RFAM[Infernal/Rfam]:::opt
+    FLAIR[FLAIR]:::opt
+    LNC[lncRNA candidates]:::opt
+    MIKGFF[final_mikado_annotation.gff3]:::opt
+    SQANTI[SQANTI3]:::opt
+    SRCQC[AEGIS vs Mikado]:::opt
+
+    BUSCO[BUSCO]:::qc
+    OMARK[OMArk]:::qc
+    AGAT[AGAT stats]:::qc
+    NCRNA[ncRNA summary]:::qc
+    EXPR[Expression support]:::qc
+    VALID[Final annotation validation]:::qc
+    MULTIQC[MultiQC HTML]:::qc
+
+    FINAL --> BUSCO & OMARK & AGAT & SQANTI & EXPR
+    FASTP -.transcript quantification.-> EXPR
+    EDTA & FINAL --> VALID
+    TRNA & RFAM --> NCRNA
+    MM2 & FLAIR --> SQANTI
+    FINAL & MIKGFF --> SRCQC
+    FASTP & BUSCO & OMARK & AGAT & NCRNA & LNC & SQANTI & EXPR & SRCQC & VALID --> MULTIQC
+```
+
 ## Quick Start
 
 ```bash
