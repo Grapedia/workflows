@@ -69,11 +69,11 @@ flowchart TD
     EGAPX[EGAPx]:::core
     FASTP[fastp]:::core
     IDX[STAR / HISAT2 / Minimap2 indices]:::core
+    STRAND[Salmon strand inference]:::core
     STAR[STAR + StringTie]:::core
     PSI[STAR + PsiCLASS]:::core
     HISAT[HISAT2 + StringTie]:::core
     MM2[Minimap2 + StringTie long reads]:::core
-    STRAND[Salmon strand inference]:::core
     BRAKER[BRAKER3 AUGUSTUS + GeneMark]:::core
 
     TRNA[tRNAscan-SE]:::opt
@@ -97,39 +97,58 @@ flowchart TD
     AGAT[AGAT stats]:::qc
     NCRNA[ncRNA summary]:::qc
     EXPR[Expression support]:::qc
+    VALID[Final annotation validation]:::qc
     SRCQC[AEGIS vs Mikado]:::opt
     MULTIQC[MultiQC HTML]:::qc
 
-    NEW --> LIFT & EDTA & TRNA & RFAM
+    NEW --> LIFT & EDTA & TRNA & RFAM & IDX & BRAKER & FLAIR
     PREV --> LIFT
     EGCFG --> EGAPX
-    RNA --> FASTP --> IDX --> STAR & PSI & HISAT & MM2
-    STAR & HISAT --> STRAND
+    RNA --> FASTP
+    RNA --> MM2
+    RNA -.long reads.-> FLAIR
+    FASTP --> STRAND
+    LIFT -.CDS-based index.-> STRAND
+    STRAND --> STAR & HISAT
+    IDX --> STAR & HISAT & MM2
+    STAR --> PSI
     PROT --> BRAKER
-    EDTA --> BRAKER & HELIXER
-    MM2 --> FLAIR
+    STAR --> BRAKER
+    MM2 -.long reads.-> BRAKER
+    EDTA --> HELIXER
     LIFT -.splice correction.-> FLAIR
 
-    LIFT & EGAPX & BRAKER & STAR & PSI & HISAT & MM2 --> AEGIS
+    LIFT & EGAPX & BRAKER & STAR & PSI & MM2 --> AEGIS
+    EDTA --> AEGIS
     HELIXER & FLAIR -.optional evidence.-> AEGIS
     AEGIS --> FINAL --> D2GO
     FINAL -.-> EGG & IPS
 
     FINAL --> LNC
     TRNA & RFAM -.exclude ncRNA overlap.-> LNC
-    STAR & PSI & HISAT & MM2 -.candidate transcripts.-> LNC
-    LIFT & EGAPX & BRAKER & STAR & PSI & HISAT & MM2 & HELIXER & FLAIR --> MIK --> MIKGFF
+    STAR & HISAT & MM2 -.candidate transcripts.-> LNC
+    LIFT & EGAPX & BRAKER & STAR & PSI & HISAT & MM2 & HELIXER & FLAIR --> MIK
+    EDTA --> MIK
+    MIK --> MIKGFF
 
-    FINAL --> BUSCO & OMARK & AGAT & EXPR & SQANTI
+    FINAL --> BUSCO & OMARK & AGAT & SQANTI & EXPR
+    FASTP -.transcript quantification.-> EXPR
+    EDTA & FINAL --> VALID
     TRNA & RFAM --> NCRNA
     MM2 & FLAIR --> SQANTI
     FINAL & MIKGFF --> SRCQC
-    D2GO & EGG & IPS & BUSCO & OMARK & AGAT & NCRNA & SQANTI & EXPR & SRCQC --> MULTIQC
+    FASTP & BUSCO & OMARK & AGAT & NCRNA & LNC & SQANTI & EXPR & SRCQC & VALID --> MULTIQC
 ```
 
 Blue nodes are the core graph, yellow dashed nodes are optional branches, and
-green nodes are quality-report steps. Nextflow's per-run `-with-dag` report
-shows the full per-sample task fan-out.
+green nodes are quality-report steps. Strand inference (Salmon, seeded by a
+Liftoff-derived CDS index) runs once per short-read sample directly on the
+fastp-trimmed FASTQs, before alignment, so it can pick the STAR/HISAT2
+alignment options and the stranded/unstranded StringTie/PsiCLASS assembly
+groups; it does not consume alignment output. AEGIS merges STAR-based
+(StringTie and PsiCLASS) and Minimap2/StringTie long-read evidence; the
+HISAT2/StringTie tracks feed Mikado only, not AEGIS. Nextflow's per-run
+`-with-dag` report shows the full per-sample task fan-out.
 
 ## Quick Start
 
