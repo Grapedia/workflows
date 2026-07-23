@@ -36,10 +36,10 @@ process titan_provenance {
     path(star_psiclass_unstranded)
     path(star_stringtie_default_unstranded)
     path(star_stringtie_alt_unstranded)
-    path(hisat2_stringtie_default_stranded)
-    path(hisat2_stringtie_alt_stranded)
-    path(hisat2_stringtie_default_unstranded)
-    path(hisat2_stringtie_alt_unstranded)
+    path(hisat2_stringtie_default_stranded, stageAs: "hisat2_stringtie_default_stranded.gtf")
+    path(hisat2_stringtie_alt_stranded, stageAs: "hisat2_stringtie_alt_stranded.gtf")
+    path(hisat2_stringtie_default_unstranded, stageAs: "hisat2_stringtie_default_unstranded.gtf")
+    path(hisat2_stringtie_alt_unstranded, stageAs: "hisat2_stringtie_alt_unstranded.gtf")
     path(long_reads_default)
     path(long_reads_alt)
     path(flair_isoforms_gtf)
@@ -99,6 +99,14 @@ def file_record(label, path):
         "sha256": h.hexdigest(),
     }
 
+def skipped_record(label, reason):
+    return {"label": label, "present": False, "status": "skipped", "reason": reason}
+
+def optional_hisat2_record(label, path):
+    if str("${params.run_hisat2}").lower() != "true":
+        return skipped_record(label, "run_hisat2=false")
+    return file_record(label, path)
+
 manifest = {
     "schema_version": "titan.evidence_manifest.v1",
     "workflow": "TITAN",
@@ -125,6 +133,7 @@ manifest = {
         "container_omark": "${params.container_omark}",
         "run_expression_validation": "${params.run_expression_validation}",
         "expression_support_min_tpm": "${params.expression_support_min_tpm}",
+        "run_hisat2": "${params.run_hisat2}",
         "container_salmon": "${params.container_salmon}",
     },
     "inputs": [
@@ -147,10 +156,10 @@ manifest = {
         file_record("star_psiclass_unstranded", "${star_psiclass_unstranded}"),
         file_record("star_stringtie_default_unstranded", "${star_stringtie_default_unstranded}"),
         file_record("star_stringtie_alt_unstranded", "${star_stringtie_alt_unstranded}"),
-        file_record("hisat2_stringtie_default_stranded", "${hisat2_stringtie_default_stranded}"),
-        file_record("hisat2_stringtie_alt_stranded", "${hisat2_stringtie_alt_stranded}"),
-        file_record("hisat2_stringtie_default_unstranded", "${hisat2_stringtie_default_unstranded}"),
-        file_record("hisat2_stringtie_alt_unstranded", "${hisat2_stringtie_alt_unstranded}"),
+        optional_hisat2_record("hisat2_stringtie_default_stranded", "${hisat2_stringtie_default_stranded}"),
+        optional_hisat2_record("hisat2_stringtie_alt_stranded", "${hisat2_stringtie_alt_stranded}"),
+        optional_hisat2_record("hisat2_stringtie_default_unstranded", "${hisat2_stringtie_default_unstranded}"),
+        optional_hisat2_record("hisat2_stringtie_alt_unstranded", "${hisat2_stringtie_alt_unstranded}"),
         file_record("long_reads_default", "${long_reads_default}"),
         file_record("long_reads_alt", "${long_reads_alt}"),
         file_record("flair_isoforms_gtf", "${flair_isoforms_gtf}"),
@@ -214,6 +223,7 @@ with open("versions.yml", "w", encoding="utf-8") as handle:
     handle.write('  omark_data_dir: "${params.omark_data_dir}"\\n')
     handle.write('  expression_validation: "${params.run_expression_validation}"\\n')
     handle.write('  expression_support_min_tpm: "${params.expression_support_min_tpm}"\\n')
+    handle.write('  hisat2: "${params.run_hisat2}"\\n')
 PY
     """
 }

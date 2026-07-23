@@ -27,7 +27,7 @@ process lncrna_candidate_annotation {
     path(trna_gff3)
     path(rfam_gff3)
     path(star_stringtie_gtf)
-    path(hisat2_stringtie_gtf)
+    path(hisat2_stringtie_gtf, stageAs: "hisat2_stringtie.gtf")
     path(long_reads_gtf)
     path(build_lncrna_candidates)
     path(download_cpat_plant_lncpipe)
@@ -84,6 +84,11 @@ EOF
         fi
     fi
 
+    transcript_gtfs=("${star_stringtie_gtf}" "${long_reads_gtf}")
+    if [[ "${params.run_hisat2}" == "true" ]]; then
+      transcript_gtfs=("${star_stringtie_gtf}" "${hisat2_stringtie_gtf}" "${long_reads_gtf}")
+    fi
+
     python3 "${build_lncrna_candidates}" \\
       --genome "${genome}" \\
       --final-annotation "${final_annotation_gff3}" \\
@@ -91,7 +96,7 @@ EOF
       --rfam-gff3 "${rfam_gff3}" \\
       --min-length "${params.lncrna_min_length}" \\
       --output-prefix lncrna_candidates \\
-      "${star_stringtie_gtf}" "${hisat2_stringtie_gtf}" "${long_reads_gtf}"
+      "\${transcript_gtfs[@]}"
 
     if [[ "${params.cpat_model_dir}" != "false" && -n "${params.cpat_model_dir}" ]] && grep -q '^>' lncrna_candidates.fasta; then
         CPAT_BIN=\$(command -v cpat.py || command -v cpat)
@@ -116,7 +121,7 @@ EOF
       --cpat-best-tsv cpat_plant.output.ORF_prob.best.tsv \\
       --cpat-cutoff "${params.cpat_plant_cutoff}" \\
       --output-prefix lncrna_candidates \\
-      "${star_stringtie_gtf}" "${hisat2_stringtie_gtf}" "${long_reads_gtf}"
+      "\${transcript_gtfs[@]}"
 
     cpat_version=\$("\${CPAT_BIN:-cpat}" --version 2>&1 | head -n 1 || true)
     printf '"%s":\n  lncrna_candidates: "python-stdlib+cpat-plant"\n  cpat: "%s"\n  cpat_model_dir: "%s"\n  cpat_model_flavour: "%s"\n  cpat_cutoff: "%s"\n  output_status: "cpat_plant_filtered_candidates_not_final_vitis_annotation"\n  container: "%s"\n' \\

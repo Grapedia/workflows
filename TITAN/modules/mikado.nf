@@ -21,10 +21,10 @@ process mikado_prepare {
     path(star_psiclass_unstranded)
     path(star_stringtie_default_unstranded)
     path(star_stringtie_alt_unstranded)
-    path(hisat2_stringtie_default_stranded)
-    path(hisat2_stringtie_alt_stranded)
-    path(hisat2_stringtie_default_unstranded)
-    path(hisat2_stringtie_alt_unstranded)
+    path(hisat2_stringtie_default_stranded, stageAs: "hisat2_stringtie_default_stranded.gtf")
+    path(hisat2_stringtie_alt_stranded, stageAs: "hisat2_stringtie_alt_stranded.gtf")
+    path(hisat2_stringtie_default_unstranded, stageAs: "hisat2_stringtie_default_unstranded.gtf")
+    path(hisat2_stringtie_alt_unstranded, stageAs: "hisat2_stringtie_alt_unstranded.gtf")
     path(long_reads_default)
     path(long_reads_alt)
     path(flair_isoforms_gtf)
@@ -54,26 +54,34 @@ process mikado_prepare {
     # Keep only valid GFF3/comment lines before Mikado's strict parser.
     awk -F'\\t' 'NF == 9 || /^#/' "${liftoff_gff3}" > liftoff_sanitized.gff3
 
-    python3 "${make_mikado_list}" \\
-      --source "liftoff_sanitized.gff3:liftoff:False:10:True" \\
-      --source "${egapx_gff3}:egapx:False:9:True" \\
-      --source "${braker_augustus_gff3}:braker_augustus:False:8:False" \\
-      --source "${braker_genemark_gtf}:braker_genemark:False:7:False" \\
-      --source "${star_stringtie_default_stranded}:star_stringtie_default_stranded:True:5:False" \\
-      --source "${star_stringtie_alt_stranded}:star_stringtie_alt_stranded:True:4:False" \\
-      --source "${star_psiclass_stranded}:star_psiclass_stranded:True:5:False" \\
-      --source "${star_psiclass_unstranded}:star_psiclass_unstranded:False:3:False" \\
-      --source "${star_stringtie_default_unstranded}:star_stringtie_default_unstranded:False:3:False" \\
-      --source "${star_stringtie_alt_unstranded}:star_stringtie_alt_unstranded:False:2:False" \\
-      --source "${hisat2_stringtie_default_stranded}:hisat2_stringtie_default_stranded:True:5:False" \\
-      --source "${hisat2_stringtie_alt_stranded}:hisat2_stringtie_alt_stranded:True:4:False" \\
-      --source "${hisat2_stringtie_default_unstranded}:hisat2_stringtie_default_unstranded:False:3:False" \\
-      --source "${hisat2_stringtie_alt_unstranded}:hisat2_stringtie_alt_unstranded:False:2:False" \\
-      --source "${long_reads_default}:long_reads_default:False:6:False" \\
-      --source "${long_reads_alt}:long_reads_alt:False:5:False" \\
-      --source "${flair_isoforms_gtf}:flair_isoforms:False:6:False" \\
-      --source "${helixer_gff3}:helixer:False:4:False" \\
-      -o transcript_inputs.tsv
+    mikado_sources=(
+      --source "liftoff_sanitized.gff3:liftoff:False:10:True"
+      --source "${egapx_gff3}:egapx:False:9:True"
+      --source "${braker_augustus_gff3}:braker_augustus:False:8:False"
+      --source "${braker_genemark_gtf}:braker_genemark:False:7:False"
+      --source "${star_stringtie_default_stranded}:star_stringtie_default_stranded:True:5:False"
+      --source "${star_stringtie_alt_stranded}:star_stringtie_alt_stranded:True:4:False"
+      --source "${star_psiclass_stranded}:star_psiclass_stranded:True:5:False"
+      --source "${star_psiclass_unstranded}:star_psiclass_unstranded:False:3:False"
+      --source "${star_stringtie_default_unstranded}:star_stringtie_default_unstranded:False:3:False"
+      --source "${star_stringtie_alt_unstranded}:star_stringtie_alt_unstranded:False:2:False"
+    )
+    if [[ "${params.run_hisat2}" == "true" ]]; then
+      mikado_sources+=(
+        --source "${hisat2_stringtie_default_stranded}:hisat2_stringtie_default_stranded:True:5:False"
+        --source "${hisat2_stringtie_alt_stranded}:hisat2_stringtie_alt_stranded:True:4:False"
+        --source "${hisat2_stringtie_default_unstranded}:hisat2_stringtie_default_unstranded:False:3:False"
+        --source "${hisat2_stringtie_alt_unstranded}:hisat2_stringtie_alt_unstranded:False:2:False"
+      )
+    fi
+    mikado_sources+=(
+      --source "${long_reads_default}:long_reads_default:False:6:False"
+      --source "${long_reads_alt}:long_reads_alt:False:5:False"
+      --source "${flair_isoforms_gtf}:flair_isoforms:False:6:False"
+      --source "${helixer_gff3}:helixer:False:4:False"
+    )
+
+    python3 "${make_mikado_list}" "\${mikado_sources[@]}" -o transcript_inputs.tsv
 
     mikado configure \\
       --list transcript_inputs.tsv \\

@@ -181,6 +181,10 @@
       "minimum": 0,
       "description": "Minimum gene-level TPM in at least one sample required to count a final gene as expression-supported."
     },
+    "run_hisat2": {
+      "type": "boolean",
+      "description": "Run the optional HISAT2 short-read alignment and HISAT2/StringTie transcriptome evidence branch. STAR evidence remains enabled independently."
+    },
     "run_trnascan": {
       "type": "boolean",
       "description": "Run tRNAscan-SE on the target genome to annotate tRNA genes under additional_annotations/ncrna/trna."

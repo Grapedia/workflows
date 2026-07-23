@@ -218,6 +218,7 @@ workflow TITAN {
         params.PSICLASS_c_option,
         params.STAR_genomeSAindexNbases,
         params.STAR_sjdbGTFfile,
+        params.run_hisat2,
         samples_list_long_reads,
         samples_list_short_reads,
         protein_list,

@@ -75,6 +75,7 @@ workflow generate_evidence_data {
         psiclass_c_option
         star_genome_sa_index_nbases
         star_sjdb_gtf_file
+        run_hisat2
         // RNA-seq tuples:
         //   long:  tuple val(sample_ID), val(SRA_or_FASTQ), val(library_layout), path(local_reads)
         //   short: tuple val(sample_ID), val(SRA_or_FASTQ), val(library_layout), path(local_reads)
@@ -139,30 +140,42 @@ workflow generate_evidence_data {
           .collect()
           .set{ concat_star_bams_BRAKER3 }
 
-        hisat2_indices = hisat2_genome_indices(
-            new_assembly,
-            new_assembly_name
-        )
-        hisat2_aligned = hisat2_alignment(hisat2_indices.index, salmon_output_processed, new_assembly_name)
+        if (run_hisat2.toString() == "true") {
+            hisat2_indices = hisat2_genome_indices(
+                new_assembly,
+                new_assembly_name
+            )
+            hisat2_aligned = hisat2_alignment(hisat2_indices.index, salmon_output_processed, new_assembly_name)
 
-        hisat2_assemblies_stringtie = assembly_transcriptome_hisat2_stringtie(
-            hisat2_aligned.samples_aligned,
-            stringtie_script,
-            stringtie_alt_script,
-            stringtie_transcriptome_script
-        )
+            hisat2_assemblies_stringtie = assembly_transcriptome_hisat2_stringtie(
+                hisat2_aligned.samples_aligned,
+                stringtie_script,
+                stringtie_alt_script,
+                stringtie_transcriptome_script
+            )
 
-        hisat2_stranded_default_gtfs = collectTranscriptGtfs(hisat2_assemblies_stringtie.hisat2_stringtie_transcriptomes, 'stranded', 1)
-        hisat2_stranded_alt_gtfs = collectTranscriptGtfs(hisat2_assemblies_stringtie.hisat2_stringtie_transcriptomes, 'stranded', 2)
-        hisat2_unstranded_default_gtfs = collectTranscriptGtfs(hisat2_assemblies_stringtie.hisat2_stringtie_transcriptomes, 'unstranded', 1, empty_default_gtf)
-        hisat2_unstranded_alt_gtfs = collectTranscriptGtfs(hisat2_assemblies_stringtie.hisat2_stringtie_transcriptomes, 'unstranded', 2, empty_alt_gtf)
+            hisat2_stranded_default_gtfs = collectTranscriptGtfs(hisat2_assemblies_stringtie.hisat2_stringtie_transcriptomes, 'stranded', 1)
+            hisat2_stranded_alt_gtfs = collectTranscriptGtfs(hisat2_assemblies_stringtie.hisat2_stringtie_transcriptomes, 'stranded', 2)
+            hisat2_unstranded_default_gtfs = collectTranscriptGtfs(hisat2_assemblies_stringtie.hisat2_stringtie_transcriptomes, 'unstranded', 1, empty_default_gtf)
+            hisat2_unstranded_alt_gtfs = collectTranscriptGtfs(hisat2_assemblies_stringtie.hisat2_stringtie_transcriptomes, 'unstranded', 2, empty_alt_gtf)
 
-        merged_hisat2_stringtie = Stringtie_merging_short_reads_hisat2(
-            hisat2_stranded_default_gtfs,
-            hisat2_stranded_alt_gtfs,
-            hisat2_unstranded_default_gtfs,
-            hisat2_unstranded_alt_gtfs
-        )
+            merged_hisat2_stringtie = Stringtie_merging_short_reads_hisat2(
+                hisat2_stranded_default_gtfs,
+                hisat2_stranded_alt_gtfs,
+                hisat2_unstranded_default_gtfs,
+                hisat2_unstranded_alt_gtfs
+            )
+
+            hisat2_stringtie_stranded_default_gtf = merged_hisat2_stringtie.default_args_stranded
+            hisat2_stringtie_stranded_alt_gtf = merged_hisat2_stringtie.alt_args_stranded
+            hisat2_stringtie_unstranded_default_gtf = merged_hisat2_stringtie.default_args_unstranded
+            hisat2_stringtie_unstranded_alt_gtf = merged_hisat2_stringtie.alt_args_unstranded
+        } else {
+            hisat2_stringtie_stranded_default_gtf = empty_default_gtf
+            hisat2_stringtie_stranded_alt_gtf = empty_alt_gtf
+            hisat2_stringtie_unstranded_default_gtf = empty_default_gtf
+            hisat2_stringtie_unstranded_alt_gtf = empty_alt_gtf
+        }
 
         if (!has_long_reads) {
             empty_long_reads = empty_long_read_evidence(empty_default_gtf, empty_alt_gtf)
@@ -312,10 +325,10 @@ workflow generate_evidence_data {
         star_stringtie_stranded_alt_gtf = merged_star_stringtie.alt_args_stranded
         star_stringtie_unstranded_default_gtf = merged_star_stringtie.default_args_unstranded
         star_stringtie_unstranded_alt_gtf = merged_star_stringtie.alt_args_unstranded
-        hisat2_stringtie_stranded_default_gtf = merged_hisat2_stringtie.default_args_stranded
-        hisat2_stringtie_stranded_alt_gtf = merged_hisat2_stringtie.alt_args_stranded
-        hisat2_stringtie_unstranded_default_gtf = merged_hisat2_stringtie.default_args_unstranded
-        hisat2_stringtie_unstranded_alt_gtf = merged_hisat2_stringtie.alt_args_unstranded
+        hisat2_stringtie_stranded_default_gtf = hisat2_stringtie_stranded_default_gtf
+        hisat2_stringtie_stranded_alt_gtf = hisat2_stringtie_stranded_alt_gtf
+        hisat2_stringtie_unstranded_default_gtf = hisat2_stringtie_unstranded_default_gtf
+        hisat2_stringtie_unstranded_alt_gtf = hisat2_stringtie_unstranded_alt_gtf
         star_psiclass_stranded_gtf = gffcompare_out.star_psiclass_stranded
         star_psiclass_unstranded_gtf = gffcompare_out.star_psiclass_unstranded
         long_reads_default_gtf = merged_long_reads_default_args_gtf
