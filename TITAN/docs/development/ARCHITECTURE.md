@@ -46,7 +46,7 @@ Important evidence emits include:
 * `braker_augustus_gff3`
 * `braker_genemark_gtf`
 * STAR/StringTie GTF evidence
-* HISAT2/StringTie GTF evidence
+* optional HISAT2/StringTie GTF evidence
 * STAR/PsiCLASS GTF evidence
 * optional long-read StringTie evidence
 * optional FLAIR isoform evidence
@@ -76,8 +76,10 @@ genome form the rest of the core evidence set consumed by AEGIS.
 ## RNA-Seq And Long Reads
 
 RNA-seq samples are described by `RNAseq_samplesheet`. Short-read rows are
-prepared, trimmed, aligned with STAR and HISAT2, assembled with StringTie and
-PsiCLASS, and used for strand inference and final expression support.
+prepared, trimmed, aligned with STAR, assembled with StringTie and PsiCLASS,
+and used for strand inference and final expression support. HISAT2/StringTie is
+an opt-in evidence branch (`--run_hisat2 true`) that is disabled by default and
+does not feed AEGIS.
 
 Long-read behavior is inferred from rows where `library_layout` is `long`.
 There is no separate public `use_long_reads` switch. When long reads are
@@ -98,9 +100,10 @@ parameters. Optional branches should keep downstream reporting stable when
 disabled or when no biological records are produced.
 
 Mikado is an alternative final annotation source, not a replacement for AEGIS.
-It receives the same major evidence families as AEGIS, then runs Mikado
-prepare, optional TransDecoder ORF prediction, Mikado serialise and Mikado
-pick. TITAN compares AEGIS and Mikado outputs when Mikado is enabled.
+It receives the main annotation and transcript evidence families plus optional
+Mikado-only HISAT2/StringTie evidence when `--run_hisat2 true`, then runs
+Mikado prepare, optional TransDecoder ORF prediction, Mikado serialise and
+Mikado pick. TITAN compares AEGIS and Mikado outputs when Mikado is enabled.
 
 ## Staging And Publication
 
@@ -112,7 +115,8 @@ cache correctness and allow stale files to influence new runs.
 filenames. It should not be used as a dependency mechanism between processes.
 
 The main evidence path stages inputs for StringTie merges, GFFCompare,
-BRAKER3, AGAT, Salmon and STAR/HISAT2/Minimap2 alignment stages.
+BRAKER3, AGAT, Salmon and STAR/Minimap2 alignment stages. HISAT2 alignment
+staging is present only when the optional `--run_hisat2 true` branch is enabled.
 
 ## Containers And Profiles
 

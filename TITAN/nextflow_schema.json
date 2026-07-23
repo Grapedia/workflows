@@ -183,7 +183,7 @@
     },
     "run_hisat2": {
       "type": "boolean",
-      "description": "Run the optional HISAT2 short-read alignment and HISAT2/StringTie transcriptome evidence branch. STAR evidence remains enabled independently."
+      "description": "Run the optional HISAT2 short-read alignment and HISAT2/StringTie transcriptome evidence branch. Disabled by default; STAR evidence remains enabled independently."
     },
     "run_trnascan": {
       "type": "boolean",

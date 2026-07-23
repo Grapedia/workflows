@@ -67,14 +67,17 @@ ncRNA QC, and are not automatically merged into AEGIS.
 ## RNA-Seq Evidence
 
 Short reads are prepared from local FASTQ files or ENA-resolved SRA accessions,
-trimmed with fastp, aligned with STAR and HISAT2, and assembled with StringTie
-and PsiCLASS. Salmon infers strandedness from Liftoff-derived CDS. Long-read
-rows are detected from `library_layout=long`, aligned with Minimap2 and
-assembled with StringTie.
+trimmed with fastp, aligned with STAR, and assembled with StringTie and
+PsiCLASS. Salmon infers strandedness from Liftoff-derived CDS. HISAT2/StringTie
+is an optional short-read evidence branch disabled by default; enable it with
+`--run_hisat2 true`. Long-read rows are detected from `library_layout=long`,
+aligned with Minimap2 and assembled with StringTie.
 
-Merged STAR/StringTie, HISAT2/StringTie, STAR/PsiCLASS and optional
-Minimap2/StringTie GTFs are passed to AEGIS and Mikado. Per-sample alignments
-and transcriptomes are published only when `--publish_intermediates true`.
+Merged STAR/StringTie, STAR/PsiCLASS and optional Minimap2/StringTie GTFs are
+passed to AEGIS and Mikado. When enabled, HISAT2/StringTie feeds Mikado,
+lncRNA candidates and provenance only; it is not passed to AEGIS. Per-sample
+alignments and transcriptomes are published only when
+`--publish_intermediates true`.
 
 ## Liftoff
 
@@ -150,10 +153,10 @@ long-read evidence, optional Helixer and optional FLAIR. It writes
 ## Mikado Final Annotation Source
 
 Mikado is optional (`--run_mikado true`) and produces an alternative final GFF3
-source in parallel with AEGIS. It receives the same major evidence families as
-AEGIS: Liftoff, EGAPx, BRAKER3, STAR/StringTie, HISAT2/StringTie,
-STAR/PsiCLASS, optional long-read StringTie, optional FLAIR and optional
-Helixer.
+source in parallel with AEGIS. It receives Liftoff, EGAPx, BRAKER3,
+STAR/StringTie, STAR/PsiCLASS, optional long-read StringTie, optional FLAIR and
+optional Helixer. If `--run_hisat2 true`, TITAN also adds HISAT2/StringTie
+sources to Mikado; otherwise skipped HISAT2 records are written to provenance.
 
 The graph runs Mikado configure/prepare, TransDecoder LongOrfs/Predict when
 `--run_transdecoder true`, then Mikado serialise and pick. Outputs are

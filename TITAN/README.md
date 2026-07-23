@@ -68,11 +68,11 @@ flowchart TD
     EDTA[EDTA masking]:::core
     EGAPX[EGAPx]:::core
     FASTP[fastp]:::core
-    IDX[STAR / HISAT2 / Minimap2 indices]:::core
+    IDX[STAR / Minimap2 indices]:::core
     STRAND[Salmon strand inference]:::core
     STAR[STAR + StringTie]:::core
     PSI[STAR + PsiCLASS]:::core
-    HISAT[HISAT2 + StringTie]:::core
+    HISAT[HISAT2 + StringTie]:::opt
     MM2[Minimap2 + StringTie long reads]:::core
     BRAKER[BRAKER3 AUGUSTUS + GeneMark]:::core
 
@@ -109,8 +109,10 @@ flowchart TD
     RNA -.long reads.-> FLAIR
     FASTP --> STRAND
     LIFT -.CDS-based index.-> STRAND
-    STRAND --> STAR & HISAT & PSI
-    IDX --> STAR & HISAT & MM2 & PSI
+    STRAND --> STAR & PSI
+    STRAND -.run_hisat2.-> HISAT
+    IDX --> STAR & MM2 & PSI
+    IDX -.run_hisat2.-> HISAT
     PROT --> BRAKER
     STAR --> BRAKER
     MM2 -.long reads.-> BRAKER
@@ -125,8 +127,10 @@ flowchart TD
 
     FINAL --> LNC
     TRNA & RFAM -.exclude ncRNA overlap.-> LNC
-    STAR & HISAT & MM2 -.candidate transcripts.-> LNC
-    LIFT & EGAPX & BRAKER & STAR & PSI & HISAT & MM2 & HELIXER & FLAIR --> MIK
+    STAR & MM2 -.candidate transcripts.-> LNC
+    HISAT -.optional candidates.-> LNC
+    LIFT & EGAPX & BRAKER & STAR & PSI & MM2 & HELIXER & FLAIR --> MIK
+    HISAT -.optional evidence.-> MIK
     EDTA --> MIK
     MIK --> MIKGFF
 
@@ -142,11 +146,12 @@ flowchart TD
 Blue nodes are the core graph, yellow dashed nodes are optional branches, and
 green nodes are quality-report steps. Strand inference (Salmon, seeded by a
 Liftoff-derived CDS index) runs once per short-read sample directly on the
-fastp-trimmed FASTQs, before alignment, so it can pick the STAR/HISAT2
+fastp-trimmed FASTQs, before alignment, so it can pick the STAR/PsiCLASS
 alignment options and the stranded/unstranded StringTie/PsiCLASS assembly
 groups; it does not consume alignment output. AEGIS merges STAR-based
 (StringTie and PsiCLASS) and Minimap2/StringTie long-read evidence; the
-HISAT2/StringTie tracks feed Mikado only, not AEGIS. Nextflow's per-run
+optional HISAT2/StringTie tracks feed Mikado, lncRNA candidates and provenance
+only when `--run_hisat2 true`; they do not feed AEGIS. Nextflow's per-run
 `-with-dag` report shows the full per-sample task fan-out.
 
 ### Decomposed Sub-Workflows
@@ -174,11 +179,10 @@ flowchart TD
     EDTA[EDTA masking]:::core
     EGAPX[EGAPx]:::core
     FASTP[fastp]:::core
-    IDX[STAR / HISAT2 / Minimap2 indices]:::core
+    IDX[STAR / Minimap2 indices]:::core
     STRAND[Salmon strand inference]:::core
     STAR[STAR + StringTie]:::core
     PSI[STAR + PsiCLASS]:::core
-    HISAT[HISAT2 + StringTie]:::core
     MM2[Minimap2 + StringTie long reads]:::core
     BRAKER[BRAKER3 AUGUSTUS + GeneMark]:::core
 
@@ -195,8 +199,8 @@ flowchart TD
     RNA --> MM2
     FASTP --> STRAND
     LIFT -.CDS-based index.-> STRAND
-    STRAND --> STAR & HISAT & PSI
-    IDX --> STAR & HISAT & MM2 & PSI
+    STRAND --> STAR & PSI
+    IDX --> STAR & MM2 & PSI
     PROT --> BRAKER
     STAR --> BRAKER
     MM2 -.long reads.-> BRAKER
@@ -222,7 +226,7 @@ flowchart TD
     EGAPX[EGAPx]:::core
     STAR[STAR + StringTie]:::core
     PSI[STAR + PsiCLASS]:::core
-    HISAT[HISAT2 + StringTie]:::core
+    HISAT[HISAT2 + StringTie]:::opt
     MM2[Minimap2 + StringTie long reads]:::core
     BRAKER[BRAKER3 AUGUSTUS + GeneMark]:::core
     FINAL[final_annotation.gff3 + proteins]:::core
@@ -244,9 +248,11 @@ flowchart TD
 
     FINAL --> LNC
     TRNA & RFAM -.exclude ncRNA overlap.-> LNC
-    STAR & HISAT & MM2 -.candidate transcripts.-> LNC
+    STAR & MM2 -.candidate transcripts.-> LNC
+    HISAT -.run_hisat2 candidates.-> LNC
 
-    LIFT & EGAPX & BRAKER & STAR & PSI & HISAT & MM2 & HELIXER & FLAIR --> MIK
+    LIFT & EGAPX & BRAKER & STAR & PSI & MM2 & HELIXER & FLAIR --> MIK
+    HISAT -.run_hisat2 evidence.-> MIK
     EDTA --> MIK
     MIK --> MIKGFF
 ```
@@ -434,7 +440,7 @@ Detailed behavior, setup notes and outputs are in [docs/reference/tools.md](docs
 | [Input validation](docs/reference/tools.md#input-validation) | on | Checks inputs before heavy work starts. |
 | [tRNAscan-SE](docs/reference/tools.md#trnascan-se) | off | Optional tRNA annotation. |
 | [Infernal/Rfam](docs/reference/tools.md#infernalrfam-ncrna) | off | Optional ncRNA family search. |
-| [RNA-seq evidence](docs/reference/tools.md#rna-seq-evidence) | on | Builds STAR/HISAT2/Minimap2 transcript evidence. |
+| [RNA-seq evidence](docs/reference/tools.md#rna-seq-evidence) | on | Builds STAR/Minimap2 transcript evidence; HISAT2 is opt-in with `--run_hisat2 true`. |
 | [Liftoff](docs/reference/tools.md#liftoff) | on | Transfers previous annotation. |
 | [EGAPx](docs/reference/tools.md#egapx) | on | Adds official NCBI annotation evidence. |
 | [FLAIR](docs/reference/tools.md#flair-long-read-isoforms) | off | Optional long-read isoform evidence. |

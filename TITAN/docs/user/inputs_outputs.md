@@ -95,10 +95,6 @@ ${output_dir}/
   genemark.gtf
   genemark_supported.gtf
   braker.gff3
-  merged_hisat2_stringtie_stranded_default.gtf
-  merged_hisat2_stringtie_stranded_alt.gtf
-  merged_hisat2_stringtie_unstranded_default.gtf
-  merged_hisat2_stringtie_unstranded_alt.gtf
   merged_star_stringtie_stranded_default.gtf
   merged_star_stringtie_stranded_alt.gtf
   merged_star_stringtie_unstranded_default.gtf
@@ -107,6 +103,11 @@ ${output_dir}/
   merged_star_psiclass_unstranded.gtf
   merged_minimap2_stringtie_long_reads_default.gtf
   merged_minimap2_stringtie_long_reads_alt.gtf
+  # when --run_hisat2 true:
+  merged_hisat2_stringtie_stranded_default.gtf
+  merged_hisat2_stringtie_stranded_alt.gtf
+  merged_hisat2_stringtie_unstranded_default.gtf
+  merged_hisat2_stringtie_unstranded_alt.gtf
   egapx/
   additional_annotations/
   final_annotations/
@@ -163,14 +164,16 @@ Merged transcript evidence is published at the top level:
 
 ```text
 ${output_dir}/
-  merged_hisat2_stringtie_*.gtf
   merged_star_stringtie_*.gtf
   merged_star_psiclass_*.gtf
   merged_minimap2_stringtie_long_reads_*.gtf
+  # when --run_hisat2 true:
+  merged_hisat2_stringtie_*.gtf
 ```
 
-These files summarize short-read STAR/HISAT2/PsiCLASS/StringTie evidence and
-long-read Minimap2/StringTie evidence.
+These files summarize short-read STAR/PsiCLASS/StringTie evidence and long-read
+Minimap2/StringTie evidence. HISAT2/StringTie merged tracks are published only
+when the optional branch is enabled with `--run_hisat2 true`.
 
 ## EGAPx Outputs
 
@@ -316,16 +319,16 @@ ${output_dir}/intermediate_files/
   evidence_data/
     EDTA/
     RNAseq_alignments/
-      HISAT2/
       STAR/
       minimap2/
+      HISAT2/              # when --run_hisat2 true
     RNAseq_data/
       trimmed_data/
     transcriptomes/
       STAR_PsiCLASS/
       StringTie/
-    hisat2_databases/
     star_databases/
+    hisat2_databases/      # when --run_hisat2 true
   liftoff/
   salmon_strand/
 ${output_dir}/tmp/

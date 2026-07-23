@@ -527,6 +527,11 @@ Important options:
 
 ## HISAT2 Index And Alignment
 
+This branch is disabled by default. Set `--run_hisat2 true` to build the
+HISAT2 index, align short reads, run HISAT2/StringTie assemblies and publish
+HISAT2 merged transcript evidence. When disabled, downstream steps receive
+empty GTF sentinels and skipped provenance records for HISAT2 evidence.
+
 Process: `hisat2_genome_indices`  
 Module: `modules/hisat2_genome_indices.nf`
 
@@ -620,7 +625,7 @@ Important options:
 Processes:
 
 * `assembly_transcriptome_star_stringtie`
-* `assembly_transcriptome_hisat2_stringtie`
+* `assembly_transcriptome_hisat2_stringtie` when `--run_hisat2 true`
 * `assembly_transcriptome_minimap2_stringtie`
 
 Modules:
@@ -743,7 +748,7 @@ Modules:
 * `modules/Stringtie_merging_short_reads_hisat2.nf`
 * `modules/Stringtie_merging_long_reads.nf`
 
-STAR and HISAT2 short-read merges are split into stranded and unstranded sets:
+STAR short-read merges are split into stranded and unstranded sets:
 
 ```bash
 stringtie --merge \
@@ -755,8 +760,9 @@ stringtie --merge \
   stranded_alt_gtfs.txt
 ```
 
-HISAT2 uses the same command with `merged_transcriptomes.hisat2...` output
-names. Unstranded merges run only when non-empty unstranded GTFs exist.
+When `--run_hisat2 true`, HISAT2 uses the same command with
+`merged_transcriptomes.hisat2...` output names. Unstranded merges run only when
+non-empty unstranded GTFs exist.
 
 Long-read merges:
 
@@ -1216,10 +1222,6 @@ python3 scripts/make_mikado_list.py \
   --source <star_psiclass_unstranded>:star_psiclass_unstranded:False:3:False \
   --source <star_stringtie_default_unstranded>:star_stringtie_default_unstranded:False:3:False \
   --source <star_stringtie_alt_unstranded>:star_stringtie_alt_unstranded:False:2:False \
-  --source <hisat2_stringtie_default_stranded>:hisat2_stringtie_default_stranded:True:5:False \
-  --source <hisat2_stringtie_alt_stranded>:hisat2_stringtie_alt_stranded:True:4:False \
-  --source <hisat2_stringtie_default_unstranded>:hisat2_stringtie_default_unstranded:False:3:False \
-  --source <hisat2_stringtie_alt_unstranded>:hisat2_stringtie_alt_unstranded:False:2:False \
   --source <long_reads_default>:long_reads_default:False:6:False \
   --source <long_reads_alt>:long_reads_alt:False:5:False \
   --source <flair_isoforms_gtf>:flair_isoforms:False:6:False \
@@ -1237,6 +1239,10 @@ mikado prepare --json-conf mikado_configuration.yaml
 ```
 
 `--source` entries use `path:label:stranded:score:is_reference`.
+When `--run_hisat2 true`, TITAN appends four additional sources:
+`hisat2_stringtie_default_stranded`, `hisat2_stringtie_alt_stranded`,
+`hisat2_stringtie_default_unstranded` and
+`hisat2_stringtie_alt_unstranded`.
 
 Process: `transdecoder_longorfs`  
 Module: `modules/transdecoder.nf`
@@ -1316,8 +1322,11 @@ python3 scripts/build_lncrna_candidates.py \
   --rfam-gff3 <rfam_ncrna.gff3> \
   --min-length <params.lncrna_min_length> \
   --output-prefix lncrna_candidates \
-  <star_stringtie_gtf> <hisat2_stringtie_gtf> <long_reads_gtf>
+  <star_stringtie_gtf> <long_reads_gtf>
 ```
+
+If `--run_hisat2 true`, TITAN also passes `<hisat2_stringtie_gtf>` to the
+candidate builder.
 
 Optional CPAT plant scoring when model files exist and candidates are present:
 
@@ -1341,8 +1350,11 @@ python3 scripts/build_lncrna_candidates.py \
   --cpat-best-tsv cpat_plant.output.ORF_prob.best.tsv \
   --cpat-cutoff <params.cpat_plant_cutoff> \
   --output-prefix lncrna_candidates \
-  <star_stringtie_gtf> <hisat2_stringtie_gtf> <long_reads_gtf>
+  <star_stringtie_gtf> <long_reads_gtf>
 ```
+
+The final rebuild receives `<hisat2_stringtie_gtf>` as an additional transcript
+source only when `--run_hisat2 true`.
 
 Important options:
 
@@ -1658,6 +1670,7 @@ Some processes deliberately emit empty placeholders instead of running a tool:
 | `flair_empty_evidence` | No long reads or FLAIR disabled. | Provides empty FLAIR GTF/FASTA. |
 | `trnascan_se` | `--run_trnascan false`. | Preserves ncRNA QC and lncRNA inputs. |
 | `infernal_rfam_search` | `--run_rfam false`. | Preserves Rfam merge/QC inputs. |
+| `hisat2_*`, `Stringtie_merging_short_reads_hisat2` | `--run_hisat2 false`. | Skips optional HISAT2 evidence while preserving empty GTF inputs and provenance records. |
 | `helixer_prediction` | `--run_helixer false`. | Optional AEGIS/Mikado evidence is absent but typed. |
 | `eggnog_mapper` | `--run_eggnog_mapper false`. | Functional output files remain predictable. |
 | `interproscan` | `--run_interproscan false`. | Functional output files remain predictable. |
