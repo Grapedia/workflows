@@ -40,7 +40,18 @@ process egapx {
       fi
     done
 
-    mkdir -p egapx_runner egapx_work egapx_out
+    mkdir -p egapx_runner egapx_work egapx_out egapx_tmp
+
+    # A minimap2_wnode sub-task once failed with ENOENT from \`sort\` writing to
+    # \$TMPDIR (the shared \${projectDir}/.tmp from slurm_apptainer.config)
+    # inside its nested singularity container. EGAPx's nested Nextflow session
+    # binds only its own task workDir into that container, so an external
+    # TMPDIR isn't guaranteed visible there -- though re-testing with the
+    # actual production apptainer engine (1.4.0-rc.2) didn't reproduce the gap,
+    # so the true trigger (possibly a transient host/storage hiccup instead)
+    # is unconfirmed. Redirecting TMPDIR under \$PWD costs nothing and keeps it
+    # inside the tree EGAPx already binds into every nested container either way.
+    export TMPDIR="\$PWD/egapx_tmp"
 
     if [[ -n "\$EGAPX_RUNNER_DIR" && "\$EGAPX_RUNNER_DIR" != "false" ]]; then
       echo "[\$DATE] Using pre-staged EGAPx runner from \$EGAPX_RUNNER_DIR"
