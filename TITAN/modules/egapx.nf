@@ -42,7 +42,7 @@ process egapx {
 
     mkdir -p egapx_runner egapx_work egapx_out egapx_tmp
 
-    # A minimap2_wnode sub-task once failed with ENOENT from \`sort\` writing to
+    # A minimap2_wnode sub-task once failed with ENOENT from 'sort' writing to
     # \$TMPDIR (the shared \${projectDir}/.tmp from slurm_apptainer.config)
     # inside its nested singularity container. EGAPx's nested Nextflow session
     # binds only its own task workDir into that container, so an external
