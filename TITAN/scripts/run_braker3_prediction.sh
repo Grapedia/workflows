@@ -57,6 +57,10 @@ copy_required_output() {
         find . -maxdepth 2 -type f | sort | sed 's#^./#  #'
         exit 1
     fi
+    if [[ "$(readlink -f "$source")" == "$(readlink -f "$destination")" ]]; then
+        log "Output already present at destination, skipping copy: ${destination}"
+        return 0
+    fi
     cp "$source" "$destination"
 }
 
