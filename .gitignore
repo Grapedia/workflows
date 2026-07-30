@@ -1,4 +1,6 @@
 TITAN/data/*
+!TITAN/data/egapx_config/
+!TITAN/data/egapx_config/*
 TITAN/intermediate_files/*
 TITAN/work/*
 TITAN/.nextflow.log*
