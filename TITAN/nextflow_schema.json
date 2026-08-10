@@ -296,6 +296,10 @@
       "$ref": "#/definitions/path_or_false",
       "description": "Optional EGAPx executor config directory passed to the nested EGAPx runner."
     },
+    "egapx_work_dir": {
+      "$ref": "#/definitions/path_or_false",
+      "description": "Optional persistent directory for EGAPx's nested Nextflow work dir/output dir/.nextflow session, shared across attempts so a failed run can resume instead of restarting from scratch."
+    },
     "aegis_version": {
       "type": "string",
       "description": "AEGIS version recorded in provenance."
