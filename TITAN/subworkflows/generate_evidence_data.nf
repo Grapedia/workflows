@@ -4,6 +4,7 @@ include { prepare_RNAseq_fastq_files_short } from "../modules/prepare_RNAseq_fas
 include { prepare_RNAseq_fastq_files_long } from "../modules/prepare_RNAseq_fastq_files_long"
 include { trimming_fastq } from "../modules/trimming_fastq"
 include { liftoff_annotations } from "../modules/liftoff_annotations"
+include { build_egapx_paramfile } from "../modules/build_egapx_paramfile"
 include { egapx } from "../modules/egapx"
 include { clean_liftoff_gff3_for_agat } from "../modules/clean_liftoff_gff3_for_agat"
 include { agat_convert_gff3_to_cds_fasta } from "../modules/agat_convert_gff3_to_cds_fasta"
@@ -108,7 +109,13 @@ workflow generate_evidence_data {
             previous_annotations.liftoff_previous_annotations
         )
 
-        egapx_annotations = egapx(egapx_paramfile)
+        egapx_trimmed_paramfile = build_egapx_paramfile(
+            egapx_paramfile,
+            trimmed_reads.trimmed_reads.collect(flat: false),
+            trimmed_reads.trimmed_reads.flatMap { sample_ID, library_layout, read_1, read_2 -> [read_1, read_2] }.collect()
+        )
+
+        egapx_annotations = egapx(egapx_trimmed_paramfile.paramfile)
 
         cleaned_liftoff_gff3 = clean_liftoff_gff3_for_agat(
             previous_annotations.liftoff_previous_annotations,
@@ -313,6 +320,9 @@ workflow generate_evidence_data {
         egapx_annotated_genome_asn = egapx_annotations.annotated_genome_asn
         egapx_output_dir = egapx_annotations.output_dir
         egapx_versions = egapx_annotations.versions
+        egapx_paramfile = egapx_trimmed_paramfile.paramfile
+        egapx_trimmed_reads_manifest = egapx_trimmed_paramfile.manifest
+        egapx_paramfile_versions = egapx_trimmed_paramfile.versions
         edta_versions = edta_results.versions
         liftoff_gff3 = previous_annotations.liftoff_previous_annotations
         liftoff_unmapped_features = previous_annotations.unmapped_features

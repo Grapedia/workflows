@@ -424,7 +424,7 @@ workflow TITAN {
         previous_annotations,
         rnaseq_samplesheet,
         protein_samplesheet,
-        egapx_paramfile,
+        evidence_data.egapx_paramfile,
         evidence_data.masked_genome,
         evidence_data.liftoff_gff3,
         evidence_data.egapx_gff3,
