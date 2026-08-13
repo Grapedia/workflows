@@ -2,16 +2,14 @@ process aegis_merge {
   label 'process_aegis'
   tag "AEGIS rename/tidy of mikado_pick annotation"
 
+  // Output here still carries systematic Vitvi IDs for every gene; it is an
+  // intermediate product until aegis_liftoff_gene_ids carries over matching
+  // old liftoff IDs, which is what actually gets published as the final
+  // annotation under aegis_outputs.
   container "${params.container_aegis}"
-  publishDir "${params.output_dir}/aegis_outputs", mode: 'copy', saveAs: { filename ->
-    if (filename in ['final_annotation.gff3', 'final_annotation_proteins_all.fasta', 'final_annotation_proteins_main.fasta', 'versions.yml']) {
-      return filename
-    }
-    return null
-  }
   publishDir "${params.output_dir}/intermediate_files/aegis", mode: 'copy', enabled: params.publish_intermediates, saveAs: { filename ->
-    if (filename in ['aegis_rename', 'aegis_tidy', 'aegis_proteins_all', 'aegis_proteins_main', 'aegis_inputs.tsv', 'aegis_merge.log']) {
-      return filename
+    if (filename in ['final_annotation.gff3', 'final_annotation_proteins_all.fasta', 'final_annotation_proteins_main.fasta', 'aegis_rename', 'aegis_tidy', 'aegis_proteins_all', 'aegis_proteins_main', 'aegis_inputs.tsv', 'aegis_merge.log', 'versions.yml']) {
+      return "vitvi_only_${filename}"
     }
     return null
   }

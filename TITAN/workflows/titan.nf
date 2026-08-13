@@ -270,7 +270,9 @@ workflow TITAN {
 
     aegis(
         evidence_data.masked_genome,
-        mikado_results.gff3
+        mikado_results.gff3,
+        evidence_data.liftoff_gff3,
+        previous_annotations
     )
 
     lncrna_results = lncrna_candidate_annotation(
