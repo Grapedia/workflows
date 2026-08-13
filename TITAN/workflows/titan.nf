@@ -12,7 +12,7 @@ include { omark } from '../modules/omark'
 include { agat_stats } from '../modules/agat_stats'
 include { ncrna_annotation_qc } from '../modules/ncrna_annotation_qc'
 include { multiqc_report } from '../modules/multiqc_report'
-include { final_transcriptome_index; final_expression_quant; expression_support_summary } from '../modules/final_expression_validation'
+include { extract_final_transcripts; final_transcriptome_index; final_expression_quant; expression_support_summary } from '../modules/final_expression_validation'
 include { trnascan_se; trnascan_to_gff3 } from '../modules/trnascan_se'
 include { rfam_split_genome; infernal_rfam_search; infernal_rfam_merge } from '../modules/infernal_rfam'
 include { lncrna_candidate_annotation } from '../modules/lncrna_candidate_annotation'
@@ -365,9 +365,13 @@ workflow TITAN {
         file("${projectDir}/scripts/validate_final_annotation.py")
     )
 
-    final_transcriptome_index_results = final_transcriptome_index(
+    extract_final_transcripts_results = extract_final_transcripts(
         new_assembly,
         aegis.out.aegis_gff
+    )
+
+    final_transcriptome_index_results = final_transcriptome_index(
+        extract_final_transcripts_results.transcripts_fasta
     )
 
     final_expression_quant_results = final_expression_quant(

@@ -1,9 +1,9 @@
-process final_transcriptome_index {
-  label 'process_index'
-  tag "Final transcriptome Salmon index"
-  container params.container_salmon
+process extract_final_transcripts {
+  label 'process_low'
+  tag "Extract final transcript sequences from AEGIS annotation"
+  container params.container_python
   publishDir "${params.output_dir}/quality_report/expression_validation", mode: 'copy', saveAs: { filename ->
-    if (filename in ['final_transcripts.fasta', 'versions.yml']) {
+    if (filename == 'final_transcripts.fasta') {
       return filename
     }
     return null
@@ -15,8 +15,6 @@ process final_transcriptome_index {
 
   output:
     path "final_transcripts.fasta", emit: transcripts_fasta
-    path "final_salmon_index", emit: index
-    path "versions.yml", emit: versions
 
   script:
     """
@@ -24,9 +22,6 @@ process final_transcriptome_index {
 
     if [[ "${params.run_expression_validation}" != "true" ]]; then
       : > final_transcripts.fasta
-      mkdir -p final_salmon_index
-      printf "expression validation skipped\\n" > final_salmon_index/versionInfo.json
-      printf '"%s":\n  salmon: "skipped"\n  container: "%s"\n' "${task.process}" "${task.container}" > versions.yml
       exit 0
     fi
 
@@ -119,8 +114,45 @@ PY
       echo "ERROR: final transcriptome extraction produced no transcripts" >&2
       exit 1
     fi
+    """
 
-    salmon index -t final_transcripts.fasta -i final_salmon_index -p ${task.cpus}
+  stub:
+    """
+    set -euo pipefail
+    printf ">aegis_stub_tx gene_id=aegis_stub_gene\\nATGGCCATT\\n" > final_transcripts.fasta
+    """
+}
+
+process final_transcriptome_index {
+  label 'process_index'
+  tag "Final transcriptome Salmon index"
+  container params.container_salmon
+  publishDir "${params.output_dir}/quality_report/expression_validation", mode: 'copy', saveAs: { filename ->
+    if (filename == 'versions.yml') {
+      return filename
+    }
+    return null
+  }
+
+  input:
+    path(transcripts_fasta)
+
+  output:
+    path "final_salmon_index", emit: index
+    path "versions.yml", emit: versions
+
+  script:
+    """
+    set -euo pipefail
+
+    if [[ "${params.run_expression_validation}" != "true" ]]; then
+      mkdir -p final_salmon_index
+      printf "expression validation skipped\\n" > final_salmon_index/versionInfo.json
+      printf '"%s":\n  salmon: "skipped"\n  container: "%s"\n' "${task.process}" "${task.container}" > versions.yml
+      exit 0
+    fi
+
+    salmon index -t ${transcripts_fasta} -i final_salmon_index -p ${task.cpus}
     salmon --version | sed 's/^/  salmon: "/; s/\$/"/' | {
       printf '"%s":\\n' "${task.process}"
       cat
@@ -131,7 +163,6 @@ PY
   stub:
     """
     set -euo pipefail
-    printf ">aegis_stub_tx gene_id=aegis_stub_gene\\nATGGCCATT\\n" > final_transcripts.fasta
     mkdir -p final_salmon_index
     printf "stub salmon index\\n" > final_salmon_index/versionInfo.json
     printf '"%s":\n  salmon: "stub"\n' "${task.process}" > versions.yml
