@@ -68,8 +68,13 @@ process interproscan {
 
     mkdir -p interproscan_tmp
 
-    "\$IPRSCAN" -i "${proteins_file_all}" -b final_annotation_proteins_all -T interproscan_tmp -cpu ${task.cpus} -dp -f TSV,GFF3,JSON -goterms -pathways
-    "\$IPRSCAN" -i "${proteins_file_main}" -b final_annotation_proteins_main -T interproscan_tmp -cpu ${task.cpus} -dp -f TSV,GFF3,JSON -goterms -pathways
+    # InterProScan rejects '*' (stop codon) characters in protein sequences;
+    # AEGIS-merged proteins carry trailing '*' from the source gene predictors.
+    sed '/^>/! s/\\*//g' "${proteins_file_all}" > proteins_all.iprscan.fasta
+    sed '/^>/! s/\\*//g' "${proteins_file_main}" > proteins_main.iprscan.fasta
+
+    "\$IPRSCAN" -i "proteins_all.iprscan.fasta" -b final_annotation_proteins_all -T interproscan_tmp -cpu ${task.cpus} -dp -f TSV,GFF3,JSON -goterms -pathways
+    "\$IPRSCAN" -i "proteins_main.iprscan.fasta" -b final_annotation_proteins_main -T interproscan_tmp -cpu ${task.cpus} -dp -f TSV,GFF3,JSON -goterms -pathways
 
     # TSV can legitimately be empty when a protein has zero domain hits across
     # all analyses; GFF3 always carries header lines, so check that instead.
