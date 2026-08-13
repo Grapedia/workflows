@@ -995,46 +995,25 @@ Important options:
 | `--downloaded-model-path` | Offline model location. | Keeps production runs reproducible. |
 | TensorFlow thread env vars | Bound CPU threading. | Prevents uncontrolled CPU oversubscription. |
 
-## AEGIS Evidence Merge
+## AEGIS Finalization (rename/tidy of Mikado's pick)
 
 Process: `aegis_merge`  
 Module: `modules/aegis_merge.nf`  
 Wrapper: `scripts/run_aegis_merge.sh`
 
-AEGIS is the central TITAN integration step. The wrapper first validates
-required and optional evidence, then records included inputs in
-`aegis_inputs.tsv`.
+The gene-model consolidation itself is done by `mikado_pick` (see below),
+which reconciles every evidence source (Liftoff, EGAPx, BRAKER, Helixer,
+and all transcript assemblies) via per-locus superloci scoring, using a
+calibrated numeric `source_score`/`reference` weighting
+(`mikado_configuration.yaml`). This is more faithful than a naive
+overlap-threshold merge: a prior `aegis merge` step existed here but was
+removed because it excludes a whole gene model outright (including any
+non-overlapping portion) whenever its overlap with a higher-priority
+source exceeds a threshold, rather than reconciling isoforms per locus
+like Mikado does.
 
-Required evidence in all modes:
-
-* Liftoff GFF3
-* BRAKER3 AUGUSTUS GFF3
-* BRAKER3 GeneMark GTF
-* EGAPx GFF3
-* STAR/StringTie stranded default GTF
-* STAR/StringTie stranded alternative GTF
-* STAR/PsiCLASS stranded GTF
-
-Required only when long reads are detected:
-
-* Minimap2/StringTie long-read default GTF
-* Minimap2/StringTie long-read alternative GTF
-
-Optional evidence:
-
-* STAR/PsiCLASS unstranded GTF
-* STAR/StringTie unstranded default and alternative GTFs
-* FLAIR isoforms GTF
-* Helixer GFF3
-
-Merge:
-
-```bash
-/opt/conda/envs/bio_env/bin/python -m aegis merge \
-  -d aegis_merge \
-  -o final_annotation \
-  <included_evidence_files...>
-```
+AEGIS is now only used to give `mikado_pick`'s output stable, systematic
+gene IDs and to normalize feature structure.
 
 Rename:
 
@@ -1044,7 +1023,7 @@ Rename:
   -d aegis_rename \
   --prefix <params.aegis_gene_id_prefix> \
   --gene-id-correspondences \
-  aegis_merge/final_annotation.gff3
+  <final_mikado_annotation.gff3>
 ```
 
 Tidy:
@@ -1079,9 +1058,7 @@ Important options:
 
 | Option | Purpose | Why it matters |
 |---|---|---|
-| `merge -d` | AEGIS merge work/output directory. | Keeps merge products isolated. |
-| `merge -o` | Annotation prefix. | Standardizes downstream file names. |
-| `rename --prefix` | Final gene ID prefix. | Produces project-specific stable identifiers. |
+| `rename --prefix` | Final gene ID prefix. | Produces project-specific stable identifiers, rebuilt from genomic position regardless of Mikado's own IDs. |
 | `rename --gene-id-correspondences` | ID mapping table. | Preserves traceability after renaming. |
 | `tidy --standard-features` | Normalize feature structure. | Improves final GFF3 consistency. |
 | `extract -m all` / `-m main` | Protein extraction mode. | Produces all and main protein sets for functional annotation and QC. |
@@ -1283,16 +1260,6 @@ mikado pick \
   --subloci-out mikado.subloci.gff3 \
   --loci-out mikado.loci.gff3 \
   --procs <cpus>
-```
-
-Process: `final_annotation_sources_qc`
-
-```bash
-python3 scripts/compare_final_annotations.py \
-  --aegis-gff3 <aegis_final_annotation.gff3> \
-  --mikado-gff3 <final_mikado_annotation.gff3> \
-  --json-report final_annotation_sources.json \
-  --multiqc-tsv final_annotation_sources_mqc.tsv
 ```
 
 ## lncRNA Candidate Annotation
@@ -1618,7 +1585,6 @@ cp <ncrna_mqc_tsv> mqc_input/
 cp <lncrna_mqc_tsv> mqc_input/
 cp <sqanti3_mqc_tsv> mqc_input/
 cp <expression_support_mqc_tsv> mqc_input/
-cp <final_annotation_sources_mqc_tsv> mqc_input/
 cp <final_annotation_validation_json> mqc_input/
 
 multiqc \
@@ -1709,7 +1675,6 @@ that documents its command or sentinel behavior.
 | `eggnog_mapper` | `modules/eggnog_mapper.nf` | eggNOG-mapper |
 | `empty_long_read_evidence` | `modules/empty_long_read_evidence.nf` | Skipped And Sentinel Processes |
 | `expression_support_summary` | `modules/final_expression_validation.nf` | Final Transcriptome And Expression Support |
-| `final_annotation_sources_qc` | `modules/mikado.nf` | Mikado And TransDecoder |
 | `final_expression_quant` | `modules/final_expression_validation.nf` | Final Transcriptome And Expression Support |
 | `final_transcriptome_index` | `modules/final_expression_validation.nf` | Final Transcriptome And Expression Support |
 | `flair_empty_evidence` | `modules/flair.nf` | Skipped And Sentinel Processes |

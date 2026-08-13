@@ -16,7 +16,7 @@ include { extract_final_transcripts; final_transcriptome_index; final_expression
 include { trnascan_se; trnascan_to_gff3 } from '../modules/trnascan_se'
 include { rfam_split_genome; infernal_rfam_search; infernal_rfam_merge } from '../modules/infernal_rfam'
 include { lncrna_candidate_annotation } from '../modules/lncrna_candidate_annotation'
-include { mikado_prepare; mikado_serialise; mikado_pick; final_annotation_sources_qc } from '../modules/mikado'
+include { mikado_prepare; mikado_serialise; mikado_pick } from '../modules/mikado'
 include { transdecoder_longorfs; transdecoder_predict } from '../modules/transdecoder'
 include { sqanti3_qc as sqanti3_qc_stringtie; sqanti3_qc as sqanti3_qc_flair; sqanti3_qc_multiqc } from '../modules/sqanti3_qc'
 
@@ -273,12 +273,6 @@ workflow TITAN {
         mikado_results.gff3
     )
 
-    final_annotation_sources_qc_results = final_annotation_sources_qc(
-        aegis.out.aegis_gff,
-        mikado_results.gff3,
-        file("${projectDir}/scripts/compare_final_annotations.py")
-    )
-
     lncrna_results = lncrna_candidate_annotation(
         new_assembly,
         aegis.out.aegis_gff,
@@ -391,7 +385,6 @@ workflow TITAN {
         lncrna_results.multiqc_tsv,
         sqanti3_multiqc_results.multiqc_tsv,
         expression_support_results.multiqc_tsv,
-        final_annotation_sources_qc_results.multiqc_tsv,
         validate_final_annotation.out.json_report
     )
 

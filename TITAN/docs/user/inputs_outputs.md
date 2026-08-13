@@ -291,7 +291,6 @@ ${output_dir}/quality_report/
   agat_stats/
   busco/
   expression_validation/
-  final_annotation_sources/
   ncrna_annotations/
   omark/
   sqanti3/
