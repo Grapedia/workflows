@@ -25,11 +25,13 @@ process transdecoder_longorfs {
 
     cp "${prepared_fasta}" mikado_prepared.fasta
     TransDecoder.LongOrfs -t mikado_prepared.fasta
-    TransDecoder.LongOrfs --version 2>&1 | sed 's/^/  transdecoder_longorfs: "/; s/\$/"/' | {
-      printf '"%s":\\n' "${task.process}"
-      cat
-      printf '  container: "%s"\\n' "${task.container}"
-    } > versions.yml
+
+    # TransDecoder.LongOrfs has no --version flag (exits non-zero with
+    # "don't understand options" if asked); read the installed conda
+    # package version instead.
+    transdecoder_version=\$(basename "\$(ls /usr/local/conda-meta/transdecoder-*.json 2>/dev/null | head -n1)" .json | sed -E 's/^transdecoder-([^-]+)-.*/\\1/')
+    printf '"%s":\\n  transdecoder_longorfs: "%s"\\n  container: "%s"\\n' \\
+      "${task.process}" "\${transdecoder_version:-unknown}" "${task.container}" > versions.yml
     """
 
   stub:
@@ -81,11 +83,12 @@ process transdecoder_predict {
     test -s mikado_prepared.fasta.transdecoder.bed
     test -s mikado_prepared.fasta.transdecoder.pep
     test -s mikado_prepared.fasta.transdecoder.gff3
-    TransDecoder.Predict --version 2>&1 | sed 's/^/  transdecoder_predict: "/; s/\$/"/' | {
-      printf '"%s":\\n' "${task.process}"
-      cat
-      printf '  container: "%s"\\n' "${task.container}"
-    } > versions.yml
+
+    # TransDecoder.Predict has no --version flag either; same conda-meta
+    # lookup as transdecoder_longorfs.
+    transdecoder_version=\$(basename "\$(ls /usr/local/conda-meta/transdecoder-*.json 2>/dev/null | head -n1)" .json | sed -E 's/^transdecoder-([^-]+)-.*/\\1/')
+    printf '"%s":\\n  transdecoder_predict: "%s"\\n  container: "%s"\\n' \\
+      "${task.process}" "\${transdecoder_version:-unknown}" "${task.container}" > versions.yml
     """
 
   stub:
