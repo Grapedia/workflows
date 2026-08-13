@@ -159,11 +159,16 @@ Helixer. If `--run_hisat2 true`, TITAN also adds HISAT2/StringTie sources to
 Mikado; otherwise skipped HISAT2 records are written to provenance.
 
 Each source is given a calibrated numeric priority (`source_score` in
-`modules/mikado.nf`'s `mikado_prepare`, e.g. Liftoff=10, EGAPx=9,
-BRAKER-AUGUSTUS=8, BRAKER-GeneMark=7), and Liftoff/EGAPx are additionally
-flagged as `reference` quality (excluded only for outright mistakes, not
-overlap competition) — this scoring is what determines which transcript wins
-at a given locus, replacing AEGIS's older whole-gene overlap-threshold merge.
+`modules/mikado.nf`'s `mikado_prepare`), highest first: EGAPx (20) > Liftoff
+(19) > BRAKER-AUGUSTUS (18) > BRAKER-GeneMark (17) > Helixer (16) > stranded
+assemblies (STAR/StringTie default 15, alt 14, STAR/PsiCLASS 13, then their
+optional HISAT2/StringTie counterparts 12/11) > FLAIR (10) > raw long reads
+(default 9, alt 8) > unstranded assemblies (STAR/PsiCLASS 7, STAR/StringTie
+default 6, alt 5, then optional HISAT2/StringTie 4/3). Liftoff/EGAPx are
+additionally flagged as `reference` quality (excluded only for outright
+mistakes, not overlap competition). This scoring is what determines which
+transcript wins at a given locus, replacing AEGIS's older whole-gene
+overlap-threshold merge.
 
 The graph runs Mikado configure/prepare, TransDecoder LongOrfs/Predict when
 `--run_transdecoder true` (also effectively required — without ORFs, Mikado's

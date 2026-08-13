@@ -1016,20 +1016,20 @@ annotation.
 awk -F'\t' 'NF == 9 || /^#/' <liftoff_gff3> > liftoff_sanitized.gff3
 
 python3 scripts/make_mikado_list.py \
-  --source liftoff_sanitized.gff3:liftoff:False:10:True \
-  --source <egapx_gff3>:egapx:False:9:True \
-  --source <braker_augustus_gff3>:braker_augustus:False:8:False \
-  --source <braker_genemark_gtf>:braker_genemark:False:7:False \
-  --source <star_stringtie_default_stranded>:star_stringtie_default_stranded:True:5:False \
-  --source <star_stringtie_alt_stranded>:star_stringtie_alt_stranded:True:4:False \
-  --source <star_psiclass_stranded>:star_psiclass_stranded:True:5:False \
-  --source <star_psiclass_unstranded>:star_psiclass_unstranded:False:3:False \
-  --source <star_stringtie_default_unstranded>:star_stringtie_default_unstranded:False:3:False \
-  --source <star_stringtie_alt_unstranded>:star_stringtie_alt_unstranded:False:2:False \
-  --source <long_reads_default>:long_reads_default:False:6:False \
-  --source <long_reads_alt>:long_reads_alt:False:5:False \
-  --source <flair_isoforms_gtf>:flair_isoforms:False:6:False \
-  --source <helixer_gff3>:helixer:False:4:False \
+  --source <egapx_gff3>:egapx:False:20:True \
+  --source liftoff_sanitized.gff3:liftoff:False:19:True \
+  --source <braker_augustus_gff3>:braker_augustus:False:18:False \
+  --source <braker_genemark_gtf>:braker_genemark:False:17:False \
+  --source <star_stringtie_default_stranded>:star_stringtie_default_stranded:True:15:False \
+  --source <star_stringtie_alt_stranded>:star_stringtie_alt_stranded:True:14:False \
+  --source <star_psiclass_stranded>:star_psiclass_stranded:True:13:False \
+  --source <star_psiclass_unstranded>:star_psiclass_unstranded:False:7:False \
+  --source <star_stringtie_default_unstranded>:star_stringtie_default_unstranded:False:6:False \
+  --source <star_stringtie_alt_unstranded>:star_stringtie_alt_unstranded:False:5:False \
+  --source <long_reads_default>:long_reads_default:False:9:False \
+  --source <long_reads_alt>:long_reads_alt:False:8:False \
+  --source <flair_isoforms_gtf>:flair_isoforms:False:10:False \
+  --source <helixer_gff3>:helixer:False:16:False \
   -o transcript_inputs.tsv
 
 mikado configure \
@@ -1046,8 +1046,12 @@ mikado prepare --json-conf mikado_configuration.yaml
 is the numeric priority used to decide which transcript wins at a locus
 during `mikado pick` (Liftoff and EGAPx are also flagged `is_reference=True`,
 so they're excluded only for outright mistakes, not overlap competition).
-When `--run_hisat2 true`, TITAN appends four additional sources:
-`hisat2_stringtie_default_stranded`, `hisat2_stringtie_alt_stranded`,
+Priority order, highest first: EGAPx > Liftoff > BRAKER-AUGUSTUS >
+BRAKER-GeneMark > Helixer > stranded assemblies (STAR/StringTie default >
+alt > STAR/PsiCLASS, then their HISAT2 counterparts) > FLAIR > raw long
+reads > unstranded assemblies (STAR/PsiCLASS > StringTie default > alt,
+then HISAT2). When `--run_hisat2 true`, TITAN appends four additional
+sources: `hisat2_stringtie_default_stranded`, `hisat2_stringtie_alt_stranded`,
 `hisat2_stringtie_default_unstranded` and
 `hisat2_stringtie_alt_unstranded`.
 

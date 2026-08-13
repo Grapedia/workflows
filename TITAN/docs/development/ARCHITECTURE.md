@@ -74,8 +74,8 @@ workflow logic consumes declared outputs.
 
 EGAPx is mandatory in evidence generation. TITAN runs the official EGAPx
 runner with a digest-pinned EGAPx container, emits named EGAPx outputs, and
-passes the EGAPx GFF3 to Mikado as annotation evidence (`source_score=9`,
-`is_reference=True` in `mikado_prepare`).
+passes the EGAPx GFF3 to Mikado as its highest-priority annotation evidence
+(`source_score=20`, `is_reference=True` in `mikado_prepare`).
 
 Liftoff, transcriptome assemblies and BRAKER3 predictions form the rest of
 the core evidence set consumed by Mikado. `run_mikado` and `run_transdecoder`

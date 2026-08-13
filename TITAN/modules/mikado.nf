@@ -54,31 +54,36 @@ process mikado_prepare {
     # Keep only valid GFF3/comment lines before Mikado's strict parser.
     awk -F'\\t' 'NF == 9 || /^#/' "${liftoff_gff3}" > liftoff_sanitized.gff3
 
+    # Priority order (highest first): egapx > liftoff > braker (augustus >
+    # genemark) > helixer > stranded assemblies (STAR StringTie default > alt
+    # > PsiCLASS, then their HISAT2 counterparts) > flair > raw long reads >
+    # unstranded assemblies (PsiCLASS > StringTie default > alt, then HISAT2).
+    # Mirrors the evidence priority used for the final annotation ID scheme.
     mikado_sources=(
-      --source "liftoff_sanitized.gff3:liftoff:False:10:True"
-      --source "${egapx_gff3}:egapx:False:9:True"
-      --source "${braker_augustus_gff3}:braker_augustus:False:8:False"
-      --source "${braker_genemark_gtf}:braker_genemark:False:7:False"
-      --source "${star_stringtie_default_stranded}:star_stringtie_default_stranded:True:5:False"
-      --source "${star_stringtie_alt_stranded}:star_stringtie_alt_stranded:True:4:False"
-      --source "${star_psiclass_stranded}:star_psiclass_stranded:True:5:False"
-      --source "${star_psiclass_unstranded}:star_psiclass_unstranded:False:3:False"
-      --source "${star_stringtie_default_unstranded}:star_stringtie_default_unstranded:False:3:False"
-      --source "${star_stringtie_alt_unstranded}:star_stringtie_alt_unstranded:False:2:False"
+      --source "${egapx_gff3}:egapx:False:20:True"
+      --source "liftoff_sanitized.gff3:liftoff:False:19:True"
+      --source "${braker_augustus_gff3}:braker_augustus:False:18:False"
+      --source "${braker_genemark_gtf}:braker_genemark:False:17:False"
+      --source "${star_stringtie_default_stranded}:star_stringtie_default_stranded:True:15:False"
+      --source "${star_stringtie_alt_stranded}:star_stringtie_alt_stranded:True:14:False"
+      --source "${star_psiclass_stranded}:star_psiclass_stranded:True:13:False"
+      --source "${star_psiclass_unstranded}:star_psiclass_unstranded:False:7:False"
+      --source "${star_stringtie_default_unstranded}:star_stringtie_default_unstranded:False:6:False"
+      --source "${star_stringtie_alt_unstranded}:star_stringtie_alt_unstranded:False:5:False"
     )
     if [[ "${params.run_hisat2}" == "true" ]]; then
       mikado_sources+=(
-        --source "${hisat2_stringtie_default_stranded}:hisat2_stringtie_default_stranded:True:5:False"
-        --source "${hisat2_stringtie_alt_stranded}:hisat2_stringtie_alt_stranded:True:4:False"
-        --source "${hisat2_stringtie_default_unstranded}:hisat2_stringtie_default_unstranded:False:3:False"
-        --source "${hisat2_stringtie_alt_unstranded}:hisat2_stringtie_alt_unstranded:False:2:False"
+        --source "${hisat2_stringtie_default_stranded}:hisat2_stringtie_default_stranded:True:12:False"
+        --source "${hisat2_stringtie_alt_stranded}:hisat2_stringtie_alt_stranded:True:11:False"
+        --source "${hisat2_stringtie_default_unstranded}:hisat2_stringtie_default_unstranded:False:4:False"
+        --source "${hisat2_stringtie_alt_unstranded}:hisat2_stringtie_alt_unstranded:False:3:False"
       )
     fi
     mikado_sources+=(
-      --source "${long_reads_default}:long_reads_default:False:6:False"
-      --source "${long_reads_alt}:long_reads_alt:False:5:False"
-      --source "${flair_isoforms_gtf}:flair_isoforms:False:6:False"
-      --source "${helixer_gff3}:helixer:False:4:False"
+      --source "${long_reads_default}:long_reads_default:False:9:False"
+      --source "${long_reads_alt}:long_reads_alt:False:8:False"
+      --source "${flair_isoforms_gtf}:flair_isoforms:False:10:False"
+      --source "${helixer_gff3}:helixer:False:16:False"
     )
 
     python3 "${make_mikado_list}" "\${mikado_sources[@]}" -o transcript_inputs.tsv
