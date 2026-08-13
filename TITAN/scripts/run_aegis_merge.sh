@@ -94,13 +94,21 @@ require_nonempty_file "masked genome" "$masked_genome"
 merge_inputs=()
 printf 'name\tpath\trequired\tincluded\tsize_bytes\n' > aegis_inputs.tsv
 
+# Merge priority (highest first): AEGIS keeps the gene model from the
+# earliest-listed source whenever two sources' models exceed the configured
+# overlap thresholds. Structured, curated predictions (egapx, liftoff,
+# BRAKER, helixer) outrank raw transcript-assembly evidence, and among
+# assemblies, stranded beats unstranded and corrected long-read isoforms
+# (FLAIR) beat raw long-read assemblies.
+include_required_evidence "egapx_gff3" "$egapx_gff3"
 include_required_evidence "liftoff_gff3" "$liftoff_gff3"
 include_required_evidence "augustus_gff3" "$augustus_gff3"
 include_required_evidence "genemark_gtf" "$genemark_gtf"
-include_required_evidence "egapx_gff3" "$egapx_gff3"
+include_optional_evidence "helixer_gff3" "$helixer_gff3"
 include_required_evidence "star_stringtie_stranded_default_gtf" "$star_stringtie_stranded_default_gtf"
 include_required_evidence "star_stringtie_stranded_alt_gtf" "$star_stringtie_stranded_alt_gtf"
 include_required_evidence "star_psiclass_stranded_gtf" "$star_psiclass_stranded_gtf"
+include_optional_evidence "flair_isoforms_gtf" "$flair_isoforms_gtf"
 
 if [[ "$mode" == "short_and_long_reads" ]]; then
   include_required_evidence "long_reads_default_gtf" "$long_reads_default_gtf"
@@ -113,8 +121,6 @@ fi
 include_optional_evidence "star_psiclass_unstranded_gtf" "$star_psiclass_unstranded_gtf"
 include_optional_evidence "star_stringtie_unstranded_default_gtf" "$star_stringtie_unstranded_default_gtf"
 include_optional_evidence "star_stringtie_unstranded_alt_gtf" "$star_stringtie_unstranded_alt_gtf"
-include_optional_evidence "flair_isoforms_gtf" "$flair_isoforms_gtf"
-include_optional_evidence "helixer_gff3" "$helixer_gff3"
 
 if [[ "${#merge_inputs[@]}" -eq 0 ]]; then
   echo "No non-empty AEGIS evidence files were provided" >&2
@@ -127,7 +133,9 @@ printf '  %s\n' "${merge_inputs[@]}"
 aegis_cmd=(/opt/conda/envs/bio_env/bin/python -m aegis)
 
 echo "[$date_stamp] AEGIS merge"
-"${aegis_cmd[@]}" merge -d aegis_merge -o "$output_prefix" "${merge_inputs[@]}"
+"${aegis_cmd[@]}" merge -d aegis_merge -o "$output_prefix" \
+  --max-gene-overlap 50 --max-exon-overlap 50 --max-cds-overlap 50 \
+  "${merge_inputs[@]}"
 if [[ ! -s "aegis_merge/${output_prefix}.gff3" ]]; then
   echo "AEGIS merge did not produce ${output_prefix}.gff3" >&2
   exit 1
