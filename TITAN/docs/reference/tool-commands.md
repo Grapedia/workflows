@@ -23,11 +23,12 @@
 - [Protein FASTA Normalization](#protein-fasta-normalization)
 - [BRAKER3](#braker3)
 - [Helixer](#helixer)
-- [AEGIS Evidence Merge](#aegis-evidence-merge)
+- [Mikado And TransDecoder](#mikado-and-transdecoder)
+- [AEGIS Finalization (rename/tidy of Mikado's pick)](#aegis-finalization-renametidy-of-mikados-pick)
+- [AEGIS Liftoff Gene ID Carryover](#aegis-liftoff-gene-id-carryover)
 - [Diamond2GO](#diamond2go)
 - [eggNOG-mapper](#eggnog-mapper)
 - [InterProScan](#interproscan)
-- [Mikado And TransDecoder](#mikado-and-transdecoder)
 - [lncRNA Candidate Annotation](#lncrna-candidate-annotation)
 - [SQANTI3 Long-Read QC](#sqanti3-long-read-qc)
 - [Final Annotation Validation](#final-annotation-validation)
@@ -64,10 +65,14 @@ The order below follows `workflows/titan.nf`,
    transcript evidence.
 5. Run EDTA, normalize protein evidence and run BRAKER3.
 6. Run optional Helixer.
-7. Merge evidence with AEGIS and extract final proteins.
-8. Run functional annotation on AEGIS proteins.
-9. Run optional Mikado/TransDecoder, lncRNA and SQANTI3 branches.
-10. Validate and summarize the final annotation with expression, BUSCO, OMArk,
+7. Consolidate every evidence source into one gene set with Mikado
+   (configure/prepare, TransDecoder, serialise, pick).
+8. Rename/tidy Mikado's picked annotation with AEGIS and carry old gene IDs
+   over from the Liftoff-transferred previous annotation where conserved.
+9. Run functional annotation (Diamond2GO, optional eggNOG-mapper and
+   InterProScan) on the final AEGIS proteins.
+10. Run optional lncRNA and SQANTI3 branches.
+11. Validate and summarize the final annotation with expression, BUSCO, OMArk,
     AGAT, ncRNA QC, MultiQC and provenance manifests.
 
 ## Input Validation
@@ -995,22 +1000,118 @@ Important options:
 | `--downloaded-model-path` | Offline model location. | Keeps production runs reproducible. |
 | TensorFlow thread env vars | Bound CPU threading. | Prevents uncontrolled CPU oversubscription. |
 
+## Mikado And TransDecoder
+
+Process: `mikado_prepare`  
+Module: `modules/mikado.nf`
+
+Defaults to enabled (`--run_mikado true`) and is effectively required: this
+is the step that consolidates every evidence source into the gene set AEGIS
+then renames (see [AEGIS Finalization](#aegis-finalization-renametidy-of-mikados-pick)
+below). If `--run_mikado false`, TITAN emits empty/skipped sentinel outputs
+and `aegis_merge` fails fast rather than silently publishing an empty
+annotation.
+
+```bash
+awk -F'\t' 'NF == 9 || /^#/' <liftoff_gff3> > liftoff_sanitized.gff3
+
+python3 scripts/make_mikado_list.py \
+  --source liftoff_sanitized.gff3:liftoff:False:10:True \
+  --source <egapx_gff3>:egapx:False:9:True \
+  --source <braker_augustus_gff3>:braker_augustus:False:8:False \
+  --source <braker_genemark_gtf>:braker_genemark:False:7:False \
+  --source <star_stringtie_default_stranded>:star_stringtie_default_stranded:True:5:False \
+  --source <star_stringtie_alt_stranded>:star_stringtie_alt_stranded:True:4:False \
+  --source <star_psiclass_stranded>:star_psiclass_stranded:True:5:False \
+  --source <star_psiclass_unstranded>:star_psiclass_unstranded:False:3:False \
+  --source <star_stringtie_default_unstranded>:star_stringtie_default_unstranded:False:3:False \
+  --source <star_stringtie_alt_unstranded>:star_stringtie_alt_unstranded:False:2:False \
+  --source <long_reads_default>:long_reads_default:False:6:False \
+  --source <long_reads_alt>:long_reads_alt:False:5:False \
+  --source <flair_isoforms_gtf>:flair_isoforms:False:6:False \
+  --source <helixer_gff3>:helixer:False:4:False \
+  -o transcript_inputs.tsv
+
+mikado configure \
+  --list transcript_inputs.tsv \
+  --reference <genome> \
+  --mode <params.mikado_mode> \
+  --scoring <params.mikado_scoring> \
+  mikado_configuration.yaml
+
+mikado prepare --json-conf mikado_configuration.yaml
+```
+
+`--source` entries use `path:label:stranded:score:is_reference`. The `score`
+is the numeric priority used to decide which transcript wins at a locus
+during `mikado pick` (Liftoff and EGAPx are also flagged `is_reference=True`,
+so they're excluded only for outright mistakes, not overlap competition).
+When `--run_hisat2 true`, TITAN appends four additional sources:
+`hisat2_stringtie_default_stranded`, `hisat2_stringtie_alt_stranded`,
+`hisat2_stringtie_default_unstranded` and
+`hisat2_stringtie_alt_unstranded`.
+
+Process: `transdecoder_longorfs`  
+Module: `modules/transdecoder.nf`
+
+Runs when both `--run_mikado true` and `--run_transdecoder true` (the latter
+also effectively required — without ORFs, `mikado pick`'s CDS-based scoring
+has nothing to score and rejects most transcripts).
+
+```bash
+export PATH=/usr/local/opt/transdecoder/util:/usr/local/opt/transdecoder:$PATH
+cp <mikado_prepared.fasta> mikado_prepared.fasta
+TransDecoder.LongOrfs -t mikado_prepared.fasta
+```
+
+Process: `transdecoder_predict`
+
+```bash
+export PATH=/usr/local/opt/transdecoder/util:/usr/local/opt/transdecoder:$PATH
+cp <mikado_prepared.fasta> mikado_prepared.fasta
+cp -r <longorfs_dir> mikado_prepared.fasta.transdecoder_dir
+TransDecoder.Predict \
+  -t mikado_prepared.fasta \
+  --single_best_only
+```
+
+Process: `mikado_serialise`
+
+```bash
+mikado serialise \
+  --json-conf <mikado_configuration.yaml> \
+  --orfs <transdecoder.bed> \
+  --procs <cpus>
+```
+
+Process: `mikado_pick`
+
+```bash
+mikado pick \
+  --json-conf <mikado_configuration.yaml> \
+  --subloci-out mikado.subloci.gff3 \
+  --loci-out mikado.loci.gff3 \
+  --procs <cpus>
+```
+
+`final_mikado_annotation.gff3` (a copy of `mikado.loci.gff3`) is the file
+AEGIS renames into the final annotation.
+
 ## AEGIS Finalization (rename/tidy of Mikado's pick)
 
 Process: `aegis_merge`  
 Module: `modules/aegis_merge.nf`  
 Wrapper: `scripts/run_aegis_merge.sh`
 
-The gene-model consolidation itself is done by `mikado_pick` (see below),
-which reconciles every evidence source (Liftoff, EGAPx, BRAKER, Helixer,
-and all transcript assemblies) via per-locus superloci scoring, using a
-calibrated numeric `source_score`/`reference` weighting
-(`mikado_configuration.yaml`). This is more faithful than a naive
-overlap-threshold merge: a prior `aegis merge` step existed here but was
-removed because it excludes a whole gene model outright (including any
-non-overlapping portion) whenever its overlap with a higher-priority
-source exceeds a threshold, rather than reconciling isoforms per locus
-like Mikado does.
+The gene-model consolidation itself is done by `mikado_pick` (above), which
+reconciles every evidence source (Liftoff, EGAPx, BRAKER, Helixer, and all
+transcript assemblies) via per-locus superloci scoring, using a calibrated
+numeric `source_score`/`reference` weighting (`mikado_configuration.yaml`).
+This is more faithful than a naive overlap-threshold merge: a prior
+`aegis merge` step existed here but was removed because it excludes a whole
+gene model outright (including any non-overlapping portion) whenever its
+overlap with a higher-priority source exceeds a threshold, rather than
+reconciling isoforms per locus like Mikado does.
 
 AEGIS is now only used to give `mikado_pick`'s output stable, systematic
 gene IDs and to normalize feature structure.
@@ -1062,6 +1163,79 @@ Important options:
 | `rename --gene-id-correspondences` | ID mapping table. | Preserves traceability after renaming. |
 | `tidy --standard-features` | Normalize feature structure. | Improves final GFF3 consistency. |
 | `extract -m all` / `-m main` | Protein extraction mode. | Produces all and main protein sets for functional annotation and QC. |
+
+This step's own output (`final_annotation.gff3` etc. inside its work dir) is
+an intermediate carrying only fresh Vitvi IDs; it is not published under
+`aegis_outputs` (only under `intermediate_files/aegis` as
+`vitvi_only_final_annotation.gff3` when `--publish_intermediates true`). See
+[AEGIS Liftoff Gene ID Carryover](#aegis-liftoff-gene-id-carryover) for the
+step that produces what's actually published as the final annotation.
+
+## AEGIS Liftoff Gene ID Carryover
+
+Process: `aegis_liftoff_gene_ids`  
+Module: `modules/aegis_liftoff_ids.nf`  
+Script: `scripts/apply_liftoff_gene_ids.py`
+
+Genes in the Vitvi-renamed annotation above that correspond to a gene in the
+Liftoff-transferred previous annotation keep the old gene ID instead of the
+fresh Vitvi one; genes with no confident old-assembly counterpart keep their
+Vitvi ID. This preserves gene ID stability across reannotations without
+losing AEGIS's systematic ID scheme for genuinely new genes.
+
+Overlap detection:
+
+```bash
+/opt/conda/envs/bio_env/bin/python -m aegis overlap \
+  -a final,liftoff \
+  --original-annotation-files "NA,<previous_annotations>" \
+  -r final \
+  -d overlap_out \
+  <vitvi_annotation.gff3> <liftoff_gff3>
+```
+
+`--original-annotation-files` points the Liftoff side at
+`previous_annotations` (the true pre-transfer, old-assembly annotation) so
+AEGIS can also report synteny conservation, not just coordinate overlap.
+
+ID substitution:
+
+```bash
+python3 scripts/apply_liftoff_gene_ids.py \
+  --overlap-csv <final_liftoff_overlaps_t6.csv> \
+  --gff3 <vitvi_annotation.gff3> \
+  --proteins-all <vitvi_proteins_all.fasta> \
+  --proteins-main <vitvi_proteins_main.fasta> \
+  --new-origin final \
+  --old-origin liftoff \
+  -o final_annotation.gff3 \
+  --output-proteins-all final_annotation_proteins_all.fasta \
+  --output-proteins-main final_annotation_proteins_main.fasta \
+  --audit-tsv liftoff_gene_id_correspondence.tsv
+```
+
+The script keeps only reciprocal-best-match pairs (the highest-scoring match
+on both sides of the overlap table) as confident carryovers; any ambiguous
+match (e.g. a gene fusion/split producing multiple candidates) is treated as
+no-match, so the gene keeps its Vitvi ID rather than risk a misleading old
+ID. Accepted matches rewrite the gene ID and cascade it to
+transcript/exon/CDS/UTR IDs, `Parent=` references and protein FASTA headers,
+following AEGIS's own `{gene_id}_t001`/`_e001`/`_CDS1` suffix convention.
+
+Important options:
+
+| Option | Purpose | Why it matters |
+|---|---|---|
+| `overlap --original-annotation-files` | Pre-transfer annotation for the Liftoff side. | Enables synteny-conservation scoring, not just coordinate overlap. |
+| `overlap -r` | Restrict matches to/from one annotation. | Keeps the correspondence table focused on new-vs-old gene pairs. |
+| `overlap -o` (default 6) | Overlap-score threshold for a reported match. | AEGIS's tuned default for valid ID equivalences; not overridden by TITAN. |
+| `apply_liftoff_gene_ids.py` reciprocal-best-match filter | Ambiguity policy. | Avoids assigning a misleading old ID when a gene fused, split, or has multiple plausible matches. |
+
+This step writes what's actually published under `${output_dir}/aegis_outputs`:
+`final_annotation.gff3`, `final_annotation_proteins_all.fasta`,
+`final_annotation_proteins_main.fasta` and
+`liftoff_gene_id_correspondence.tsv` (per-gene decision and match score, for
+provenance).
 
 ## Diamond2GO
 
@@ -1176,91 +1350,6 @@ Important options:
 | `-dp` | Disable precalculated match lookup. | Supports offline production runs. |
 | `-f TSV,GFF3,JSON` | Output formats. | Provides tabular, feature and structured results. |
 | `-goterms`, `-pathways` | Add GO and pathway annotations. | Enriches functional annotation outputs. |
-
-## Mikado And TransDecoder
-
-Process: `mikado_prepare`  
-Module: `modules/mikado.nf`
-
-Runs when `--run_mikado true`; otherwise TITAN emits empty/skipped sentinel
-outputs.
-
-```bash
-awk -F'\t' 'NF == 9 || /^#/' <liftoff_gff3> > liftoff_sanitized.gff3
-
-python3 scripts/make_mikado_list.py \
-  --source liftoff_sanitized.gff3:liftoff:False:10:True \
-  --source <egapx_gff3>:egapx:False:9:True \
-  --source <braker_augustus_gff3>:braker_augustus:False:8:False \
-  --source <braker_genemark_gtf>:braker_genemark:False:7:False \
-  --source <star_stringtie_default_stranded>:star_stringtie_default_stranded:True:5:False \
-  --source <star_stringtie_alt_stranded>:star_stringtie_alt_stranded:True:4:False \
-  --source <star_psiclass_stranded>:star_psiclass_stranded:True:5:False \
-  --source <star_psiclass_unstranded>:star_psiclass_unstranded:False:3:False \
-  --source <star_stringtie_default_unstranded>:star_stringtie_default_unstranded:False:3:False \
-  --source <star_stringtie_alt_unstranded>:star_stringtie_alt_unstranded:False:2:False \
-  --source <long_reads_default>:long_reads_default:False:6:False \
-  --source <long_reads_alt>:long_reads_alt:False:5:False \
-  --source <flair_isoforms_gtf>:flair_isoforms:False:6:False \
-  --source <helixer_gff3>:helixer:False:4:False \
-  -o transcript_inputs.tsv
-
-mikado configure \
-  --list transcript_inputs.tsv \
-  --reference <genome> \
-  --mode <params.mikado_mode> \
-  --scoring <params.mikado_scoring> \
-  mikado_configuration.yaml
-
-mikado prepare --json-conf mikado_configuration.yaml
-```
-
-`--source` entries use `path:label:stranded:score:is_reference`.
-When `--run_hisat2 true`, TITAN appends four additional sources:
-`hisat2_stringtie_default_stranded`, `hisat2_stringtie_alt_stranded`,
-`hisat2_stringtie_default_unstranded` and
-`hisat2_stringtie_alt_unstranded`.
-
-Process: `transdecoder_longorfs`  
-Module: `modules/transdecoder.nf`
-
-Runs when both `--run_mikado true` and `--run_transdecoder true`.
-
-```bash
-export PATH=/usr/local/opt/transdecoder/util:/usr/local/opt/transdecoder:$PATH
-cp <mikado_prepared.fasta> mikado_prepared.fasta
-TransDecoder.LongOrfs -t mikado_prepared.fasta
-```
-
-Process: `transdecoder_predict`
-
-```bash
-export PATH=/usr/local/opt/transdecoder/util:/usr/local/opt/transdecoder:$PATH
-cp <mikado_prepared.fasta> mikado_prepared.fasta
-cp -r <longorfs_dir> mikado_prepared.fasta.transdecoder_dir
-TransDecoder.Predict \
-  -t mikado_prepared.fasta \
-  --single_best_only
-```
-
-Process: `mikado_serialise`
-
-```bash
-mikado serialise \
-  --json-conf <mikado_configuration.yaml> \
-  --orfs <transdecoder.bed> \
-  --procs <cpus>
-```
-
-Process: `mikado_pick`
-
-```bash
-mikado pick \
-  --json-conf <mikado_configuration.yaml> \
-  --subloci-out mikado.subloci.gff3 \
-  --loci-out mikado.loci.gff3 \
-  --procs <cpus>
-```
 
 ## lncRNA Candidate Annotation
 
@@ -1658,7 +1747,8 @@ that documents its command or sentinel behavior.
 | `Stringtie_merging_short_reads_STAR` | `modules/Stringtie_merging_short_reads_STAR.nf` | Merging Transcript Assemblies |
 | `Stringtie_merging_short_reads_hisat2` | `modules/Stringtie_merging_short_reads_hisat2.nf` | Merging Transcript Assemblies |
 | `additional_annotations_provenance` | `modules/additional_annotations_provenance.nf` | Provenance Manifests |
-| `aegis_merge` | `modules/aegis_merge.nf` | AEGIS Evidence Merge |
+| `aegis_liftoff_gene_ids` | `modules/aegis_liftoff_ids.nf` | AEGIS Liftoff Gene ID Carryover |
+| `aegis_merge` | `modules/aegis_merge.nf` | AEGIS Finalization (rename/tidy of Mikado's pick) |
 | `agat_convert_gff3_to_cds_fasta` | `modules/agat_convert_gff3_to_cds_fasta.nf` | AGAT Conversion For Liftoff Evidence |
 | `agat_convert_gff3_to_gtf` | `modules/agat_convert_gff3_to_gtf.nf` | AGAT Conversion For Liftoff Evidence |
 | `agat_stats` | `modules/agat_stats.nf` | AGAT Structural Statistics |

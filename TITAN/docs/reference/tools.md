@@ -12,8 +12,8 @@
 - [EDTA](#edta)
 - [BRAKER3](#braker3)
 - [Helixer](#helixer)
-- [AEGIS](#aegis)
 - [Mikado Final Annotation Source](#mikado-final-annotation-source)
+- [AEGIS](#aegis)
 - [lncRNA Candidates](#lncrna-candidates)
 - [SQANTI3 Long-Read Isoform QC](#sqanti3-long-read-isoform-qc)
 - [Diamond2GO](#diamond2go)
@@ -48,7 +48,7 @@ table/structure/isotype/statistics files, and converts the raw table to
 
 Outputs are published under `${output_dir}/additional_annotations/ncrna/trna`.
 The tRNA GFF3 is used by lncRNA filtering and ncRNA QC, but is not
-automatically merged into the AEGIS coding annotation.
+automatically merged into the final coding annotation.
 
 ## Infernal/Rfam ncRNA
 
@@ -62,7 +62,7 @@ TITAN splits the target FASTA by sequence, runs `cmsearch --cut_ga --rfam
 and converts them once to `rfam_ncrna.gff3` with
 `scripts/rfam_tblout_to_gff3.py`. Rfam outputs are published under
 `${output_dir}/additional_annotations/ncrna/rfam`, used by lncRNA filtering and
-ncRNA QC, and are not automatically merged into AEGIS.
+ncRNA QC, and are not automatically merged into the final coding annotation.
 
 ## RNA-Seq Evidence
 
@@ -74,18 +74,19 @@ is an optional short-read evidence branch disabled by default; enable it with
 aligned with Minimap2 and assembled with StringTie.
 
 Merged STAR/StringTie, STAR/PsiCLASS and optional Minimap2/StringTie GTFs are
-passed to AEGIS and Mikado. When enabled, HISAT2/StringTie feeds Mikado,
-lncRNA candidates and provenance only; it is not passed to AEGIS. Per-sample
-alignments and transcriptomes are published only when
-`--publish_intermediates true`.
+passed to Mikado (AEGIS no longer consumes raw evidence directly — see
+[AEGIS](#aegis)). When enabled, HISAT2/StringTie also feeds Mikado, lncRNA
+candidates and provenance. Per-sample alignments and transcriptomes are
+published only when `--publish_intermediates true`.
 
 ## Liftoff
 
 Liftoff transfers the previous annotation from `--previous_assembly` and
 `--previous_annotations` onto `--new_assembly`. TITAN publishes
 `liftoff_previous_annotations.gff3` and `unmapped_features.txt`, then uses the
-GFF3 as evidence for AEGIS, Mikado and Liftoff-derived splice-junction support
-for FLAIR.
+GFF3 as Mikado consolidation evidence, as the correspondence source for
+AEGIS's liftoff gene-ID carryover (see [AEGIS](#aegis)), and as
+Liftoff-derived splice-junction support for FLAIR.
 
 ## EGAPx
 
@@ -105,13 +106,14 @@ FLAIR is optional (`--run_flair true`) and runs only when long-read samples are
 present. It uses Liftoff as splice-junction correction evidence, publishes
 per-sample and merged isoform GTF/FASTA files under
 `${output_dir}/additional_annotations/flair`, and passes merged isoforms to
-AEGIS and Mikado as optional transcript evidence.
+Mikado as optional transcript evidence.
 
 ## EDTA
 
 EDTA is mandatory. It annotates repetitive elements and produces the
-hard-masked target genome consumed by AEGIS and downstream validation. TITAN
-publishes the public masked genome as `assembly_masked.EDTA.fasta`.
+hard-masked target genome consumed by Mikado, AEGIS and downstream
+validation. TITAN publishes the public masked genome as
+`assembly_masked.EDTA.fasta`.
 
 ## BRAKER3
 
@@ -125,8 +127,10 @@ uses the long-read-aware BRAKER3 branch. Published outputs include
 
 Helixer is optional (`--run_helixer true`) and predicts genes directly from the
 EDTA soft-masked genome. Its GFF3 is published under
-`${output_dir}/additional_annotations/helixer` and passed to AEGIS and Mikado
-as optional evidence.
+`${output_dir}/additional_annotations/helixer` and passed to Mikado as
+optional evidence (Mikado is the only step that consumes raw evidence
+sources; AEGIS only sees Mikado's consolidated output — see
+[AEGIS](#aegis) and [Mikado](#mikado-final-annotation-source)).
 
 Use `--helixer_model_dir` with a staged lineage model and optionally
 `--helixer_model` (`vertebrate`, `land_plant`, `fungi` or `invertebrate`;
@@ -142,27 +146,63 @@ scripts/download_helixer_model.sh \
   --lineage land_plant
 ```
 
-## AEGIS
-
-AEGIS is the primary final annotation integration step. It consumes named
-evidence channels from Liftoff, EGAPx, BRAKER3, transcript assemblies, optional
-long-read evidence, optional Helixer and optional FLAIR. It writes
-`final_annotation.gff3`, `final_annotation_proteins_all.fasta` and
-`final_annotation_proteins_main.fasta` under `${output_dir}/aegis_outputs`.
-
 ## Mikado Final Annotation Source
 
-Mikado is optional (`--run_mikado true`) and produces an alternative final GFF3
-source in parallel with AEGIS. It receives Liftoff, EGAPx, BRAKER3,
-STAR/StringTie, STAR/PsiCLASS, optional long-read StringTie, optional FLAIR and
-optional Helixer. If `--run_hisat2 true`, TITAN also adds HISAT2/StringTie
-sources to Mikado; otherwise skipped HISAT2 records are written to provenance.
+Mikado is the annotation consolidation step: it reconciles every evidence
+source into one non-redundant, per-locus-scored gene set, which AEGIS then
+renames and tidies (see [AEGIS](#aegis) below). It defaults to enabled
+(`--run_mikado true`) and is effectively required — if disabled, `mikado_pick`
+produces an empty annotation and `aegis_merge` fails fast rather than silently
+publishing nothing. It receives Liftoff, EGAPx, BRAKER3, STAR/StringTie,
+STAR/PsiCLASS, optional long-read StringTie, optional FLAIR and optional
+Helixer. If `--run_hisat2 true`, TITAN also adds HISAT2/StringTie sources to
+Mikado; otherwise skipped HISAT2 records are written to provenance.
+
+Each source is given a calibrated numeric priority (`source_score` in
+`modules/mikado.nf`'s `mikado_prepare`, e.g. Liftoff=10, EGAPx=9,
+BRAKER-AUGUSTUS=8, BRAKER-GeneMark=7), and Liftoff/EGAPx are additionally
+flagged as `reference` quality (excluded only for outright mistakes, not
+overlap competition) — this scoring is what determines which transcript wins
+at a given locus, replacing AEGIS's older whole-gene overlap-threshold merge.
 
 The graph runs Mikado configure/prepare, TransDecoder LongOrfs/Predict when
-`--run_transdecoder true`, then Mikado serialise and pick. Outputs are
-published under `${output_dir}/final_annotations/mikado`. AEGIS and Mikado are
-separate final GFF3 sources; TITAN adds an AEGIS-vs-Mikado overlap summary to
-MultiQC when Mikado is enabled.
+`--run_transdecoder true` (also effectively required — without ORFs, Mikado's
+CDS-based scoring has nothing to score and rejects most transcripts), then
+Mikado serialise and pick. Outputs are published under
+`${output_dir}/final_annotations/mikado`; `final_mikado_annotation.gff3` is
+the file AEGIS renames into the final annotation.
+
+## AEGIS
+
+AEGIS no longer merges evidence directly; Mikado does that (see
+[Mikado Final Annotation Source](#mikado-final-annotation-source) above).
+AEGIS runs in two steps on Mikado's consolidated output:
+
+1. **`aegis_merge`** (rename/tidy) — runs `aegis rename --prefix <aegis_gene_id_prefix>`
+   on `final_mikado_annotation.gff3` to assign systematic, position-based gene
+   IDs (default prefix `Vitvi`, independent of Mikado's own IDs), then
+   `aegis tidy --standard-features`. This intermediate, Vitvi-only annotation
+   is not published by default (only under
+   `${output_dir}/intermediate_files/aegis` with `--publish_intermediates true`,
+   as `vitvi_only_final_annotation.gff3`).
+2. **`aegis_liftoff_gene_ids`** (ID carryover) — runs `aegis overlap` between
+   that Vitvi-renamed annotation and the Liftoff-transferred previous
+   annotation (`evidence_data.liftoff_gff3`), with `previous_annotations` as
+   `--original-annotation-files` so AEGIS can also check synteny conservation
+   against the true old-assembly gene order. For every gene with a confident,
+   reciprocal-best-match correspondence to an old gene (AEGIS's default
+   `overlap_score` threshold), the old gene ID replaces the fresh Vitvi ID
+   (cascaded to transcript/exon/CDS/UTR IDs and protein FASTA headers via
+   `scripts/apply_liftoff_gene_ids.py`); genes without a confident match keep
+   their Vitvi ID. Ambiguous matches (e.g. a gene fusion/split) are treated as
+   no-match and also keep a fresh Vitvi ID, rather than risk a misleading old
+   ID assignment.
+
+This step writes the files that are actually published under
+`${output_dir}/aegis_outputs`: `final_annotation.gff3`,
+`final_annotation_proteins_all.fasta`, `final_annotation_proteins_main.fasta`
+and `liftoff_gene_id_correspondence.tsv` (per-gene decision and match score,
+for provenance).
 
 ## lncRNA Candidates
 
@@ -244,7 +284,6 @@ optional branches:
 * ncRNA counts from tRNAscan-SE and Rfam outputs;
 * expression support validation with Salmon when `--run_expression_validation true`;
 * SQANTI3 summaries when enabled and long-read evidence exists;
-* AEGIS-vs-Mikado comparison when Mikado is enabled;
 * final MultiQC HTML aggregation.
 
 BUSCO needs an offline lineage dataset at `--busco_data_dir`; the launchers can

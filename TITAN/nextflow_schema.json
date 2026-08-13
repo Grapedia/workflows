@@ -114,7 +114,7 @@
     },
     "run_helixer": {
       "type": "boolean",
-      "description": "Run Helixer ab initio gene prediction on the EDTA soft-masked genome. Its GFF3 is also passed to AEGIS as optional merge evidence."
+      "description": "Run Helixer ab initio gene prediction on the EDTA soft-masked genome. Its GFF3 is also passed to Mikado as optional consolidation evidence."
     },
     "helixer_model_dir": {
       "$ref": "#/definitions/path_or_false",
@@ -231,7 +231,7 @@
     },
     "run_mikado": {
       "type": "boolean",
-      "description": "Run Mikado as a parallel final GFF3 annotation source using the same annotation evidence inputs as AEGIS."
+      "description": "Run Mikado to consolidate all evidence sources into the gene set that AEGIS then renames (Vitvi IDs, with liftoff ID carryover) and tidies into the final annotation. Required for a real final annotation; when false, AEGIS has nothing to rename and the pipeline fails at aegis_merge."
     },
     "run_transdecoder": {
       "type": "boolean",
@@ -247,7 +247,7 @@
     },
     "run_flair": {
       "type": "boolean",
-      "description": "Run FLAIR on long-read RNA-seq samples and pass merged isoforms as optional evidence to AEGIS and Mikado."
+      "description": "Run FLAIR on long-read RNA-seq samples and pass merged isoforms as optional evidence to Mikado."
     },
     "run_sqanti3": {
       "type": "boolean",
@@ -306,7 +306,7 @@
     },
     "aegis_gene_id_prefix": {
       "type": "string",
-      "description": "Gene ID prefix applied by 'aegis rename' when building the final merged annotation (e.g. Vitvi)."
+      "description": "Gene ID prefix applied by 'aegis rename' to Mikado's consolidated annotation (e.g. Vitvi)."
     },
     "ena_download_timeout_seconds": {
       "type": "integer",

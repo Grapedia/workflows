@@ -36,7 +36,7 @@ The container image pins themselves are documented in
 | tRNAscan-SE | off | None beyond the container image | No data step |
 | Infernal/Rfam | off | `Rfam.cm`, `Rfam.clanin`, `cmpress` index files | Bundled script |
 | lncRNA/CPAT | off | Plant-LncPipe CPAT model files | Bundled script or validation-time fetch |
-| Mikado + TransDecoder | off | None beyond container images and pipeline evidence | No data step |
+| Mikado + TransDecoder | on (required) | None beyond container images and pipeline evidence | No data step |
 | FLAIR | off | None beyond container image and long-read evidence | No data step |
 | SQANTI3 | off | None beyond container image and long-read evidence | No data step |
 | OMArk | off | OMAmer `omamer.h5` database | Bundled script |
@@ -269,18 +269,19 @@ For the cleanest lncRNA candidate filtering, also enable tRNAscan-SE and Rfam.
 
 ## Mikado and TransDecoder
 
-Mikado is optional and disabled by default. TransDecoder is enabled whenever
-Mikado is enabled unless explicitly disabled.
-
-```bash
---run_mikado true
-```
-
-Disable TransDecoder only for an intentional transcript-only Mikado run:
+Mikado and TransDecoder both default to enabled and are effectively
+required: Mikado consolidates every evidence source into the gene set that
+AEGIS then renames into the final annotation (see
+[AEGIS](../reference/tools.md#aegis) and
+[Mikado Final Annotation Source](../reference/tools.md#mikado-final-annotation-source)).
+Do not disable either for a production run — `aegis_merge` fails fast if
+`mikado_pick`'s output has no feature records, so there is no supported way
+to get a real final annotation with `--run_mikado false` or
+`--run_transdecoder false`.
 
 ```bash
 --run_mikado true \
---run_transdecoder false
+--run_transdecoder true
 ```
 
 No additional reference database is required.

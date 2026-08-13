@@ -22,7 +22,8 @@ are documented separately:
 * [Tool reference](../reference/tools.md)
 
 TITAN has one public execution contract: evidence generation, mandatory EDTA,
-mandatory EGAPx and AEGIS run in the same Nextflow graph.
+mandatory EGAPx, Mikado consolidation and AEGIS finalization run in the same
+Nextflow graph.
 
 ## 1. Requirements
 

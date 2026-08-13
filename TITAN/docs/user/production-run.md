@@ -41,7 +41,7 @@ Base command:
 ```
 
 The base command runs the mandatory graph: Liftoff, RNA-seq evidence, EDTA,
-EGAPx, BRAKER3, AEGIS, Diamond2GO and default quality checks.
+EGAPx, BRAKER3, Mikado, AEGIS, Diamond2GO and default quality checks.
 
 ## Optional Branches
 
@@ -199,7 +199,7 @@ Before launching a long run:
 
 * Confirm all TITAN and EGAPx paths are absolute and visible on compute nodes.
 * Confirm the selected container runtime works on compute nodes.
-* Confirm EGAPx, EDTA and AEGIS images are available or pullable.
+* Confirm EGAPx, EDTA, Mikado and AEGIS images are available or pullable.
 * Pre-stage the EGAPx runner, support cache and executor config for
   reproducible HPC runs.
 * Confirm the EGAPx cache contains the BUSCO lineage selected from the YAML
@@ -208,8 +208,9 @@ Before launching a long run:
   InterProScan, Rfam, OMArk, CPAT or BUSCO.
 * Enable tRNAscan-SE and Rfam when using the lncRNA candidate branch.
 * Enable FLAIR and SQANTI3 only for runs with long-read evidence.
-* Keep `run_transdecoder = true` with Mikado unless a transcript-only run is
-  intentional.
+* Keep `run_mikado = true` and `run_transdecoder = true` (both pipeline
+  defaults) — AEGIS renames Mikado's picked annotation, so disabling either
+  leaves nothing for `aegis_merge` to rename and the run fails there.
 * Run a `-stub-run` after every profile/config edit.
 * Keep `.nextflow.log`, `nextflow_reports/`, trace/timeline files when enabled
   and the published `provenance/` directory with the run outputs.

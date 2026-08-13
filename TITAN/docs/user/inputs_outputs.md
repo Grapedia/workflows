@@ -8,7 +8,7 @@
 - [Core Evidence Outputs](#core-evidence-outputs)
 - [EGAPx Outputs](#egapx-outputs)
 - [Additional Annotations](#additional-annotations)
-- [Optional Final Annotation Source](#optional-final-annotation-source)
+- [Mikado Consolidated Annotation](#mikado-consolidated-annotation)
 - [Functional Annotation](#functional-annotation)
 - [Quality, Validation And Provenance](#quality-validation-and-provenance)
 - [Intermediate And Runtime Outputs](#intermediate-and-runtime-outputs)
@@ -87,6 +87,7 @@ ${output_dir}/
     final_annotation.gff3
     final_annotation_proteins_all.fasta
     final_annotation_proteins_main.fasta
+    liftoff_gene_id_correspondence.tsv
     versions.yml
   assembly_masked.EDTA.fasta
   liftoff_previous_annotations.gff3
@@ -124,9 +125,10 @@ ${output_dir}/
 ```
 
 Top-level evidence tracks are intentionally kept near `aegis_outputs/` because
-they are direct AEGIS inputs or easy-to-inspect evidence products. Some
-unstranded or long-read merged GTF files can be empty when the corresponding
-sample class is absent.
+they are direct Mikado consolidation inputs (see
+[Mikado Consolidated Annotation](#mikado-consolidated-annotation)) or
+easy-to-inspect evidence products. Some unstranded or long-read merged GTF
+files can be empty when the corresponding sample class is absent.
 
 ## Primary Annotation
 
@@ -135,12 +137,18 @@ ${output_dir}/aegis_outputs/
   final_annotation.gff3
   final_annotation_proteins_all.fasta
   final_annotation_proteins_main.fasta
+  liftoff_gene_id_correspondence.tsv
   versions.yml
 ```
 
-This is the primary output family. `final_annotation.gff3` is the final AEGIS
-annotation. The protein FASTAs contain all translated proteins and the main
-representative protein set.
+This is the primary output family. `final_annotation.gff3` is Mikado's
+consolidated gene set, renamed and tidied by AEGIS (systematic `Vitvi` IDs,
+with old gene IDs carried over from the previous annotation via Liftoff
+where a confident correspondence exists). The protein FASTAs contain all
+translated proteins and the main representative protein set.
+`liftoff_gene_id_correspondence.tsv` records, per gene, whether its ID was
+carried over (`carried_over_from_liftoff`, with the match's overlap score)
+or freshly assigned (`new_vitvi_id`).
 
 ## Core Evidence Outputs
 
@@ -237,7 +245,7 @@ Rfam and tRNAscan-SE feed ncRNA summaries and lncRNA filtering. FLAIR and
 SQANTI3 require long-read evidence and their own optional settings. Helixer and
 lncRNA outputs are only present when the corresponding branches are enabled.
 
-## Optional Final Annotation Source
+## Mikado Consolidated Annotation
 
 ```text
 ${output_dir}/final_annotations/mikado/
@@ -249,8 +257,12 @@ ${output_dir}/final_annotations/mikado/
   transdecoder/
 ```
 
-Mikado is an optional alternative final annotation source. The AEGIS annotation
-remains under `aegis_outputs/`.
+Mikado consolidates every evidence source into one non-redundant, per-locus-
+scored gene set; `final_mikado_annotation.gff3` is what AEGIS then renames
+(Vitvi IDs, with liftoff ID carryover) and tidies into
+`aegis_outputs/final_annotation.gff3`. This branch defaults to enabled
+(`--run_mikado true`) and is effectively required — disabling it leaves
+`aegis_merge` nothing to rename and the run fails there.
 
 ## Functional Annotation
 
@@ -313,7 +325,8 @@ Provenance manifests record inputs, selected outputs, versions and checksums.
 
 ```text
 ${output_dir}/intermediate_files/
-  aegis/
+  aegis/                  # aegis_merge's Vitvi-only pass (vitvi_only_*) and
+                           # the aegis overlap correspondence table
   braker3/
   evidence_data/
     EDTA/

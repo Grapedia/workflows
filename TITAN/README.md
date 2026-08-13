@@ -2,11 +2,13 @@
 
 ![Nextflow](https://img.shields.io/badge/Nextflow-24.04.3-23aa62?logo=nextflow) ![DSL2](https://img.shields.io/badge/DSL2-workflow-4b7bec) ![Python](https://img.shields.io/badge/Python-3.x-3776ab?logo=python&logoColor=white) ![Bash](https://img.shields.io/badge/Bash-scripts-4eaa25?logo=gnubash&logoColor=white) ![Apptainer](https://img.shields.io/badge/Apptainer-HPC-6b46c1) ![Slurm](https://img.shields.io/badge/Slurm-ready-0f766e)
 
-TITAN is a Nextflow pipeline for eukaryotic genome annotation centered on
-AEGIS-based evidence integration. It generates and harmonizes transferred
-annotation, RNA-seq transcript evidence, protein-supported ab initio
-prediction, repeat masking, EGAPx, optional ncRNA/lncRNA and isoform branches,
-then uses AEGIS to merge these evidence tracks into a final annotation with
+TITAN is a Nextflow pipeline for eukaryotic genome annotation. It generates
+and harmonizes transferred annotation, RNA-seq transcript evidence,
+protein-supported ab initio prediction, repeat masking, EGAPx, and optional
+ncRNA/lncRNA and isoform branches, consolidates every evidence track into a
+single non-redundant gene set with Mikado, then uses AEGIS to assign final
+gene IDs (systematic Vitvi IDs, carrying over matching old IDs from the
+previous annotation via Liftoff where the gene is conserved) and to run
 functional annotation and quality reporting in one reproducible graph.
 
 Contributors: David Navarro, Antonio Santiago, Jose Tomas Matus, Amandine
@@ -41,14 +43,15 @@ Site-specific examples are kept under [examples/](examples/).
 
 ## What TITAN Produces
 
-TITAN has one public execution mode: evidence generation, EDTA, EGAPx and
-AEGIS always run together. Long-read processing is automatic when
+TITAN has one public execution mode: evidence generation, EDTA, EGAPx, Mikado
+and AEGIS always run together. Long-read processing is automatic when
 `RNAseq_samplesheet` contains at least one `library_layout=long` row.
 
-Core outputs are a final AEGIS GFF3/protein set, transferred and predicted
-evidence tracks, optional alternative/specialized annotations, functional
-annotation tables, provenance manifests, validation reports and a final
-MultiQC HTML report.
+Core outputs are a final AEGIS-tidied GFF3/protein set with stable gene IDs
+(old IDs carried over from the previous annotation where conserved, fresh
+Vitvi IDs elsewhere), transferred and predicted evidence tracks, optional
+alternative/specialized annotations, functional annotation tables, provenance
+manifests, validation reports and a final MultiQC HTML report.
 
 ## Workflow Graph
 
@@ -81,15 +84,16 @@ flowchart TD
     HELIXER[Helixer]:::opt
     FLAIR[FLAIR]:::opt
 
-    AEGIS[AEGIS merge + Vitvi IDs]:::core
+    MIK[Mikado + TransDecoder]:::core
+    MIKGFF[final_mikado_annotation.gff3]:::core
+    AEGIS[AEGIS rename - Vitvi IDs - + tidy]:::core
+    LIFTID[AEGIS liftoff ID carryover]:::core
     FINAL[final_annotation.gff3 + proteins]:::core
     D2GO[Diamond2GO]:::core
     EGG[eggNOG-mapper]:::opt
     IPS[InterProScan]:::opt
 
     LNC[lncRNA candidates]:::opt
-    MIK[Mikado + TransDecoder]:::opt
-    MIKGFF[final_mikado_annotation.gff3]:::opt
 
     BUSCO[BUSCO]:::opt
     OMARK[OMArk]:::opt
@@ -98,11 +102,10 @@ flowchart TD
     NCRNA[ncRNA summary]:::qc
     EXPR[Expression support]:::qc
     VALID[Final annotation validation]:::qc
-    SRCQC[AEGIS vs Mikado]:::opt
     MULTIQC[MultiQC HTML]:::qc
 
     NEW --> LIFT & EDTA & TRNA & RFAM & IDX & BRAKER & FLAIR
-    PREV --> LIFT
+    PREV --> LIFT & LIFTID
     EGCFG --> EGAPX
     RNA --> FASTP
     RNA --> MM2
@@ -119,28 +122,28 @@ flowchart TD
     EDTA --> HELIXER
     LIFT -.splice correction.-> FLAIR
 
-    LIFT & EGAPX & BRAKER & STAR & PSI & MM2 --> AEGIS
+    LIFT & EGAPX & BRAKER & STAR & PSI & MM2 --> MIK
+    EDTA --> MIK
+    HELIXER & FLAIR -.optional evidence.-> MIK
+    HISAT -.run_hisat2 evidence.-> MIK
+    MIK --> MIKGFF --> AEGIS
     EDTA --> AEGIS
-    HELIXER & FLAIR -.optional evidence.-> AEGIS
-    AEGIS --> FINAL --> D2GO
+    AEGIS --> LIFTID
+    LIFT --> LIFTID
+    LIFTID --> FINAL --> D2GO
     FINAL -.-> EGG & IPS
 
     FINAL --> LNC
     TRNA & RFAM -.exclude ncRNA overlap.-> LNC
     STAR & MM2 -.candidate transcripts.-> LNC
     HISAT -.optional candidates.-> LNC
-    LIFT & EGAPX & BRAKER & STAR & PSI & MM2 & HELIXER & FLAIR --> MIK
-    HISAT -.optional evidence.-> MIK
-    EDTA --> MIK
-    MIK --> MIKGFF
 
     FINAL --> BUSCO & OMARK & AGAT & SQANTI & EXPR
     FASTP -.transcript quantification.-> EXPR
     EDTA & FINAL --> VALID
     TRNA & RFAM --> NCRNA
     MM2 & FLAIR --> SQANTI
-    FINAL & MIKGFF --> SRCQC
-    FASTP & BUSCO & OMARK & AGAT & NCRNA & LNC & SQANTI & EXPR & SRCQC & VALID --> MULTIQC
+    FASTP & BUSCO & OMARK & AGAT & NCRNA & LNC & SQANTI & EXPR & VALID --> MULTIQC
 ```
 
 Blue nodes are the core graph, yellow dashed nodes are optional branches, and
@@ -148,11 +151,23 @@ green nodes are quality-report steps. Strand inference (Salmon, seeded by a
 Liftoff-derived CDS index) runs once per short-read sample directly on the
 fastp-trimmed FASTQs, before alignment, so it can pick the STAR/PsiCLASS
 alignment options and the stranded/unstranded StringTie/PsiCLASS assembly
-groups; it does not consume alignment output. AEGIS merges STAR-based
-(StringTie and PsiCLASS) and Minimap2/StringTie long-read evidence; the
-optional HISAT2/StringTie tracks feed Mikado, lncRNA candidates and provenance
-only when `--run_hisat2 true`; they do not feed AEGIS. Nextflow's per-run
-`-with-dag` report shows the full per-sample task fan-out.
+groups; it does not consume alignment output. Mikado consolidates every
+evidence track (Liftoff, EGAPx, BRAKER3, STAR-based StringTie/PsiCLASS,
+Minimap2/StringTie long reads, and — when enabled — Helixer, FLAIR and
+HISAT2/StringTie) into one non-redundant, per-locus-scored gene set, using a
+calibrated numeric priority per source (`mikado_prepare`'s `source_score`).
+AEGIS no longer merges evidence itself: it only renames Mikado's picked
+transcripts with systematic Vitvi gene IDs and tidies the result, then a
+dedicated step (`aegis_liftoff_gene_ids`) carries the old gene ID over from
+the Liftoff-transferred annotation for every gene with a confident
+one-to-one correspondence (via `aegis overlap`, using `previous_annotations`
+for synteny conservation); genes with no such match keep their Vitvi ID.
+See [AEGIS](docs/reference/tools.md#aegis) and
+[Mikado + TransDecoder](docs/reference/tools.md#mikado-final-annotation-source)
+for details. The optional HISAT2/StringTie tracks feed Mikado, lncRNA
+candidates and provenance only when `--run_hisat2 true`; they do not feed
+AEGIS. Nextflow's per-run `-with-dag` report shows the full per-sample task
+fan-out.
 
 ### Decomposed Sub-Workflows
 
@@ -162,7 +177,8 @@ The three views below split it along those phases for easier reading; nodes
 and colors match the full graph.
 
 **1. Core pipeline** (always runs: Liftoff, RNA-seq alignment/assembly, EDTA,
-EGAPx, BRAKER3, AEGIS merge, functional annotation):
+EGAPx, BRAKER3, Mikado consolidation, AEGIS rename/tidy + liftoff ID
+carryover, functional annotation):
 
 ```mermaid
 flowchart TD
@@ -186,14 +202,17 @@ flowchart TD
     MM2[Minimap2 + StringTie long reads]:::core
     BRAKER[BRAKER3 AUGUSTUS + GeneMark]:::core
 
-    AEGIS[AEGIS merge + Vitvi IDs]:::core
+    MIK[Mikado + TransDecoder]:::core
+    MIKGFF[final_mikado_annotation.gff3]:::core
+    AEGIS[AEGIS rename - Vitvi IDs - + tidy]:::core
+    LIFTID[AEGIS liftoff ID carryover]:::core
     FINAL[final_annotation.gff3 + proteins]:::core
     D2GO[Diamond2GO]:::core
     EGG[eggNOG-mapper]:::opt
     IPS[InterProScan]:::opt
 
     NEW --> LIFT & EDTA & IDX & BRAKER
-    PREV --> LIFT
+    PREV --> LIFT & LIFTID
     EGCFG --> EGAPX
     RNA --> FASTP
     RNA --> MM2
@@ -205,14 +224,19 @@ flowchart TD
     STAR --> BRAKER
     MM2 -.long reads.-> BRAKER
 
-    LIFT & EGAPX & BRAKER & STAR & PSI & MM2 --> AEGIS
+    LIFT & EGAPX & BRAKER & STAR & PSI & MM2 --> MIK
+    EDTA --> MIK
+    MIK --> MIKGFF --> AEGIS
     EDTA --> AEGIS
-    AEGIS --> FINAL --> D2GO
+    AEGIS --> LIFTID
+    LIFT --> LIFTID
+    LIFTID --> FINAL --> D2GO
     FINAL -.-> EGG & IPS
 ```
 
-**2. Optional evidence branches** (Helixer, FLAIR, Mikado, lncRNA — enabled
-per-project when their reference data are available):
+**2. Optional evidence branches** (Helixer, FLAIR, HISAT2, lncRNA — enabled
+per-project when their reference data are available; they feed into the core
+Mikado/lncRNA steps shown above):
 
 ```mermaid
 flowchart TD
@@ -223,38 +247,29 @@ flowchart TD
     RNA[RNAseq_samplesheet]:::core
     LIFT[Liftoff]:::core
     EDTA[EDTA masking]:::core
-    EGAPX[EGAPx]:::core
     STAR[STAR + StringTie]:::core
-    PSI[STAR + PsiCLASS]:::core
-    HISAT[HISAT2 + StringTie]:::opt
     MM2[Minimap2 + StringTie long reads]:::core
-    BRAKER[BRAKER3 AUGUSTUS + GeneMark]:::core
     FINAL[final_annotation.gff3 + proteins]:::core
-    AEGIS[AEGIS merge + Vitvi IDs]:::core
+    MIK[Mikado + TransDecoder]:::core
 
     TRNA[tRNAscan-SE]:::opt
     RFAM[Infernal/Rfam]:::opt
     HELIXER[Helixer]:::opt
     FLAIR[FLAIR]:::opt
+    HISAT[HISAT2 + StringTie]:::opt
     LNC[lncRNA candidates]:::opt
-    MIK[Mikado + TransDecoder]:::opt
-    MIKGFF[final_mikado_annotation.gff3]:::opt
 
     NEW --> TRNA & RFAM & FLAIR
     RNA -.long reads.-> FLAIR
     LIFT -.splice correction.-> FLAIR
     EDTA --> HELIXER
-    HELIXER & FLAIR -.optional evidence.-> AEGIS
+    HELIXER & FLAIR -.optional evidence.-> MIK
+    HISAT -.run_hisat2 evidence.-> MIK
 
     FINAL --> LNC
     TRNA & RFAM -.exclude ncRNA overlap.-> LNC
     STAR & MM2 -.candidate transcripts.-> LNC
     HISAT -.run_hisat2 candidates.-> LNC
-
-    LIFT & EGAPX & BRAKER & STAR & PSI & MM2 & HELIXER & FLAIR --> MIK
-    HISAT -.run_hisat2 evidence.-> MIK
-    EDTA --> MIK
-    MIK --> MIKGFF
 ```
 
 **3. QC and reporting** (everything feeding the final MultiQC report):
@@ -274,9 +289,7 @@ flowchart TD
     RFAM[Infernal/Rfam]:::opt
     FLAIR[FLAIR]:::opt
     LNC[lncRNA candidates]:::opt
-    MIKGFF[final_mikado_annotation.gff3]:::opt
     SQANTI[SQANTI3]:::opt
-    SRCQC[AEGIS vs Mikado]:::opt
 
     BUSCO[BUSCO]:::qc
     OMARK[OMArk]:::qc
@@ -291,8 +304,7 @@ flowchart TD
     EDTA & FINAL --> VALID
     TRNA & RFAM --> NCRNA
     MM2 & FLAIR --> SQANTI
-    FINAL & MIKGFF --> SRCQC
-    FASTP & BUSCO & OMARK & AGAT & NCRNA & LNC & SQANTI & EXPR & SRCQC & VALID --> MULTIQC
+    FASTP & BUSCO & OMARK & AGAT & NCRNA & LNC & SQANTI & EXPR & VALID --> MULTIQC
 ```
 
 ## Quick Start
@@ -304,8 +316,8 @@ scripts/run-tests.sh
 ```
 
 Production runs should go through the launcher. The base command runs the
-mandatory graph: Liftoff, RNA-seq evidence, EDTA, EGAPx, BRAKER3, AEGIS,
-Diamond2GO and default quality checks.
+mandatory graph: Liftoff, RNA-seq evidence, EDTA, EGAPx, BRAKER3, Mikado,
+AEGIS, Diamond2GO and default quality checks.
 
 ```bash
 ./launch_TITAN_example.sh \
@@ -409,14 +421,16 @@ Main output layout after a complete run:
 
 ```text
 ${output_dir}/
-  aegis_outputs/                 # primary final annotation and proteins
+  aegis_outputs/                 # primary final annotation, proteins and
+                                  # liftoff_gene_id_correspondence.tsv
   assembly_masked.EDTA.fasta     # EDTA-masked target assembly
   liftoff_previous_annotations.gff3
   merged_*_stringtie*.gtf        # merged transcript evidence tracks
   merged_star_psiclass_*.gtf
   egapx/                         # EGAPx annotation products
   additional_annotations/        # tRNA, Rfam, FLAIR, Helixer, lncRNA, SQANTI3
-  final_annotations/mikado/      # optional Mikado annotation
+  final_annotations/mikado/      # Mikado consolidated annotation (mandatory
+                                  # input to AEGIS rename/tidy)
   Diamond2GO_outputs/            # default functional annotation
   EggNOG_outputs/                # optional eggNOG-mapper output
   InterProScan_outputs/          # optional InterProScan output
@@ -444,11 +458,11 @@ Detailed behavior, setup notes and outputs are in [docs/reference/tools.md](docs
 | [Liftoff](docs/reference/tools.md#liftoff) | on | Transfers previous annotation. |
 | [EGAPx](docs/reference/tools.md#egapx) | on | Adds official NCBI annotation evidence. |
 | [FLAIR](docs/reference/tools.md#flair-long-read-isoforms) | off | Optional long-read isoform evidence. |
-| [EDTA](docs/reference/tools.md#edta) | on | Produces the hard-masked genome for AEGIS. |
+| [EDTA](docs/reference/tools.md#edta) | on | Produces the hard-masked genome for Mikado and AEGIS. |
 | [BRAKER3](docs/reference/tools.md#braker3) | on | Generates ab initio gene predictions. |
 | [Helixer](docs/reference/tools.md#helixer) | off | Optional deep-learning prediction evidence. |
-| [AEGIS](docs/reference/tools.md#aegis) | on | Integrates evidence into the primary annotation. |
-| [Mikado + TransDecoder](docs/reference/tools.md#mikado-final-annotation-source) | off | Optional alternative final annotation source. |
+| [Mikado + TransDecoder](docs/reference/tools.md#mikado-final-annotation-source) | on (required) | Consolidates every evidence source into one non-redundant, per-locus-scored gene set. |
+| [AEGIS](docs/reference/tools.md#aegis) | on | Renames Mikado's gene set with systematic Vitvi IDs (carrying over old IDs via Liftoff where conserved) and tidies it into the final annotation. |
 | [lncRNA candidates](docs/reference/tools.md#lncrna-candidates) | off | Optional CPAT-plant candidate layer. |
 | [SQANTI3](docs/reference/tools.md#sqanti3-long-read-isoform-qc) | off | Optional long-read isoform QC. |
 | [Diamond2GO](docs/reference/tools.md#diamond2go) | on | Annotates final AEGIS proteins. |
@@ -475,6 +489,9 @@ The primary files to inspect first are
 `${output_dir}/aegis_outputs/final_annotation_proteins_all.fasta`,
 `${output_dir}/aegis_outputs/final_annotation_proteins_main.fasta` and
 `${output_dir}/quality_report/titan_multiqc_report.html`.
+`${output_dir}/aegis_outputs/liftoff_gene_id_correspondence.tsv` lists, per
+gene, whether its ID was carried over from the previous annotation (via
+Liftoff) or freshly assigned.
 
 Intermediate/debug outputs are controlled by `--publish_intermediates`
 (`true` by default for backward compatibility). The complete output map is in
