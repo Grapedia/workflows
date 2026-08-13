@@ -1,83 +1,33 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-if [[ $# -ne 20 ]]; then
-  echo "Usage: run_aegis_merge.sh <mode> <masked_genome> <aegis_version> <aegis_container> <output_prefix> <liftoff_gff3> <augustus_gff3> <genemark_gtf> <egapx_gff3> <star_stringtie_stranded_default_gtf> <star_stringtie_stranded_alt_gtf> <star_psiclass_stranded_gtf> <long_reads_default_gtf> <long_reads_alt_gtf> <flair_isoforms_gtf> <star_psiclass_unstranded_gtf> <star_stringtie_unstranded_default_gtf> <star_stringtie_unstranded_alt_gtf> <helixer_gff3> <gene_id_prefix>" >&2
+# NOTE: This script used to fan out to `aegis merge` across ~13 raw evidence
+# GFF/GTF sources (liftoff, BRAKER, egapx, helixer, and every transcript
+# assembly). That step is now skipped: `mikado_pick` already consolidates
+# those same sources into a single non-redundant, per-locus-scored gene set
+# (numeric source_score/reference weighting in mikado_configuration.yaml,
+# built from the same evidence), which is a more faithful reconciliation
+# than aegis merge's whole-gene overlap-threshold exclusion. AEGIS is now
+# only used here to rename IDs (Vitvi prefix) and tidy the Mikado output.
+
+if [[ $# -ne 6 ]]; then
+  echo "Usage: run_aegis_merge.sh <masked_genome> <aegis_version> <aegis_container> <output_prefix> <mikado_gff3> <gene_id_prefix>" >&2
   exit 2
 fi
 
-mode="$1"
-masked_genome="$2"
-aegis_version="$3"
-aegis_container="$4"
-output_prefix="$5"
-liftoff_gff3="$6"
-augustus_gff3="$7"
-genemark_gtf="$8"
-egapx_gff3="$9"
-star_stringtie_stranded_default_gtf="${10}"
-star_stringtie_stranded_alt_gtf="${11}"
-star_psiclass_stranded_gtf="${12}"
-long_reads_default_gtf="${13}"
-long_reads_alt_gtf="${14}"
-flair_isoforms_gtf="${15}"
-star_psiclass_unstranded_gtf="${16}"
-star_stringtie_unstranded_default_gtf="${17}"
-star_stringtie_unstranded_alt_gtf="${18}"
-helixer_gff3="${19}"
-gene_id_prefix="${20}"
-
-if [[ "$mode" != "short_reads" && "$mode" != "short_and_long_reads" ]]; then
-  echo "AEGIS mode must be 'short_reads' or 'short_and_long_reads', got: $mode" >&2
-  exit 1
-fi
+masked_genome="$1"
+aegis_version="$2"
+aegis_container="$3"
+output_prefix="$4"
+mikado_gff3="$5"
+gene_id_prefix="$6"
 
 date_stamp="$(date "+%Y-%m-%d %H:%M:%S")"
-echo "[$date_stamp] Running AEGIS merge on ${mode} evidence"
+echo "[$date_stamp] Finalizing annotation from mikado_pick output"
 
 has_feature_records() {
   local file="$1"
   awk 'NF && $0 !~ /^#/ { found = 1; exit } END { exit found ? 0 : 1 }' "$file"
-}
-
-require_nonempty_evidence() {
-  local name="$1"
-  local file="$2"
-  if [[ ! -f "$file" ]]; then
-    echo "Required AEGIS evidence is missing (${name}): ${file}" >&2
-    exit 1
-  fi
-  if [[ ! -s "$file" || ! -r "$file" ]]; then
-    echo "Required AEGIS evidence is empty or unreadable (${name}): ${file}" >&2
-    exit 1
-  fi
-  if ! has_feature_records "$file"; then
-    echo "Required AEGIS evidence has no feature records (${name}): ${file}" >&2
-    exit 1
-  fi
-}
-
-include_optional_evidence() {
-  local name="$1"
-  local file="$2"
-  if [[ ! -f "$file" || ! -s "$file" ]]; then
-    printf '%s\t%s\tfalse\tfalse\t0\n' "$name" "$file" >> aegis_inputs.tsv
-    return 0
-  fi
-  if has_feature_records "$file"; then
-    merge_inputs+=("$file")
-    printf '%s\t%s\tfalse\ttrue\t%s\n' "$name" "$file" "$(stat -c '%s' "$file")" >> aegis_inputs.tsv
-  else
-    printf '%s\t%s\tfalse\tfalse\t%s\n' "$name" "$file" "$(stat -c '%s' "$file")" >> aegis_inputs.tsv
-  fi
-}
-
-include_required_evidence() {
-  local name="$1"
-  local file="$2"
-  require_nonempty_evidence "$name" "$file"
-  merge_inputs+=("$file")
-  printf '%s\t%s\ttrue\ttrue\t%s\n' "$name" "$file" "$(stat -c '%s' "$file")" >> aegis_inputs.tsv
 }
 
 require_nonempty_file() {
@@ -90,56 +40,16 @@ require_nonempty_file() {
 }
 
 require_nonempty_file "masked genome" "$masked_genome"
-
-merge_inputs=()
-printf 'name\tpath\trequired\tincluded\tsize_bytes\n' > aegis_inputs.tsv
-
-# Merge priority (highest first): AEGIS keeps the gene model from the
-# earliest-listed source whenever two sources' models exceed the configured
-# overlap thresholds. Structured, curated predictions (egapx, liftoff,
-# BRAKER, helixer) outrank raw transcript-assembly evidence, and among
-# assemblies, stranded beats unstranded and corrected long-read isoforms
-# (FLAIR) beat raw long-read assemblies.
-include_required_evidence "egapx_gff3" "$egapx_gff3"
-include_required_evidence "liftoff_gff3" "$liftoff_gff3"
-include_required_evidence "augustus_gff3" "$augustus_gff3"
-include_required_evidence "genemark_gtf" "$genemark_gtf"
-include_optional_evidence "helixer_gff3" "$helixer_gff3"
-include_required_evidence "star_stringtie_stranded_default_gtf" "$star_stringtie_stranded_default_gtf"
-include_required_evidence "star_stringtie_stranded_alt_gtf" "$star_stringtie_stranded_alt_gtf"
-include_required_evidence "star_psiclass_stranded_gtf" "$star_psiclass_stranded_gtf"
-include_optional_evidence "flair_isoforms_gtf" "$flair_isoforms_gtf"
-
-if [[ "$mode" == "short_and_long_reads" ]]; then
-  include_required_evidence "long_reads_default_gtf" "$long_reads_default_gtf"
-  include_required_evidence "long_reads_alt_gtf" "$long_reads_alt_gtf"
-else
-  include_optional_evidence "long_reads_default_gtf" "$long_reads_default_gtf"
-  include_optional_evidence "long_reads_alt_gtf" "$long_reads_alt_gtf"
-fi
-
-include_optional_evidence "star_psiclass_unstranded_gtf" "$star_psiclass_unstranded_gtf"
-include_optional_evidence "star_stringtie_unstranded_default_gtf" "$star_stringtie_unstranded_default_gtf"
-include_optional_evidence "star_stringtie_unstranded_alt_gtf" "$star_stringtie_unstranded_alt_gtf"
-
-if [[ "${#merge_inputs[@]}" -eq 0 ]]; then
-  echo "No non-empty AEGIS evidence files were provided" >&2
+require_nonempty_file "mikado_pick annotation" "$mikado_gff3"
+if ! has_feature_records "$mikado_gff3"; then
+  echo "mikado_pick annotation has no feature records (${mikado_gff3}); check --run_mikado and upstream evidence" >&2
   exit 1
 fi
 
-printf "[%s] AEGIS merge inputs:\n" "$date_stamp"
-printf '  %s\n' "${merge_inputs[@]}"
+printf 'name\tpath\trequired\tincluded\tsize_bytes\n' > aegis_inputs.tsv
+printf 'mikado_pick\t%s\ttrue\ttrue\t%s\n' "$mikado_gff3" "$(stat -c '%s' "$mikado_gff3")" >> aegis_inputs.tsv
 
 aegis_cmd=(/opt/conda/envs/bio_env/bin/python -m aegis)
-
-echo "[$date_stamp] AEGIS merge"
-"${aegis_cmd[@]}" merge -d aegis_merge -o "$output_prefix" \
-  --max-gene-overlap 50 --max-exon-overlap 50 --max-cds-overlap 50 \
-  "${merge_inputs[@]}"
-if [[ ! -s "aegis_merge/${output_prefix}.gff3" ]]; then
-  echo "AEGIS merge did not produce ${output_prefix}.gff3" >&2
-  exit 1
-fi
 
 echo "[$date_stamp] AEGIS rename (prefix: ${gene_id_prefix})"
 "${aegis_cmd[@]}" rename \
@@ -147,7 +57,7 @@ echo "[$date_stamp] AEGIS rename (prefix: ${gene_id_prefix})"
   -d aegis_rename \
   --prefix "$gene_id_prefix" \
   --gene-id-correspondences \
-  "aegis_merge/${output_prefix}.gff3"
+  "$mikado_gff3"
 if [[ ! -s "aegis_rename/${output_prefix}_renamed.gff3" ]]; then
   echo "AEGIS rename did not produce ${output_prefix}_renamed.gff3" >&2
   exit 1
@@ -188,5 +98,5 @@ test -s final_annotation.gff3
 test -s final_annotation_proteins_all.fasta
 test -s final_annotation_proteins_main.fasta
 
-printf '"%s":\n  aegis: "%s"\n  aegis_container: "%s"\n  mode: "%s"\n  evidence_count: "%s"\n  gene_id_prefix: "%s"\n' \
-  "${NXF_TASK_PROCESS:-aegis}" "$aegis_version" "$aegis_container" "$mode" "${#merge_inputs[@]}" "$gene_id_prefix" > versions.yml
+printf '"%s":\n  aegis: "%s"\n  aegis_container: "%s"\n  source: "mikado_pick"\n  gene_id_prefix: "%s"\n' \
+  "${NXF_TASK_PROCESS:-aegis}" "$aegis_version" "$aegis_container" "$gene_id_prefix" > versions.yml

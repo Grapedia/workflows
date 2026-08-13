@@ -227,27 +227,6 @@ workflow TITAN {
 
     helixer_results = helixer_prediction(evidence_data.masked_genome)
 
-    println "Running Aegis from generated named evidence; EDTA masked genome is passed as a direct channel input."
-
-    aegis(
-        evidence_data.masked_genome,
-        evidence_data.braker_augustus_gff3,
-        evidence_data.braker_genemark_gtf,
-        evidence_data.liftoff_gff3,
-        evidence_data.egapx_gff3,
-        evidence_data.star_stringtie_stranded_default_gtf,
-        evidence_data.star_stringtie_stranded_alt_gtf,
-        evidence_data.star_psiclass_stranded_gtf,
-        evidence_data.star_psiclass_unstranded_gtf,
-        evidence_data.star_stringtie_unstranded_default_gtf,
-        evidence_data.star_stringtie_unstranded_alt_gtf,
-        evidence_data.long_reads_default_gtf,
-        evidence_data.long_reads_alt_gtf,
-        evidence_data.flair_isoforms_gtf,
-        has_long_reads,
-        helixer_results.gff3
-    )
-
     mikado_prepared = mikado_prepare(
         evidence_data.masked_genome,
         evidence_data.braker_augustus_gff3,
@@ -285,6 +264,13 @@ workflow TITAN {
         evidence_data.masked_genome,
         mikado_prepared.config,
         mikado_serialise_results.database
+    )
+
+    println "Running Aegis (rename/tidy) on the mikado_pick consolidated annotation."
+
+    aegis(
+        evidence_data.masked_genome,
+        mikado_results.gff3
     )
 
     final_annotation_sources_qc_results = final_annotation_sources_qc(

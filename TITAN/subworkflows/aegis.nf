@@ -8,47 +8,20 @@ include { interproscan } from "../modules/interproscan"
 workflow aegis {
 
   take:
-    // Long-read GTF inputs may be empty sentinel files.
     masked_genome
-    braker_augustus_gff
-    braker_genemark_gtf
-    liftoff_annotation
-    egapx_gff3
-    star_stringtie_default_stranded
-    star_stringtie_alt_stranded
-    star_psiclass_stranded
-    star_psiclass_unstranded
-    star_stringtie_default_unstranded
-    star_stringtie_alt_unstranded
-    long_reads_default
-    long_reads_alt
-    flair_isoforms_gtf
-    has_long_reads
-    // Empty when run_helixer is false.
-    helixer_gff3
+    // Already-consolidated, per-locus-scored annotation from mikado_pick,
+    // built from every evidence source (liftoff, egapx, BRAKER, helixer,
+    // and all transcript assemblies). AEGIS only renames (Vitvi prefix)
+    // and tidies it here.
+    mikado_gff3
 
   main:
 
-    def aegis_mode = has_long_reads ? 'short_and_long_reads' : 'short_reads'
     def aegis_merge_script = file("${projectDir}/scripts/run_aegis_merge.sh")
 
     merged_annotation = aegis_merge(
-      aegis_mode,
       masked_genome,
-      braker_augustus_gff,
-      braker_genemark_gtf,
-      liftoff_annotation,
-      egapx_gff3,
-      long_reads_default,
-      long_reads_alt,
-      flair_isoforms_gtf,
-      star_stringtie_default_stranded,
-      star_stringtie_alt_stranded,
-      star_psiclass_stranded,
-      star_psiclass_unstranded,
-      star_stringtie_default_unstranded,
-      star_stringtie_alt_unstranded,
-      helixer_gff3,
+      mikado_gff3,
       aegis_merge_script
     )
 
