@@ -70,6 +70,15 @@ EOF
       exit 1
     fi
 
+    # omark unconditionally initializes ete3's NCBITaxa() even when no
+    # --taxid is passed, which defaults to writing/downloading its taxonomy
+    # cache under \$HOME/.etetoolkit. \$HOME is unwritable here (apptainer
+    # --no-home still sets it to the host user's home path without binding
+    # it), so point it at the already-bound, persistent omark_data_dir
+    # instead: this also means the ~750MB NCBI taxdump is only ever
+    # downloaded once, not on every run.
+    export HOME="${params.omark_data_dir}"
+
     omamer search \\
       --db "\${omamer_db}" \\
       --query "${proteins_file_main}" \\
