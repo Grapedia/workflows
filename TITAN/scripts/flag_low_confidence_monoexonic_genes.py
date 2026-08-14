@@ -2,11 +2,16 @@
 """Classify single-exon genes in the final annotation by supporting evidence.
 
 Ab initio predictors (BRAKER/Helixer) are known to over-predict single-exon
-genes in plant genomes. Rather than deleting anything, this cross-references
-every single-exon gene against evidence TITAN already computes elsewhere in
-the pipeline (expression, functional domains, liftoff conservation, BUSCO
-orthology, TE overlap) and reports a confidence tier per gene. Nothing in the
-final annotation is modified by this script.
+genes in plant genomes. This cross-references every single-exon gene against
+evidence TITAN already computes elsewhere in the pipeline (expression,
+functional domains, liftoff conservation, BUSCO orthology, TE overlap) and
+reports a confidence tier per gene (supported / unsupported+TE-overlap /
+unsupported grey-zone) in a TSV+JSON report.
+
+The original final_annotation.gff3 is never touched. In addition, this
+writes a "high confidence" GFF3 + main-proteins FASTA variant with every
+unsupported (non-"supported"-tier) single-exon gene removed, so its BUSCO/
+AGAT stats can be compared side by side against the full annotation's.
 """
 from __future__ import annotations
 
@@ -202,6 +207,44 @@ def build_resolver_for(protein_ids: set[str], resolve_to_gene) -> set[str]:
     return genes
 
 
+def filter_gff3(gff_path: Path, genes_to_remove: set[str], resolve_to_gene, output_path: Path) -> None:
+    """Write every line whose feature does not resolve (via its Parent
+    chain) to a removed gene. A line that can't be resolved to any gene at
+    all (e.g. a comment, or malformed) is kept - safer to keep an
+    unrecognized line than to silently drop real data."""
+    with gff_path.open("r", encoding="utf-8") as src, output_path.open("w", encoding="utf-8") as dst:
+        for line in src:
+            stripped = line.rstrip("\n")
+            if not stripped.strip() or stripped.startswith("#"):
+                dst.write(line)
+                continue
+            fields = stripped.split("\t")
+            if len(fields) != 9:
+                dst.write(line)
+                continue
+            attrs = parse_attributes(fields[8])
+            feature_id = attrs.get("ID")
+            gene_id = resolve_to_gene(feature_id) if feature_id else None
+            if gene_id in genes_to_remove:
+                continue
+            dst.write(line)
+
+
+def filter_proteins_fasta(fasta_path: Path, genes_to_remove: set[str], resolve_to_gene, output_path: Path) -> None:
+    """Drop every protein record whose gene is in genes_to_remove. Protein
+    headers carry the CDS ID plus a trailing '.prot' (AEGIS convention)."""
+    with fasta_path.open("r", encoding="utf-8") as src, output_path.open("w", encoding="utf-8") as dst:
+        skip_current = False
+        for line in src:
+            if line.startswith(">"):
+                protein_id = line[1:].split()[0].strip()
+                feature_id = protein_id[:-5] if protein_id.endswith(".prot") else protein_id
+                gene_id = resolve_to_gene(feature_id)
+                skip_current = gene_id in genes_to_remove
+            if not skip_current:
+                dst.write(line)
+
+
 def parse_args():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--gff3", required=True, type=Path)
@@ -212,8 +255,15 @@ def parse_args():
     parser.add_argument("--diamond2go-tsv", required=True, type=Path)
     parser.add_argument("--liftoff-correspondence-tsv", required=True, type=Path)
     parser.add_argument("--busco-full-table", required=True, type=Path)
+    parser.add_argument("--proteins-main-fasta", required=True, type=Path)
     parser.add_argument("--tsv-report", default=Path("monoexonic_gene_confidence.tsv"), type=Path)
     parser.add_argument("--json-summary", default=Path("monoexonic_gene_confidence_summary.json"), type=Path)
+    parser.add_argument("--filtered-gff3", default=Path("final_annotation.high_confidence.gff3"), type=Path)
+    parser.add_argument(
+        "--filtered-proteins-main",
+        default=Path("final_annotation_proteins_main.high_confidence.fasta"),
+        type=Path,
+    )
     return parser.parse_args()
 
 
@@ -286,6 +336,10 @@ def main() -> int:
         writer.writeheader()
         writer.writerows(rows)
 
+    genes_to_remove = {row["gene_id"] for row in rows if row["tier"] != "supported"}
+    filter_gff3(args.gff3, genes_to_remove, resolve_to_gene, args.filtered_gff3)
+    filter_proteins_fasta(args.proteins_main_fasta, genes_to_remove, resolve_to_gene, args.filtered_proteins_main)
+
     # AGAT's own gene/mRNA stats (what this report is meant to be read
     # alongside) only count protein-coding genes, i.e. genes with at least
     # one mRNA child; `genes` also includes ncRNA-only gene records that
@@ -311,6 +365,20 @@ def main() -> int:
             ),
             "contradictions": busco_monoexonic_contradictions,
         },
+        "filtering": {
+            "description": (
+                "final_annotation.gff3 is never modified. genes_removed lists "
+                "every single-exon gene in a non-'supported' tier, dropped (with "
+                "all their child features) from --filtered-gff3 / "
+                "--filtered-proteins-main so BUSCO/AGAT can be compared against "
+                "the full annotation."
+            ),
+            "genes_removed": len(genes_to_remove),
+            "genes_removed_te_overlap": tier_counts.get("unsupported_te_overlap", 0),
+            "genes_removed_grey_zone": tier_counts.get("unsupported_grey_zone", 0),
+            "filtered_gff3": str(args.filtered_gff3),
+            "filtered_proteins_main": str(args.filtered_proteins_main),
+        },
         "inputs": {
             "gff3": str(args.gff3),
             "expression_json": str(args.expression_json),
@@ -320,6 +388,7 @@ def main() -> int:
             "diamond2go_tsv": str(args.diamond2go_tsv),
             "liftoff_correspondence_tsv": str(args.liftoff_correspondence_tsv),
             "busco_full_table": str(args.busco_full_table),
+            "proteins_main_fasta": str(args.proteins_main_fasta),
         },
     }
     args.json_summary.write_text(json.dumps(summary, indent=2, sort_keys=True) + "\n", encoding="utf-8")
@@ -329,7 +398,8 @@ def main() -> int:
         f"({summary['monoexonic_gene_percent']}%): "
         f"{tier_counts.get('supported', 0)} supported, "
         f"{tier_counts.get('unsupported_te_overlap', 0)} unsupported+TE-overlap, "
-        f"{tier_counts.get('unsupported_grey_zone', 0)} unsupported grey-zone.",
+        f"{tier_counts.get('unsupported_grey_zone', 0)} unsupported grey-zone. "
+        f"Removed {len(genes_to_remove)} genes into {args.filtered_gff3}.",
         file=sys.stderr,
     )
     if busco_monoexonic_contradictions:

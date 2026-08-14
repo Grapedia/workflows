@@ -295,3 +295,38 @@ BUSCO needs an offline lineage dataset at `--busco_data_dir`; the launchers can
 prepare it with `--prepare-busco-data`, which uses the pinned BUSCO container.
 OMArk requires an offline OMAmer database at `--omark_data_dir` containing
 `omamer.h5`; the launchers can prepare it with `--prepare-omark-data`.
+
+## Single-exon gene confidence
+
+Ab initio predictors (BRAKER/Helixer) are known to over-predict single-exon
+genes in plant genomes; a large fraction of `final_annotation.gff3`'s genes
+can be monoexonic without independent support. `flag_low_confidence_monoexonic_genes`
+(`scripts/flag_low_confidence_monoexonic_genes.py`) cross-references every
+single-exon gene against evidence TITAN already computes elsewhere in the
+pipeline:
+
+* Salmon expression support (`expression_support_summary`'s unsupported gene list);
+* functional domain/GO hits (InterProScan, eggNOG-mapper, Diamond2GO);
+* gene IDs conserved from the previous annotation via liftoff;
+* BUSCO single-copy/duplicated/fragmented orthology;
+* overlap with an EDTA-annotated transposable element (negative signal only).
+
+Each single-exon gene is classified into one of three tiers and reported in
+`${output_dir}/quality_report/monoexonic_gene_confidence/`:
+
+* `supported` - at least one positive evidence signal; kept as-is;
+* `unsupported_te_overlap` - no positive evidence, overlaps a TE;
+* `unsupported_grey_zone` - no positive evidence, no TE overlap either.
+
+`final_annotation.gff3` itself is never modified. The process also writes a
+"high confidence" variant with every non-`supported` single-exon gene (and
+its child features) removed:
+`final_annotation.high_confidence.gff3` /
+`final_annotation_proteins_main.high_confidence.fasta`. BUSCO and AGAT stats
+are run on this filtered variant too
+(`busco_high_confidence_monoexonic`, `agat_stats_high_confidence_monoexonic`,
+published under `${output_dir}/quality_report/busco_high_confidence_monoexonic`
+and `.../agat_stats_high_confidence_monoexonic`), so completeness and gene-set
+structure can be compared side by side against the unfiltered annotation's
+own `busco`/`agat_stats` results before deciding whether the filtered variant
+should replace the primary annotation.

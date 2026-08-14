@@ -301,8 +301,11 @@ ${output_dir}/quality_report/
   titan_multiqc_report.html
   titan_multiqc_report_data/
   agat_stats/
+  agat_stats_high_confidence_monoexonic/
   busco/
+  busco_high_confidence_monoexonic/
   expression_validation/
+  monoexonic_gene_confidence/
   ncrna_annotations/
   omark/
   sqanti3/
@@ -320,6 +323,15 @@ ${output_dir}/provenance/
 `quality_report/titan_multiqc_report.html` is the main QC entry point. The
 validation directory reports structural checks on the final annotation.
 Provenance manifests record inputs, selected outputs, versions and checksums.
+
+`quality_report/monoexonic_gene_confidence/` classifies every single-exon
+gene in `final_annotation.gff3` by supporting evidence (expression, functional
+domains, liftoff conservation, BUSCO orthology, TE overlap) without touching
+the annotation itself; see [tools reference](../reference/tools.md#single-exon-gene-confidence).
+It also emits a "high confidence" GFF3/proteins variant with unsupported
+single-exon genes removed, whose completeness/structure can be compared
+against the primary annotation's via `agat_stats_high_confidence_monoexonic/`
+and `busco_high_confidence_monoexonic/`.
 
 ## Intermediate And Runtime Outputs
 

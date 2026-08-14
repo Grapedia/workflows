@@ -7,9 +7,9 @@ include { validate_final_annotation } from '../modules/validate_final_annotation
 include { validate_inputs } from '../modules/validate_inputs'
 include { helixer_prediction } from '../modules/helixer_prediction'
 include { additional_annotations_provenance } from '../modules/additional_annotations_provenance'
-include { busco } from '../modules/busco'
+include { busco; busco_high_confidence_monoexonic } from '../modules/busco'
 include { omark } from '../modules/omark'
-include { agat_stats } from '../modules/agat_stats'
+include { agat_stats; agat_stats_high_confidence_monoexonic } from '../modules/agat_stats'
 include { ncrna_annotation_qc } from '../modules/ncrna_annotation_qc'
 include { multiqc_report } from '../modules/multiqc_report'
 include { extract_final_transcripts; final_transcriptome_index; final_expression_quant; expression_support_summary } from '../modules/final_expression_validation'
@@ -381,7 +381,17 @@ workflow TITAN {
         aegis.out.diamond2go_main,
         aegis.out.liftoff_gene_id_correspondence,
         busco_results.full_table,
+        aegis.out.aegis_proteins_main,
         file("${projectDir}/scripts/flag_low_confidence_monoexonic_genes.py")
+    )
+
+    // Compare completeness/structure with and without the unsupported
+    // single-exon genes flag_low_confidence_monoexonic_genes removed.
+    busco_high_confidence_monoexonic_results = busco_high_confidence_monoexonic(
+        monoexonic_confidence_results.filtered_proteins_main
+    )
+    agat_stats_high_confidence_monoexonic_results = agat_stats_high_confidence_monoexonic(
+        monoexonic_confidence_results.filtered_gff3
     )
 
     omark_results = omark(aegis.out.aegis_proteins_main)

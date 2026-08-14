@@ -103,6 +103,10 @@ flowchart TD
     EXPR[Expression support]:::qc
     VALID[Final annotation validation]:::qc
     MULTIQC[MultiQC HTML]:::qc
+    MONOEX[Single-exon gene confidence]:::qc
+    MONOEXGFF[high_confidence GFF3 + proteins]:::qc
+    BUSCOHC[BUSCO high-confidence]:::qc
+    AGATHC[AGAT stats high-confidence]:::qc
 
     NEW --> LIFT & EDTA & TRNA & RFAM & IDX & BRAKER & FLAIR
     PREV --> LIFT & LIFTID
@@ -144,6 +148,10 @@ flowchart TD
     TRNA & RFAM --> NCRNA
     MM2 & FLAIR --> SQANTI
     FASTP & BUSCO & OMARK & AGAT & NCRNA & LNC & SQANTI & EXPR & VALID --> MULTIQC
+
+    FINAL & EXPR & EDTA & D2GO & LIFTID & BUSCO --> MONOEX
+    EGG & IPS -.optional evidence.-> MONOEX
+    MONOEX --> MONOEXGFF --> BUSCOHC & AGATHC
 ```
 
 Blue nodes are the core graph, yellow dashed nodes are optional branches, and
@@ -298,6 +306,10 @@ flowchart TD
     EXPR[Expression support]:::qc
     VALID[Final annotation validation]:::qc
     MULTIQC[MultiQC HTML]:::qc
+    MONOEX[Single-exon gene confidence]:::qc
+    MONOEXGFF[high_confidence GFF3 + proteins]:::qc
+    BUSCOHC[BUSCO high-confidence]:::qc
+    AGATHC[AGAT stats high-confidence]:::qc
 
     FINAL --> BUSCO & OMARK & AGAT & SQANTI & EXPR
     FASTP -.transcript quantification.-> EXPR
@@ -305,6 +317,9 @@ flowchart TD
     TRNA & RFAM --> NCRNA
     MM2 & FLAIR --> SQANTI
     FASTP & BUSCO & OMARK & AGAT & NCRNA & LNC & SQANTI & EXPR & VALID --> MULTIQC
+
+    FINAL & EXPR & EDTA & BUSCO --> MONOEX
+    MONOEX --> MONOEXGFF --> BUSCOHC & AGATHC
 ```
 
 ## Quick Start
@@ -469,6 +484,7 @@ Detailed behavior, setup notes and outputs are in [docs/reference/tools.md](docs
 | [eggNOG-mapper](docs/reference/tools.md#eggnog-mapper) | off | Optional orthology/function. |
 | [InterProScan](docs/reference/tools.md#interproscan) | off | Optional domains, GO and pathways. |
 | [Quality report](docs/reference/tools.md#quality-report) | mixed | BUSCO, OMArk, AGAT, expression and MultiQC. |
+| [Single-exon gene confidence](docs/reference/tools.md#single-exon-gene-confidence) | always on | Classifies single-exon genes by evidence (never modifies `final_annotation.gff3`) and runs BUSCO/AGAT on a filtered "high confidence" variant for comparison. |
 
 ## Profiles
 
