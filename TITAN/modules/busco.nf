@@ -50,7 +50,12 @@ process busco {
         exit 1
     fi
 
-    busco -i "${proteins_file_main}" -m protein -l "${params.busco_lineage}" \\
+    # HMMER (which BUSCO runs internally) rejects '-' as an illegal
+    # character in an unaligned query FASTA; AEGIS/Mikado proteins carry it
+    # as a placeholder for untranslatable codons (e.g. padded/gap regions).
+    sed '/^>/! s/-//g' "${proteins_file_main}" > proteins_main.busco.fasta
+
+    busco -i "proteins_main.busco.fasta" -m protein -l "${params.busco_lineage}" \\
       -o busco_out -c ${task.cpus} --offline --download_path "${params.busco_data_dir}" -f
 
     cp busco_out/short_summary.*.busco_out.txt busco_short_summary.txt
