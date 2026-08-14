@@ -68,10 +68,11 @@ process interproscan {
 
     mkdir -p interproscan_tmp
 
-    # InterProScan rejects '*' (stop codon) characters in protein sequences;
-    # AEGIS-merged proteins carry trailing '*' from the source gene predictors.
-    sed '/^>/! s/\\*//g' "${proteins_file_all}" > proteins_all.iprscan.fasta
-    sed '/^>/! s/\\*//g' "${proteins_file_main}" > proteins_main.iprscan.fasta
+    # InterProScan's hmmsearch rejects '*' (stop codon) and '-' (untranslatable
+    # codon placeholder) characters in protein sequences; AEGIS/Mikado-merged
+    # proteins carry both from the source gene predictors.
+    sed '/^>/! s/[*-]//g' "${proteins_file_all}" > proteins_all.iprscan.fasta
+    sed '/^>/! s/[*-]//g' "${proteins_file_main}" > proteins_main.iprscan.fasta
 
     "\$IPRSCAN" -i "proteins_all.iprscan.fasta" -b final_annotation_proteins_all -T interproscan_tmp -cpu ${task.cpus} -dp -f TSV,GFF3,JSON -goterms -pathways
     "\$IPRSCAN" -i "proteins_main.iprscan.fasta" -b final_annotation_proteins_main -T interproscan_tmp -cpu ${task.cpus} -dp -f TSV,GFF3,JSON -goterms -pathways
