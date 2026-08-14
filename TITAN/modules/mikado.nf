@@ -127,6 +127,7 @@ process mikado_serialise {
     path(config)
     path(prepared_fasta)
     path(transdecoder_bed)
+    path(pandas_sqlalchemy_sitecustomize, stageAs: "sitecustomize.py")
 
   output:
     path "mikado.db", emit: database
@@ -141,6 +142,9 @@ process mikado_serialise {
       exit 0
     fi
 
+    # See assets/mikado_pandas_sqlalchemy_sitecustomize.py: this container's
+    # pandas/sqlalchemy pairing otherwise crashes ORF loading below.
+    export PYTHONPATH="\${PWD}\${PYTHONPATH:+:\${PYTHONPATH}}"
     mikado serialise --json-conf "${config}" --orfs "${transdecoder_bed}" --procs ${task.cpus}
     test -s mikado.db
     mikado --version 2>&1 | sed 's/^/  mikado: "/; s/\$/"/' | {

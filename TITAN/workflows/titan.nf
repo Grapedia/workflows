@@ -258,7 +258,8 @@ workflow TITAN {
     mikado_serialise_results = mikado_serialise(
         mikado_prepared.config,
         mikado_prepared.fasta,
-        transdecoder_predict_results.bed
+        transdecoder_predict_results.bed,
+        file("${projectDir}/assets/mikado_pandas_sqlalchemy_sitecustomize.py")
     )
     mikado_results = mikado_pick(
         evidence_data.masked_genome,
