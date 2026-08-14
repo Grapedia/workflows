@@ -13,6 +13,7 @@ include { agat_stats } from '../modules/agat_stats'
 include { ncrna_annotation_qc } from '../modules/ncrna_annotation_qc'
 include { multiqc_report } from '../modules/multiqc_report'
 include { extract_final_transcripts; final_transcriptome_index; final_expression_quant; expression_support_summary } from '../modules/final_expression_validation'
+include { flag_low_confidence_monoexonic_genes } from '../modules/flag_low_confidence_monoexonic_genes'
 include { trnascan_se; trnascan_to_gff3 } from '../modules/trnascan_se'
 include { rfam_split_genome; infernal_rfam_search; infernal_rfam_merge } from '../modules/infernal_rfam'
 include { lncrna_candidate_annotation } from '../modules/lncrna_candidate_annotation'
@@ -370,6 +371,18 @@ workflow TITAN {
     )
 
     busco_results = busco(aegis.out.aegis_proteins_main)
+
+    monoexonic_confidence_results = flag_low_confidence_monoexonic_genes(
+        aegis.out.aegis_gff,
+        expression_support_results.json_summary,
+        evidence_data.TE_annotations_gff3,
+        aegis.out.interproscan_main_tsv,
+        aegis.out.eggnog_annotations_main,
+        aegis.out.diamond2go_main,
+        aegis.out.liftoff_gene_id_correspondence,
+        busco_results.full_table,
+        file("${projectDir}/scripts/flag_low_confidence_monoexonic_genes.py")
+    )
 
     omark_results = omark(aegis.out.aegis_proteins_main)
 

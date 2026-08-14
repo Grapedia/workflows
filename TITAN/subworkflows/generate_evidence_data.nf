@@ -312,6 +312,7 @@ workflow generate_evidence_data {
 
     emit:
         masked_genome = edta_results.masked_genome
+        TE_annotations_gff3 = edta_results.TE_annotations_gff3
         egapx_gff3 = egapx_annotations.gff3
         egapx_gtf = egapx_annotations.gtf
         egapx_proteins = egapx_annotations.proteins
