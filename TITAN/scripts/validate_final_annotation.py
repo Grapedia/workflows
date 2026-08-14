@@ -109,8 +109,14 @@ def validate_gff3(path, genome):
             attrs = parse_attributes(attributes)
             feature_id = attrs.get("ID")
             if feature_id:
-                if feature_id in ids:
-                    errors.append(error(f"{path}: line {line_number}: duplicate GFF3 ID '{feature_id}'"))
+                existing = ids.get(feature_id)
+                if existing is not None:
+                    # Per the GFF3 spec, the segments of a single multi-exon
+                    # CDS share one ID (that's how they're grouped into one
+                    # coding sequence) - only flag it when either side isn't
+                    # a CDS, which is a genuine collision.
+                    if feature_type != "CDS" or existing["type"] != "CDS":
+                        errors.append(error(f"{path}: line {line_number}: duplicate GFF3 ID '{feature_id}'"))
                 ids[feature_id] = {
                     "line": line_number,
                     "seqid": seqid,
