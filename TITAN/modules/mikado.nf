@@ -176,6 +176,7 @@ process mikado_pick {
   input:
     path(genome)
     path(config)
+    path(prepared_gtf)
     path(database)
 
   output:

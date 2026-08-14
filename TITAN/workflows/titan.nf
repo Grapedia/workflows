@@ -264,6 +264,7 @@ workflow TITAN {
     mikado_results = mikado_pick(
         evidence_data.masked_genome,
         mikado_prepared.config,
+        mikado_prepared.gtf,
         mikado_serialise_results.database
     )
 
