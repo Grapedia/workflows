@@ -55,7 +55,7 @@ process transdecoder_predict {
 
   input:
     path(prepared_fasta)
-    path(longorfs_dir)
+    path(longorfs_dir, stageAs: "transdecoder_longorfs_input_dir")
 
   output:
     path "mikado_prepared.fasta.transdecoder.bed", emit: bed
@@ -78,7 +78,13 @@ process transdecoder_predict {
     export PATH="/usr/local/opt/transdecoder/util:/usr/local/opt/transdecoder:\${PATH}"
 
     cp "${prepared_fasta}" mikado_prepared.fasta
-    cp -r "${longorfs_dir}" mikado_prepared.fasta.transdecoder_dir
+    # -L: longorfs_dir is staged under a different name (see the process
+    # input) specifically so this is a real, independent copy. Plain `cp -r`
+    # on a symlinked directory recreates a symlink at the destination instead
+    # of copying its contents, so TransDecoder.Predict would write its scratch
+    # files straight through into transdecoder_longorfs's cached output dir,
+    # corrupting it for every future resume.
+    cp -rL "${longorfs_dir}" mikado_prepared.fasta.transdecoder_dir
     TransDecoder.Predict -t mikado_prepared.fasta --single_best_only
     test -s mikado_prepared.fasta.transdecoder.bed
     test -s mikado_prepared.fasta.transdecoder.pep
