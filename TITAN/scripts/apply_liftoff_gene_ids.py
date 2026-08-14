@@ -2,6 +2,7 @@
 import argparse
 import csv
 import sys
+from functools import lru_cache
 from pathlib import Path
 
 
@@ -51,11 +52,34 @@ def reciprocal_best_matches(overlap_csv, new_origin, old_origin):
 
 
 def make_remapper(id_map):
-    def remap_token(token):
+    # A linear scan over id_map (tens of thousands of entries) per token,
+    # times every ID/Parent token in a genome-scale GFF3/FASTA (hundreds of
+    # thousands), is O(n*m) and takes tens of minutes. The gene IDs Mikado/
+    # AEGIS/liftoff produce here never contain "_", so old_id + "_" is a
+    # prefix of token exactly when old_id equals the token's segment before
+    # its first "_" - look that segment up directly (O(1)) instead of
+    # scanning. Falls back to the original linear scan (memoized) if that
+    # assumption is ever violated, so results stay correct either way; only
+    # the common case is fast.
+    has_underscore_keys = any("_" in old_id for old_id in id_map)
+
+    @lru_cache(maxsize=None)
+    def linear_scan(token):
         for old_id, new_id in id_map.items():
             if token == old_id or token.startswith(old_id + "_"):
                 return new_id + token[len(old_id):]
         return token
+
+    def remap_token(token):
+        new_id = id_map.get(token)
+        if new_id is not None:
+            return new_id
+        prefix, sep, suffix = token.partition("_")
+        if sep:
+            new_prefix = id_map.get(prefix)
+            if new_prefix is not None:
+                return new_prefix + sep + suffix
+        return linear_scan(token) if has_underscore_keys else token
 
     return remap_token
 
