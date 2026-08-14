@@ -91,7 +91,7 @@ EOF
       -o omark_out
 
     cp omark_out/proteins_main_detailed_summary.txt proteins_main_detailed_summary.txt
-    cp omark_out/proteins_main_omark.sum proteins_main_omark.sum
+    cp omark_out/proteins_main.sum proteins_main_omark.sum
 
     test -s proteins_main_detailed_summary.txt
     test -s proteins_main_omark.sum
