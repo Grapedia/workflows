@@ -3,7 +3,7 @@ process validate_final_annotation {
   tag "TITAN final annotation validation"
 
   container params.container_python
-  publishDir "${params.output_dir}/validation", mode: 'copy'
+  publishDir "${params.output_dir}/01_final_annotation/validation", mode: 'copy'
 
   input:
     path(genome)

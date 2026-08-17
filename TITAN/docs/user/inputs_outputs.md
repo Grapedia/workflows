@@ -6,13 +6,13 @@
 - [Output Tree](#output-tree)
 - [Primary Annotation](#primary-annotation)
 - [High-Confidence Monoexonic-Filtered Annotation](#high-confidence-monoexonic-filtered-annotation)
+- [Quality, Validation And Provenance](#quality-validation-and-provenance)
 - [Functional Annotation](#functional-annotation)
-- [Evidence: Core Tracks](#evidence-core-tracks)
 - [Additional Annotations](#additional-annotations)
+- [Evidence: Core Tracks](#evidence-core-tracks)
 - [Evidence: EGAPx](#evidence-egapx)
 - [Evidence: Mikado Consolidated Annotation](#evidence-mikado-consolidated-annotation)
-- [Quality, Validation And Provenance](#quality-validation-and-provenance)
-- [Intermediate And Runtime Outputs](#intermediate-and-runtime-outputs)
+- [Run Info: Provenance And Runtime Outputs](#run-info-provenance-and-runtime-outputs)
 
 
 This page gives a file-tree view of the inputs TITAN expects and the outputs it
@@ -80,32 +80,51 @@ Nextflow parameters. They are inputs/reference data, not TITAN results.
 
 The exact tree depends on enabled optional branches and
 `--publish_intermediates`. A complete production run publishes the main result
-families below under `--output_dir`.
+families below under `--output_dir`, in 5 numbered top-level folders — sorted
+in reading order, so `ls` lists them in the order you should actually look at
+them.
 
 ```text
 ${output_dir}/
-  aegis_outputs/
-    final_annotation.gff3
-    final_annotation_proteins_all.fasta
-    final_annotation_proteins_main.fasta
-    liftoff_gene_id_correspondence.tsv
-    versions.yml
-  aegis_outputs_high_confidence_monoexonic/
-    final_annotation.high_confidence.gff3
-    final_annotation_proteins_main.high_confidence.fasta
-    monoexonic_gene_confidence.tsv
-    monoexonic_gene_confidence_summary.json
-    versions.yml
-    agat_stats/
-    busco/
-  functional_annotation/
+  01_final_annotation/
+    primary/
+      final_annotation.gff3
+      final_annotation_proteins_all.fasta
+      final_annotation_proteins_main.fasta
+      liftoff_gene_id_correspondence.tsv
+      versions.yml
+    high_confidence_monoexonic/
+      final_annotation.high_confidence.gff3
+      final_annotation_proteins_main.high_confidence.fasta
+      monoexonic_gene_confidence.tsv
+      monoexonic_gene_confidence_summary.json
+      versions.yml
+      agat_stats/
+      busco/
+    quality_report/
+      titan_multiqc_report.html
+      titan_multiqc_report_data/
+      agat_stats/
+      busco/
+      expression_validation/
+      ncrna_annotations/
+      omark/
+      sqanti3/
+      versions.yml
+    validation/
+      final_annotation_validation.json
+      final_annotation_validation.txt
+      versions.yml
+  02_functional_annotation/
     diamond2go/
     eggnog/
     interproscan/
-  additional_annotations/
-  quality_report/
-  validation/
-  evidence/
+  03_additional_annotations/
+    ncrna/
+    flair/
+    helixer/
+    sqanti3/
+  04_evidence/
     assembly_masked.EDTA.fasta
     liftoff_previous_annotations.gff3
     unmapped_features.txt
@@ -136,28 +155,31 @@ ${output_dir}/
       versions_minimap2_stringtie_long_reads.yml
     egapx/
     mikado/
-  provenance/
-  intermediate_files/
-  nextflow_reports/
+  05_run_info/
+    provenance/
+    intermediate_files/
+    nextflow_reports/
   versions.yml
 ```
 
-`aegis_outputs/` and `aegis_outputs_high_confidence_monoexonic/` are the two
-final annotation candidates to compare (see
-[High-Confidence Monoexonic-Filtered Annotation](#high-confidence-monoexonic-filtered-annotation)).
-`evidence/` groups everything that feeds Mikado/AEGIS but is not itself a
+`01_final_annotation/primary/` and `01_final_annotation/high_confidence_monoexonic/`
+are the two final annotation candidates to compare (see
+[High-Confidence Monoexonic-Filtered Annotation](#high-confidence-monoexonic-filtered-annotation)),
+with their shared `quality_report/` and `validation/` right alongside them —
+so `01_final_annotation/` as a whole is what to check first on a completed
+run. `02_functional_annotation/` and `03_additional_annotations/` come next.
+`04_evidence/` groups everything that feeds Mikado/AEGIS but is not itself a
 final annotation — including the EGAPx run and the pre-AEGIS Mikado
 consolidation (see [Evidence: EGAPx](#evidence-egapx) and
-[Evidence: Mikado Consolidated Annotation](#evidence-mikado-consolidated-annotation))
-— away from the primary deliverables, so `aegis_outputs*/`, `quality_report/`
-and `validation/` are what to check first on a completed run. Some unstranded
-or long-read merged GTF files can be empty when the corresponding sample
-class is absent.
+[Evidence: Mikado Consolidated Annotation](#evidence-mikado-consolidated-annotation)).
+`05_run_info/` is provenance/debug material, not required reading. Some
+unstranded or long-read merged GTF files can be empty when the corresponding
+sample class is absent.
 
 ## Primary Annotation
 
 ```text
-${output_dir}/aegis_outputs/
+${output_dir}/01_final_annotation/primary/
   final_annotation.gff3
   final_annotation_proteins_all.fasta
   final_annotation_proteins_main.fasta
@@ -177,7 +199,7 @@ or freshly assigned (`new_vitvi_id`).
 ## High-Confidence Monoexonic-Filtered Annotation
 
 ```text
-${output_dir}/aegis_outputs_high_confidence_monoexonic/
+${output_dir}/01_final_annotation/high_confidence_monoexonic/
   final_annotation.high_confidence.gff3
   final_annotation_proteins_main.high_confidence.fasta
   monoexonic_gene_confidence.tsv
@@ -193,27 +215,57 @@ ${output_dir}/aegis_outputs_high_confidence_monoexonic/
     versions.yml
 ```
 
-This is the second final-annotation candidate: `aegis_outputs/final_annotation.gff3`
-with every unsupported single-exon gene removed. `monoexonic_gene_confidence.tsv`
-classifies every single-exon gene in the primary annotation by supporting
-evidence (expression, functional domains, Liftoff conservation, BUSCO
-orthology, TE overlap) without touching the annotation itself; see
+This is the second final-annotation candidate:
+`01_final_annotation/primary/final_annotation.gff3` with every unsupported
+single-exon gene removed. `monoexonic_gene_confidence.tsv` classifies every
+single-exon gene in the primary annotation by supporting evidence
+(expression, functional domains, Liftoff conservation, BUSCO orthology, TE
+overlap) without touching the annotation itself; see
 [tools reference](../reference/tools.md#single-exon-gene-confidence).
 `monoexonic_gene_confidence_summary.json` is the run-level summary.
 
 `agat_stats/` and `busco/` here run on this filtered GFF3/protein set, so they
-can be compared directly against `quality_report/agat_stats/` and
-`quality_report/busco/` (the primary candidate's) to decide which annotation
-to keep or publish.
+can be compared directly against
+`01_final_annotation/quality_report/agat_stats/` and
+`01_final_annotation/quality_report/busco/` (the primary candidate's) to
+decide which annotation to keep or publish.
+
+## Quality, Validation And Provenance
+
+```text
+${output_dir}/01_final_annotation/quality_report/
+  titan_multiqc_report.html
+  titan_multiqc_report_data/
+  agat_stats/
+  busco/
+  expression_validation/
+  ncrna_annotations/
+  omark/
+  sqanti3/
+  versions.yml
+${output_dir}/01_final_annotation/validation/
+  final_annotation_validation.json
+  final_annotation_validation.txt
+  versions.yml
+```
+
+`quality_report/titan_multiqc_report.html` is the main QC entry point;
+`quality_report/agat_stats/` and `quality_report/busco/` assess the primary
+`01_final_annotation/primary/` candidate specifically. See
+[High-Confidence Monoexonic-Filtered Annotation](#high-confidence-monoexonic-filtered-annotation)
+for the equivalent AGAT/BUSCO results on the second candidate. `validation/`
+reports structural checks on the final annotation. Input/evidence provenance
+manifests live under `05_run_info/provenance/` (see
+[Run Info: Provenance And Runtime Outputs](#run-info-provenance-and-runtime-outputs)).
 
 ## Functional Annotation
 
 ```text
-${output_dir}/functional_annotation/diamond2go/
+${output_dir}/02_functional_annotation/diamond2go/
   final_annotation_proteins_all.diamond2go.tsv
   final_annotation_proteins_main.diamond2go.tsv
   versions.yml
-${output_dir}/functional_annotation/eggnog/
+${output_dir}/02_functional_annotation/eggnog/
   final_annotation_proteins_all.emapper.annotations
   final_annotation_proteins_main.emapper.annotations
   final_annotation_proteins_all.emapper.seed_orthologs
@@ -223,7 +275,7 @@ ${output_dir}/functional_annotation/eggnog/
   final_annotation_proteins_all.emapper.annotations.xlsx
   final_annotation_proteins_main.emapper.annotations.xlsx
   versions.yml
-${output_dir}/functional_annotation/interproscan/
+${output_dir}/02_functional_annotation/interproscan/
   final_annotation_proteins_all.tsv
   final_annotation_proteins_main.tsv
   final_annotation_proteins_all.gff3
@@ -233,51 +285,24 @@ ${output_dir}/functional_annotation/interproscan/
   versions.yml
 ```
 
-All three annotate `aegis_outputs/`'s proteins (the primary candidate, not the
-high-confidence-filtered one). Diamond2GO is part of the default graph.
-eggNOG-mapper and InterProScan are optional and only appear when enabled.
-
-## Evidence: Core Tracks
-
-```text
-${output_dir}/evidence/
-  assembly_masked.EDTA.fasta
-  liftoff_previous_annotations.gff3
-  unmapped_features.txt
-  gene_prediction/
-    augustus.hints.gff3
-    genemark.gtf
-    genemark_supported.gtf
-    braker.gff3
-```
-
-`assembly_masked.EDTA.fasta` is the EDTA-masked assembly. Liftoff outputs are
-the transferred previous annotation and the list of unmapped features. BRAKER3
-publishes AUGUSTUS and GeneMark evidence under `evidence/gene_prediction/` for
-direct inspection.
-
-Merged transcript evidence is published under `evidence/transcript_assemblies/`:
-
-```text
-${output_dir}/evidence/transcript_assemblies/
-  merged_star_stringtie_*.gtf
-  merged_star_psiclass_*.gtf
-  merged_minimap2_stringtie_long_reads_*.gtf
-  # when --run_hisat2 true:
-  merged_hisat2_stringtie_*.gtf
-```
-
-These files summarize short-read STAR/PsiCLASS/StringTie evidence and long-read
-Minimap2/StringTie evidence. HISAT2/StringTie merged tracks are published only
-when the optional branch is enabled with `--run_hisat2 true`. This directory
-is the single copy of these merges; earlier TITAN versions also published a
-byte-identical, pre-rename copy under `${output_dir}/tmp/`, which has been
-removed.
+All three annotate `01_final_annotation/primary/`'s proteins (the primary
+candidate, not the high-confidence-filtered one). Each tool runs on the
+protein FASTA, so its raw output keys every row on the FASTA header
+(`<gene_id>_t<NNN>_CDS<N>.prot`, a CDS-record ID, e.g.
+`Vitvichr00g00010_t001_CDS1.prot`); every one of these files is rewritten at
+the end of its job to collapse that ID back to the bare gene ID
+(`Vitvichr00g00010`) everywhere it appears — TSV query columns, the
+InterProScan GFF3's seqid/`ID=`/`##sequence-region`, its JSON `xref`
+entries, and the eggNOG-mapper `.xlsx` exports — so results join directly
+onto `final_annotation.gff3` by gene ID. `_all` files can have several rows
+per gene when the primary annotation has multiple isoforms for it.
+Diamond2GO is part of the default graph. eggNOG-mapper and InterProScan are
+optional and only appear when enabled.
 
 ## Additional Annotations
 
 ```text
-${output_dir}/additional_annotations/
+${output_dir}/03_additional_annotations/
   ncrna/
     trna/
       trna.gff3
@@ -319,10 +344,47 @@ Rfam and tRNAscan-SE feed ncRNA summaries and lncRNA filtering. FLAIR and
 SQANTI3 require long-read evidence and their own optional settings. Helixer and
 lncRNA outputs are only present when the corresponding branches are enabled.
 
+## Evidence: Core Tracks
+
+```text
+${output_dir}/04_evidence/
+  assembly_masked.EDTA.fasta
+  liftoff_previous_annotations.gff3
+  unmapped_features.txt
+  gene_prediction/
+    augustus.hints.gff3
+    genemark.gtf
+    genemark_supported.gtf
+    braker.gff3
+```
+
+`assembly_masked.EDTA.fasta` is the EDTA-masked assembly. Liftoff outputs are
+the transferred previous annotation and the list of unmapped features. BRAKER3
+publishes AUGUSTUS and GeneMark evidence under `04_evidence/gene_prediction/`
+for direct inspection.
+
+Merged transcript evidence is published under `04_evidence/transcript_assemblies/`:
+
+```text
+${output_dir}/04_evidence/transcript_assemblies/
+  merged_star_stringtie_*.gtf
+  merged_star_psiclass_*.gtf
+  merged_minimap2_stringtie_long_reads_*.gtf
+  # when --run_hisat2 true:
+  merged_hisat2_stringtie_*.gtf
+```
+
+These files summarize short-read STAR/PsiCLASS/StringTie evidence and long-read
+Minimap2/StringTie evidence. HISAT2/StringTie merged tracks are published only
+when the optional branch is enabled with `--run_hisat2 true`. This directory
+is the single copy of these merges; earlier TITAN versions also published a
+byte-identical, pre-rename copy under `${output_dir}/tmp/`, which has been
+removed.
+
 ## Evidence: EGAPx
 
 ```text
-${output_dir}/evidence/egapx/
+${output_dir}/04_evidence/egapx/
   egapx.complete.genomic.gff3
   egapx.complete.genomic.gtf
   egapx.complete.proteins.faa
@@ -341,7 +403,7 @@ alongside the Mikado/AEGIS evidence tracks, not a TITAN final annotation.
 ## Evidence: Mikado Consolidated Annotation
 
 ```text
-${output_dir}/evidence/mikado/
+${output_dir}/04_evidence/mikado/
   final_mikado_annotation.gff3
   mikado.loci.gff3
   mikado.subloci.gff3
@@ -353,75 +415,52 @@ ${output_dir}/evidence/mikado/
 Mikado consolidates every evidence source into one non-redundant, per-locus-
 scored gene set; `final_mikado_annotation.gff3` is what AEGIS then renames
 (Vitvi IDs, with liftoff ID carryover) and tidies into
-`aegis_outputs/final_annotation.gff3`. This branch defaults to enabled
-(`--run_mikado true`) and is effectively required — disabling it leaves
-`aegis_merge` nothing to rename and the run fails there. It is evidence for
-`aegis_outputs/`, not a final annotation in its own right.
+`01_final_annotation/primary/final_annotation.gff3`. This branch defaults to
+enabled (`--run_mikado true`) and is effectively required — disabling it
+leaves `aegis_merge` nothing to rename and the run fails there. It is
+evidence for `01_final_annotation/primary/`, not a final annotation in its
+own right.
 
-## Quality, Validation And Provenance
-
-```text
-${output_dir}/quality_report/
-  titan_multiqc_report.html
-  titan_multiqc_report_data/
-  agat_stats/
-  busco/
-  expression_validation/
-  ncrna_annotations/
-  omark/
-  sqanti3/
-  versions.yml
-${output_dir}/validation/
-  final_annotation_validation.json
-  final_annotation_validation.txt
-  versions.yml
-${output_dir}/provenance/
-  evidence_manifest.json
-  additional_annotations_manifest.json
-  versions.yml
-```
-
-`quality_report/titan_multiqc_report.html` is the main QC entry point;
-`quality_report/agat_stats/` and `quality_report/busco/` assess the primary
-`aegis_outputs/` candidate specifically. See
-[High-Confidence Monoexonic-Filtered Annotation](#high-confidence-monoexonic-filtered-annotation)
-for the equivalent AGAT/BUSCO results on the second candidate. The validation
-directory reports structural checks on the final annotation. Provenance
-manifests record inputs, selected outputs, versions and checksums.
-
-## Intermediate And Runtime Outputs
+## Run Info: Provenance And Runtime Outputs
 
 ```text
-${output_dir}/intermediate_files/
-  aegis/                  # aegis_merge's Vitvi-only pass (vitvi_only_*) and
-                           # the aegis overlap correspondence table
-  braker3/
-  evidence_data/
-    EDTA/
-    RNAseq_alignments/
-      STAR/
-      minimap2/
-      HISAT2/              # when --run_hisat2 true
-    RNAseq_data/
-      trimmed_data/
-    transcriptomes/
-      STAR_PsiCLASS/
-      StringTie/
-    star_databases/
-    hisat2_databases/      # when --run_hisat2 true
-  liftoff/
-  salmon_strand/
-${output_dir}/nextflow_reports/
-  <run_name>.dag.html
-  progress.log
+${output_dir}/05_run_info/
+  provenance/
+    evidence_manifest.json
+    additional_annotations_manifest.json
+    versions.yml
+  intermediate_files/
+    aegis/                  # aegis_merge's Vitvi-only pass (vitvi_only_*) and
+                             # the aegis overlap correspondence table
+    braker3/
+    evidence_data/
+      EDTA/
+      RNAseq_alignments/
+        STAR/
+        minimap2/
+        HISAT2/              # when --run_hisat2 true
+      RNAseq_data/
+        trimmed_data/
+      transcriptomes/
+        STAR_PsiCLASS/
+        StringTie/
+      star_databases/
+      hisat2_databases/      # when --run_hisat2 true
+    liftoff/
+    salmon_strand/
+  nextflow_reports/
+    <run_name>.dag.html
+    progress.log
 ```
 
-`intermediate_files/` is controlled by `--publish_intermediates`. It is useful
-for debugging, manual inspection and downstream reuse, but the main
-deliverables are `aegis_outputs/`, `aegis_outputs_high_confidence_monoexonic/`,
-`quality_report/`, `validation/` and `provenance/` — `evidence/` (see
-[Evidence: Core Tracks](#evidence-core-tracks)) sits one step below those as
-supporting material worth keeping but not required reading.
+Provenance manifests record inputs, selected outputs, versions and checksums.
+`intermediate_files/` is controlled by `--publish_intermediates`. It is
+useful for debugging, manual inspection and downstream reuse, but the main
+deliverables are `01_final_annotation/`, `02_functional_annotation/` and
+`05_run_info/provenance/` — `04_evidence/` (see
+[Evidence: Core Tracks](#evidence-core-tracks)) and
+`05_run_info/intermediate_files/` sit one step below those as supporting
+material worth keeping but not required reading.
 
 The Nextflow `work/` directory and `.nextflow.log` are runtime state, not
 published biological outputs. Keep them for resume/debugging, but do not treat

@@ -46,7 +46,7 @@ genome near the start of the graph. TITAN runs eukaryotic mode, keeps raw
 table/structure/isotype/statistics files, and converts the raw table to
 `trna.gff3` with `scripts/trnascan_to_gff3.py`.
 
-Outputs are published under `${output_dir}/additional_annotations/ncrna/trna`.
+Outputs are published under `${output_dir}/03_additional_annotations/ncrna/trna`.
 The tRNA GFF3 is used by lncRNA filtering and ncRNA QC, but is not
 automatically merged into the final coding annotation.
 
@@ -61,7 +61,7 @@ TITAN splits the target FASTA by sequence, runs `cmsearch --cut_ga --rfam
 --nohmmonly` independently on each split, merges all `rfam_hits.tbl` fragments,
 and converts them once to `rfam_ncrna.gff3` with
 `scripts/rfam_tblout_to_gff3.py`. Rfam outputs are published under
-`${output_dir}/additional_annotations/ncrna/rfam`, used by lncRNA filtering and
+`${output_dir}/03_additional_annotations/ncrna/rfam`, used by lncRNA filtering and
 ncRNA QC, and are not automatically merged into the final coding annotation.
 
 ## RNA-Seq Evidence
@@ -105,7 +105,7 @@ transcripts, ASN, the full `egapx_out/` directory and `versions.yml`.
 FLAIR is optional (`--run_flair true`) and runs only when long-read samples are
 present. It uses Liftoff as splice-junction correction evidence, publishes
 per-sample and merged isoform GTF/FASTA files under
-`${output_dir}/additional_annotations/flair`, and passes merged isoforms to
+`${output_dir}/03_additional_annotations/flair`, and passes merged isoforms to
 Mikado as optional transcript evidence.
 
 ## EDTA
@@ -127,7 +127,7 @@ uses the long-read-aware BRAKER3 branch. Published outputs include
 
 Helixer is optional (`--run_helixer true`) and predicts genes directly from the
 EDTA soft-masked genome. Its GFF3 is published under
-`${output_dir}/additional_annotations/helixer` and passed to Mikado as
+`${output_dir}/03_additional_annotations/helixer` and passed to Mikado as
 optional evidence (Mikado is the only step that consumes raw evidence
 sources; AEGIS only sees Mikado's consolidated output — see
 [AEGIS](#aegis) and [Mikado](#mikado-final-annotation-source)).
@@ -174,7 +174,7 @@ The graph runs Mikado configure/prepare, TransDecoder LongOrfs/Predict when
 `--run_transdecoder true` (also effectively required — without ORFs, Mikado's
 CDS-based scoring has nothing to score and rejects most transcripts), then
 Mikado serialise and pick. Outputs are published as evidence under
-`${output_dir}/evidence/mikado`; `final_mikado_annotation.gff3` is the file
+`${output_dir}/04_evidence/mikado`; `final_mikado_annotation.gff3` is the file
 AEGIS renames into the final annotation.
 
 ## AEGIS
@@ -188,7 +188,7 @@ AEGIS runs in two steps on Mikado's consolidated output:
    IDs (default prefix `Vitvi`, independent of Mikado's own IDs), then
    `aegis tidy --standard-features`. This intermediate, Vitvi-only annotation
    is not published by default (only under
-   `${output_dir}/intermediate_files/aegis` with `--publish_intermediates true`,
+   `${output_dir}/05_run_info/intermediate_files/aegis` with `--publish_intermediates true`,
    as `vitvi_only_final_annotation.gff3`).
 2. **`aegis_liftoff_gene_ids`** (ID carryover) — runs `aegis overlap` between
    that Vitvi-renamed annotation and the Liftoff-transferred previous
@@ -204,7 +204,7 @@ AEGIS runs in two steps on Mikado's consolidated output:
    ID assignment.
 
 This step writes the files that are actually published under
-`${output_dir}/aegis_outputs`: `final_annotation.gff3`,
+`${output_dir}/01_final_annotation/primary`: `final_annotation.gff3`,
 `final_annotation_proteins_all.fasta`, `final_annotation_proteins_main.fasta`
 and `liftoff_gene_id_correspondence.tsv` (per-gene decision and match score,
 for provenance).
@@ -219,7 +219,7 @@ bundled Plant-LncPipe CPAT-plant model.
 
 Outputs include `lncrna_candidates.gff3`, `lncrna_candidates.gtf`,
 `lncrna_candidates.fasta`, CPAT TSV/log files and summary TSV files under
-`${output_dir}/additional_annotations/ncrna/lncrna`. This is a candidate
+`${output_dir}/03_additional_annotations/ncrna/lncrna`. This is a candidate
 layer, not a final lncRNA annotation.
 
 ## SQANTI3 Long-Read Isoform QC
@@ -237,14 +237,23 @@ configured by `--sqanti3_libbz2_path` (default
 Set the parameter to `false` only when a replacement SQANTI3 image already
 ships `libbz2.so.1`.
 
-Outputs are published under `${output_dir}/additional_annotations/sqanti3` and
-`${output_dir}/quality_report/sqanti3`.
+Outputs are published under `${output_dir}/03_additional_annotations/sqanti3` and
+`${output_dir}/01_final_annotation/quality_report/sqanti3`.
 
 ## Diamond2GO
 
 Diamond2GO runs on the final AEGIS protein FASTAs and is part of the default
 functional annotation path. Its outputs are published under
-`${output_dir}/functional_annotation/diamond2go`.
+`${output_dir}/02_functional_annotation/diamond2go`.
+
+Diamond2GO, eggNOG-mapper and InterProScan (below) all run on the protein
+FASTAs, so each tool's raw output keys every row on the FASTA header
+(`<gene_id>_t<NNN>_CDS<N>.prot`, a CDS-record ID), not the gene ID. Each
+module's script rewrites its own outputs in place at the end of the job
+(`sed`, plus a Python step in `eggnog_mapper` to regenerate the `.xlsx`
+exports from the now-cleaned annotations TSV) to collapse that ID back to
+the bare gene ID everywhere it appears, so results join directly onto
+`final_annotation.gff3` by gene ID.
 
 ## eggNOG-mapper
 
@@ -312,7 +321,7 @@ pipeline:
 * overlap with an EDTA-annotated transposable element (negative signal only).
 
 Each single-exon gene is classified into one of three tiers and reported in
-`${output_dir}/aegis_outputs_high_confidence_monoexonic/`:
+`${output_dir}/01_final_annotation/high_confidence_monoexonic/`:
 
 * `supported` - at least one positive evidence signal; kept as-is;
 * `unsupported_te_overlap` - no positive evidence, overlaps a TE;
@@ -325,9 +334,10 @@ its child features) removed:
 `final_annotation_proteins_main.high_confidence.fasta`. BUSCO and AGAT stats
 are run on this filtered variant too
 (`busco_high_confidence_monoexonic`, `agat_stats_high_confidence_monoexonic`,
-published under `${output_dir}/aegis_outputs_high_confidence_monoexonic/busco`
-and `.../aegis_outputs_high_confidence_monoexonic/agat_stats`), so
+published under `${output_dir}/01_final_annotation/high_confidence_monoexonic/busco`
+and `.../01_final_annotation/high_confidence_monoexonic/agat_stats`), so
 completeness and gene-set structure can be compared side by side against the
-unfiltered annotation's own `quality_report/busco`/`quality_report/agat_stats`
+unfiltered annotation's own `01_final_annotation/quality_report/busco`/
+`01_final_annotation/quality_report/agat_stats`
 results before deciding whether the filtered variant should replace the
 primary annotation.

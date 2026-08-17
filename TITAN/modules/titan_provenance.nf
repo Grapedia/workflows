@@ -3,7 +3,7 @@ process titan_provenance {
   tag "TITAN evidence manifest"
 
   container params.container_python
-  publishDir "${params.output_dir}/provenance", mode: 'copy'
+  publishDir "${params.output_dir}/05_run_info/provenance", mode: 'copy'
 
   input:
     val(has_long_reads)

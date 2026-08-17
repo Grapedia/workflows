@@ -6,9 +6,9 @@ process assembly_transcriptome_star_psiclass {
   container params.container_psiclass_samtools
   publishDir {
     if (strand_type == "unstranded") {
-      return "${params.output_dir}/intermediate_files/evidence_data/transcriptomes/STAR_PsiCLASS/unstranded"
+      return "${params.output_dir}/05_run_info/intermediate_files/evidence_data/transcriptomes/STAR_PsiCLASS/unstranded"
     } else if (strand_type in ["stranded_forward", "stranded_reverse"]) {
-      return "${params.output_dir}/intermediate_files/evidence_data/transcriptomes/STAR_PsiCLASS/stranded"
+      return "${params.output_dir}/05_run_info/intermediate_files/evidence_data/transcriptomes/STAR_PsiCLASS/stranded"
     }
   }, mode: "copy", enabled: params.publish_intermediates
   input:

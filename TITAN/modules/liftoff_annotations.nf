@@ -5,7 +5,7 @@ process liftoff_annotations {
   cache 'deep'
   tag "Executing liftoff on the new assembly $genome_fasta"
   container params.container_liftoff
-  publishDir "${params.output_dir}/evidence", mode: 'copy'
+  publishDir "${params.output_dir}/04_evidence", mode: 'copy'
 
   input:
     path(genome_fasta)

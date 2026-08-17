@@ -3,7 +3,7 @@ process clean_liftoff_gff3_for_agat {
 
   tag "Clean Liftoff GFF3 for AGAT"
   container params.container_python
-  publishDir "${params.output_dir}/intermediate_files/liftoff/clean_gff3_for_agat", mode: "copy", enabled: params.publish_intermediates
+  publishDir "${params.output_dir}/05_run_info/intermediate_files/liftoff/clean_gff3_for_agat", mode: "copy", enabled: params.publish_intermediates
 
   input:
     path(liftoff_gff3)

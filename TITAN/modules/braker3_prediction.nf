@@ -4,13 +4,13 @@ process braker3_prediction {
 
   tag "Executing BRAKER3/AUGUSTUS-Genemark prediction"
   container params.container_braker3
-  publishDir "${params.output_dir}/evidence/gene_prediction", mode: 'copy', saveAs: { filename ->
+  publishDir "${params.output_dir}/04_evidence/gene_prediction", mode: 'copy', saveAs: { filename ->
     if (filename in ['augustus.hints.gff3', 'genemark.gtf', 'genemark_supported.gtf', 'braker.gff3', 'versions.yml']) {
       return filename
     }
     return null
   }
-  publishDir "${params.output_dir}/intermediate_files/braker3", mode: 'copy', enabled: params.publish_intermediates, saveAs: { filename ->
+  publishDir "${params.output_dir}/05_run_info/intermediate_files/braker3", mode: 'copy', enabled: params.publish_intermediates, saveAs: { filename ->
     if (filename in ['braker3_run.log', 'braker3_command.txt', 'braker3_inputs.tsv', 'braker.log', 'errors']) {
       return filename
     }

@@ -4,7 +4,7 @@ process salmon_strand_inference {
   tag "Executing salmon strand inference on $sample_ID"
   container params.container_salmon
   // Avoid republishing the trimmed FASTQs re-emitted for downstream alignment.
-  publishDir "${params.output_dir}/intermediate_files/salmon_strand/", mode: "copy", enabled: params.publish_intermediates, saveAs: { filename ->
+  publishDir "${params.output_dir}/05_run_info/intermediate_files/salmon_strand/", mode: "copy", enabled: params.publish_intermediates, saveAs: { filename ->
     filename.endsWith('.trimmed.fastq.gz') ? null : filename
   }
   input:

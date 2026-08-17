@@ -3,7 +3,7 @@ process omark {
 
   tag "Executing OMArk on final AEGIS main protein set"
   container params.container_omark
-  publishDir "${params.output_dir}/quality_report/omark", mode: 'copy', saveAs: { filename ->
+  publishDir "${params.output_dir}/01_final_annotation/quality_report/omark", mode: 'copy', saveAs: { filename ->
     if (filename in [
       'proteins_main.omamer',
       'proteins_main_detailed_summary.txt',

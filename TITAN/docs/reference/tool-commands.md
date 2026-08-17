@@ -1170,8 +1170,8 @@ Important options:
 
 This step's own output (`final_annotation.gff3` etc. inside its work dir) is
 an intermediate carrying only fresh Vitvi IDs; it is not published under
-`aegis_outputs` (only under `intermediate_files/aegis` as
-`vitvi_only_final_annotation.gff3` when `--publish_intermediates true`). See
+`01_final_annotation/primary` (only under `05_run_info/intermediate_files/aegis`
+as `vitvi_only_final_annotation.gff3` when `--publish_intermediates true`). See
 [AEGIS Liftoff Gene ID Carryover](#aegis-liftoff-gene-id-carryover) for the
 step that produces what's actually published as the final annotation.
 
@@ -1235,7 +1235,7 @@ Important options:
 | `overlap -o` (default 6) | Overlap-score threshold for a reported match. | AEGIS's tuned default for valid ID equivalences; not overridden by TITAN. |
 | `apply_liftoff_gene_ids.py` reciprocal-best-match filter | Ambiguity policy. | Avoids assigning a misleading old ID when a gene fused, split, or has multiple plausible matches. |
 
-This step writes what's actually published under `${output_dir}/aegis_outputs`:
+This step writes what's actually published under `${output_dir}/01_final_annotation/primary`:
 `final_annotation.gff3`, `final_annotation_proteins_all.fasta`,
 `final_annotation_proteins_main.fasta` and
 `liftoff_gene_id_correspondence.tsv` (per-gene decision and match score, for

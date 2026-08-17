@@ -152,7 +152,7 @@ command -v curl >/dev/null 2>&1 || die "curl is not available in PATH"
 command -v tar >/dev/null 2>&1 || die "tar is not available in PATH"
 
 mkdir -p \
-  "$OUTPUT_DIR/nextflow_reports" \
+  "$OUTPUT_DIR/05_run_info/nextflow_reports" \
   "$WORK_DIR" \
   "$EGAPX_CACHE_DIR" \
   "$EGAPX_RUNNER_DIR" \
@@ -298,7 +298,7 @@ cmd=(
   # every single task fails immediately with "Command 'ps' required by
   # nextflow to collect task metrics cannot be found" when any of them are
   # enabled. -with-dag does not need runtime metrics and is safe to keep.
-  -with-dag "$OUTPUT_DIR/nextflow_reports/${RUN_NAME}.dag.html"
+  -with-dag "$OUTPUT_DIR/05_run_info/nextflow_reports/${RUN_NAME}.dag.html"
   -ansi-log false
   "${resume_args[@]}"
   --egapx_runner_dir "$EGAPX_RUNNER_DIR"

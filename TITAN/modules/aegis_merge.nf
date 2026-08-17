@@ -7,7 +7,7 @@ process aegis_merge {
   // old liftoff IDs, which is what actually gets published as the final
   // annotation under aegis_outputs.
   container "${params.container_aegis}"
-  publishDir "${params.output_dir}/intermediate_files/aegis", mode: 'copy', enabled: params.publish_intermediates, saveAs: { filename ->
+  publishDir "${params.output_dir}/05_run_info/intermediate_files/aegis", mode: 'copy', enabled: params.publish_intermediates, saveAs: { filename ->
     if (filename in ['final_annotation.gff3', 'final_annotation_proteins_all.fasta', 'final_annotation_proteins_main.fasta', 'aegis_rename', 'aegis_tidy', 'aegis_proteins_all', 'aegis_proteins_main', 'aegis_inputs.tsv', 'aegis_merge.log', 'versions.yml']) {
       return "vitvi_only_${filename}"
     }

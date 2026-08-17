@@ -4,7 +4,7 @@ process trnascan_se {
 
   tag "tRNAscan-SE tRNA annotation"
   container params.container_trnascan
-  publishDir "${params.output_dir}/additional_annotations/ncrna/trna", mode: 'copy'
+  publishDir "${params.output_dir}/03_additional_annotations/ncrna/trna", mode: 'copy'
 
   input:
     path(genome)
@@ -67,7 +67,7 @@ process trnascan_to_gff3 {
 
   tag "Convert tRNAscan-SE output to GFF3"
   container params.container_python
-  publishDir "${params.output_dir}/additional_annotations/ncrna/trna", mode: 'copy'
+  publishDir "${params.output_dir}/03_additional_annotations/ncrna/trna", mode: 'copy'
 
   input:
     path(trnascan_out)

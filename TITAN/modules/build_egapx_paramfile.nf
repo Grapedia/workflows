@@ -1,7 +1,7 @@
 process build_egapx_paramfile {
   label 'process_low'
   tag "EGAPx paramfile from fastp-trimmed short reads"
-  publishDir "${params.output_dir}/intermediate_files/evidence_data/egapx", mode: "copy", enabled: params.publish_intermediates
+  publishDir "${params.output_dir}/05_run_info/intermediate_files/evidence_data/egapx", mode: "copy", enabled: params.publish_intermediates
 
   input:
     path egapx_paramfile

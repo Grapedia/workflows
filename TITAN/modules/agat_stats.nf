@@ -4,7 +4,7 @@ process agat_stats {
 
   tag "AGAT structural statistics on the final AEGIS annotation"
   container params.container_agat
-  publishDir "${params.output_dir}/quality_report/agat_stats", mode: 'copy'
+  publishDir "${params.output_dir}/01_final_annotation/quality_report/agat_stats", mode: 'copy'
 
   input:
     path(annotation_gff3)
@@ -43,7 +43,7 @@ process agat_stats_high_confidence_monoexonic {
 
   tag "AGAT structural statistics on the high-confidence (monoexonic-filtered) annotation"
   container params.container_agat
-  publishDir "${params.output_dir}/aegis_outputs_high_confidence_monoexonic/agat_stats", mode: 'copy'
+  publishDir "${params.output_dir}/01_final_annotation/high_confidence_monoexonic/agat_stats", mode: 'copy'
 
   input:
     path(annotation_gff3)

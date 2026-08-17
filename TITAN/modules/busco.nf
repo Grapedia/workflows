@@ -4,7 +4,7 @@ process busco {
 
   tag "Executing BUSCO on final AEGIS main protein set"
   container params.container_busco
-  publishDir "${params.output_dir}/quality_report/busco", mode: 'copy', saveAs: { filename ->
+  publishDir "${params.output_dir}/01_final_annotation/quality_report/busco", mode: 'copy', saveAs: { filename ->
     if (filename in [
       'busco_short_summary.txt',
       'busco_full_table.tsv',
@@ -88,7 +88,7 @@ process busco_high_confidence_monoexonic {
 
   tag "Executing BUSCO on the high-confidence (monoexonic-filtered) protein set"
   container params.container_busco
-  publishDir "${params.output_dir}/aegis_outputs_high_confidence_monoexonic/busco", mode: 'copy', saveAs: { filename ->
+  publishDir "${params.output_dir}/01_final_annotation/high_confidence_monoexonic/busco", mode: 'copy', saveAs: { filename ->
     if (filename in [
       'busco_short_summary.txt',
       'busco_full_table.tsv',

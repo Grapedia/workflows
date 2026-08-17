@@ -3,7 +3,7 @@ process agat_convert_gff3_to_gtf {
 
   tag "Converting ${gff3.name} to GTF for FLAIR"
   container params.container_agat
-  publishDir "${params.output_dir}/intermediate_files/liftoff/gff3_to_gtf", mode: "copy", enabled: params.publish_intermediates
+  publishDir "${params.output_dir}/05_run_info/intermediate_files/liftoff/gff3_to_gtf", mode: "copy", enabled: params.publish_intermediates
 
   input:
     path(gff3)

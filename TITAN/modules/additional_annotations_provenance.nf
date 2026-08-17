@@ -3,7 +3,7 @@ process additional_annotations_provenance {
   tag "TITAN additional annotations manifest"
 
   container params.container_python
-  publishDir "${params.output_dir}/provenance", mode: 'copy'
+  publishDir "${params.output_dir}/05_run_info/provenance", mode: 'copy'
 
   input:
     val(workflow_revision)

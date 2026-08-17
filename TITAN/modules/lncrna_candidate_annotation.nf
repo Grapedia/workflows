@@ -3,7 +3,7 @@ process lncrna_candidate_annotation {
 
   tag "Preliminary lncRNA candidate annotation"
   container params.container_cpat
-  publishDir "${params.output_dir}/additional_annotations/ncrna/lncrna", mode: 'copy', saveAs: { filename ->
+  publishDir "${params.output_dir}/03_additional_annotations/ncrna/lncrna", mode: 'copy', saveAs: { filename ->
     if (filename in [
       'lncrna_candidates.gff3',
       'lncrna_candidates.gtf',

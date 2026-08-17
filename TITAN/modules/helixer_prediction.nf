@@ -3,7 +3,7 @@ process helixer_prediction {
 
   tag "Executing Helixer ab initio prediction on $masked_genome"
   container params.container_helixer
-  publishDir "${params.output_dir}/additional_annotations/helixer", mode: 'copy', saveAs: { filename ->
+  publishDir "${params.output_dir}/03_additional_annotations/helixer", mode: 'copy', saveAs: { filename ->
     if (filename in ['helixer.gff3', 'versions.yml']) {
       return filename
     }

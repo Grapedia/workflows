@@ -2,7 +2,7 @@ process extract_final_transcripts {
   label 'process_low'
   tag "Extract final transcript sequences from AEGIS annotation"
   container params.container_python
-  publishDir "${params.output_dir}/quality_report/expression_validation", mode: 'copy', saveAs: { filename ->
+  publishDir "${params.output_dir}/01_final_annotation/quality_report/expression_validation", mode: 'copy', saveAs: { filename ->
     if (filename == 'final_transcripts.fasta') {
       return filename
     }
@@ -127,7 +127,7 @@ process final_transcriptome_index {
   label 'process_index'
   tag "Final transcriptome Salmon index"
   container params.container_salmon
-  publishDir "${params.output_dir}/quality_report/expression_validation", mode: 'copy', saveAs: { filename ->
+  publishDir "${params.output_dir}/01_final_annotation/quality_report/expression_validation", mode: 'copy', saveAs: { filename ->
     if (filename == 'versions.yml') {
       return filename
     }
@@ -173,7 +173,7 @@ process final_expression_quant {
   label 'process_index'
   tag "Final transcriptome Salmon quant on ${sample_ID}"
   container params.container_salmon
-  publishDir "${params.output_dir}/quality_report/expression_validation/quants", mode: 'copy', enabled: params.publish_intermediates, saveAs: { filename ->
+  publishDir "${params.output_dir}/01_final_annotation/quality_report/expression_validation/quants", mode: 'copy', enabled: params.publish_intermediates, saveAs: { filename ->
     filename.endsWith('.trimmed.fastq.gz') ? null : filename
   }
 
@@ -234,7 +234,7 @@ process expression_support_summary {
   label 'process_low'
   tag "Final annotation expression support summary"
   container params.container_python
-  publishDir "${params.output_dir}/quality_report/expression_validation", mode: 'copy'
+  publishDir "${params.output_dir}/01_final_annotation/quality_report/expression_validation", mode: 'copy'
 
   input:
     path(final_annotation_gff3)

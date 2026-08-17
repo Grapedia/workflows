@@ -6,7 +6,7 @@ process ncrna_annotation_qc {
 
   tag "AGAT and MultiQC summaries for ncRNA annotations"
   container params.container_agat
-  publishDir "${params.output_dir}/quality_report/ncrna_annotations", mode: 'copy'
+  publishDir "${params.output_dir}/01_final_annotation/quality_report/ncrna_annotations", mode: 'copy'
 
   input:
     path(trna_gff3)

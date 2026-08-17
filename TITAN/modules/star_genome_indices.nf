@@ -4,7 +4,7 @@ process star_genome_indices {
 
   tag "STAR genomeGenerate on $genome"
   container params.container_star
-  publishDir "${params.output_dir}/intermediate_files/evidence_data/star_databases/", mode: "copy", enabled: params.publish_intermediates
+  publishDir "${params.output_dir}/05_run_info/intermediate_files/evidence_data/star_databases/", mode: "copy", enabled: params.publish_intermediates
   input:
     path(genome_fasta)
     val(genome)

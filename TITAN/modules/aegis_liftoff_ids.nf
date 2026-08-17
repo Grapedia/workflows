@@ -3,13 +3,13 @@ process aegis_liftoff_gene_ids {
   tag "Carry over liftoff gene IDs onto the final annotation"
 
   container "${params.container_aegis}"
-  publishDir "${params.output_dir}/aegis_outputs", mode: 'copy', saveAs: { filename ->
+  publishDir "${params.output_dir}/01_final_annotation/primary", mode: 'copy', saveAs: { filename ->
     if (filename in ['final_annotation.gff3', 'final_annotation_proteins_all.fasta', 'final_annotation_proteins_main.fasta', 'liftoff_gene_id_correspondence.tsv', 'versions.yml']) {
       return filename
     }
     return null
   }
-  publishDir "${params.output_dir}/intermediate_files/aegis", mode: 'copy', enabled: params.publish_intermediates, saveAs: { filename ->
+  publishDir "${params.output_dir}/05_run_info/intermediate_files/aegis", mode: 'copy', enabled: params.publish_intermediates, saveAs: { filename ->
     if (filename == 'overlap_out') {
       return filename
     }

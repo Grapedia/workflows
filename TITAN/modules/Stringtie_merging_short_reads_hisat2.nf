@@ -5,7 +5,7 @@ process Stringtie_merging_short_reads_hisat2 {
   tag "HISAT2/StringTie merge: stranded and optional unstranded short-read GTFs"
   container params.container_stringtie
   stageInMode 'copy'
-  publishDir "${params.output_dir}/evidence/transcript_assemblies", mode: 'copy', saveAs: { filename ->
+  publishDir "${params.output_dir}/04_evidence/transcript_assemblies", mode: 'copy', saveAs: { filename ->
     if (filename == 'merged_transcriptomes.hisat2.short_reads.default_args.stranded.gtf') {
       return 'merged_hisat2_stringtie_stranded_default.gtf'
     }

@@ -122,7 +122,7 @@ nextflow run main.nf \
   -profile slurm,apptainer \
   -name titan_target_v1 \
   -work-dir /absolute/path/to/project/titan_out/work \
-  -with-dag /absolute/path/to/project/titan_out/nextflow_reports/titan_target_v1.dag.html \
+  -with-dag /absolute/path/to/project/titan_out/05_run_info/nextflow_reports/titan_target_v1.dag.html \
   -ansi-log false \
   --output_dir /absolute/path/to/project/titan_out \
   --previous_assembly /absolute/path/to/project/assemblies/previous.fa \
@@ -163,20 +163,23 @@ preview run.
 Main result groups are published under `--output_dir`:
 
 ```text
-aegis_outputs/                          # primary final annotation
-aegis_outputs_high_confidence_monoexonic/  # 2nd candidate: monoexon-filtered
-functional_annotation/                  # diamond2go/, eggnog/, interproscan/
-additional_annotations/
-quality_report/
-validation/
-provenance/
-evidence/                               # EDTA, Liftoff, BRAKER3, merged GTFs,
-                                         # egapx/, mikado/
-intermediate_files/
-nextflow_reports/
+01_final_annotation/
+  primary/                               # primary final annotation
+  high_confidence_monoexonic/            # 2nd candidate: monoexon-filtered
+  quality_report/
+  validation/
+02_functional_annotation/                # diamond2go/, eggnog/, interproscan/
+03_additional_annotations/
+04_evidence/                             # EDTA, Liftoff, BRAKER3, merged GTFs,
+                                          # egapx/, mikado/
+05_run_info/
+  provenance/
+  intermediate_files/
+  nextflow_reports/
 ```
 
-EGAPx outputs (under `evidence/egapx/`) include:
+Folders are numbered in reading order. EGAPx outputs (under
+`04_evidence/egapx/`) include:
 
 ```text
 egapx.complete.genomic.gff3
@@ -187,9 +190,10 @@ egapx.complete.transcripts.fna
 egapx.annotated_genome.asn
 ```
 
-`provenance/evidence_manifest.json` records main inputs, AEGIS evidence files,
-final AEGIS outputs, file sizes and SHA-256 checksums. Final structural
-validation reports are written under `validation/`. See
+`05_run_info/provenance/evidence_manifest.json` records main inputs, AEGIS
+evidence files, final AEGIS outputs, file sizes and SHA-256 checksums. Final
+structural validation reports are written under
+`01_final_annotation/validation/`. See
 [inputs_outputs.md](inputs_outputs.md) for the complete input and output tree.
 
 ## Production Checklist
@@ -211,8 +215,9 @@ Before launching a long run:
   defaults) — AEGIS renames Mikado's picked annotation, so disabling either
   leaves nothing for `aegis_merge` to rename and the run fails there.
 * Run a `-stub-run` after every profile/config edit.
-* Keep `.nextflow.log`, `nextflow_reports/`, trace/timeline files when enabled
-  and the published `provenance/` directory with the run outputs.
+* Keep `.nextflow.log`, `05_run_info/nextflow_reports/`, trace/timeline files
+  when enabled and the published `05_run_info/provenance/` directory with the
+  run outputs.
 
 For troubleshooting details and current limitations, see the README sections
 `Troubleshooting` and `Limitations`.

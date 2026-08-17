@@ -3,7 +3,7 @@ process eggnog_mapper {
 
   tag "Executing eggnog-mapper on $proteins_file_all and $proteins_file_main"
   container params.container_eggnog_mapper
-  publishDir "${params.output_dir}/functional_annotation/eggnog", mode: 'copy', saveAs: { filename ->
+  publishDir "${params.output_dir}/02_functional_annotation/eggnog", mode: 'copy', saveAs: { filename ->
     if (filename in [
       'final_annotation_proteins_all.emapper.annotations',
       'final_annotation_proteins_main.emapper.annotations',
@@ -80,6 +80,44 @@ process eggnog_mapper {
 
     test -s final_annotation_proteins_all.emapper.annotations
     test -s final_annotation_proteins_main.emapper.annotations
+
+    # eggNOG-mapper keys every output (annotations/seed_orthologs/orthologs
+    # query column) on the input protein FASTA's own header
+    # (<gene_id>_t<NNN>_CDS<N>.prot, a CDS-record ID), not the gene ID
+    # downstream analyses join on. Collapse it back to the bare gene ID
+    # everywhere it appears (comment/header lines never match, so they pass
+    # through untouched), then regenerate the .xlsx exports from the
+    # now-cleaned annotations TSVs so they stay in sync.
+    sed -i -E 's/(Vitvi[A-Za-z0-9]*g[0-9]+)_t[0-9]+_CDS[0-9]+\\.prot/\\1/g' \\
+      final_annotation_proteins_all.emapper.annotations \\
+      final_annotation_proteins_main.emapper.annotations \\
+      final_annotation_proteins_all.emapper.seed_orthologs \\
+      final_annotation_proteins_main.emapper.seed_orthologs \\
+      final_annotation_proteins_all.emapper.orthologs \\
+      final_annotation_proteins_main.emapper.orthologs
+
+    python3 - <<'PY'
+def regenerate_xlsx(tsv_path, xlsx_path):
+    rows = [line.rstrip("\n").split("\t") for line in open(tsv_path, encoding="utf-8")]
+    try:
+        import xlsxwriter
+        workbook = xlsxwriter.Workbook(xlsx_path)
+        sheet = workbook.add_worksheet()
+        for r, row in enumerate(rows):
+            for c, value in enumerate(row):
+                sheet.write(r, c, value)
+        workbook.close()
+    except ImportError:
+        import openpyxl
+        workbook = openpyxl.Workbook()
+        sheet = workbook.active
+        for row in rows:
+            sheet.append(row)
+        workbook.save(xlsx_path)
+
+regenerate_xlsx("final_annotation_proteins_all.emapper.annotations", "final_annotation_proteins_all.emapper.annotations.xlsx")
+regenerate_xlsx("final_annotation_proteins_main.emapper.annotations", "final_annotation_proteins_main.emapper.annotations.xlsx")
+PY
 
     printf '"%s":\n  eggnog_mapper: "emapper.py"\n  sensmode: "%s"\n  container: "%s"\n' \
         "${task.process}" "${params.eggnog_mapper_sensmode}" "${task.container}" > versions.yml

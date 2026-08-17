@@ -132,7 +132,7 @@ process infernal_rfam_merge {
 
   tag "Merge Infernal/Rfam split searches"
   container params.container_python
-  publishDir "${params.output_dir}/additional_annotations/ncrna/rfam", mode: 'copy'
+  publishDir "${params.output_dir}/03_additional_annotations/ncrna/rfam", mode: 'copy'
 
   input:
     path(rfam_search_results, stageAs: "rfam_search_results/*")

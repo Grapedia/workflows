@@ -6,9 +6,9 @@ process assembly_transcriptome_star_stringtie {
   container params.container_stringtie
   publishDir {
     if (strand_type == "unstranded") {
-      return "${params.output_dir}/intermediate_files/evidence_data/transcriptomes/StringTie/short_reads/STAR/unstranded"
+      return "${params.output_dir}/05_run_info/intermediate_files/evidence_data/transcriptomes/StringTie/short_reads/STAR/unstranded"
     } else if (strand_type in ["stranded_forward", "stranded_reverse"]) {
-      return "${params.output_dir}/intermediate_files/evidence_data/transcriptomes/StringTie/short_reads/STAR/stranded"
+      return "${params.output_dir}/05_run_info/intermediate_files/evidence_data/transcriptomes/StringTie/short_reads/STAR/stranded"
     }
   }, mode: "copy", enabled: params.publish_intermediates
   input:

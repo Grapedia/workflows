@@ -3,7 +3,7 @@ process diamond2go {
 
   tag "Executing diamond2go annotation on $proteins_file_all and $proteins_file_main"
   container params.container_diamond2go
-  publishDir "${params.output_dir}/functional_annotation/diamond2go", mode: 'copy', saveAs: { filename ->
+  publishDir "${params.output_dir}/02_functional_annotation/diamond2go", mode: 'copy', saveAs: { filename ->
     if (filename in ['final_annotation_proteins_all.diamond2go.tsv', 'final_annotation_proteins_main.diamond2go.tsv', 'versions.yml']) {
       return filename
     }
@@ -85,6 +85,12 @@ EOF
 
     run_diamond2go all "${proteins_file_all}" final_annotation_proteins_all.diamond2go.tsv
     run_diamond2go main "${proteins_file_main}" final_annotation_proteins_main.diamond2go.tsv
+
+    # Diamond2GO keys its output on the input protein FASTA's own header
+    # (<gene_id>_t<NNN>_CDS<N>.prot, a CDS-record ID), not the gene ID
+    # downstream analyses join on. Collapse it back to the bare gene ID.
+    sed -i -E 's/(Vitvi[A-Za-z0-9]*g[0-9]+)_t[0-9]+_CDS[0-9]+\\.prot/\\1/g' \\
+      final_annotation_proteins_all.diamond2go.tsv final_annotation_proteins_main.diamond2go.tsv
 
     diamond_version=\$(diamond version 2>/dev/null | head -n 1 || true)
     printf '"%s":\n  diamond2go: "%s"\n  diamond: "%s"\n  threads: "%s"\n  container: "%s"\n' \\

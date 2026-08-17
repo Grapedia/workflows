@@ -6,9 +6,9 @@ process assembly_transcriptome_hisat2_stringtie {
   container params.container_stringtie
   publishDir {
     if (strand_type == "unstranded") {
-      return "${params.output_dir}/intermediate_files/evidence_data/transcriptomes/StringTie/short_reads/HISAT2/unstranded"
+      return "${params.output_dir}/05_run_info/intermediate_files/evidence_data/transcriptomes/StringTie/short_reads/HISAT2/unstranded"
     } else if (strand_type in ["stranded_forward", "stranded_reverse"]) {
-      return "${params.output_dir}/intermediate_files/evidence_data/transcriptomes/StringTie/short_reads/HISAT2/stranded"
+      return "${params.output_dir}/05_run_info/intermediate_files/evidence_data/transcriptomes/StringTie/short_reads/HISAT2/stranded"
     }
   }, mode: "copy", enabled: params.publish_intermediates
   input:

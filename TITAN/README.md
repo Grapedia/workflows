@@ -381,7 +381,7 @@ can be passed after `--` as native Nextflow parameters; see
 [production-run.md](docs/user/production-run.md).
 
 The launcher resolves paths, checks profile/container contracts, validates
-inputs and writes Nextflow reports under `${output_dir}/nextflow_reports`.
+inputs and writes Nextflow reports under `${output_dir}/05_run_info/nextflow_reports`.
 
 ## Requirements
 
@@ -436,34 +436,38 @@ Main output layout after a complete run:
 
 ```text
 ${output_dir}/
-  aegis_outputs/                 # primary final annotation, proteins and
+  01_final_annotation/
+    primary/                     # final annotation, proteins and
                                   # liftoff_gene_id_correspondence.tsv
-  aegis_outputs_high_confidence_monoexonic/
-                                  # 2nd candidate: same annotation with
+    high_confidence_monoexonic/  # 2nd candidate: same annotation with
                                   # unsupported single-exon genes removed,
                                   # plus its own agat_stats/ and busco/ to
                                   # compare against the primary candidate
-  functional_annotation/         # diamond2go/, eggnog/, interproscan/ —
+    quality_report/              # MultiQC and per-tool QC (primary candidate)
+    validation/                  # final annotation validation reports
+  02_functional_annotation/      # diamond2go/, eggnog/, interproscan/ —
                                   # function calls on the primary candidate
-  additional_annotations/        # tRNA, Rfam, FLAIR, Helixer, lncRNA, SQANTI3
-  quality_report/                # MultiQC and per-tool QC (primary candidate)
-  validation/                    # final annotation validation reports
-  evidence/                      # everything that feeds Mikado/AEGIS but is
+  03_additional_annotations/     # tRNA, Rfam, FLAIR, Helixer, lncRNA, SQANTI3
+  04_evidence/                   # everything that feeds Mikado/AEGIS but is
                                   # not itself a final annotation: EDTA-masked
                                   # assembly, Liftoff transfer, BRAKER3/
                                   # AUGUSTUS/GeneMark, merged STAR/PsiCLASS/
                                   # StringTie/minimap2 GTFs, the pre-AEGIS
                                   # Mikado-consolidated gene set (mikado/),
                                   # and the standalone EGAPx run (egapx/)
-  provenance/                    # manifests, checksums and software versions
-  intermediate_files/            # optional published intermediates
-  nextflow_reports/              # launcher DAG/progress/report files
+  05_run_info/
+    provenance/                  # manifests, checksums and software versions
+    intermediate_files/          # optional published intermediates
+    nextflow_reports/            # launcher DAG/progress/report files
 ```
 
-`aegis_outputs/` and `aegis_outputs_high_confidence_monoexonic/` are the two
-final annotation candidates to compare; `quality_report/`, `validation/` and
-`functional_annotation/` support that comparison. `evidence/` and
-`intermediate_files/` are supporting/debug material, not required reading.
+Folders are numbered in reading order. `01_final_annotation/primary/` and
+`01_final_annotation/high_confidence_monoexonic/` are the two final
+annotation candidates to compare; `quality_report/` and `validation/` right
+next to them support that comparison, as does
+`02_functional_annotation/`. `04_evidence/` and
+`05_run_info/intermediate_files/` are supporting/debug material, not
+required reading.
 
 See [docs/user/inputs_outputs.md](docs/user/inputs_outputs.md) for the full
 tree, including optional branches and files controlled by
@@ -510,15 +514,15 @@ Resource policy is centralized in [conf/base.config](conf/base.config).
 ## Outputs
 
 The primary files to inspect first are
-`${output_dir}/aegis_outputs/final_annotation.gff3`,
-`${output_dir}/aegis_outputs/final_annotation_proteins_all.fasta`,
-`${output_dir}/aegis_outputs/final_annotation_proteins_main.fasta` and
-`${output_dir}/quality_report/titan_multiqc_report.html`.
-`${output_dir}/aegis_outputs/liftoff_gene_id_correspondence.tsv` lists, per
-gene, whether its ID was carried over from the previous annotation (via
-Liftoff) or freshly assigned.
+`${output_dir}/01_final_annotation/primary/final_annotation.gff3`,
+`${output_dir}/01_final_annotation/primary/final_annotation_proteins_all.fasta`,
+`${output_dir}/01_final_annotation/primary/final_annotation_proteins_main.fasta`
+and `${output_dir}/01_final_annotation/quality_report/titan_multiqc_report.html`.
+`${output_dir}/01_final_annotation/primary/liftoff_gene_id_correspondence.tsv`
+lists, per gene, whether its ID was carried over from the previous annotation
+(via Liftoff) or freshly assigned.
 
-`${output_dir}/aegis_outputs_high_confidence_monoexonic/` is a second
+`${output_dir}/01_final_annotation/high_confidence_monoexonic/` is a second
 annotation candidate: the same gene set with unsupported single-exon genes
 removed, plus its own `agat_stats/` and `busco/` to compare gene-set
 structure and completeness against the primary candidate before deciding
@@ -533,7 +537,7 @@ Intermediate/debug outputs are controlled by `--publish_intermediates`
 Use `-resume` or `./launch_TITAN_example.sh --resume` after interrupted runs.
 Keep the same `--output-dir`, `--work-dir`, profile combination and input paths.
 For production, preserve the Nextflow work directory, `.nextflow.log`,
-`${output_dir}/nextflow_reports` and `${output_dir}/provenance`.
+`${output_dir}/05_run_info/nextflow_reports` and `${output_dir}/05_run_info/provenance`.
 
 ## Troubleshooting
 

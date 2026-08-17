@@ -4,7 +4,7 @@ process assembly_transcriptome_minimap2_stringtie {
 
   tag "Minimap2/StringTie - long reads"
   container params.container_stringtie
-  publishDir "${params.output_dir}/intermediate_files/evidence_data/transcriptomes/StringTie/long_reads", mode: "copy", enabled: params.publish_intermediates
+  publishDir "${params.output_dir}/05_run_info/intermediate_files/evidence_data/transcriptomes/StringTie/long_reads", mode: "copy", enabled: params.publish_intermediates
   input:
     tuple val(sample_ID), path(bam_file)
     path(stringtie_script)

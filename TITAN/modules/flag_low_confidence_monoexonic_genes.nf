@@ -3,7 +3,7 @@ process flag_low_confidence_monoexonic_genes {
   tag "Classify single-exon genes by supporting evidence"
 
   container params.container_python
-  publishDir "${params.output_dir}/aegis_outputs_high_confidence_monoexonic", mode: 'copy'
+  publishDir "${params.output_dir}/01_final_annotation/high_confidence_monoexonic", mode: 'copy'
 
   input:
     path(annotation)

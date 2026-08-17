@@ -3,7 +3,7 @@ process interproscan {
 
   tag "Executing InterProScan on $proteins_file_all and $proteins_file_main"
   container params.container_interproscan
-  publishDir "${params.output_dir}/functional_annotation/interproscan", mode: 'copy', saveAs: { filename ->
+  publishDir "${params.output_dir}/02_functional_annotation/interproscan", mode: 'copy', saveAs: { filename ->
     if (filename in [
       'final_annotation_proteins_all.tsv',
       'final_annotation_proteins_main.tsv',
@@ -81,6 +81,17 @@ process interproscan {
     # all analyses; GFF3 always carries header lines, so check that instead.
     test -s final_annotation_proteins_all.gff3
     test -s final_annotation_proteins_main.gff3
+
+    # InterProScan keys every output (TSV query column, GFF3 seqid/ID=/
+    # ##sequence-region, JSON xref name/id) on the input protein FASTA's own
+    # header (<gene_id>_t<NNN>_CDS<N>.prot, a CDS-record ID), not the gene ID
+    # downstream analyses join on. Collapse it back to the bare gene ID
+    # everywhere it appears; empty TSVs (zero domain hits) are left as-is.
+    for f in final_annotation_proteins_all.tsv final_annotation_proteins_main.tsv \\
+             final_annotation_proteins_all.gff3 final_annotation_proteins_main.gff3 \\
+             final_annotation_proteins_all.json final_annotation_proteins_main.json; do
+      [[ -s "\$f" ]] && sed -i -E 's/(Vitvi[A-Za-z0-9]*g[0-9]+)_t[0-9]+_CDS[0-9]+\\.prot/\\1/g' "\$f"
+    done
 
     interproscan_version=\$("\$IPRSCAN" -version 2>/dev/null | head -n 1 || true)
     printf '"%s":\n  interproscan: "%s"\n  container: "%s"\n' \

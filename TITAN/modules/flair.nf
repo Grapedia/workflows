@@ -2,7 +2,7 @@ process flair_isoforms {
   label 'process_transcriptome'
   tag "FLAIR isoforms on ${sample_ID}"
   container params.container_flair
-  publishDir "${params.output_dir}/additional_annotations/flair/samples", mode: 'copy', saveAs: { filename ->
+  publishDir "${params.output_dir}/03_additional_annotations/flair/samples", mode: 'copy', saveAs: { filename ->
     if (filename.endsWith('.flair.isoforms.gtf') || filename.endsWith('.flair.isoforms.fa') || filename.endsWith('.flair.log') || filename == 'versions.yml') {
       return filename
     }
@@ -73,7 +73,7 @@ process flair_merge_isoforms {
   label 'process_merge'
   tag "Merge FLAIR isoform GTFs"
   container params.container_python
-  publishDir "${params.output_dir}/additional_annotations/flair", mode: 'copy', saveAs: { filename ->
+  publishDir "${params.output_dir}/03_additional_annotations/flair", mode: 'copy', saveAs: { filename ->
     if (filename in ['flair_isoforms.gtf', 'flair_isoforms.fa', 'versions.yml']) {
       return filename
     }

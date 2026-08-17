@@ -2,7 +2,7 @@ process sqanti3_qc {
   label 'process_transcriptome'
   tag "SQANTI3 QC on ${source_label}"
   container params.container_sqanti3
-  publishDir "${params.output_dir}/additional_annotations/sqanti3/${source_label}", mode: 'copy', saveAs: { filename ->
+  publishDir "${params.output_dir}/03_additional_annotations/sqanti3/${source_label}", mode: 'copy', saveAs: { filename ->
     if (filename.endsWith('_classification.txt') || filename.endsWith('_corrected.gtf') || filename.endsWith('_report.html') || filename.endsWith('_summary.tsv') || filename == 'versions.yml') {
       return filename
     }
@@ -147,7 +147,7 @@ process sqanti3_qc_multiqc {
   label 'process_low'
   tag "SQANTI3 long-read isoform QC MultiQC summary"
   container params.container_python
-  publishDir "${params.output_dir}/quality_report/sqanti3", mode: 'copy'
+  publishDir "${params.output_dir}/01_final_annotation/quality_report/sqanti3", mode: 'copy'
 
   input:
     path(stringtie_summary)

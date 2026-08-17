@@ -6,9 +6,9 @@ process star_alignment {
   container params.container_star
   publishDir {
     if (strand_type == "unstranded") {
-      return "${params.output_dir}/intermediate_files/evidence_data/RNAseq_alignments/STAR/unstranded"
+      return "${params.output_dir}/05_run_info/intermediate_files/evidence_data/RNAseq_alignments/STAR/unstranded"
     } else if (strand_type in ["stranded_forward", "stranded_reverse"]) {
-      return "${params.output_dir}/intermediate_files/evidence_data/RNAseq_alignments/STAR/stranded"
+      return "${params.output_dir}/05_run_info/intermediate_files/evidence_data/RNAseq_alignments/STAR/stranded"
     }
   }, mode: "copy", enabled: params.publish_intermediates
   input:
