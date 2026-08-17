@@ -89,26 +89,35 @@ ${output_dir}/
     final_annotation_proteins_main.fasta
     liftoff_gene_id_correspondence.tsv
     versions.yml
-  assembly_masked.EDTA.fasta
-  liftoff_previous_annotations.gff3
-  unmapped_features.txt
-  augustus.hints.gff3
-  genemark.gtf
-  genemark_supported.gtf
-  braker.gff3
-  merged_star_stringtie_stranded_default.gtf
-  merged_star_stringtie_stranded_alt.gtf
-  merged_star_stringtie_unstranded_default.gtf
-  merged_star_stringtie_unstranded_alt.gtf
-  merged_star_psiclass_stranded.gtf
-  merged_star_psiclass_unstranded.gtf
-  merged_minimap2_stringtie_long_reads_default.gtf
-  merged_minimap2_stringtie_long_reads_alt.gtf
-  # when --run_hisat2 true:
-  merged_hisat2_stringtie_stranded_default.gtf
-  merged_hisat2_stringtie_stranded_alt.gtf
-  merged_hisat2_stringtie_unstranded_default.gtf
-  merged_hisat2_stringtie_unstranded_alt.gtf
+  evidence/
+    assembly_masked.EDTA.fasta
+    liftoff_previous_annotations.gff3
+    unmapped_features.txt
+    versions.yml
+    gene_prediction/
+      augustus.hints.gff3
+      genemark.gtf
+      genemark_supported.gtf
+      braker.gff3
+      versions.yml
+    transcript_assemblies/
+      merged_star_stringtie_stranded_default.gtf
+      merged_star_stringtie_stranded_alt.gtf
+      merged_star_stringtie_unstranded_default.gtf
+      merged_star_stringtie_unstranded_alt.gtf
+      merged_star_psiclass_stranded.gtf
+      merged_star_psiclass_unstranded.gtf
+      merged_minimap2_stringtie_long_reads_default.gtf
+      merged_minimap2_stringtie_long_reads_alt.gtf
+      # when --run_hisat2 true:
+      merged_hisat2_stringtie_stranded_default.gtf
+      merged_hisat2_stringtie_stranded_alt.gtf
+      merged_hisat2_stringtie_unstranded_default.gtf
+      merged_hisat2_stringtie_unstranded_alt.gtf
+      versions_star_psiclass.yml
+      versions_star_stringtie.yml
+      versions_hisat2_stringtie.yml
+      versions_minimap2_stringtie_long_reads.yml
   egapx/
   additional_annotations/
   final_annotations/
@@ -119,16 +128,16 @@ ${output_dir}/
   validation/
   provenance/
   intermediate_files/
-  tmp/
   nextflow_reports/
   versions.yml
 ```
 
-Top-level evidence tracks are intentionally kept near `aegis_outputs/` because
-they are direct Mikado consolidation inputs (see
-[Mikado Consolidated Annotation](#mikado-consolidated-annotation)) or
-easy-to-inspect evidence products. Some unstranded or long-read merged GTF
-files can be empty when the corresponding sample class is absent.
+`evidence/` groups every direct Mikado consolidation input (see
+[Mikado Consolidated Annotation](#mikado-consolidated-annotation)) away from
+the primary deliverables, so `aegis_outputs/`, `quality_report/` and
+`validation/` are what to check first on a completed run. Some unstranded or
+long-read merged GTF files can be empty when the corresponding sample class is
+absent.
 
 ## Primary Annotation
 
@@ -153,25 +162,26 @@ or freshly assigned (`new_vitvi_id`).
 ## Core Evidence Outputs
 
 ```text
-${output_dir}/
+${output_dir}/evidence/
   assembly_masked.EDTA.fasta
   liftoff_previous_annotations.gff3
   unmapped_features.txt
-  augustus.hints.gff3
-  genemark.gtf
-  genemark_supported.gtf
-  braker.gff3
+  gene_prediction/
+    augustus.hints.gff3
+    genemark.gtf
+    genemark_supported.gtf
+    braker.gff3
 ```
 
 `assembly_masked.EDTA.fasta` is the EDTA-masked assembly. Liftoff outputs are
 the transferred previous annotation and the list of unmapped features. BRAKER3
-publishes AUGUSTUS and GeneMark evidence at the top level for compatibility and
-for direct inspection.
+publishes AUGUSTUS and GeneMark evidence under `evidence/gene_prediction/` for
+direct inspection.
 
-Merged transcript evidence is published at the top level:
+Merged transcript evidence is published under `evidence/transcript_assemblies/`:
 
 ```text
-${output_dir}/
+${output_dir}/evidence/transcript_assemblies/
   merged_star_stringtie_*.gtf
   merged_star_psiclass_*.gtf
   merged_minimap2_stringtie_long_reads_*.gtf
@@ -181,7 +191,10 @@ ${output_dir}/
 
 These files summarize short-read STAR/PsiCLASS/StringTie evidence and long-read
 Minimap2/StringTie evidence. HISAT2/StringTie merged tracks are published only
-when the optional branch is enabled with `--run_hisat2 true`.
+when the optional branch is enabled with `--run_hisat2 true`. This directory
+is the single copy of these merges; earlier TITAN versions also published a
+byte-identical, pre-rename copy under `${output_dir}/tmp/`, which has been
+removed.
 
 ## EGAPx Outputs
 
@@ -355,16 +368,17 @@ ${output_dir}/intermediate_files/
     hisat2_databases/      # when --run_hisat2 true
   liftoff/
   salmon_strand/
-${output_dir}/tmp/
 ${output_dir}/nextflow_reports/
   <run_name>.dag.html
   progress.log
 ```
 
-`intermediate_files/` and `tmp/` are controlled by `--publish_intermediates`.
-They are useful for debugging, manual inspection and downstream reuse, but the
-main deliverables are `aegis_outputs/`, `quality_report/`, `validation/` and
-`provenance/`.
+`intermediate_files/` is controlled by `--publish_intermediates`. It is useful
+for debugging, manual inspection and downstream reuse, but the main
+deliverables are `aegis_outputs/`, `quality_report/`, `validation/` and
+`provenance/` — `evidence/` (see
+[Core Evidence Outputs](#core-evidence-outputs)) sits one step below those as
+supporting material worth keeping but not required reading.
 
 The Nextflow `work/` directory and `.nextflow.log` are runtime state, not
 published biological outputs. Keep them for resume/debugging, but do not treat

@@ -5,13 +5,15 @@ process Stringtie_merging_long_reads {
   tag "Minimap2/StringTie merge: long-read default and alt GTFs"
   container params.container_stringtie
   stageInMode 'copy'
-  publishDir "${params.output_dir}/tmp", mode: 'copy', enabled: params.publish_intermediates
-  publishDir "${params.output_dir}", mode: 'copy', saveAs: { filename ->
+  publishDir "${params.output_dir}/evidence/transcript_assemblies", mode: 'copy', saveAs: { filename ->
     if (filename == 'merged_transcriptomes.minimap2.long_reads.default_args.gtf') {
       return 'merged_minimap2_stringtie_long_reads_default.gtf'
     }
     if (filename == 'merged_transcriptomes.minimap2.long_reads.alt_args.gtf') {
       return 'merged_minimap2_stringtie_long_reads_alt.gtf'
+    }
+    if (filename == 'versions.yml') {
+      return 'versions_minimap2_stringtie_long_reads.yml'
     }
     return null
   }

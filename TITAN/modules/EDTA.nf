@@ -5,7 +5,7 @@ process EDTA {
   container params.container_edta
   publishDir "${params.output_dir}", mode: 'copy', saveAs: { filename ->
     if (filename == 'edta.MAKER.masked') {
-      return 'assembly_masked.EDTA.fasta'
+      return 'evidence/assembly_masked.EDTA.fasta'
     }
     if (params.publish_intermediates && filename in ['edta.TElib.fa', 'edta.TEanno.gff3', 'versions.yml']) {
       return "intermediate_files/evidence_data/EDTA/${filename}"

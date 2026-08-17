@@ -438,10 +438,11 @@ Main output layout after a complete run:
 ${output_dir}/
   aegis_outputs/                 # primary final annotation, proteins and
                                   # liftoff_gene_id_correspondence.tsv
-  assembly_masked.EDTA.fasta     # EDTA-masked target assembly
-  liftoff_previous_annotations.gff3
-  merged_*_stringtie*.gtf        # merged transcript evidence tracks
-  merged_star_psiclass_*.gtf
+  evidence/                      # raw gene-prediction/transcript-assembly
+                                  # tracks that feed Mikado/AEGIS (EDTA-masked
+                                  # assembly, Liftoff transfer, BRAKER3/
+                                  # AUGUSTUS/GeneMark, merged STAR/PsiCLASS/
+                                  # StringTie/minimap2 GTFs)
   egapx/                         # EGAPx annotation products
   additional_annotations/        # tRNA, Rfam, FLAIR, Helixer, lncRNA, SQANTI3
   final_annotations/mikado/      # Mikado consolidated annotation (mandatory
@@ -455,6 +456,10 @@ ${output_dir}/
   intermediate_files/            # optional published intermediates
   nextflow_reports/              # launcher DAG/progress/report files
 ```
+
+`aegis_outputs/`, `quality_report/` and `validation/` are the outputs worth
+looking at first; `evidence/` and `intermediate_files/` are supporting/debug
+material, not required reading.
 
 See [docs/user/inputs_outputs.md](docs/user/inputs_outputs.md) for the full
 tree, including optional branches and files controlled by
