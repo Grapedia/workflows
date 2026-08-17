@@ -2,7 +2,7 @@ process mikado_prepare {
   label 'process_transcriptome'
   tag "Mikado configure and prepare"
   container params.container_mikado
-  publishDir "${params.output_dir}/final_annotations/mikado/intermediate", mode: 'copy', enabled: params.publish_intermediates, saveAs: { filename ->
+  publishDir "${params.output_dir}/evidence/mikado/intermediate", mode: 'copy', enabled: params.publish_intermediates, saveAs: { filename ->
     if (filename in ['mikado_configuration.yaml', 'mikado_prepared.fasta', 'mikado_prepared.gtf', 'transcript_inputs.tsv', 'versions.yml']) {
       return filename
     }
@@ -166,7 +166,7 @@ process mikado_pick {
   label 'process_transcriptome'
   tag "Mikado final annotation pick"
   container params.container_mikado
-  publishDir "${params.output_dir}/final_annotations/mikado", mode: 'copy', saveAs: { filename ->
+  publishDir "${params.output_dir}/evidence/mikado", mode: 'copy', saveAs: { filename ->
     if (filename in ['final_mikado_annotation.gff3', 'mikado.loci.gff3', 'mikado.subloci.gff3', 'versions.yml']) {
       return filename
     }

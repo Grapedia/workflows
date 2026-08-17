@@ -88,7 +88,7 @@ process busco_high_confidence_monoexonic {
 
   tag "Executing BUSCO on the high-confidence (monoexonic-filtered) protein set"
   container params.container_busco
-  publishDir "${params.output_dir}/quality_report/busco_high_confidence_monoexonic", mode: 'copy', saveAs: { filename ->
+  publishDir "${params.output_dir}/aegis_outputs_high_confidence_monoexonic/busco", mode: 'copy', saveAs: { filename ->
     if (filename in [
       'busco_short_summary.txt',
       'busco_full_table.tsv',

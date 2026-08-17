@@ -163,21 +163,20 @@ preview run.
 Main result groups are published under `--output_dir`:
 
 ```text
-aegis_outputs/
-Diamond2GO_outputs/
-EggNOG_outputs/
-InterProScan_outputs/
+aegis_outputs/                          # primary final annotation
+aegis_outputs_high_confidence_monoexonic/  # 2nd candidate: monoexon-filtered
+functional_annotation/                  # diamond2go/, eggnog/, interproscan/
 additional_annotations/
-final_annotations/
 quality_report/
 validation/
 provenance/
-egapx/
+evidence/                               # EDTA, Liftoff, BRAKER3, merged GTFs,
+                                         # egapx/, mikado/
 intermediate_files/
 nextflow_reports/
 ```
 
-EGAPx outputs include:
+EGAPx outputs (under `evidence/egapx/`) include:
 
 ```text
 egapx.complete.genomic.gff3

@@ -5,11 +5,12 @@
 - [Input Tree](#input-tree)
 - [Output Tree](#output-tree)
 - [Primary Annotation](#primary-annotation)
-- [Core Evidence Outputs](#core-evidence-outputs)
-- [EGAPx Outputs](#egapx-outputs)
-- [Additional Annotations](#additional-annotations)
-- [Mikado Consolidated Annotation](#mikado-consolidated-annotation)
+- [High-Confidence Monoexonic-Filtered Annotation](#high-confidence-monoexonic-filtered-annotation)
 - [Functional Annotation](#functional-annotation)
+- [Evidence: Core Tracks](#evidence-core-tracks)
+- [Additional Annotations](#additional-annotations)
+- [Evidence: EGAPx](#evidence-egapx)
+- [Evidence: Mikado Consolidated Annotation](#evidence-mikado-consolidated-annotation)
 - [Quality, Validation And Provenance](#quality-validation-and-provenance)
 - [Intermediate And Runtime Outputs](#intermediate-and-runtime-outputs)
 
@@ -89,6 +90,21 @@ ${output_dir}/
     final_annotation_proteins_main.fasta
     liftoff_gene_id_correspondence.tsv
     versions.yml
+  aegis_outputs_high_confidence_monoexonic/
+    final_annotation.high_confidence.gff3
+    final_annotation_proteins_main.high_confidence.fasta
+    monoexonic_gene_confidence.tsv
+    monoexonic_gene_confidence_summary.json
+    versions.yml
+    agat_stats/
+    busco/
+  functional_annotation/
+    diamond2go/
+    eggnog/
+    interproscan/
+  additional_annotations/
+  quality_report/
+  validation/
   evidence/
     assembly_masked.EDTA.fasta
     liftoff_previous_annotations.gff3
@@ -118,26 +134,25 @@ ${output_dir}/
       versions_star_stringtie.yml
       versions_hisat2_stringtie.yml
       versions_minimap2_stringtie_long_reads.yml
-  egapx/
-  additional_annotations/
-  final_annotations/
-  Diamond2GO_outputs/
-  EggNOG_outputs/
-  InterProScan_outputs/
-  quality_report/
-  validation/
+    egapx/
+    mikado/
   provenance/
   intermediate_files/
   nextflow_reports/
   versions.yml
 ```
 
-`evidence/` groups every direct Mikado consolidation input (see
-[Mikado Consolidated Annotation](#mikado-consolidated-annotation)) away from
-the primary deliverables, so `aegis_outputs/`, `quality_report/` and
-`validation/` are what to check first on a completed run. Some unstranded or
-long-read merged GTF files can be empty when the corresponding sample class is
-absent.
+`aegis_outputs/` and `aegis_outputs_high_confidence_monoexonic/` are the two
+final annotation candidates to compare (see
+[High-Confidence Monoexonic-Filtered Annotation](#high-confidence-monoexonic-filtered-annotation)).
+`evidence/` groups everything that feeds Mikado/AEGIS but is not itself a
+final annotation — including the EGAPx run and the pre-AEGIS Mikado
+consolidation (see [Evidence: EGAPx](#evidence-egapx) and
+[Evidence: Mikado Consolidated Annotation](#evidence-mikado-consolidated-annotation))
+— away from the primary deliverables, so `aegis_outputs*/`, `quality_report/`
+and `validation/` are what to check first on a completed run. Some unstranded
+or long-read merged GTF files can be empty when the corresponding sample
+class is absent.
 
 ## Primary Annotation
 
@@ -159,7 +174,70 @@ translated proteins and the main representative protein set.
 carried over (`carried_over_from_liftoff`, with the match's overlap score)
 or freshly assigned (`new_vitvi_id`).
 
-## Core Evidence Outputs
+## High-Confidence Monoexonic-Filtered Annotation
+
+```text
+${output_dir}/aegis_outputs_high_confidence_monoexonic/
+  final_annotation.high_confidence.gff3
+  final_annotation_proteins_main.high_confidence.fasta
+  monoexonic_gene_confidence.tsv
+  monoexonic_gene_confidence_summary.json
+  versions.yml
+  agat_stats/
+    agat_stats.txt
+    versions.yml
+  busco/
+    busco_short_summary.txt
+    busco_full_table.tsv
+    busco_missing_busco_list.tsv
+    versions.yml
+```
+
+This is the second final-annotation candidate: `aegis_outputs/final_annotation.gff3`
+with every unsupported single-exon gene removed. `monoexonic_gene_confidence.tsv`
+classifies every single-exon gene in the primary annotation by supporting
+evidence (expression, functional domains, Liftoff conservation, BUSCO
+orthology, TE overlap) without touching the annotation itself; see
+[tools reference](../reference/tools.md#single-exon-gene-confidence).
+`monoexonic_gene_confidence_summary.json` is the run-level summary.
+
+`agat_stats/` and `busco/` here run on this filtered GFF3/protein set, so they
+can be compared directly against `quality_report/agat_stats/` and
+`quality_report/busco/` (the primary candidate's) to decide which annotation
+to keep or publish.
+
+## Functional Annotation
+
+```text
+${output_dir}/functional_annotation/diamond2go/
+  final_annotation_proteins_all.diamond2go.tsv
+  final_annotation_proteins_main.diamond2go.tsv
+  versions.yml
+${output_dir}/functional_annotation/eggnog/
+  final_annotation_proteins_all.emapper.annotations
+  final_annotation_proteins_main.emapper.annotations
+  final_annotation_proteins_all.emapper.seed_orthologs
+  final_annotation_proteins_main.emapper.seed_orthologs
+  final_annotation_proteins_all.emapper.orthologs
+  final_annotation_proteins_main.emapper.orthologs
+  final_annotation_proteins_all.emapper.annotations.xlsx
+  final_annotation_proteins_main.emapper.annotations.xlsx
+  versions.yml
+${output_dir}/functional_annotation/interproscan/
+  final_annotation_proteins_all.tsv
+  final_annotation_proteins_main.tsv
+  final_annotation_proteins_all.gff3
+  final_annotation_proteins_main.gff3
+  final_annotation_proteins_all.json
+  final_annotation_proteins_main.json
+  versions.yml
+```
+
+All three annotate `aegis_outputs/`'s proteins (the primary candidate, not the
+high-confidence-filtered one). Diamond2GO is part of the default graph.
+eggNOG-mapper and InterProScan are optional and only appear when enabled.
+
+## Evidence: Core Tracks
 
 ```text
 ${output_dir}/evidence/
@@ -195,23 +273,6 @@ when the optional branch is enabled with `--run_hisat2 true`. This directory
 is the single copy of these merges; earlier TITAN versions also published a
 byte-identical, pre-rename copy under `${output_dir}/tmp/`, which has been
 removed.
-
-## EGAPx Outputs
-
-```text
-${output_dir}/egapx/
-  egapx.complete.genomic.gff3
-  egapx.complete.genomic.gtf
-  egapx.complete.proteins.faa
-  egapx.complete.cds.fna
-  egapx.complete.transcripts.fna
-  egapx.annotated_genome.asn
-  egapx_out/
-  versions.yml
-```
-
-The `egapx.complete.*` files are copied from the nested EGAPx run into stable
-TITAN filenames. `egapx_out/` is the nested EGAPx output directory.
 
 ## Additional Annotations
 
@@ -258,10 +319,29 @@ Rfam and tRNAscan-SE feed ncRNA summaries and lncRNA filtering. FLAIR and
 SQANTI3 require long-read evidence and their own optional settings. Helixer and
 lncRNA outputs are only present when the corresponding branches are enabled.
 
-## Mikado Consolidated Annotation
+## Evidence: EGAPx
 
 ```text
-${output_dir}/final_annotations/mikado/
+${output_dir}/evidence/egapx/
+  egapx.complete.genomic.gff3
+  egapx.complete.genomic.gtf
+  egapx.complete.proteins.faa
+  egapx.complete.cds.fna
+  egapx.complete.transcripts.fna
+  egapx.annotated_genome.asn
+  egapx_out/
+  versions.yml
+```
+
+The `egapx.complete.*` files are copied from the nested EGAPx run into stable
+TITAN filenames. `egapx_out/` is the nested EGAPx output directory. This is a
+standalone NCBI EGAPx annotation run, kept as evidence/comparison material
+alongside the Mikado/AEGIS evidence tracks, not a TITAN final annotation.
+
+## Evidence: Mikado Consolidated Annotation
+
+```text
+${output_dir}/evidence/mikado/
   final_mikado_annotation.gff3
   mikado.loci.gff3
   mikado.subloci.gff3
@@ -275,37 +355,8 @@ scored gene set; `final_mikado_annotation.gff3` is what AEGIS then renames
 (Vitvi IDs, with liftoff ID carryover) and tidies into
 `aegis_outputs/final_annotation.gff3`. This branch defaults to enabled
 (`--run_mikado true`) and is effectively required — disabling it leaves
-`aegis_merge` nothing to rename and the run fails there.
-
-## Functional Annotation
-
-```text
-${output_dir}/Diamond2GO_outputs/
-  final_annotation_proteins_all.diamond2go.tsv
-  final_annotation_proteins_main.diamond2go.tsv
-  versions.yml
-${output_dir}/EggNOG_outputs/
-  final_annotation_proteins_all.emapper.annotations
-  final_annotation_proteins_main.emapper.annotations
-  final_annotation_proteins_all.emapper.seed_orthologs
-  final_annotation_proteins_main.emapper.seed_orthologs
-  final_annotation_proteins_all.emapper.orthologs
-  final_annotation_proteins_main.emapper.orthologs
-  final_annotation_proteins_all.emapper.annotations.xlsx
-  final_annotation_proteins_main.emapper.annotations.xlsx
-  versions.yml
-${output_dir}/InterProScan_outputs/
-  final_annotation_proteins_all.tsv
-  final_annotation_proteins_main.tsv
-  final_annotation_proteins_all.gff3
-  final_annotation_proteins_main.gff3
-  final_annotation_proteins_all.json
-  final_annotation_proteins_main.json
-  versions.yml
-```
-
-Diamond2GO is part of the default graph. eggNOG-mapper and InterProScan are
-optional and only appear when enabled.
+`aegis_merge` nothing to rename and the run fails there. It is evidence for
+`aegis_outputs/`, not a final annotation in its own right.
 
 ## Quality, Validation And Provenance
 
@@ -314,11 +365,8 @@ ${output_dir}/quality_report/
   titan_multiqc_report.html
   titan_multiqc_report_data/
   agat_stats/
-  agat_stats_high_confidence_monoexonic/
   busco/
-  busco_high_confidence_monoexonic/
   expression_validation/
-  monoexonic_gene_confidence/
   ncrna_annotations/
   omark/
   sqanti3/
@@ -333,18 +381,13 @@ ${output_dir}/provenance/
   versions.yml
 ```
 
-`quality_report/titan_multiqc_report.html` is the main QC entry point. The
-validation directory reports structural checks on the final annotation.
-Provenance manifests record inputs, selected outputs, versions and checksums.
-
-`quality_report/monoexonic_gene_confidence/` classifies every single-exon
-gene in `final_annotation.gff3` by supporting evidence (expression, functional
-domains, liftoff conservation, BUSCO orthology, TE overlap) without touching
-the annotation itself; see [tools reference](../reference/tools.md#single-exon-gene-confidence).
-It also emits a "high confidence" GFF3/proteins variant with unsupported
-single-exon genes removed, whose completeness/structure can be compared
-against the primary annotation's via `agat_stats_high_confidence_monoexonic/`
-and `busco_high_confidence_monoexonic/`.
+`quality_report/titan_multiqc_report.html` is the main QC entry point;
+`quality_report/agat_stats/` and `quality_report/busco/` assess the primary
+`aegis_outputs/` candidate specifically. See
+[High-Confidence Monoexonic-Filtered Annotation](#high-confidence-monoexonic-filtered-annotation)
+for the equivalent AGAT/BUSCO results on the second candidate. The validation
+directory reports structural checks on the final annotation. Provenance
+manifests record inputs, selected outputs, versions and checksums.
 
 ## Intermediate And Runtime Outputs
 
@@ -375,9 +418,9 @@ ${output_dir}/nextflow_reports/
 
 `intermediate_files/` is controlled by `--publish_intermediates`. It is useful
 for debugging, manual inspection and downstream reuse, but the main
-deliverables are `aegis_outputs/`, `quality_report/`, `validation/` and
-`provenance/` — `evidence/` (see
-[Core Evidence Outputs](#core-evidence-outputs)) sits one step below those as
+deliverables are `aegis_outputs/`, `aegis_outputs_high_confidence_monoexonic/`,
+`quality_report/`, `validation/` and `provenance/` — `evidence/` (see
+[Evidence: Core Tracks](#evidence-core-tracks)) sits one step below those as
 supporting material worth keeping but not required reading.
 
 The Nextflow `work/` directory and `.nextflow.log` are runtime state, not

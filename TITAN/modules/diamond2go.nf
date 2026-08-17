@@ -3,7 +3,7 @@ process diamond2go {
 
   tag "Executing diamond2go annotation on $proteins_file_all and $proteins_file_main"
   container params.container_diamond2go
-  publishDir "${params.output_dir}/Diamond2GO_outputs", mode: 'copy', saveAs: { filename ->
+  publishDir "${params.output_dir}/functional_annotation/diamond2go", mode: 'copy', saveAs: { filename ->
     if (filename in ['final_annotation_proteins_all.diamond2go.tsv', 'final_annotation_proteins_main.diamond2go.tsv', 'versions.yml']) {
       return filename
     }

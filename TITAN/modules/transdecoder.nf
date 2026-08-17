@@ -46,7 +46,7 @@ process transdecoder_predict {
   label 'process_medium'
   tag "TransDecoder Predict on Mikado transcripts"
   container params.container_transdecoder
-  publishDir "${params.output_dir}/final_annotations/mikado/transdecoder", mode: 'copy', saveAs: { filename ->
+  publishDir "${params.output_dir}/evidence/mikado/transdecoder", mode: 'copy', saveAs: { filename ->
     if (filename in ['mikado_prepared.fasta.transdecoder.bed', 'mikado_prepared.fasta.transdecoder.pep', 'mikado_prepared.fasta.transdecoder.gff3', 'versions.yml']) {
       return filename
     }

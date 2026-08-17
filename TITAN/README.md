@@ -438,28 +438,32 @@ Main output layout after a complete run:
 ${output_dir}/
   aegis_outputs/                 # primary final annotation, proteins and
                                   # liftoff_gene_id_correspondence.tsv
-  evidence/                      # raw gene-prediction/transcript-assembly
-                                  # tracks that feed Mikado/AEGIS (EDTA-masked
+  aegis_outputs_high_confidence_monoexonic/
+                                  # 2nd candidate: same annotation with
+                                  # unsupported single-exon genes removed,
+                                  # plus its own agat_stats/ and busco/ to
+                                  # compare against the primary candidate
+  functional_annotation/         # diamond2go/, eggnog/, interproscan/ —
+                                  # function calls on the primary candidate
+  additional_annotations/        # tRNA, Rfam, FLAIR, Helixer, lncRNA, SQANTI3
+  quality_report/                # MultiQC and per-tool QC (primary candidate)
+  validation/                    # final annotation validation reports
+  evidence/                      # everything that feeds Mikado/AEGIS but is
+                                  # not itself a final annotation: EDTA-masked
                                   # assembly, Liftoff transfer, BRAKER3/
                                   # AUGUSTUS/GeneMark, merged STAR/PsiCLASS/
-                                  # StringTie/minimap2 GTFs)
-  egapx/                         # EGAPx annotation products
-  additional_annotations/        # tRNA, Rfam, FLAIR, Helixer, lncRNA, SQANTI3
-  final_annotations/mikado/      # Mikado consolidated annotation (mandatory
-                                  # input to AEGIS rename/tidy)
-  Diamond2GO_outputs/            # default functional annotation
-  EggNOG_outputs/                # optional eggNOG-mapper output
-  InterProScan_outputs/          # optional InterProScan output
-  quality_report/                # MultiQC and per-tool QC
-  validation/                    # final annotation validation reports
+                                  # StringTie/minimap2 GTFs, the pre-AEGIS
+                                  # Mikado-consolidated gene set (mikado/),
+                                  # and the standalone EGAPx run (egapx/)
   provenance/                    # manifests, checksums and software versions
   intermediate_files/            # optional published intermediates
   nextflow_reports/              # launcher DAG/progress/report files
 ```
 
-`aegis_outputs/`, `quality_report/` and `validation/` are the outputs worth
-looking at first; `evidence/` and `intermediate_files/` are supporting/debug
-material, not required reading.
+`aegis_outputs/` and `aegis_outputs_high_confidence_monoexonic/` are the two
+final annotation candidates to compare; `quality_report/`, `validation/` and
+`functional_annotation/` support that comparison. `evidence/` and
+`intermediate_files/` are supporting/debug material, not required reading.
 
 See [docs/user/inputs_outputs.md](docs/user/inputs_outputs.md) for the full
 tree, including optional branches and files controlled by
@@ -513,6 +517,12 @@ The primary files to inspect first are
 `${output_dir}/aegis_outputs/liftoff_gene_id_correspondence.tsv` lists, per
 gene, whether its ID was carried over from the previous annotation (via
 Liftoff) or freshly assigned.
+
+`${output_dir}/aegis_outputs_high_confidence_monoexonic/` is a second
+annotation candidate: the same gene set with unsupported single-exon genes
+removed, plus its own `agat_stats/` and `busco/` to compare gene-set
+structure and completeness against the primary candidate before deciding
+which one to keep.
 
 Intermediate/debug outputs are controlled by `--publish_intermediates`
 (`true` by default for backward compatibility). The complete output map is in

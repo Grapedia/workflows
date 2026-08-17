@@ -173,9 +173,9 @@ overlap-threshold merge.
 The graph runs Mikado configure/prepare, TransDecoder LongOrfs/Predict when
 `--run_transdecoder true` (also effectively required — without ORFs, Mikado's
 CDS-based scoring has nothing to score and rejects most transcripts), then
-Mikado serialise and pick. Outputs are published under
-`${output_dir}/final_annotations/mikado`; `final_mikado_annotation.gff3` is
-the file AEGIS renames into the final annotation.
+Mikado serialise and pick. Outputs are published as evidence under
+`${output_dir}/evidence/mikado`; `final_mikado_annotation.gff3` is the file
+AEGIS renames into the final annotation.
 
 ## AEGIS
 
@@ -244,7 +244,7 @@ Outputs are published under `${output_dir}/additional_annotations/sqanti3` and
 
 Diamond2GO runs on the final AEGIS protein FASTAs and is part of the default
 functional annotation path. Its outputs are published under
-`${output_dir}/Diamond2GO_outputs`.
+`${output_dir}/functional_annotation/diamond2go`.
 
 ## eggNOG-mapper
 
@@ -312,7 +312,7 @@ pipeline:
 * overlap with an EDTA-annotated transposable element (negative signal only).
 
 Each single-exon gene is classified into one of three tiers and reported in
-`${output_dir}/quality_report/monoexonic_gene_confidence/`:
+`${output_dir}/aegis_outputs_high_confidence_monoexonic/`:
 
 * `supported` - at least one positive evidence signal; kept as-is;
 * `unsupported_te_overlap` - no positive evidence, overlaps a TE;
@@ -325,8 +325,9 @@ its child features) removed:
 `final_annotation_proteins_main.high_confidence.fasta`. BUSCO and AGAT stats
 are run on this filtered variant too
 (`busco_high_confidence_monoexonic`, `agat_stats_high_confidence_monoexonic`,
-published under `${output_dir}/quality_report/busco_high_confidence_monoexonic`
-and `.../agat_stats_high_confidence_monoexonic`), so completeness and gene-set
-structure can be compared side by side against the unfiltered annotation's
-own `busco`/`agat_stats` results before deciding whether the filtered variant
-should replace the primary annotation.
+published under `${output_dir}/aegis_outputs_high_confidence_monoexonic/busco`
+and `.../aegis_outputs_high_confidence_monoexonic/agat_stats`), so
+completeness and gene-set structure can be compared side by side against the
+unfiltered annotation's own `quality_report/busco`/`quality_report/agat_stats`
+results before deciding whether the filtered variant should replace the
+primary annotation.

@@ -3,7 +3,7 @@ process interproscan {
 
   tag "Executing InterProScan on $proteins_file_all and $proteins_file_main"
   container params.container_interproscan
-  publishDir "${params.output_dir}/InterProScan_outputs", mode: 'copy', saveAs: { filename ->
+  publishDir "${params.output_dir}/functional_annotation/interproscan", mode: 'copy', saveAs: { filename ->
     if (filename in [
       'final_annotation_proteins_all.tsv',
       'final_annotation_proteins_main.tsv',

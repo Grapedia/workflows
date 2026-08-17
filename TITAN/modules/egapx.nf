@@ -4,7 +4,7 @@ process egapx {
   tag "Executing NCBI egapx gene annotation pipeline ..."
   // Intentionally no process container: this wrapper launches the official EGAPx
   // nested Nextflow runner, which must access the host Docker/Apptainer runtime.
-  publishDir "${params.output_dir}/egapx", mode: 'copy'
+  publishDir "${params.output_dir}/evidence/egapx", mode: 'copy'
   input:
     path egapx_paramfile
 

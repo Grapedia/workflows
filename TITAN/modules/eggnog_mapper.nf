@@ -3,7 +3,7 @@ process eggnog_mapper {
 
   tag "Executing eggnog-mapper on $proteins_file_all and $proteins_file_main"
   container params.container_eggnog_mapper
-  publishDir "${params.output_dir}/EggNOG_outputs", mode: 'copy', saveAs: { filename ->
+  publishDir "${params.output_dir}/functional_annotation/eggnog", mode: 'copy', saveAs: { filename ->
     if (filename in [
       'final_annotation_proteins_all.emapper.annotations',
       'final_annotation_proteins_main.emapper.annotations',
