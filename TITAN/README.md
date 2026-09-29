@@ -19,6 +19,7 @@ Input formats are in [docs/user/inputs.md](docs/user/inputs.md), input/output
 tree layouts are in [docs/user/inputs_outputs.md](docs/user/inputs_outputs.md),
 reference data preparation is in [docs/user/reference-data.md](docs/user/reference-data.md),
 and production operations are in [docs/user/production-run.md](docs/user/production-run.md).
+How to study and set aside genes with no support is in [docs/user/unsupported_genes.md](docs/user/unsupported_genes.md), and the annotation quality report (French, HTML) is in [docs/reports/annotation_quality_and_gene_count.html](docs/reports/annotation_quality_and_gene_count.html).
 Tool details are in [docs/reference/tools.md](docs/reference/tools.md), and
 the command-line reference is in
 [docs/reference/tool-commands.md](docs/reference/tool-commands.md).
