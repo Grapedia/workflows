@@ -115,6 +115,14 @@ hard-masked target genome consumed by Mikado, AEGIS and downstream
 validation. TITAN publishes the public masked genome as
 `assembly_masked.EDTA.fasta`.
 
+TITAN also derives `assembly_softmasked.EDTA.fasta` from it
+(`scripts/soft_mask_genome.py`: the original assembly with the bases that EDTA
+turned into `N` written in lower case). BRAKER3 is run on that file with
+`--softmasking`, and so is Mikado; disable with `--mask_genome_for_prediction false`. EDTA can be
+skipped by pointing `--edta_precomputed_dir` at a directory that holds
+`assembly_masked.EDTA.fasta`, `edta.TEanno.gff3` and `edta.TElib.fa` from an
+earlier run. Plan and rationale: [EDTA masking plan](../user/edta_masking_plan.md).
+
 ## BRAKER3
 
 BRAKER3 uses the target genome, protein FASTA evidence and RNA-seq BAMs to
@@ -126,7 +134,7 @@ uses the long-read-aware BRAKER3 branch. Published outputs include
 ## Helixer
 
 Helixer is optional (`--run_helixer true`) and predicts genes directly from the
-EDTA soft-masked genome. Its GFF3 is published under
+EDTA hard-masked genome (repeats = `N`). Its GFF3 is published under
 `${output_dir}/03_additional_annotations/helixer` and passed to Mikado as
 optional evidence (Mikado is the only step that consumes raw evidence
 sources; AEGIS only sees Mikado's consolidated output — see

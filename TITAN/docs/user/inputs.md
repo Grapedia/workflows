@@ -200,8 +200,9 @@ Important EGAPx notes:
   the EGAPx runner.
 * `taxid` must be the NCBI taxonomy identifier for the target organism.
 * Local RNA-seq files should be FASTA or FASTQ, not BAM.
-* EGAPx performs its own masking; it does not require the EDTA-masked genome as
-  input.
+* EGAPx performs its own masking (WindowMasker); it does not require the
+  EDTA-masked genome as input, and in EGAPx 0.5.2 an external soft-mask is not
+  wired into Gnomon. TITAN therefore leaves the `genome` of your YAML untouched.
 * TITAN launches EGAPx as a nested Nextflow workflow from the host environment,
   so the host must provide `python3`, `curl`, `tar` and the selected nested
   executor.

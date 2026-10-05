@@ -349,6 +349,7 @@ lncRNA outputs are only present when the corresponding branches are enabled.
 ```text
 ${output_dir}/04_evidence/
   assembly_masked.EDTA.fasta
+  assembly_softmasked.EDTA.fasta
   liftoff_previous_annotations.gff3
   unmapped_features.txt
   gene_prediction/
@@ -358,7 +359,8 @@ ${output_dir}/04_evidence/
     braker.gff3
 ```
 
-`assembly_masked.EDTA.fasta` is the EDTA-masked assembly. Liftoff outputs are
+`assembly_masked.EDTA.fasta` is the EDTA hard-masked assembly (repeats = `N`) and
+`assembly_softmasked.EDTA.fasta` the same mask written in lower case, which is what BRAKER3 receives. Liftoff outputs are
 the transferred previous annotation and the list of unmapped features. BRAKER3
 publishes AUGUSTUS and GeneMark evidence under `04_evidence/gene_prediction/`
 for direct inspection.
