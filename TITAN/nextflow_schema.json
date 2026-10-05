@@ -61,6 +61,14 @@
       "type": "boolean",
       "description": "Publish intermediate/debug outputs under output_dir/intermediate_files and output_dir/tmp."
     },
+    "edta_precomputed_dir": {
+      "$ref": "#/definitions/path_or_false",
+      "description": "Directory containing assembly_masked.EDTA.fasta, edta.TEanno.gff3 and edta.TElib.fa from an earlier run. When set, EDTA is not run."
+    },
+    "mask_genome_for_prediction": {
+      "type": "boolean",
+      "description": "Run BRAKER3 on the assembly soft-masked with the EDTA repeat annotation (repeats in lower case) instead of the unmasked assembly."
+    },
     "edta_cpus": {
       "type": "integer",
       "minimum": 1,
@@ -114,7 +122,7 @@
     },
     "run_helixer": {
       "type": "boolean",
-      "description": "Run Helixer ab initio gene prediction on the EDTA soft-masked genome. Its GFF3 is also passed to Mikado as optional consolidation evidence."
+      "description": "Run Helixer ab initio gene prediction on the EDTA hard-masked genome (repeats = N). Its GFF3 is also passed to Mikado as optional consolidation evidence."
     },
     "helixer_model_dir": {
       "$ref": "#/definitions/path_or_false",

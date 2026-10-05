@@ -97,6 +97,11 @@ process mikado_prepare {
 
     mikado prepare --json-conf mikado_configuration.yaml
 
+    # A soft-masked reference leaves lower-case repeats in the transcript FASTA; keep it upper case
+    # for TransDecoder and Mikado serialise.
+    awk '/^>/ {print; next} {print toupper(\$0)}' mikado_prepared.fasta > mikado_prepared.upper.fasta
+    mv mikado_prepared.upper.fasta mikado_prepared.fasta
+
     test -s mikado_prepared.fasta
     test -s mikado_prepared.gtf
     mikado --version 2>&1 | sed 's/^/  mikado: "/; s/\$/"/' | {

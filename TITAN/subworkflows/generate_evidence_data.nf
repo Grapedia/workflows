@@ -26,6 +26,8 @@ include { Stringtie_merging_short_reads_STAR } from "../modules/Stringtie_mergin
 include { Stringtie_merging_short_reads_hisat2 } from "../modules/Stringtie_merging_short_reads_hisat2"
 include { Stringtie_merging_long_reads } from "../modules/Stringtie_merging_long_reads"
 include { EDTA } from "../modules/EDTA"
+include { edta_precomputed } from "../modules/edta_precomputed"
+include { soft_mask_genome } from "../modules/soft_mask_genome"
 include { braker3_prediction } from "../modules/braker3_prediction"
 include { braker3_prediction_with_long_reads } from "../modules/braker3_prediction_with_long_reads"
 include { normalize_protein_fastas } from "../modules/normalize_protein_fastas"
@@ -58,6 +60,7 @@ workflow generate_evidence_data {
         previous_annotations_file
         egapx_paramfile
         edta_script
+        soft_mask_script
         stringtie_script
         stringtie_alt_script
         stringtie_transcriptome_script
@@ -87,6 +90,40 @@ workflow generate_evidence_data {
         has_long_reads
 
     main:
+        // EDTA is mandatory: AEGIS/Mikado/Helixer consume the hard-masked genome and BRAKER3 the
+        // soft-masked one derived from it. --edta_precomputed_dir swaps the (multi-day) EDTA process
+        // for outputs of an earlier run.
+        if (params.edta_precomputed_dir) {
+            def edta_dir = params.edta_precomputed_dir.toString()
+            edta_results = edta_precomputed(
+                file("${edta_dir}/assembly_masked.EDTA.fasta", checkIfExists: true),
+                file("${edta_dir}/edta.TEanno.gff3", checkIfExists: true),
+                file("${edta_dir}/edta.TElib.fa", checkIfExists: true)
+            )
+        } else {
+            edta_results = EDTA(
+                new_assembly,
+                new_assembly_name,
+                edta_script
+            )
+        }
+
+        // BRAKER3 (AUGUSTUS + GeneMark-ES) is run with --softmasking, so it needs the assembly with
+        // repeats in lower case. Without this, its raw models on transposable elements reach Mikado.
+        if (params.mask_genome_for_prediction) {
+            softmask_results = soft_mask_genome(
+                new_assembly,
+                edta_results.masked_genome,
+                soft_mask_script
+            )
+            braker_genome = softmask_results.softmasked_genome
+            // Mikado checks splice sites and extracts transcript sequences: N-masked repeats break both
+            mikado_genome = softmask_results.softmasked_genome
+        } else {
+            braker_genome = new_assembly
+            mikado_genome = edta_results.masked_genome
+        }
+
         short_reads_prepared = prepare_RNAseq_fastq_files_short(
             samples_list_short_reads,
             download_sra_fastq_script,
@@ -277,13 +314,6 @@ workflow generate_evidence_data {
 
         gffcompare_out = gffcompare(star_psiclass_stranded_gtfs, star_psiclass_unstranded_gtfs)
 
-        // EDTA is mandatory because AEGIS consumes the hard-masked genome.
-        edta_results = EDTA(
-            new_assembly,
-            new_assembly_name,
-            edta_script
-        )
-
         normalized_proteins = normalize_protein_fastas(
             protein_list.map { organism, filename -> [organism, file(filename)] },
             clean_protein_script
@@ -295,7 +325,7 @@ workflow generate_evidence_data {
 
         if (has_long_reads) {
             braker3_results = braker3_prediction_with_long_reads(
-                new_assembly,
+                braker_genome,
                 protein_fastas,
                 concat_star_bams_BRAKER3,
                 concat_minimap2_bams_BRAKER3,
@@ -303,7 +333,7 @@ workflow generate_evidence_data {
             )
         } else {
             braker3_results = braker3_prediction(
-                new_assembly,
+                braker_genome,
                 protein_fastas,
                 concat_star_bams_BRAKER3,
                 braker3_runner_script
@@ -312,6 +342,7 @@ workflow generate_evidence_data {
 
     emit:
         masked_genome = edta_results.masked_genome
+        mikado_genome = mikado_genome
         TE_annotations_gff3 = edta_results.TE_annotations_gff3
         egapx_gff3 = egapx_annotations.gff3
         egapx_gtf = egapx_annotations.gtf

@@ -41,6 +41,17 @@ def validateExistingInputFiles(requiredFiles) {
     }
 }
 
+def validateEdtaPrecomputedDir() {
+    if (!params.edta_precomputed_dir) {
+        return
+    }
+    def required = ['assembly_masked.EDTA.fasta', 'edta.TEanno.gff3', 'edta.TElib.fa']
+    def missing = required.findAll { name -> !file("${params.edta_precomputed_dir}/${name}").exists() }
+    if (missing) {
+        error "--edta_precomputed_dir ${params.edta_precomputed_dir} must contain ${required.join(', ')}; missing: ${missing.join(', ')}"
+    }
+}
+
 def parseCsvLine(String line) {
     def cells = []
     def cell = new StringBuilder()
@@ -118,6 +129,7 @@ workflow TITAN {
     rejectDeprecatedWorkflowParam()
     validateRequiredParams(['output_dir', 'egapx_paramfile', 'RNAseq_samplesheet', 'RNAseq_data_dir', 'protein_samplesheet', 'new_assembly', 'previous_assembly', 'previous_annotations'])
     validateExistingInputFiles(['egapx_paramfile', 'RNAseq_samplesheet', 'protein_samplesheet', 'new_assembly', 'previous_assembly', 'previous_annotations'])
+    validateEdtaPrecomputedDir()
     def has_long_reads = samplesheetHasLongReads(params.RNAseq_samplesheet)
     println "Long-read RNA-seq detected from samplesheet: ${has_long_reads}"
 
@@ -201,6 +213,7 @@ workflow TITAN {
         previous_annotations,
         egapx_paramfile,
         file("${projectDir}/scripts/edta.sh"),
+        file("${projectDir}/scripts/soft_mask_genome.py"),
         file("${projectDir}/scripts/Stringtie.sh"),
         file("${projectDir}/scripts/Stringtie_AltCommands.sh"),
         file("${projectDir}/scripts/run_stringtie_transcriptome.sh"),
@@ -229,7 +242,7 @@ workflow TITAN {
     helixer_results = helixer_prediction(evidence_data.masked_genome)
 
     mikado_prepared = mikado_prepare(
-        evidence_data.masked_genome,
+        evidence_data.mikado_genome,
         evidence_data.braker_augustus_gff3,
         evidence_data.braker_genemark_gtf,
         evidence_data.liftoff_gff3,
@@ -263,7 +276,7 @@ workflow TITAN {
         file("${projectDir}/assets/mikado_pandas_sqlalchemy_sitecustomize.py")
     )
     mikado_results = mikado_pick(
-        evidence_data.masked_genome,
+        evidence_data.mikado_genome,
         mikado_prepared.config,
         mikado_prepared.gtf,
         mikado_serialise_results.database
