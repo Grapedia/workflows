@@ -98,7 +98,7 @@ process eggnog_mapper {
 
     python3 - <<'PY'
 def regenerate_xlsx(tsv_path, xlsx_path):
-    rows = [line.rstrip("\n").split("\t") for line in open(tsv_path, encoding="utf-8")]
+    rows = [line.rstrip("\\n").split("\\t") for line in open(tsv_path, encoding="utf-8")]
     try:
         import xlsxwriter
         workbook = xlsxwriter.Workbook(xlsx_path)
