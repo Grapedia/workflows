@@ -54,7 +54,7 @@ process mikado_prepare {
     # Keep only valid GFF3/comment lines before Mikado's strict parser.
     awk -F'\\t' 'NF == 9 || /^#/' "${liftoff_gff3}" > liftoff_sanitized.gff3
 
-    # Priority order (highest first): egapx > liftoff > braker (augustus >
+    # Priority order (highest first): egapx > liftoff > braker (braker.gff3, or raw augustus >
     # genemark) > helixer > stranded assemblies (STAR StringTie default > alt
     # > PsiCLASS, then their HISAT2 counterparts) > flair > raw long reads >
     # unstranded assemblies (PsiCLASS > StringTie default > alt, then HISAT2).
@@ -62,8 +62,19 @@ process mikado_prepare {
     mikado_sources=(
       --source "${egapx_gff3}:egapx:False:20:True"
       --source "liftoff_sanitized.gff3:liftoff:False:19:True"
-      --source "${braker_augustus_gff3}:braker_augustus:False:18:False"
-      --source "${braker_genemark_gtf}:braker_genemark:False:17:False"
+    )
+    if [[ "${params.mikado_braker_tracks}" == "raw" ]]; then
+      mikado_sources+=(
+        --source "${braker_augustus_gff3}:braker_augustus:False:18:False"
+        --source "${braker_genemark_gtf}:braker_genemark:False:17:False"
+      )
+    else
+      # braker_augustus_gff3 then holds braker.gff3 (TSEBRA-selected); braker_genemark_gtf is unused
+      mikado_sources+=(
+        --source "${braker_augustus_gff3}:braker:False:18:False"
+      )
+    fi
+    mikado_sources+=(
       --source "${star_stringtie_default_stranded}:star_stringtie_default_stranded:True:15:False"
       --source "${star_stringtie_alt_stranded}:star_stringtie_alt_stranded:True:14:False"
       --source "${star_psiclass_stranded}:star_psiclass_stranded:True:13:False"

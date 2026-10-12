@@ -241,9 +241,11 @@ workflow TITAN {
 
     helixer_results = helixer_prediction(evidence_data.masked_genome)
 
+    // Track 1/2 of mikado_prepare: raw AUGUSTUS + GeneMark, or braker.gff3 alone (track 2 is then unused)
+    mikado_braker_track1 = params.mikado_braker_tracks == "raw" ? evidence_data.braker_augustus_gff3 : evidence_data.braker_gff3
     mikado_prepared = mikado_prepare(
         evidence_data.mikado_genome,
-        evidence_data.braker_augustus_gff3,
+        mikado_braker_track1,
         evidence_data.braker_genemark_gtf,
         evidence_data.liftoff_gff3,
         evidence_data.egapx_gff3,
