@@ -117,12 +117,13 @@ workflow generate_evidence_data {
                 soft_mask_script
             )
             braker_genome = softmask_results.softmasked_genome
-            // Mikado checks splice sites and extracts transcript sequences: N-masked repeats break both
-            mikado_genome = softmask_results.softmasked_genome
         } else {
             braker_genome = new_assembly
-            mikado_genome = edta_results.masked_genome
         }
+        // Mikado stays on the hard-masked genome on purpose: transcripts inside TEs become N, get no ORF
+        // and are dropped. On the soft-masked genome they kept ORFs and TE genes rose from 17.6% to 23.1%.
+        // TEs are not wanted in the main annotation; if ever needed they belong in a separate one.
+        mikado_genome = edta_results.masked_genome
 
         short_reads_prepared = prepare_RNAseq_fastq_files_short(
             samples_list_short_reads,

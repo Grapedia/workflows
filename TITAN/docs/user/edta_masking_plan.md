@@ -11,7 +11,7 @@ l'assemblage n'a aucune minuscule).
 | Étape | Génome reçu | Pourquoi |
 |---|---|---|
 | **BRAKER3** (AUGUSTUS + GeneMark-ES) | **soft-masqué EDTA** (`assembly_softmasked.EDTA.fasta`) | `--softmasking` est déjà actif : AUGUSTUS/GeneMark baissent le poids des répétitions sans effacer la séquence. Source du problème. |
-| **Mikado** prepare/serialise/pick | **soft-masqué EDTA** | Mikado met les sites d'épissage en majuscules avant de les tester, donc les minuscules sont sans effet. Avec des `N`, les introns au bord d'un TE perdent leur GT-AG canonique. En production, 81 360 des 1 599 787 transcrits préparés (5,1 %) contiennent des `N`. Le FASTA de transcrits est remis en majuscules après `mikado prepare`. |
+| **Mikado** prepare/serialise/pick | **hard-masqué EDTA** | Les transcrits dans un TE deviennent des `N`, n'ont plus d'ORF et sont écartés : c'est voulu, on ne veut pas de TE dans l'annotation principale (ils iraient dans une annotation séparée). Essai du 2026-10-12 en soft-masqué : gènes TE de 17,6 % à 23,1 %, +4 368 gènes. Coût accepté : environ 5 % de transcrits dont des introns au bord d'un TE perdent leur GT-AG canonique. |
 | Helixer | hard-masqué EDTA (inchangé) | Helixer met tout en majuscules à l'import du FASTA (`geenuff` : `seq.upper()`). Soft-masqué = non masqué pour lui, il prédirait de nouveau des gènes dans les TE. Seul le `N` l'en empêche. |
 | AEGIS, validation | hard-masqué EDTA (inchangé) | déjà le cas |
 | EGAPx | **inchangé** (génome brut du YAML) | voir « EGAPx » ci-dessous |
@@ -54,11 +54,9 @@ identique à l'original une fois remise en majuscules.
    dans `nf/subworkflows/ncbi/main.nf` mais n'est qu'un commentaire dans la v0.5.2 (Gnomon
    reçoit `win_softmask`). Un FASTA en minuscules n'aurait donc aucun effet, et un FASTA
    hard-masqué empêcherait Gnomon de prédire sous les `N`, y compris de vrais gènes.
-2. **Mikado** recevait un génome hard-masqué : 5,1 % des transcrits préparés contenaient des `N`
-   (ORF coupés pour TransDecoder, sites d'épissage non canoniques). Corrigé. Effet à mesurer :
-   les transcrits RNA-seq dans des TE ne sont plus mutilés, ils peuvent donc être mieux soutenus.
-   Je n'ai pas pu tester TransDecoder sur du texte en minuscules (image sans exécutable utilisable
-   hors Nextflow) ; c'est pourquoi le FASTA est remis en majuscules.
+2. **Mikado** reçoit un génome hard-masqué (inchangé). Un essai en soft-masqué (2026-10-12) a fait
+   remonter les gènes TE dans l'annotation finale (17,6 % → 23,1 %) : le `N` écarte les transcrits de TE,
+   ce qui est voulu. Le soft-masqué n'est donc utilisé que pour BRAKER3.
 3. **Risque de perte de vrais gènes.** 4 314 gènes non exprimés ont ≥ 50 % de CDS dans un TE, mais
    4 200 gènes exprimés sont dans le même cas (certains gènes réels contiennent des TE).
    Le soft-masquage n'interdit pas les gènes dans les répétitions (les hints RNA-seq et
