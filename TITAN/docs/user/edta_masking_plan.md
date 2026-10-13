@@ -75,6 +75,13 @@ identique à l'original une fois remise en majuscules.
 4. **Critère de décision** : adopter si les gènes TE-protéine/`no_signal` baissent nettement sans
    perte notable de gènes exprimés ni de BUSCO ; sinon `--mask_genome_for_prediction false`.
 
+## Résultats (2026-10-13)
+
+* Mikado soft-masqué (c05f152) : +4 143 gènes TE (23,1 % de TE), annulé par 2323be3 (Mikado hard-masqué).
+* Avec en plus `braker.gff3` en entrée de Mikado (ad39260) : 49 688 gènes, 14,3 % de TE, BUSCO 99,9 %,
+  mais ~4 300 gènes exprimés non-TE de l'ancien run perdus (10,4 %). Détail :
+  [mikado_braker_input_test.md](mikado_braker_input_test.md#production-run-2026-10-13).
+
 ## Pistes ensuite (non faites)
 
 * Bras « EGAPx sur génome hard-masqué » comme expérience contrôlée, pas par défaut.

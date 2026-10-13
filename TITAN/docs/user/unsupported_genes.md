@@ -1,7 +1,10 @@
 # Genes without support: how to study them and when to set them aside
 
 Analysis of the PN40024 T2T production run (`data/titan_prod_out`, 56,744 genes),
-written 2026-09-29. It answers three questions:
+written 2026-09-29. **Update 2026-10-13:** the sections below describe that run, in which Mikado received
+the raw AUGUSTUS/GeneMark tracks. Production now feeds Mikado `braker.gff3` on the hard-masked genome
+(`--mikado_braker_tracks`, 49,688 genes); see
+[mikado_braker_input_test.md](mikado_braker_input_test.md#production-run-2026-10-13). It answers three questions:
 
 1. What are the ~15,000 genes with no RNA-seq expression?
 2. Which of them can be called annotation errors, and why?

@@ -7,7 +7,9 @@ of the TSEBRA-selected `braker.gff3` and GeneMark's `genemark_supported.gtf`. Th
 test measures what changes if Mikado receives the filtered tracks.
 
 Status: **run 2026-09-29, verdict: do not switch production as is** (see [Results](#results)).
-Production (`titan.nf`, modules) is unchanged.
+Update 2026-10-13: production now feeds Mikado `braker.gff3` (param `mikado_braker_tracks`,
+default `braker_gff3`; `raw` restores the old behaviour), on the hard-masked genome. See
+[Production run 2026-10-13](#production-run-2026-10-13).
 
 ## Design
 
@@ -193,3 +195,41 @@ behaviour), rename the source labels, update `docs/reference/tools.md` and
 (AEGIS, expression validation, functional annotation, BUSCO/OMArk and the audit all
 depend on the gene set), then regenerate the unsupported-genes analysis on the new
 run. Do not edit the production output directory in place.
+
+## Production run 2026-10-13
+
+Commits 2323be3 (Mikado back on the EDTA hard-masked genome) and ad39260 (`braker.gff3` as a single
+`braker` track instead of raw AUGUSTUS + GeneMark). Output `data/titan_prod_out`, compared with the
+old run `data/titan_prod_out_unmasked_braker`. Coordinate-based comparison (a gene is "lost" when
+less than 50 % of its old CDS is covered by a same-strand CDS of the new run).
+
+| | Old run | Soft-masked Mikado (2026-10-12) | New run |
+|---|---|---|---|
+| Genes | 56,744 | 61,112 | **49,688** |
+| Genes with >= 50 % CDS in an EDTA TE | 9,805 (17.6 %) | 13,948 (23.1 %) | **6,909 (14.3 %)** |
+| BUSCO complete (n = 1990) | 99.8 % | 99.9 % | 99.9 % |
+
+Genes of the old run that are missing from the new one (13,242 in total):
+
+| Old class | Genes | Lost | % |
+|---|---|---|---|
+| expressed | 41,290 | 5,953 | 14.4 |
+| conserved_or_functional | 10,308 | 4,712 | 45.7 |
+| no_signal | 1,263 | 911 | 72.1 |
+| te_overlap_unsupported | 1,215 | 883 | 72.7 |
+| te_protein | 1,140 | 739 | 64.8 |
+| liftoff_only | 539 | 37 | 6.9 |
+
+- 1,659 of the 5,953 lost expressed genes are TE genes; about 4,300 (10.4 % of the expressed genes)
+  are not. Above the 9.7 % of the 2026-09-29 test.
+- The loss is almost entirely in genes whose old origin was `ab_initio_braker` (63 % of them lost);
+  Helixer, EGAPx and Liftoff origins lose < 1 %, RNA-seq assemblies 9.9 %.
+- Limits: coordinate-based (a merged or split gene counts as lost), function-based classes were
+  computed without InterProScan and MapMan (not finished at the time), so the classes of the new run
+  are underestimated. Rerun `scripts/run_unsupported_genes_analysis.sh` when InterProScan is done.
+- Fallbacks if the loss is not acceptable: `--mikado_braker_tracks raw` with a lower score, or an
+  explicit TE filter on the loci supported only by STAR/StringTie.
+
+`scripts/novel_genes_importance.py` compares the genes added on top of the Liftoff reference (17,214) with
+the carried-over ones (32,474): median max TPM 1.6 vs 24.7, 61 % vs 91 % with a functional hit (without
+InterProScan), 83 % expressed or functional.

@@ -108,6 +108,18 @@ per-sample and merged isoform GTF/FASTA files under
 `${output_dir}/03_additional_annotations/flair`, and passes merged isoforms to
 Mikado as optional transcript evidence.
 
+## Mikado BRAKER3 input
+
+`--mikado_braker_tracks` (default `braker_gff3`) selects the BRAKER3 evidence given to `mikado_prepare`:
+
+| Value | Mikado sources |
+|---|---|
+| `braker_gff3` | one `braker` track = `braker.gff3` (TSEBRA-selected AUGUSTUS + GeneMark models), score 18 |
+| `raw` | previous behaviour: raw `augustus.hints.gff3` (score 18) and `genemark.gtf` (score 17) |
+
+Mikado runs on the EDTA hard-masked genome in both cases. Results and rationale:
+[Mikado BRAKER3 input test](../user/mikado_braker_input_test.md#production-run-2026-10-13).
+
 ## EDTA
 
 EDTA is mandatory. It annotates repetitive elements and produces the
@@ -118,7 +130,9 @@ validation. TITAN publishes the public masked genome as
 TITAN also derives `assembly_softmasked.EDTA.fasta` from it
 (`scripts/soft_mask_genome.py`: the original assembly with the bases that EDTA
 turned into `N` written in lower case). BRAKER3 is run on that file with
-`--softmasking`, and so is Mikado; disable with `--mask_genome_for_prediction false`. EDTA can be
+`--softmasking`; disable with `--mask_genome_for_prediction false`. Mikado, AEGIS and Helixer stay on the
+hard-masked genome on purpose: transcripts inside a TE become `N`, get no ORF and are dropped, which is the
+only TE filter of the main annotation (giving Mikado the soft-masked genome added ~4,100 TE genes). EDTA can be
 skipped by pointing `--edta_precomputed_dir` at a directory that holds
 `assembly_masked.EDTA.fasta`, `edta.TEanno.gff3` and `edta.TElib.fa` from an
 earlier run. Plan and rationale: [EDTA masking plan](../user/edta_masking_plan.md).

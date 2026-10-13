@@ -44,7 +44,8 @@ Important evidence emits include:
 * `liftoff_gff3`
 * `egapx_gff3`
 * `braker_augustus_gff3`
-* `braker_genemark_gtf`
+* `braker_genemark_gtf` (only used with `--mikado_braker_tracks raw`; by default the
+  `braker_augustus_gff3` slot holds `braker.gff3`)
 * STAR/StringTie GTF evidence
 * optional HISAT2/StringTie GTF evidence
 * STAR/PsiCLASS GTF evidence
