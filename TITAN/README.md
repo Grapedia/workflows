@@ -440,6 +440,10 @@ ${output_dir}/
   01_final_annotation/
     primary/                     # final annotation, proteins and
                                   # liftoff_gene_id_correspondence.tsv
+    primary_noTE/                # protein-coding annotation without ncRNA and
+                                  # TE-derived genes (CDS >= 80 % in EDTA TE, no
+                                  # independent support), with its filtered
+                                  # proteins and functional annotations
     high_confidence_monoexonic/  # 2nd candidate: same annotation with
                                   # unsupported single-exon genes removed,
                                   # plus its own agat_stats/ and busco/ to
@@ -462,8 +466,8 @@ ${output_dir}/
     nextflow_reports/            # launcher DAG/progress/report files
 ```
 
-Folders are numbered in reading order. `01_final_annotation/primary/` and
-`01_final_annotation/high_confidence_monoexonic/` are the two final
+Folders are numbered in reading order. `01_final_annotation/primary/`, `01_final_annotation/primary_noTE/` and
+`01_final_annotation/high_confidence_monoexonic/` are the final
 annotation candidates to compare; `quality_report/` and `validation/` right
 next to them support that comparison, as does
 `02_functional_annotation/`. `04_evidence/` and

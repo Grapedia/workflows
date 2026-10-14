@@ -14,6 +14,7 @@ include { ncrna_annotation_qc } from '../modules/ncrna_annotation_qc'
 include { multiqc_report } from '../modules/multiqc_report'
 include { extract_final_transcripts; final_transcriptome_index; final_expression_quant; expression_support_summary } from '../modules/final_expression_validation'
 include { flag_low_confidence_monoexonic_genes } from '../modules/flag_low_confidence_monoexonic_genes'
+include { select_te_candidates; diamond_te_candidates; finalize_primary_noTE } from '../modules/primary_noTE'
 include { trnascan_se; trnascan_to_gff3 } from '../modules/trnascan_se'
 include { rfam_split_genome; infernal_rfam_search; infernal_rfam_merge } from '../modules/infernal_rfam'
 include { lncrna_candidate_annotation } from '../modules/lncrna_candidate_annotation'
@@ -407,6 +408,42 @@ workflow TITAN {
     )
     agat_stats_high_confidence_monoexonic_results = agat_stats_high_confidence_monoexonic(
         monoexonic_confidence_results.filtered_gff3
+    )
+
+    // Protein-coding, TE-cleaned variant of the final annotation: genes with >= params.noTE_te_frac of
+    // their CDS in an EDTA TE and no independent support (Liftoff, BUSCO, host function, non-Vitis
+    // homolog) are removed, as are the ncRNA genes. GFF3, proteins and functional tables are filtered.
+    te_candidates_results = select_te_candidates(
+        aegis.out.aegis_gff,
+        aegis.out.aegis_proteins_main,
+        evidence_data.TE_annotations_gff3,
+        evidence_data.liftoff_gff3,
+        aegis.out.liftoff_gene_id_correspondence,
+        busco_results.full_table,
+        aegis.out.diamond2go_main,
+        aegis.out.eggnog_annotations_main,
+        aegis.out.interproscan_main_tsv,
+        file("${projectDir}/scripts/filter_te_ncrna_final_annotation.py")
+    )
+
+    te_candidates_homology_results = diamond_te_candidates(
+        te_candidates_results.candidates_fasta,
+        protein_list.map { organism, filename -> file(filename) }.collect()
+    )
+
+    primary_noTE_results = finalize_primary_noTE(
+        aegis.out.aegis_gff,
+        aegis.out.aegis_proteins_all,
+        aegis.out.aegis_proteins_main,
+        te_candidates_results.candidates_tsv,
+        te_candidates_homology_results.hits_tsv,
+        aegis.out.diamond2go_all,
+        aegis.out.diamond2go_main,
+        aegis.out.eggnog_annotations_all,
+        aegis.out.eggnog_annotations_main,
+        aegis.out.interproscan_all_tsv,
+        aegis.out.interproscan_main_tsv,
+        file("${projectDir}/scripts/filter_te_ncrna_final_annotation.py")
     )
 
     omark_results = omark(aegis.out.aegis_proteins_main)

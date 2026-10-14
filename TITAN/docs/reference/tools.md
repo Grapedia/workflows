@@ -327,6 +327,22 @@ prepare it with `--prepare-busco-data`, which uses the pinned BUSCO container.
 OMArk requires an offline OMAmer database at `--omark_data_dir` containing
 `omamer.h5`; the launchers can prepare it with `--prepare-omark-data`.
 
+## Protein-coding TE-cleaned annotation (primary_noTE)
+
+`modules/primary_noTE.nf` (processes `select_te_candidates`, `diamond_te_candidates`,
+`finalize_primary_noTE`) and `scripts/filter_te_ncrna_final_annotation.py` (stdlib only, sub-commands
+`select` and `finalize`) write `${output_dir}/01_final_annotation/primary_noTE/`: the primary annotation
+without ncRNA genes and without TE-derived genes, plus the matching protein FASTAs and the Diamond2GO, eggNOG
+and InterProScan tables. A gene is TE-derived when at least `params.noTE_te_frac` (0.80) of the CDS of its main
+isoform (longest CDS) lies in an EDTA TE (`repeat_region` and `target_site_duplication` ignored) and none of
+these protects it: Liftoff carry-over, >= 50 % CDS overlap with the Liftoff-transferred previous annotation,
+BUSCO match, host functional hit (Diamond2GO GO / eggNOG description, GO or KEGG KO / informative InterProScan
+analysis, minus proteins that also match TE text), non-Vitis homolog (DIAMOND `--sensitive -e 1e-5 -k 3`, best
+hit >= 35 % identity and >= 50 % query coverage, reference = UniProt-style `OS=` records of the protein
+samplesheet FASTAs except `OS=Vitis`, queries = the candidates only). `genes_removed.tsv` lists each removed
+gene with its reason. MapMan/Mercator4 is manual and not part of this output. The analysis-side equivalent is
+`scripts/filter_te_genes.py` (see `docs/user/unsupported_genes.md`).
+
 ## Single-exon gene confidence
 
 Ab initio predictors (BRAKER/Helixer) are known to over-predict single-exon

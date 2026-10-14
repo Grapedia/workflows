@@ -93,6 +93,13 @@ ${output_dir}/
       final_annotation_proteins_main.fasta
       liftoff_gene_id_correspondence.tsv
       versions.yml
+    primary_noTE/
+      final_annotation.noTE.gff3
+      final_annotation_proteins_all.noTE.fasta
+      final_annotation_proteins_main.noTE.fasta
+      genes_removed.tsv
+      primary_noTE_summary.json
+      functional_annotation/        # diamond2go/, eggnog/, interproscan/ (no MapMan)
     high_confidence_monoexonic/
       final_annotation.high_confidence.gff3
       final_annotation_proteins_main.high_confidence.fasta
@@ -195,6 +202,48 @@ translated proteins and the main representative protein set.
 `liftoff_gene_id_correspondence.tsv` records, per gene, whether its ID was
 carried over (`carried_over_from_liftoff`, with the match's overlap score)
 or freshly assigned (`new_vitvi_id`).
+
+## Protein-Coding, TE-Cleaned Annotation (`primary_noTE`)
+
+```text
+${output_dir}/01_final_annotation/primary_noTE/
+  final_annotation.noTE.gff3
+  final_annotation_proteins_all.noTE.fasta
+  final_annotation_proteins_main.noTE.fasta
+  genes_removed.tsv                 # every removed gene, with the reason (te_derived / ncRNA)
+  primary_noTE_summary.json
+  versions.yml
+  functional_annotation/
+    diamond2go/final_annotation_proteins_{all,main}.noTE.diamond2go.tsv
+    eggnog/final_annotation_proteins_{all,main}.noTE.emapper.annotations
+    interproscan/final_annotation_proteins_{all,main}.noTE.tsv
+```
+
+`01_final_annotation/primary/` with two kinds of genes removed, together with their mRNA/exon/CDS
+children, proteins and functional-annotation rows:
+
+* **ncRNA genes** (genes without any mRNA child), so that the set is protein-coding only;
+* **TE-derived genes**: at least `--noTE_te_frac` (default 0.80) of the CDS of the main isoform lies in an
+  EDTA TE annotation **and** the gene has no independent support. A gene is kept if any of these holds:
+  carried over from Liftoff (`liftoff_gene_id_correspondence.tsv`); at least 50 % of its CDS overlaps, on
+  the same strand, the Liftoff-transferred previous annotation (`04_evidence/liftoff_previous_annotations.gff3`);
+  BUSCO match; a host (non-TE) functional hit (Diamond2GO GO term, eggNOG description/GO/KEGG, informative
+  InterProScan analysis, unless the protein also carries a TE domain/description); a non-Vitis homolog
+  (DIAMOND best hit >= 35 % identity and >= 50 % query coverage against the UniProt-style records of the
+  `--protein_samplesheet` FASTAs that are not `OS=Vitis`). The DIAMOND search only runs on the few thousand
+  TE-derived candidates.
+
+`primary/` and the original `02_functional_annotation/` files are never modified. MapMan/Mercator4 is a
+manual step outside the pipeline, so it has no `primary_noTE` counterpart: filter its result on
+`genes_removed.tsv` (the Mercator4 table is keyed on the lower-case gene ID in column `IDENTIFIER`). The
+InterProScan GFF3/JSON and the eggNOG `.xlsx`/`orthologs` files are not filtered either.
+
+On the 2026-10-14 production run (`mikado_braker_tracks = braker_gff3`) this takes the 49,688 genes of
+`primary/` (48,307 protein-coding + 1,381 ncRNA) to 45,125 genes (4,457 TE-derived candidates, 1,275 rescued by a
+non-Vitis homolog, 3,182 removed). The post-hoc tool `scripts/filter_te_genes.py` used for the analysis
+([unsupported_genes.md](unsupported_genes.md#te-derived-gene-filter-2026-10-14)) additionally protects genes
+overlapping the PN40024 5.1 liftover (`data/PN40024_5.1_on_T2T_ref.gff3`, not a pipeline input) and keeps 288
+more genes (45,413 after removing the ncRNA).
 
 ## High-Confidence Monoexonic-Filtered Annotation
 

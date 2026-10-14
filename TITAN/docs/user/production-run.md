@@ -165,6 +165,7 @@ Main result groups are published under `--output_dir`:
 ```text
 01_final_annotation/
   primary/                               # primary final annotation
+  primary_noTE/                          # protein-coding, TE-derived genes removed
   high_confidence_monoexonic/            # 2nd candidate: monoexon-filtered
   quality_report/
   validation/

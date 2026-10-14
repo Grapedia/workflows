@@ -334,3 +334,44 @@ Python 3.6+ with pandas and bedtools are required. Files of interest:
 
 Thresholds (`MIN_TPM 0.5`, homolog 35 % identity / 50 % coverage, TE 50 % CDS,
 short ORF 100 aa) are constants at the top of the scripts.
+
+## TE-derived gene filter (2026-10-14)
+
+Run on `data/titan_prod_out` (Mikado on the hard-masked genome, fed `braker.gff3`; run completed 2026-10-13,
+74 tasks, 0 failures; InterProScan and Mercator4 real, not stubbed; BUSCO C 99.9 %). 49,688 genes
+(48,307 protein-coding + 1,381 ncRNA); 6,908 protein-coding genes (14.3 %) have >= 50 % of their CDS in a TE.
+
+| Class | Genes |
+|---|---:|
+| expressed | 39,113 (81.0 %) |
+| conserved_or_functional | 7,146 |
+| te_protein | 596 |
+| te_overlap_unsupported | 461 |
+| liftoff_only | 585 |
+| no_signal | 401 |
+| junction_only | 5 |
+
+`scripts/filter_te_genes.py` (post-hoc, not in the pipeline) removes a gene when >= 80 % of its CDS is in an EDTA
+TE **and** it is not carried over from Liftoff, does not overlap PN40024 5.1, has no non-Vitis homolog and no
+non-TE function: **2,894 genes** (5.8 %; 80.9 % expressed but median max TPM 2.57, only 389 with max TPM >= 10;
+2,289 rnaseq_assembly, 515 ab_initio_braker, 89 ab_initio_helixer, 1 egapx_gnomon; 0 BUSCO or reference genes).
+522 of the 558 genes that Mercator4 could not take (proteins made of `-` or 1-4 aa) are among them. Removing in
+addition the 1,381 ncRNA genes leaves **45,413 protein-coding genes**. The same filter on the previous run
+(raw BRAKER tracks) would remove 4,104 genes.
+
+The same filter is now part of the pipeline (`01_final_annotation/primary_noTE/`, see
+[inputs_outputs.md](inputs_outputs.md#protein-coding-te-cleaned-annotation-primary_note)); it has no PN40024 5.1
+condition and gives 45,125 genes on this run (288 fewer, all genes that only overlap the 5.1 liftover).
+
+**Genes of the previous run (56,744) absent from the filtered set (45,413 genes + ncRNA excluded)**: 14,929, i.e.
+coordinate-based, a gene is absent when < 50 % of its CDS is covered on the same strand. 83 % come from the old
+`ab_initio_braker` track (12,407), 2,399 from `rnaseq_assembly`. Median max TPM 0.49 (12.6 in the genes kept),
+47.5 % have a strict functional hit (86.2 %), 40 % an OMAMER hit (81.7 %), only 8.2 % are in TSEBRA (65.4 %) and
+44 % have >= 50 % CDS in a TE (7.7 %); no BUSCO gene is lost. By group: 6,588 TE-rich, 6,658 non-TE with
+expression/function/non-Vitis homolog (6,515 BRAKER), 1,683 non-TE without any evidence. Decision: keep
+`braker.gff3` as Mikado input and apply the TE filter, rather than `--mikado_braker_tracks raw` (BRAKER3 uses
+RNA-seq and protein hints, but the predictions TSEBRA does not select are ab initio, which is where pseudogenes
+and TE genes come from).
+
+`scripts/novel_genes_importance.py` compares the 17,214 genes not carried by Liftoff with the 32,474 Liftoff genes
+(median max TPM 1.64 vs 24.7; 64.6 % vs 86.2 % expressed; 87.7 % of the new genes are expressed or functional).
