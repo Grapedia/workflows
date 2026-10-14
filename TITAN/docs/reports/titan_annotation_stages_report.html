@@ -58,6 +58,12 @@ code{font-family:var(--mono);font-size:.85em}
 ul{margin:0;padding-left:1.2rem;display:flex;flex-direction:column;gap:4px}
 footer{font-size:.82rem;color:var(--muted);display:flex;flex-direction:column;gap:6px}
 @media (max-width:720px){.stages,.charts{grid-template-columns:1fr}.row{grid-template-columns:5.5rem 1fr 4.6rem}h1{font-size:1.7rem}}
+.mini{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+.mini .card{background:var(--surface);border:1px solid var(--line);padding:14px 16px;display:flex;flex-direction:column;gap:6px;min-width:0}
+.mini .card h3{font-family:var(--body);font-weight:600;font-size:.95rem}
+.mini .card p{font-size:.88rem;color:var(--muted)}
+.mini .tag{font:500 .72rem var(--mono);letter-spacing:.06em;color:var(--accent)}
+@media (max-width:720px){.mini{grid-template-columns:1fr}}
 @media (prefers-reduced-motion:reduce){*{transition:none!important}}
 </style>
 
@@ -165,6 +171,58 @@ footer{font-size:.82rem;color:var(--muted);display:flex;flex-direction:column;ga
       <li>Les 1 381 ncRNA de Mikado sont retirés pour obtenir un jeu strictement protéique, dont 28 portés par Liftoff. Les annotations tRNA, Rfam et lncRNA du dossier <code>03_additional_annotations</code> ne sont pas touchées.</li>
       <li>MapMan/Mercator4 est filtré à la main ; il n'est pas produit par le pipeline.</li>
     </ul></div>
+</section>
+
+<section aria-labelledby="h-split">
+  <h2 id="h-split">Gènes coupés en deux : estimation sur primary_noTE</h2>
+  <p>Un gène coupé donne deux modèles voisins qui, ensemble, couvrent une seule protéine. Je teste toutes les paires de gènes voisins de même brin (au plus 3 gènes entre les deux, soit 99 838 paires) avec trois preuves indépendantes.</p>
+  <div class="mini">
+    <div class="card"><span class="tag">M1 · HOMOLOGIE</span><h3>Deux moitiés d'une même protéine</h3>
+      <p>Les deux gènes s'alignent (DIAMOND, protéines non-Vitis et Vitales/Swiss-Prot) sur des parties différentes de la même protéine, dans l'ordre. Chacun couvre ≤ 85 % de la protéine, ils se rejoignent à ±15 aa, l'ensemble couvre ≥ 60 %. Principe de Mender.</p></div>
+    <div class="card"><span class="tag">M2 · LECTURES LONGUES</span><h3>Un transcrit traverse les deux gènes</h3>
+      <p>Au moins 2 lectures Iso-Seq (alignements primaires) recouvrent les exons des deux gènes, soit au moins 10 % des lectures du gène le moins couvert. Un seul échantillon Iso-Seq : seules 15 757 paires sont testables (≥ 3 lectures sur chaque gène).</p></div>
+    <div class="card"><span class="tag">M3 · EXPRESSION</span><h3>Les deux gènes varient ensemble</h3>
+      <p>Corrélation de Pearson ≥ 0,90 sur log2(TPM+1) dans les 47 échantillons, les deux gènes étant exprimés dans au moins 5 échantillons. Comparaison à 7 873 paires témoins à 10–40 gènes de distance.</p></div>
+  </div>
+
+  <div class="tablewrap"><table>
+    <thead><tr><th>Résultat</th><th>Paires</th><th>Gènes concernés</th><th>Part des 45 125 gènes</th></tr></thead>
+    <tbody>
+      <tr><td>M1 : toutes les paires avec au moins une protéine de référence</td><td>2 051</td><td>3 675</td><td>8,1 %</td></tr>
+      <tr><td>M1 : au moins 3 protéines de référence indépendantes</td><td>370</td><td>723</td><td>1,6 %</td></tr>
+      <tr><td>M2 seul : lectures longues traversant deux gènes</td><td>1 099</td><td>1 899</td><td>4,2 %</td></tr>
+      <tr><td>M3 seul : corrélation d'expression ≥ 0,90</td><td>679</td><td>943</td><td>2,1 %</td></tr>
+      <tr><td><b>Haute confiance : M1 et (M2 ou M3)</b></td><td class="best">182</td><td class="best">360</td><td class="best">0,8 %</td></tr>
+      <tr><td>Haute confiance avec les trois preuves</td><td>12</td><td>—</td><td>—</td></tr>
+    </tbody></table></div>
+
+  <div class="chart"><h3>Gènes concernés (% des 45 125)</h3><div class="bars">
+    <div class="row"><span class="lab">M1, toutes</span><span class="track"><span class="fill" style="--c:var(--s1);width:100%"></span></span><span class="val">8,1</span></div>
+    <div class="row"><span class="lab">M1, ≥ 3 réf.</span><span class="track"><span class="fill" style="--c:var(--s2);width:19.8%"></span></span><span class="val">1,6</span></div>
+    <div class="row"><span class="lab">Haute confiance</span><span class="track"><span class="fill" style="--c:var(--s3);width:9.9%"></span></span><span class="val">0,8</span></div></div></div>
+
+  <h3>Comment lire ces chiffres</h3>
+  <ul>
+    <li><b>L'homologie seule surestime.</b> Beaucoup des 2 051 paires M1 sont sans doute des gènes paralogues en tandem qui partagent des domaines : 1 428 n'ont qu'une seule protéine de référence.</li>
+    <li><b>Les lectures longues valident M1 quand elles le peuvent.</b> Parmi les paires M1 testables par lectures longues, 83 % de celles à ≥ 3 protéines de référence sont traversées par des lectures (30 paires testables), 54 % pour 2 références et 29 % pour 1, contre 14 % pour des paires voisines sans signal d'homologie. Plus l'homologie est forte, plus les lectures confirment.</li>
+    <li><b>Extrapolation prudente :</b> en corrigeant du niveau de fond de 14 %, on estime environ 300 vraies fusions parmi les paires à ≥ 3 références, 120 parmi celles à 2 et 250 parmi celles à 1, soit <b>environ 650 paires, 2,5 à 3 % des gènes</b>. L'ordre de grandeur est proche de celui de l'étude sur le maïs (3 à 5 % de gènes candidats). C'est une estimation grossière : les paires testables sont surtout très exprimées, et seules 30 paires à ≥ 3 références le sont.</li>
+    <li><b>Fourchette retenue :</b> 0,8 % des gènes sont des fragments très probables (360), 1,6 % si l'on ajoute les paires à ≥ 3 références (723), et environ 3 % en estimation large.</li>
+    <li>Parmi les 2 051 paires M1, 1 212 ne peuvent être testées ni par lectures longues, ni par expression : elles restent non confirmées. Le sens des corrélations d'expression est aussi limité, les gènes en tandem pouvant être corégulés sans être un seul gène (3,1 % des paires voisines contre 0,3 % des paires témoins).</li>
+  </ul>
+  <h3>Fragmentation vue par OMArk, face à la référence Liftoff 4.3</h3>
+  <p>OMArk marque « fragmentée » (F) une protéine plus courte que la moitié de la longueur médiane de sa famille. Calculé de la même façon sur l'annotation précédente (v4.3) reportée sur le T2T par Liftoff, le niveau de F est le même que celui de primary_noTE.</p>
+  <div class="tablewrap"><table>
+    <thead><tr><th>OMArk</th><th>Liftoff 4.3 (34 838 protéines)</th><th>primary_noTE (45 125)</th></tr></thead>
+    <tbody>
+      <tr><td>Protéines fragmentées (F), total</td><td>2 927 <small>(8,4 %)</small></td><td>3 776 <small>(8,4 %)</small></td></tr>
+      <tr><td>F parmi les protéines cohérentes</td><td>7,89 %</td><td>7,91 %</td></tr>
+      <tr><td>Protéines partielles (P), total</td><td>14,6 %</td><td>17,5 %</td></tr>
+      <tr><td>HOG single / dupliqués / manquants</td><td>81,4 / 14,6 / 4,0</td><td>80,9 / 15,6 / 3,5</td></tr>
+      <tr><td>Protéines cohérentes / inconnues</td><td>82,0 % / 16,0 %</td><td>79,9 % / 17,8 %</td></tr>
+    </tbody></table></div>
+  <p><b>Conclusion :</b> pas de problème de fragmentation propre à TITAN. BUSCO compte 0,1 % de gènes fragmentés, la part de F d'OMArk égale celle de la référence, et les gènes coupés identifiés par mes trois méthodes représentent 0,8 % des gènes (très probables) à environ 3 % (estimation large). L'écart restant avec la référence porte sur les protéines partielles (17,5 % contre 14,6 %) et cohérentes (79,9 % contre 82,0 %), ce qui reste modeste et va avec les gènes nouveaux, moins bien supportés que ceux de Liftoff.</p>
+  <div class="note"><b>Suite possible</b>
+    <p>Les 502 paires « haute confiance » ou « probables » sont exportées au format BED pour être contrôlées sur Apollo : <code>split_genes/split_gene_candidates_apollo.bed</code>, avec le tableau <code>split_gene_candidates_high_and_likely.tsv</code>. Le script <code>scripts/estimate_split_genes.py</code> refait toute l'analyse. Une fusion automatique des paires de haute confiance pourrait être faite avec Mender, à valider sur un échantillon dans Apollo avant tout usage en production.</p></div>
 </section>
 
 <section aria-labelledby="h-files">
