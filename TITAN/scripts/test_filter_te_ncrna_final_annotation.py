@@ -68,6 +68,19 @@ def main():
         fa = (t / "out" / "final_annotation_proteins_main.noTE.fasta").read_text()
         assert ">g_te_t001_CDS1.prot" not in fa and ">g_ok_t001_CDS1.prot" in fa
         assert (t / "out" / "functional_annotation" / "eggnog" / "final_annotation_proteins_main.noTE.emapper.annotations").exists()
+        # compare: primary vs primary_noTE
+        (t / "expr.json").write_text('{"unsupported_gene_ids": ["g_te", "g_ok"]}')
+        (t / "busco.txt").write_text("\tC:99.0%[S:98.0%,D:1.0%],F:0.5%,M:0.5%,n:10\n")
+        run("compare", "--candidate", "primary", t / "a.gff3", t / "busco.txt", "NA",
+            "--candidate", "primary_noTE", t / "out" / "final_annotation.noTE.gff3", "NA", "NA",
+            "--te-gff3", t / "te.gff3", "--expression-json", t / "expr.json", "--diamond2go-main", t / "d2go.tsv",
+            "--eggnog-main", t / "egg.tsv", "--interproscan-main", t / "ipr.tsv", "--out", t / "cmp.tsv")
+        rows = [l.split("\t") for l in (t / "cmp.tsv").read_text().splitlines()]
+        table = {r[0]: dict(zip(rows[0], r)) for r in rows[1:]}
+        assert table["primary"]["genes"] == "6" and table["primary"]["ncrna_genes"] == "1", table["primary"]
+        assert table["primary_noTE"]["genes"] == "4" and table["primary_noTE"]["ncrna_genes"] == "0"
+        assert table["primary"]["te_cds_ge80_pct"] == "80.0" and table["primary_noTE"]["te_cds_ge80_pct"] == "75.0"
+        assert table["primary"]["busco_C"] == "99.0" and table["primary_noTE"]["busco_C"] == ""
     print("OK")
 
 

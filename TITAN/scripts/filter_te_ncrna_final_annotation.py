@@ -17,6 +17,9 @@ It then filters the protein FASTAs and the Diamond2GO / eggNOG / InterProScan ta
 The original files are never modified.  MapMan/Mercator4 is a manual step outside the pipeline and is
 not handled here.  Stdlib only (runs in the plain python container).
 
+A third sub-command, `compare`, tabulates the quality of several candidate annotations side by side
+(gene counts, TE content, function, expression, BUSCO, OMArk): see candidates_comparison.tsv.
+
 Two steps, because the homology search sits in between (it is run only on the few thousand candidates):
   select    -> candidates.tsv + candidates.fasta (TE-derived genes not protected by any other evidence)
   finalize  -> reads the DIAMOND hits of candidates.fasta, drops the candidates without a non-Vitis
@@ -375,6 +378,105 @@ def finalize(a):
     print(json.dumps(summary, sort_keys=True))
 
 
+def candidate_structure(gff3):
+    """Per gene: (type, number of exons of the main isoform, CDS length of the main isoform)."""
+    genes, mrna_type, mrna_gene = set(), {}, {}
+    exons, cds_len = defaultdict(int), defaultdict(int)
+    with open(gff3) as fh:
+        for line in fh:
+            if line.startswith("#") or not line.strip():
+                continue
+            f = line.rstrip("\n").split("\t")
+            if len(f) < 9:
+                continue
+            a = parse_attrs(f[8])
+            if f[2] == "gene":
+                genes.add(a["ID"])
+            elif f[2] in ("mRNA", "ncRNA", "transcript") and "Parent" in a:
+                mrna_type[a["ID"]] = f[2]
+                mrna_gene[a["ID"]] = a["Parent"].split(",")[0]
+            elif f[2] == "exon" and "Parent" in a:
+                for q in a["Parent"].split(","):
+                    exons[q] += 1
+            elif f[2] == "CDS" and "Parent" in a:
+                for q in a["Parent"].split(","):
+                    cds_len[q] += int(f[4]) - int(f[3]) + 1
+    main = {}
+    for mid, g in mrna_gene.items():
+        if mrna_type[mid] != "mRNA":
+            continue
+        if g not in main or cds_len[mid] > main[g][2]:
+            main[g] = (mid, exons[mid], cds_len[mid])
+    ncrna = {g for mid, g in mrna_gene.items() if mrna_type[mid] == "ncRNA"} - set(main)
+    return genes, main, ncrna, sum(1 for t in mrna_type.values() if t == "mRNA")
+
+
+def parse_busco_summary(path):
+    """C/S/D/F/M percentages of a BUSCO short summary ('' when absent or empty)."""
+    keys = ("C", "S", "D", "F", "M")
+    if path in (None, "NA") or not os.path.exists(path):
+        return dict.fromkeys(keys, "")
+    for line in open(path):
+        m = re.search(r"C:([\d.]+)%\[S:([\d.]+)%,D:([\d.]+)%\],F:([\d.]+)%,M:([\d.]+)%", line)
+        if m:
+            return dict(zip(keys, m.groups()))
+    return dict.fromkeys(keys, "")
+
+
+def parse_omark_sum(path):
+    """Completeness (single/duplicated/missing HOGs) and consistency (A/I/C/U) percentages of an OMArk .sum."""
+    keys = ("omark_S", "omark_D", "omark_M", "omark_consistent", "omark_inconsistent",
+            "omark_contaminant", "omark_unknown")
+    out = dict.fromkeys(keys, "")
+    if path in (None, "NA") or not os.path.exists(path):
+        return out
+    pct = [l for l in open(path) if not l.startswith("#") and "%" in l]
+    if len(pct) >= 2:
+        n = lambda tag, line: (re.search(tag + r":([\d.]+)%", line) or [None, ""])[1]
+        out.update(omark_S=n("S", pct[0]), omark_D=n("D", pct[0]), omark_M=n("M", pct[0]),
+                   omark_consistent=n("A", pct[1]), omark_inconsistent=n("I", pct[1]),
+                   omark_contaminant=n("C", pct[1]), omark_unknown=n("U", pct[1]))
+    return out
+
+
+def compare(a):
+    unsupported = set(json.load(open(a.expression_json)).get("unsupported_gene_ids", []))
+    with_function = set()
+    for path in (a.diamond2go_main, a.eggnog_main, a.interproscan_main):
+        with open(path) as fh:
+            for line in fh:
+                if line.strip() and not line.startswith("#"):
+                    with_function.add(gene_of(line.split("\t", 1)[0]))
+    spans, starts = read_te_spans(a.te_gff3)
+    rows = []
+    for label, gff3, busco, omark in a.candidate:
+        genes, main, ncrna, n_mrna = candidate_structure(gff3)
+        _g, mrna_gene, cds = read_gff3(gff3)
+        te = te_fraction_by_gene(_g, mrna_gene, cds, a.te_gff3)
+        n = len(main) or 1
+        lens = sorted(v[2] // 3 for v in main.values())
+        pct = lambda k: "%.1f" % (100.0 * k / n)
+        row = {
+            "candidate": label, "genes": len(genes), "protein_coding_genes": len(main),
+            "ncrna_genes": len(ncrna), "mrna": n_mrna,
+            "mono_exonic_pct": pct(sum(1 for v in main.values() if v[1] <= 1)),
+            "median_protein_aa": lens[len(lens) // 2] if lens else "",
+            "te_cds_ge50_pct": pct(sum(1 for g in main if te.get(g, 0) >= 0.5)),
+            "te_cds_ge80_pct": pct(sum(1 for g in main if te.get(g, 0) >= 0.8)),
+            "with_function_pct": pct(sum(1 for g in main if g in with_function)),
+            "expressed_pct": pct(sum(1 for g in main if g not in unsupported)),
+        }
+        row.update({"busco_" + k: v for k, v in parse_busco_summary(busco).items()})
+        row.update(parse_omark_sum(omark))
+        rows.append(row)
+    cols = list(rows[0])
+    with open(a.out, "w") as fh:
+        fh.write("\t".join(cols) + "\n")
+        for r in rows:
+            fh.write("\t".join(str(r[c]) for c in cols) + "\n")
+    print(open(a.out).read())
+
+
 def main():
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     sub = ap.add_subparsers(dest="cmd")
@@ -400,7 +502,20 @@ def main():
     f.add_argument("--diamond2go-all", required=True)
     f.add_argument("--eggnog-all", required=True)
     f.add_argument("--interproscan-all", required=True)
+    c = sub.add_parser("compare", help="side-by-side quality table of candidate annotations")
+    c.add_argument("--candidate", nargs=4, action="append", required=True,
+                   metavar=("LABEL", "GFF3", "BUSCO_SHORT_SUMMARY", "OMARK_SUM"),
+                   help="repeatable; give NA for a missing BUSCO/OMArk file")
+    c.add_argument("--te-gff3", required=True)
+    c.add_argument("--expression-json", required=True, help="expression_support_summary.json")
+    c.add_argument("--diamond2go-main", required=True)
+    c.add_argument("--eggnog-main", required=True)
+    c.add_argument("--interproscan-main", required=True)
+    c.add_argument("--out", default="candidates_comparison.tsv")
     a = ap.parse_args()
+    if a.cmd == "compare":
+        compare(a)
+        return
     os.makedirs(a.out_dir, exist_ok=True)
     select_candidates(a) if a.cmd == "select" else finalize(a)
 

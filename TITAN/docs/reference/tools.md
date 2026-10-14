@@ -340,7 +340,13 @@ BUSCO match, host functional hit (Diamond2GO GO / eggNOG description, GO or KEGG
 analysis, minus proteins that also match TE text), non-Vitis homolog (DIAMOND `--sensitive -e 1e-5 -k 3`, best
 hit >= 35 % identity and >= 50 % query coverage, reference = UniProt-style `OS=` records of the protein
 samplesheet FASTAs except `OS=Vitis`, queries = the candidates only). `genes_removed.tsv` lists each removed
-gene with its reason. MapMan/Mercator4 is manual and not part of this output. The analysis-side equivalent is
+gene with its reason. MapMan/Mercator4 is manual and not part of this output. The quality processes are
+aliases of the existing modules (`busco_primary_noTE`, `omark_primary_noTE`, `agat_stats_primary_noTE`,
+`validate_final_annotation_primary_noTE`, `expression_support_summary_primary_noTE`,
+`multiqc_report_primary_noTE`); their `publishDir` is chosen from `task.process` (suffix `_primary_noTE` ->
+`01_final_annotation/primary_noTE/...`), which leaves the task hash of the primary runs unchanged. Process
+`compare_candidates` (`filter_te_ncrna_final_annotation.py compare`) writes
+`01_final_annotation/quality_report/candidates_comparison.tsv`. The analysis-side equivalent is
 `scripts/filter_te_genes.py` (see `docs/user/unsupported_genes.md`).
 
 ## Single-exon gene confidence

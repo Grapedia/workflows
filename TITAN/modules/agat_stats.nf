@@ -4,7 +4,7 @@ process agat_stats {
 
   tag "AGAT structural statistics on the final AEGIS annotation"
   container params.container_agat
-  publishDir "${params.output_dir}/01_final_annotation/quality_report/agat_stats", mode: 'copy'
+  publishDir path: { "${params.output_dir}/01_final_annotation/${task.process.endsWith('_primary_noTE') ? 'primary_noTE/' : ''}quality_report/agat_stats" }, mode: 'copy'
 
   input:
     path(annotation_gff3)

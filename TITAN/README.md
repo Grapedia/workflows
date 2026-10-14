@@ -443,12 +443,14 @@ ${output_dir}/
     primary_noTE/                # protein-coding annotation without ncRNA and
                                   # TE-derived genes (CDS >= 80 % in EDTA TE, no
                                   # independent support), with its filtered
-                                  # proteins and functional annotations
+                                  # proteins, functional annotations and its
+                                  # own quality_report/ and validation/
     high_confidence_monoexonic/  # 2nd candidate: same annotation with
                                   # unsupported single-exon genes removed,
                                   # plus its own agat_stats/ and busco/ to
                                   # compare against the primary candidate
-    quality_report/              # MultiQC and per-tool QC (primary candidate)
+    quality_report/              # MultiQC and per-tool QC (primary candidate),
+                                  # candidates_comparison.tsv (all candidates)
     validation/                  # final annotation validation reports
   02_functional_annotation/      # diamond2go/, eggnog/, interproscan/ —
                                   # function calls on the primary candidate

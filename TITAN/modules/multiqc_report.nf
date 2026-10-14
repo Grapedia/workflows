@@ -4,7 +4,7 @@ process multiqc_report {
 
   tag "MultiQC full-run and final annotation quality report"
   container params.container_multiqc
-  publishDir "${params.output_dir}/01_final_annotation/quality_report", mode: 'copy'
+  publishDir path: { "${params.output_dir}/01_final_annotation/${task.process.endsWith('_primary_noTE') ? 'primary_noTE/' : ''}quality_report" }, mode: 'copy'
 
   input:
     path(fastp_json_reports, stageAs: "fastp_reports/*")

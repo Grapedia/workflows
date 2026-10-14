@@ -180,3 +180,67 @@ process finalize_primary_noTE {
     printf '"%s":\\n  container: "not_recorded"\\n' "${task.process}" > versions.yml
     """
 }
+
+// Side-by-side quality table of the final-annotation candidates (primary, primary_noTE,
+// high_confidence_monoexonic): gene counts, TE content, function, expression, BUSCO, OMArk.
+process compare_candidates {
+  label 'process_low'
+  tag "Compare the final annotation candidates (primary / primary_noTE / high_confidence_monoexonic)"
+
+  container params.container_python
+  publishDir "${params.output_dir}/01_final_annotation/quality_report", mode: 'copy'
+
+  input:
+    path(primary_gff3, stageAs: "primary/*")
+    path(primary_busco, stageAs: "primary/*")
+    path(primary_omark, stageAs: "primary/*")
+    path(noTE_gff3, stageAs: "primary_noTE/*")
+    path(noTE_busco, stageAs: "primary_noTE/*")
+    path(noTE_omark, stageAs: "primary_noTE/*")
+    path(monoexonic_gff3, stageAs: "high_confidence_monoexonic/*")
+    path(monoexonic_busco, stageAs: "high_confidence_monoexonic/*")
+    path(te_gff3)
+    path(expression_json)
+    path(diamond2go_main_tsv)
+    path(eggnog_main_annotations)
+    path(interproscan_main_tsv)
+    path(script)
+
+  output:
+    path "candidates_comparison.tsv", emit: comparison_tsv
+    path "versions.yml", emit: versions
+
+  script:
+    """
+    set -euo pipefail
+    python3 ${script} compare \\
+      --candidate primary ${primary_gff3} ${primary_busco} ${primary_omark} \\
+      --candidate primary_noTE ${noTE_gff3} ${noTE_busco} ${noTE_omark} \\
+      --candidate high_confidence_monoexonic ${monoexonic_gff3} ${monoexonic_busco} NA \\
+      --te-gff3 ${te_gff3} \\
+      --expression-json ${expression_json} \\
+      --diamond2go-main ${diamond2go_main_tsv} \\
+      --eggnog-main ${eggnog_main_annotations} \\
+      --interproscan-main ${interproscan_main_tsv} \\
+      --out candidates_comparison.tsv
+    script_sha256=\$(sha256sum ${script} | awk '{print \$1}')
+    printf '"%s":\\n  container: "%s"\\n  script: "%s"\\n  script_sha256: "%s"\\n' \\
+      "${task.process}" "${task.container}" "${script}" "\${script_sha256}" > versions.yml
+    """
+
+  stub:
+    """
+    set -euo pipefail
+    python3 ${script} compare \\
+      --candidate primary ${primary_gff3} ${primary_busco} ${primary_omark} \\
+      --candidate primary_noTE ${noTE_gff3} ${noTE_busco} ${noTE_omark} \\
+      --candidate high_confidence_monoexonic ${monoexonic_gff3} ${monoexonic_busco} NA \\
+      --te-gff3 ${te_gff3} \\
+      --expression-json ${expression_json} \\
+      --diamond2go-main ${diamond2go_main_tsv} \\
+      --eggnog-main ${eggnog_main_annotations} \\
+      --interproscan-main ${interproscan_main_tsv} \\
+      --out candidates_comparison.tsv
+    printf '"%s":\\n  container: "not_recorded"\\n' "${task.process}" > versions.yml
+    """
+}

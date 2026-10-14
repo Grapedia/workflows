@@ -100,6 +100,9 @@ ${output_dir}/
       genes_removed.tsv
       primary_noTE_summary.json
       functional_annotation/        # diamond2go/, eggnog/, interproscan/ (no MapMan)
+      quality_report/               # agat_stats/, busco/, omark/, expression_validation/,
+                                    # titan_multiqc_report.html (same analyses as primary)
+      validation/                   # final_annotation_validation.{json,txt}
     high_confidence_monoexonic/
       final_annotation.high_confidence.gff3
       final_annotation_proteins_main.high_confidence.fasta
@@ -109,6 +112,7 @@ ${output_dir}/
       agat_stats/
       busco/
     quality_report/
+      candidates_comparison.tsv
       titan_multiqc_report.html
       titan_multiqc_report_data/
       agat_stats/
@@ -232,6 +236,16 @@ children, proteins and functional-annotation rows:
   (DIAMOND best hit >= 35 % identity and >= 50 % query coverage against the UniProt-style records of the
   `--protein_samplesheet` FASTAs that are not `OS=Vitis`). The DIAMOND search only runs on the few thousand
   TE-derived candidates.
+
+The same quality analyses as for `primary/` are run on this set and published inside the folder:
+`quality_report/busco` and `omark` (on `final_annotation_proteins_main.noTE.fasta`), `quality_report/agat_stats`,
+`quality_report/expression_validation` (Salmon support of the filtered genes),
+`quality_report/titan_multiqc_report.html` (same MultiQC as the primary one, fed with the `primary_noTE`
+results) and `validation/`. `01_final_annotation/quality_report/candidates_comparison.tsv` puts `primary`,
+`primary_noTE` and `high_confidence_monoexonic` side by side: gene counts (protein-coding / ncRNA / mRNA),
+% mono-exonic, median protein length, % genes with >= 50 % / >= 80 % of the CDS in a TE, % genes with a
+functional hit, % genes expressed, BUSCO C/S/D/F/M and OMArk completeness/consistency (BUSCO/OMArk columns are
+empty for a candidate that has none, e.g. OMArk for `high_confidence_monoexonic`).
 
 `primary/` and the original `02_functional_annotation/` files are never modified. MapMan/Mercator4 is a
 manual step outside the pipeline, so it has no `primary_noTE` counterpart: filter its result on

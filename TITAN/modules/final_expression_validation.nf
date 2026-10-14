@@ -234,7 +234,7 @@ process expression_support_summary {
   label 'process_low'
   tag "Final annotation expression support summary"
   container params.container_python
-  publishDir "${params.output_dir}/01_final_annotation/quality_report/expression_validation", mode: 'copy'
+  publishDir path: { "${params.output_dir}/01_final_annotation/${task.process.endsWith('_primary_noTE') ? 'primary_noTE/' : ''}quality_report/expression_validation" }, mode: 'copy'
 
   input:
     path(final_annotation_gff3)

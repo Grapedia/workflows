@@ -3,18 +3,18 @@ nextflow.enable.dsl = 2
 include { generate_evidence_data } from '../subworkflows/generate_evidence_data'
 include { aegis } from '../subworkflows/aegis'
 include { titan_provenance } from '../modules/titan_provenance'
-include { validate_final_annotation } from '../modules/validate_final_annotation'
+include { validate_final_annotation; validate_final_annotation as validate_final_annotation_primary_noTE } from '../modules/validate_final_annotation'
 include { validate_inputs } from '../modules/validate_inputs'
 include { helixer_prediction } from '../modules/helixer_prediction'
 include { additional_annotations_provenance } from '../modules/additional_annotations_provenance'
-include { busco; busco_high_confidence_monoexonic } from '../modules/busco'
-include { omark } from '../modules/omark'
-include { agat_stats; agat_stats_high_confidence_monoexonic } from '../modules/agat_stats'
+include { busco; busco as busco_primary_noTE; busco_high_confidence_monoexonic } from '../modules/busco'
+include { omark; omark as omark_primary_noTE } from '../modules/omark'
+include { agat_stats; agat_stats as agat_stats_primary_noTE; agat_stats_high_confidence_monoexonic } from '../modules/agat_stats'
 include { ncrna_annotation_qc } from '../modules/ncrna_annotation_qc'
-include { multiqc_report } from '../modules/multiqc_report'
-include { extract_final_transcripts; final_transcriptome_index; final_expression_quant; expression_support_summary } from '../modules/final_expression_validation'
+include { multiqc_report; multiqc_report as multiqc_report_primary_noTE } from '../modules/multiqc_report'
+include { extract_final_transcripts; final_transcriptome_index; final_expression_quant; expression_support_summary; expression_support_summary as expression_support_summary_primary_noTE } from '../modules/final_expression_validation'
 include { flag_low_confidence_monoexonic_genes } from '../modules/flag_low_confidence_monoexonic_genes'
-include { select_te_candidates; diamond_te_candidates; finalize_primary_noTE } from '../modules/primary_noTE'
+include { select_te_candidates; diamond_te_candidates; finalize_primary_noTE; compare_candidates } from '../modules/primary_noTE'
 include { trnascan_se; trnascan_to_gff3 } from '../modules/trnascan_se'
 include { rfam_split_genome; infernal_rfam_search; infernal_rfam_merge } from '../modules/infernal_rfam'
 include { lncrna_candidate_annotation } from '../modules/lncrna_candidate_annotation'
@@ -465,6 +465,55 @@ workflow TITAN {
         sqanti3_multiqc_results.multiqc_tsv,
         expression_support_results.multiqc_tsv,
         validate_final_annotation.out.json_report
+    )
+
+    // Same quality analyses on primary_noTE (published under 01_final_annotation/primary_noTE/), then a
+    // side-by-side table of the three final-annotation candidates.
+    busco_primary_noTE_results = busco_primary_noTE(primary_noTE_results.proteins_main)
+    omark_primary_noTE_results = omark_primary_noTE(primary_noTE_results.proteins_main)
+    agat_stats_primary_noTE_results = agat_stats_primary_noTE(primary_noTE_results.gff3)
+
+    validate_final_annotation_primary_noTE(
+        evidence_data.masked_genome,
+        primary_noTE_results.gff3,
+        primary_noTE_results.proteins_all,
+        primary_noTE_results.proteins_main,
+        file("${projectDir}/scripts/validate_final_annotation.py")
+    )
+
+    expression_support_primary_noTE_results = expression_support_summary_primary_noTE(
+        primary_noTE_results.gff3,
+        final_expression_quant_results.quant_dir.map { sample_ID, quant_dir -> quant_dir }.collect(),
+        file("${projectDir}/scripts/summarize_expression_support.py")
+    )
+
+    multiqc_report_primary_noTE(
+        evidence_data.fastp_json_reports,
+        busco_primary_noTE_results.short_summary,
+        omark_primary_noTE_results.multiqc_tsv,
+        agat_stats_primary_noTE_results.stats_txt,
+        ncrna_qc_results.multiqc_tsv,
+        lncrna_results.multiqc_tsv,
+        sqanti3_multiqc_results.multiqc_tsv,
+        expression_support_primary_noTE_results.multiqc_tsv,
+        validate_final_annotation_primary_noTE.out.json_report
+    )
+
+    compare_candidates(
+        aegis.out.aegis_gff,
+        busco_results.short_summary,
+        omark_results.summary,
+        primary_noTE_results.gff3,
+        busco_primary_noTE_results.short_summary,
+        omark_primary_noTE_results.summary,
+        monoexonic_confidence_results.filtered_gff3,
+        busco_high_confidence_monoexonic_results.short_summary,
+        evidence_data.TE_annotations_gff3,
+        expression_support_results.json_summary,
+        aegis.out.diamond2go_main,
+        aegis.out.eggnog_annotations_main,
+        aegis.out.interproscan_main_tsv,
+        file("${projectDir}/scripts/filter_te_ncrna_final_annotation.py")
     )
 
     titan_provenance(
