@@ -1,0 +1,179 @@
+<title>Annotation PN40024 T2T</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Source+Serif+4:opsz,wght@8..60,500;8..60,700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: one reading column; a stage-comparison table is the spine, charts and arguments hang off it.
+   Palette: three steps of one vine-green hue encode the three stages (light = first run, dark = production candidate). */
+:root{
+  --bg:#f5f8f6; --surface:#ffffff; --fg:#17251f; --muted:#5a6b63; --line:#d9e2dd;
+  --s1:#a8bdb2; --s2:#5e9a82; --s3:#1d5a44; --accent:#1d5a44; --warn:#9a5b13; --warn-bg:#f8efe0;
+  --good-bg:#e4f1ea;
+  --display:'Source Serif 4',Georgia,serif; --body:'IBM Plex Sans',system-ui,sans-serif; --mono:'IBM Plex Mono',ui-monospace,monospace;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#0f1815; --surface:#16231e; --fg:#e4eee9; --muted:#97aaa1; --line:#2a3b34;
+  --s1:#5d7568; --s2:#4f9a7c; --s3:#7fd0ac; --accent:#7fd0ac; --warn:#e2b46c; --warn-bg:#2b2316; --good-bg:#18332a; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#0f1815; --surface:#16231e; --fg:#e4eee9; --muted:#97aaa1; --line:#2a3b34;
+  --s1:#5d7568; --s2:#4f9a7c; --s3:#7fd0ac; --accent:#7fd0ac; --warn:#e2b46c; --warn-bg:#2b2316; --good-bg:#18332a; color-scheme:dark}
+body{background:var(--bg);color:var(--fg);font:16px/1.55 var(--body);padding-inline:16px;padding-block:32px 64px}
+main{max-width:920px;margin:0 auto;display:flex;flex-direction:column;gap:40px}
+h1,h2,h3{font-family:var(--display);line-height:1.2;text-wrap:balance;margin:0}
+h1{font-size:2.1rem;font-weight:700}
+h2{font-size:1.45rem;font-weight:700}
+h3{font-size:1.1rem;font-weight:500}
+p{margin:0;max-width:68ch}
+.lead{color:var(--muted);font-size:1.05rem}
+.meta{font:0.8rem var(--mono);color:var(--muted);letter-spacing:.02em}
+section{display:flex;flex-direction:column;gap:16px;min-width:0}
+.stages{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+.stage{background:var(--surface);border:1px solid var(--line);border-top:4px solid var(--c);padding:14px 16px;display:flex;flex-direction:column;gap:6px;min-width:0}
+.stage .n{font:500 2rem/1 var(--mono);font-variant-numeric:tabular-nums}
+.stage .t{font-weight:600}
+.stage .d{font-size:.88rem;color:var(--muted)}
+.tablewrap{overflow-x:auto;border:1px solid var(--line);background:var(--surface)}
+table{border-collapse:collapse;width:100%;min-width:640px;font-size:.92rem}
+th,td{padding:8px 12px;text-align:right;border-bottom:1px solid var(--line);font-variant-numeric:tabular-nums}
+th:first-child,td:first-child{text-align:left}
+thead th{font-weight:600;border-bottom:2px solid var(--fg);vertical-align:bottom}
+tbody tr.grp td{font:600 .75rem var(--body);letter-spacing:.08em;text-transform:uppercase;color:var(--muted);background:var(--bg);text-align:left}
+td.best{background:var(--good-bg);font-weight:600}
+td small{color:var(--muted);font-weight:400}
+.bars{display:flex;flex-direction:column;gap:6px}
+.chart{background:var(--surface);border:1px solid var(--line);padding:14px 16px;display:flex;flex-direction:column;gap:10px;min-width:0}
+.chart h3{font-family:var(--body);font-weight:600;font-size:.95rem}
+.row{display:grid;grid-template-columns:7.5rem 1fr 5.5rem;align-items:center;gap:10px;font-size:.85rem}
+.row .lab{color:var(--muted)}
+.row .val{font-family:var(--mono);text-align:right;font-variant-numeric:tabular-nums}
+.track{background:var(--bg);height:14px;border-radius:2px;overflow:hidden}
+.fill{height:100%;background:var(--c)}
+.charts{display:grid;grid-template-columns:repeat(2,1fr);gap:12px}
+.args{display:flex;flex-direction:column;gap:12px}
+.arg{background:var(--surface);border:1px solid var(--line);padding:14px 16px;display:grid;grid-template-columns:2.2rem 1fr;gap:12px;min-width:0}
+.arg .k{font:600 1.1rem var(--mono);color:var(--accent)}
+.arg h3{margin-bottom:4px}
+.arg p{font-size:.93rem}
+.note{background:var(--warn-bg);border-left:4px solid var(--warn);padding:12px 16px;font-size:.93rem;display:flex;flex-direction:column;gap:6px}
+.note b{color:var(--warn)}
+code{font-family:var(--mono);font-size:.85em}
+ul{margin:0;padding-left:1.2rem;display:flex;flex-direction:column;gap:4px}
+footer{font-size:.82rem;color:var(--muted);display:flex;flex-direction:column;gap:6px}
+@media (max-width:720px){.stages,.charts{grid-template-columns:1fr}.row{grid-template-columns:5.5rem 1fr 4.6rem}h1{font-size:1.7rem}}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+
+<main>
+<header style="display:flex;flex-direction:column;gap:10px">
+  <span class="meta">TITAN · Vitis vinifera PN40024 · assemblage T2T · 14 octobre 2026</span>
+  <h1>Trois étapes d'annotation, de 56 744 à 45 125 gènes</h1>
+  <p class="lead">Chaque étape retire du bruit (modèles de gènes issus de transposons ou sans support) sans perdre de gènes conservés ni de complétude. Le jeu final de 45 125 gènes protéiques est le candidat pour la production.</p>
+</header>
+
+<section aria-labelledby="h-stages">
+  <h2 id="h-stages">Les trois annotations</h2>
+  <div class="stages">
+    <div class="stage" style="--c:var(--s1)"><span class="meta">ÉTAPE 1 · run initial</span><span class="n">56 744</span><span class="t">gènes</span>
+      <span class="d">BRAKER3 sur génome non masqué ; Mikado reçoit les pistes brutes AUGUSTUS et GeneMark. 55 766 gènes codants, 978 ncRNA.</span></div>
+    <div class="stage" style="--c:var(--s2)"><span class="meta">ÉTAPE 2 · génome masqué + braker.gff3</span><span class="n">49 688</span><span class="t">gènes</span>
+      <span class="d">BRAKER3 sur le génome masqué EDTA ; Mikado reçoit le <code>braker.gff3</code> sélectionné par TSEBRA. 48 307 gènes codants, 1 381 ncRNA.</span></div>
+    <div class="stage" style="--c:var(--s3)"><span class="meta">ÉTAPE 3 · filtre TE 80 % (primary_noTE)</span><span class="n">45 125</span><span class="t">gènes codants</span>
+      <span class="d">Étape 2 moins 3 182 gènes dont au moins 80 % du CDS est dans un transposon sans autre appui, et moins les 1 381 ncRNA.</span></div>
+  </div>
+</section>
+
+<section aria-labelledby="h-table">
+  <h2 id="h-table">Comparaison complète</h2>
+  <div class="tablewrap">
+  <table>
+    <thead><tr><th>Mesure</th><th>1 · initial</th><th>2 · masqué + braker.gff3</th><th>3 · filtre TE (45 125)</th></tr></thead>
+    <tbody>
+      <tr class="grp"><td colspan="4">Contenu</td></tr>
+      <tr><td>Gènes (tous types)</td><td>56 744</td><td>49 688</td><td>45 125</td></tr>
+      <tr><td>Gènes codants</td><td>55 766</td><td>48 307</td><td>45 125</td></tr>
+      <tr><td>Gènes ncRNA de Mikado</td><td>978</td><td>1 381</td><td>0</td></tr>
+      <tr><td>Transcrits (mRNA)</td><td>57 542</td><td>50 128</td><td>46 946</td></tr>
+      <tr class="grp"><td colspan="4">Transposons (part du CDS dans un TE EDTA, gènes codants)</td></tr>
+      <tr><td>Gènes avec ≥ 50 % du CDS en TE</td><td>17,6 %</td><td>14,3 %</td><td class="best">8,3 %</td></tr>
+      <tr><td>Gènes avec ≥ 80 % du CDS en TE</td><td>14,4 %</td><td>12,2 %</td><td class="best">6,0 %</td></tr>
+      <tr class="grp"><td colspan="4">Support fonctionnel</td></tr>
+      <tr><td>Gènes avec un résultat Diamond2GO, eggNOG ou InterProScan</td><td>84,8 %</td><td>87,4 %</td><td class="best">92,2 %</td></tr>
+      <tr><td>Fonction « stricte » (GO, description, KEGG, domaine informatif)</td><td>77,4 %</td><td>81,8 %</td><td class="best">87,5 %</td></tr>
+      <tr><td>Homologue dans une autre espèce que Vitis (DIAMOND)</td><td>64,8 %</td><td>73,7 %</td><td class="best">78,9 %</td></tr>
+      <tr class="grp"><td colspan="4">Support par l'expression (Salmon, 47 échantillons, TPM ≥ 0,5)</td></tr>
+      <tr><td>Gènes codants exprimés</td><td>74,0 %<br><small>41 290 gènes</small></td><td class="best">81,0 %<br><small>39 113 gènes</small></td><td class="best">81,0 %<br><small>36 568 gènes</small></td></tr>
+      <tr><td>Gènes sans aucune preuve (ni expression, ni fonction, ni Liftoff, ni homologue)</td><td>3 933 <small>(7,1 %)</small></td><td>1 238 <small>(2,6 %)</small></td><td class="best">613 <small>(1,4 %)</small></td></tr>
+      <tr class="grp"><td colspan="4">Complétude et cohérence</td></tr>
+      <tr><td>BUSCO complets (eudicotyledons_odb12.2, n = 1 990)</td><td>99,8 %</td><td>99,9 %</td><td>99,9 %</td></tr>
+      <tr><td>BUSCO : single / dupliqués / fragmentés / manquants</td><td>98,3 / 1,5 / 0,1 / 0,1</td><td>98,4 / 1,5 / 0,1 / 0,1</td><td>98,4 / 1,5 / 0,1 / 0,1</td></tr>
+      <tr><td>OMArk : HOG single / dupliqués / manquants</td><td>80,70 / 15,62 / 3,69</td><td>80,92 / 15,60 / 3,48</td><td>80,93 / 15,59 / 3,48</td></tr>
+      <tr><td>OMArk : protéines taxonomiquement cohérentes</td><td>69,2 %</td><td>74,7 %</td><td class="best">79,9 %</td></tr>
+      <tr><td>OMArk : protéines de statut inconnu</td><td>28,0 %</td><td>23,0 %</td><td class="best">17,8 %</td></tr>
+      <tr><td>OMArk : contamination</td><td>0 %</td><td>0 %</td><td>0 %</td></tr>
+      <tr class="grp"><td colspan="4">Structure (AGAT, gènes codants)</td></tr>
+      <tr><td>Gènes mono-exoniques</td><td>15 640 <small>(28,0 %)</small></td><td>16 834 <small>(34,8 %)</small></td><td>13 990 <small>(31,0 %)</small></td></tr>
+      <tr><td>Exons par mRNA (moyenne)</td><td>4,3</td><td>4,2</td><td>4,4</td></tr>
+      <tr><td>Longueur moyenne d'un gène (pb)</td><td>3 923</td><td>4 036</td><td>4 217</td></tr>
+      <tr><td>Longueur médiane d'une protéine (aa)</td><td>268</td><td>267</td><td>265</td></tr>
+      <tr><td>Gènes qui se chevauchent</td><td>3 520</td><td>2 117</td><td class="best">1 737</td></tr>
+      <tr class="grp"><td colspan="4">Validation structurelle TITAN</td></tr>
+      <tr><td>Génome, GFF3 et protéines cohérents</td><td>PASS</td><td>PASS</td><td>PASS</td></tr>
+    </tbody>
+  </table>
+  </div>
+  <p class="meta">Les cases vertes marquent la meilleure valeur lorsqu'un sens est clair. Les parts « exprimé », « fonction » et « TE » portent sur les gènes codants ; un gène est « exprimé » si sa TPM atteint 0,5 dans au moins un échantillon.</p>
+</section>
+
+<section aria-labelledby="h-charts">
+  <h2 id="h-charts">En un coup d'œil</h2>
+  <div class="charts">
+    <div class="chart"><h3>Nombre de gènes codants</h3><div class="bars">
+      <div class="row"><span class="lab">1 · initial</span><span class="track"><span class="fill" style="--c:var(--s1);width:100%"></span></span><span class="val">55 766</span></div>
+      <div class="row"><span class="lab">2 · masqué</span><span class="track"><span class="fill" style="--c:var(--s2);width:86.6%"></span></span><span class="val">48 307</span></div>
+      <div class="row"><span class="lab">3 · filtre TE</span><span class="track"><span class="fill" style="--c:var(--s3);width:80.9%"></span></span><span class="val">45 125</span></div></div></div>
+    <div class="chart"><h3>Gènes avec ≥ 50 % du CDS dans un TE (%)</h3><div class="bars">
+      <div class="row"><span class="lab">1 · initial</span><span class="track"><span class="fill" style="--c:var(--s1);width:17.6%"></span></span><span class="val">17,6</span></div>
+      <div class="row"><span class="lab">2 · masqué</span><span class="track"><span class="fill" style="--c:var(--s2);width:14.3%"></span></span><span class="val">14,3</span></div>
+      <div class="row"><span class="lab">3 · filtre TE</span><span class="track"><span class="fill" style="--c:var(--s3);width:8.3%"></span></span><span class="val">8,3</span></div></div></div>
+    <div class="chart"><h3>Gènes avec une fonction stricte (%)</h3><div class="bars">
+      <div class="row"><span class="lab">1 · initial</span><span class="track"><span class="fill" style="--c:var(--s1);width:77.4%"></span></span><span class="val">77,4</span></div>
+      <div class="row"><span class="lab">2 · masqué</span><span class="track"><span class="fill" style="--c:var(--s2);width:81.8%"></span></span><span class="val">81,8</span></div>
+      <div class="row"><span class="lab">3 · filtre TE</span><span class="track"><span class="fill" style="--c:var(--s3);width:87.5%"></span></span><span class="val">87,5</span></div></div></div>
+    <div class="chart"><h3>Gènes codants exprimés (%)</h3><div class="bars">
+      <div class="row"><span class="lab">1 · initial</span><span class="track"><span class="fill" style="--c:var(--s1);width:74%"></span></span><span class="val">74,0</span></div>
+      <div class="row"><span class="lab">2 · masqué</span><span class="track"><span class="fill" style="--c:var(--s2);width:81%"></span></span><span class="val">81,0</span></div>
+      <div class="row"><span class="lab">3 · filtre TE</span><span class="track"><span class="fill" style="--c:var(--s3);width:81%"></span></span><span class="val">81,0</span></div></div></div>
+  </div>
+</section>
+
+<section aria-labelledby="h-why">
+  <h2 id="h-why">Pourquoi 45 125 gènes peuvent passer en production</h2>
+  <div class="args">
+    <div class="arg"><span class="k">1</span><div><h3>Aucune perte de complétude</h3>
+      <p>BUSCO reste à 99,9 % de gènes complets (1 988 sur 1 990), identique avant et après le filtre : aucun gène BUSCO n'est retiré. Les HOG OMArk (single 80,9 %, manquants 3,5 %) ne bougent pas non plus. Pour comparaison, la référence PN40024 5.1 reportée sur le T2T compte 47 971 gènes et 97,9 % de BUSCO complets.</p></div></div>
+    <div class="arg"><span class="k">2</span><div><h3>Les gènes de référence sont tous conservés</h3>
+      <p>Les 32 446 gènes codants issus de Liftoff (annotation précédente) sont tous présents dans le jeu filtré. Le filtre ne retire que des gènes sans homologue dans une espèce autre que Vitis, sans fonction hors transposon, hors BUSCO et hors Liftoff.</p></div></div>
+    <div class="arg"><span class="k">3</span><div><h3>Les transposons reculent nettement</h3>
+      <p>La part de gènes dont au moins la moitié du CDS est dans un TE passe de 17,6 % à 8,3 %. Les gènes retirés ont une expression médiane faible (TPM max 2,5) : un transposon est transcrit, ce qui ne prouve pas l'existence d'un gène de l'hôte. Les 1 275 candidats qui ont un homologue non-Vitis sont conservés.</p></div></div>
+    <div class="arg"><span class="k">4</span><div><h3>Le jeu est mieux supporté</h3>
+      <p>92,2 % des gènes ont un résultat fonctionnel (84,8 % au départ) et 98,6 % ont au moins une preuve parmi expression, fonction, Liftoff ou homologue ; seuls 613 gènes (1,4 %) n'en ont aucune, contre 3 933 (7,1 %) dans le run initial. 36 568 gènes sont exprimés, un ordre de grandeur proche de ce qu'on attend chez la vigne (autour de 36 000).</p></div></div>
+    <div class="arg"><span class="k">5</span><div><h3>Les protéines sont plus cohérentes taxonomiquement</h3>
+      <p>OMArk classe 79,9 % des protéines comme cohérentes avec la lignée (69,2 % au départ) et seulement 17,8 % comme inconnues (28,0 % au départ), sans contamination. La structure reste normale : 4,4 exons par mRNA, gènes plus longs en moyenne, et deux fois moins de chevauchements entre gènes que dans le run initial (1 737 contre 3 520).</p></div></div>
+  </div>
+  <div class="note"><b>Limites à connaître</b>
+    <ul>
+      <li>Passer au <code>braker.gff3</code> (étape 2) retire des modèles de BRAKER non sélectionnés par TSEBRA : parmi les gènes du run initial absents du jeu final, environ 6 700 ont une expression, une fonction ou un homologue non-Vitis. Ce sont surtout des prédictions ab initio. Sur l'ensemble des 14 929 gènes absents, la médiane de TPM max est de 0,5, seuls 2,8 % ont un intron confirmé par les lectures, et aucun n'est un gène BUSCO.</li>
+      <li>Les gènes mono-exoniques restent à 31 % : cette part monte à l'étape 2 (34,8 %) et baisse avec le filtre sans revenir à son niveau initial.</li>
+      <li>Les 1 381 ncRNA de Mikado sont retirés pour obtenir un jeu strictement protéique, dont 28 portés par Liftoff. Les annotations tRNA, Rfam et lncRNA du dossier <code>03_additional_annotations</code> ne sont pas touchées.</li>
+      <li>MapMan/Mercator4 est filtré à la main ; il n'est pas produit par le pipeline.</li>
+    </ul></div>
+</section>
+
+<section aria-labelledby="h-files">
+  <h2 id="h-files">Fichiers du jeu de production</h2>
+  <p>Dans <code>01_final_annotation/primary_noTE/</code> : <code>final_annotation.noTE.gff3</code>, les protéines <code>main</code> (45 125) et <code>all</code> (46 946), les annotations fonctionnelles filtrées (Diamond2GO, eggNOG, InterProScan, MapMan), <code>genes_removed.tsv</code> avec la raison de chaque retrait, ainsi que <code>quality_report/</code> et <code>validation/</code>. Le tableau de comparaison est dans <code>01_final_annotation/quality_report/candidates_comparison.tsv</code>.</p>
+</section>
+
+<footer>
+  <span>Sources : BUSCO 6.1.0 (eudicotyledons_odb12.2), OMArk, AGAT, Salmon sur le transcriptome final, Diamond2GO, eggNOG-mapper, InterProScan, EDTA ; runs <code>titan_prod_out_unmasked_braker</code> (étape 1) et <code>titan_prod_out</code> (étapes 2 et 3).</span>
+  <span>Règle du filtre : au moins 80 % du CDS de l'isoforme principale dans un TE EDTA, et ni Liftoff, ni chevauchement avec l'annotation précédente transférée, ni BUSCO, ni fonction hors TE, ni homologue non-Vitis (DIAMOND, ≥ 35 % d'identité, ≥ 50 % de couverture).</span>
+</footer>
+</main>
