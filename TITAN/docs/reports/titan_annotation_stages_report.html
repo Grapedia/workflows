@@ -90,41 +90,43 @@ footer{font-size:.82rem;color:var(--muted);display:flex;flex-direction:column;ga
   <h2 id="h-table">Comparaison complète</h2>
   <div class="tablewrap">
   <table>
-    <thead><tr><th>Mesure</th><th>1 · initial</th><th>2 · masqué + braker.gff3</th><th>3 · filtre TE (45 125)</th></tr></thead>
+    <thead><tr><th>Mesure</th><th>1 · initial</th><th>2 · masqué + braker.gff3</th><th>3 · filtre TE (45 125)</th><th>Réf. v4.3<br><small>GFF3 d'origine, génome v4</small></th><th>Réf. v5.1<br><small>reportée sur le T2T</small></th></tr></thead>
     <tbody>
       <tr class="grp"><td colspan="4">Contenu</td></tr>
-      <tr><td>Gènes (tous types)</td><td>56 744</td><td>49 688</td><td>45 125</td></tr>
-      <tr><td>Gènes codants</td><td>55 766</td><td>48 307</td><td>45 125</td></tr>
-      <tr><td>Gènes ncRNA de Mikado</td><td>978</td><td>1 381</td><td>0</td></tr>
-      <tr><td>Transcrits (mRNA)</td><td>57 542</td><td>50 128</td><td>46 946</td></tr>
+      <tr><td>Gènes (tous types)</td><td>56 744</td><td>49 688</td><td>45 125</td><td>35 256</td><td>49 618</td></tr>
+      <tr><td>Gènes codants</td><td>55 766</td><td>48 307</td><td>45 125</td><td>35 256</td><td>41 766</td></tr>
+      <tr><td>Gènes ncRNA de Mikado</td><td>978</td><td>1 381</td><td>0</td><td>0</td><td>7 852 <small>(lncRNA)</small></td></tr>
+      <tr><td>Transcrits (mRNA)</td><td>57 542</td><td>50 128</td><td>46 946</td><td>41 122</td><td>48 974</td></tr>
       <tr class="grp"><td colspan="4">Transposons (part du CDS dans un TE EDTA, gènes codants)</td></tr>
-      <tr><td>Gènes avec ≥ 50 % du CDS en TE</td><td>17,6 %</td><td>14,3 %</td><td class="best">8,3 %</td></tr>
-      <tr><td>Gènes avec ≥ 80 % du CDS en TE</td><td>14,4 %</td><td>12,2 %</td><td class="best">6,0 %</td></tr>
+      <tr><td>Gènes avec ≥ 50 % du CDS en TE</td><td>17,6 %</td><td>14,3 %</td><td class="best">8,3 %</td><td>–</td><td>–</td></tr>
+      <tr><td>Gènes avec ≥ 80 % du CDS en TE</td><td>14,4 %</td><td>12,2 %</td><td class="best">6,0 %</td><td>–</td><td>–</td></tr>
       <tr class="grp"><td colspan="4">Support fonctionnel</td></tr>
-      <tr><td>Gènes avec un résultat Diamond2GO, eggNOG ou InterProScan</td><td>84,8 %</td><td>87,4 %</td><td class="best">92,2 %</td></tr>
-      <tr><td>Fonction « stricte » (GO, description, KEGG, domaine informatif)</td><td>77,4 %</td><td>81,8 %</td><td class="best">87,5 %</td></tr>
-      <tr><td>Homologue dans une autre espèce que Vitis (DIAMOND)</td><td>64,8 %</td><td>73,7 %</td><td class="best">78,9 %</td></tr>
+      <tr><td>Gènes avec un résultat Diamond2GO, eggNOG ou InterProScan</td><td>84,8 %</td><td>87,4 %</td><td class="best">92,2 %</td><td>–</td><td>–</td></tr>
+      <tr><td>Fonction « stricte » (GO, description, KEGG, domaine informatif)</td><td>77,4 %</td><td>81,8 %</td><td class="best">87,5 %</td><td>–</td><td>–</td></tr>
+      <tr><td>Homologue dans une autre espèce que Vitis (DIAMOND)</td><td>64,8 %</td><td>73,7 %</td><td class="best">78,9 %</td><td>–</td><td>–</td></tr>
       <tr class="grp"><td colspan="4">Support par l'expression (Salmon, 47 échantillons, TPM ≥ 0,5)</td></tr>
-      <tr><td>Gènes codants exprimés</td><td>74,0 %<br><small>41 290 gènes</small></td><td class="best">81,0 %<br><small>39 113 gènes</small></td><td class="best">81,0 %<br><small>36 568 gènes</small></td></tr>
-      <tr><td>Gènes sans aucune preuve (ni expression, ni fonction, ni Liftoff, ni homologue)</td><td>3 933 <small>(7,1 %)</small></td><td>1 238 <small>(2,6 %)</small></td><td class="best">613 <small>(1,4 %)</small></td></tr>
+      <tr><td>Gènes codants exprimés</td><td>74,0 %<br><small>41 290 gènes</small></td><td class="best">81,0 %<br><small>39 113 gènes</small></td><td class="best">81,0 %<br><small>36 568 gènes</small></td><td>–</td><td>–</td></tr>
+      <tr><td>Gènes sans aucune preuve (ni expression, ni fonction, ni Liftoff, ni homologue)</td><td>3 933 <small>(7,1 %)</small></td><td>1 238 <small>(2,6 %)</small></td><td class="best">613 <small>(1,4 %)</small></td><td>–</td><td>–</td></tr>
       <tr class="grp"><td colspan="4">Complétude et cohérence</td></tr>
-      <tr><td>BUSCO complets (eudicotyledons_odb12.2, n = 1 990)</td><td>99,8 %</td><td>99,9 %</td><td>99,9 %</td></tr>
-      <tr><td>BUSCO : single / dupliqués / fragmentés / manquants</td><td>98,3 / 1,5 / 0,1 / 0,1</td><td>98,4 / 1,5 / 0,1 / 0,1</td><td>98,4 / 1,5 / 0,1 / 0,1</td></tr>
-      <tr><td>OMArk : HOG single / dupliqués / manquants</td><td>80,70 / 15,62 / 3,69</td><td>80,92 / 15,60 / 3,48</td><td>80,93 / 15,59 / 3,48</td></tr>
-      <tr><td>OMArk : protéines taxonomiquement cohérentes</td><td>69,2 %</td><td>74,7 %</td><td class="best">79,9 %</td></tr>
-      <tr><td>OMArk : protéines de statut inconnu</td><td>28,0 %</td><td>23,0 %</td><td class="best">17,8 %</td></tr>
-      <tr><td>OMArk : contamination</td><td>0 %</td><td>0 %</td><td>0 %</td></tr>
+      <tr><td>BUSCO complets (eudicotyledons_odb12.2, n = 1 990)</td><td>99,8 %</td><td>99,9 %</td><td>99,9 %</td><td>99,8 %</td><td>97,9 %</td></tr>
+      <tr><td>BUSCO : single / dupliqués / fragmentés / manquants</td><td>98,3 / 1,5 / 0,1 / 0,1</td><td>98,4 / 1,5 / 0,1 / 0,1</td><td>98,4 / 1,5 / 0,1 / 0,1</td><td>98,3 / 1,5 / 0,2 / 0,1</td><td>96,4 / 1,6 / 0,0 / 2,1</td></tr>
+      <tr><td>OMArk : HOG single / dupliqués / manquants</td><td>80,70 / 15,62 / 3,69</td><td>80,92 / 15,60 / 3,48</td><td>80,93 / 15,59 / 3,48</td><td>80,79 / 15,51 / 3,70</td><td>83,00 / 12,39 / 4,61</td></tr>
+      <tr><td>OMArk : protéines taxonomiquement cohérentes</td><td>69,2 %</td><td>74,7 %</td><td class="best">79,9 %</td><td>82,5 %</td><td>70,5 %</td></tr>
+      <tr><td>OMArk : protéines de statut inconnu</td><td>28,0 %</td><td>23,0 %</td><td class="best">17,8 %</td><td>15,5 %</td><td>27,2 %</td></tr>
+      <tr><td>OMArk : contamination</td><td>0 %</td><td>0 %</td><td>0 %</td><td>0 %</td><td>0 %</td></tr>
       <tr class="grp"><td colspan="4">Structure (AGAT, gènes codants)</td></tr>
-      <tr><td>Gènes mono-exoniques</td><td>15 640 <small>(28,0 %)</small></td><td>16 834 <small>(34,8 %)</small></td><td>13 990 <small>(31,0 %)</small></td></tr>
-      <tr><td>Exons par mRNA (moyenne)</td><td>4,3</td><td>4,2</td><td>4,4</td></tr>
-      <tr><td>Longueur moyenne d'un gène (pb)</td><td>3 923</td><td>4 036</td><td>4 217</td></tr>
-      <tr><td>Longueur médiane d'une protéine (aa)</td><td>268</td><td>267</td><td>265</td></tr>
-      <tr><td>Gènes qui se chevauchent</td><td>3 520</td><td>2 117</td><td class="best">1 737</td></tr>
+      <tr><td>Gènes mono-exoniques</td><td>15 640 <small>(28,0 %)</small></td><td>16 834 <small>(34,8 %)</small></td><td>13 990 <small>(31,0 %)</small></td><td>9 373 <small>(26,6 %)</small></td><td>17 205 <small>(41,2 %)</small></td></tr>
+      <tr><td>Exons par mRNA (moyenne)</td><td>4,3</td><td>4,2</td><td>4,4</td><td>4,6</td><td>4,0</td></tr>
+      <tr><td>Longueur moyenne d'un gène (pb)</td><td>3 923</td><td>4 036</td><td>4 217</td><td>4 733</td><td>4 850</td></tr>
+      <tr><td>Longueur médiane d'une protéine (aa)</td><td>268</td><td>267</td><td>265</td><td>272</td><td>254</td></tr>
+      <tr><td>Gènes qui se chevauchent</td><td>3 520</td><td>2 117</td><td class="best">1 737</td><td>333</td><td>32</td></tr>
       <tr class="grp"><td colspan="4">Validation structurelle TITAN</td></tr>
-      <tr><td>Génome, GFF3 et protéines cohérents</td><td>PASS</td><td>PASS</td><td>PASS</td></tr>
+      <tr><td>Génome, GFF3 et protéines cohérents</td><td>PASS</td><td>PASS</td><td>PASS</td><td>–</td><td>–</td></tr>
     </tbody>
   </table>
   </div>
+  <p class="meta">Colonnes de référence : v4.3 est le GFF3 d'origine (<code>v4_3_just_ref.gff3</code>, sur son génome de référence <code>v4_genome_ref.fasta</code>) et v5.1 l'annotation reportée sur le T2T. Les protéines (isoforme la plus longue par gène) et les statistiques sont recalculées de la même façon que pour les trois étapes (BUSCO 6.1.0 eudicotyledons_odb12.2, OMArk, AGAT). Les mesures qui dépendent du T2T (TE, expression, fonction) ne sont pas calculées pour ces deux références (–). Pour v5.1, « tous types » compte 41 766 gènes codants et 7 852 lncRNA.</p>
+  <p><b>Lecture :</b> avec 99,9 % de BUSCO complets, les trois étapes dépassent v5.1 (97,9 %) et égalent v4.3 (99,8 %). OMArk classe 79,9 % des protéines du jeu final comme cohérentes, contre 82,5 % pour v4.3 et 70,5 % pour v5.1 ; la part inconnue (17,8 %) est entre les deux. Les gènes mono-exoniques (31,0 %) sont plus nombreux que dans v4.3 (26,6 %) mais bien moins que dans v5.1 (41,2 %).</p>
   <p class="meta">Les cases vertes marquent la meilleure valeur lorsqu'un sens est clair. Les parts « exprimé », « fonction » et « TE » portent sur les gènes codants ; un gène est « exprimé » si sa TPM atteint 0,5 dans au moins un échantillon.</p>
 </section>
 
