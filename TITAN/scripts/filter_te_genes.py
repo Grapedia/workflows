@@ -1,8 +1,9 @@
 #!/usr/bin/env python3
 """List and remove the TE-derived genes of a TITAN GFF3 that nothing else supports.
 
-NOT part of the pipeline: an optional, post-hoc tool (same spirit as flag_unsupported_genes.py).
-It never modifies its inputs and never renames genes.
+Post-hoc analysis tool (same spirit as flag_unsupported_genes.py): it works from the evidence table of
+scripts/run_unsupported_genes_analysis.sh and never modifies its inputs or renames genes.  The pipeline itself
+runs scripts/filter_te_ncrna_final_annotation.py (modules/primary_noTE.nf), its in-pipeline version.
 
 A gene is removed when ALL of these hold
   1. >= --te-frac (default 0.80) of its CDS lies in an EDTA TE            (te_frac_cds)

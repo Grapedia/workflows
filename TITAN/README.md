@@ -78,7 +78,7 @@ flowchart TD
     PSI[STAR + PsiCLASS]:::core
     HISAT[HISAT2 + StringTie]:::opt
     MM2[Minimap2 + StringTie long reads]:::core
-    BRAKER[BRAKER3 AUGUSTUS + GeneMark]:::core
+    BRAKER[BRAKER3 on soft-masked genome → braker.gff3]:::core
 
     TRNA[tRNAscan-SE]:::opt
     RFAM[Infernal/Rfam]:::opt
@@ -110,6 +110,7 @@ flowchart TD
     AGATHC[AGAT stats high-confidence]:::qc
 
     NEW --> LIFT & EDTA & TRNA & RFAM & IDX & BRAKER & FLAIR
+    EDTA -.soft-masked genome.-> BRAKER
     PREV --> LIFT & LIFTID
     EGCFG --> EGAPX
     RNA --> FASTP
@@ -209,7 +210,7 @@ flowchart TD
     STAR[STAR + StringTie]:::core
     PSI[STAR + PsiCLASS]:::core
     MM2[Minimap2 + StringTie long reads]:::core
-    BRAKER[BRAKER3 AUGUSTUS + GeneMark]:::core
+    BRAKER[BRAKER3 on soft-masked genome → braker.gff3]:::core
 
     MIK[Mikado + TransDecoder]:::core
     MIKGFF[final_mikado_annotation.gff3]:::core
@@ -221,6 +222,7 @@ flowchart TD
     IPS[InterProScan]:::opt
 
     NEW --> LIFT & EDTA & IDX & BRAKER
+    EDTA -.soft-masked genome.-> BRAKER
     PREV --> LIFT & LIFTID
     EGCFG --> EGAPX
     RNA --> FASTP

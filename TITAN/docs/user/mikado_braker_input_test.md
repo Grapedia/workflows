@@ -226,7 +226,8 @@ Genes of the old run that are missing from the new one (13,242 in total):
   Helixer, EGAPx and Liftoff origins lose < 1 %, RNA-seq assemblies 9.9 %.
 - Limits: coordinate-based (a merged or split gene counts as lost), function-based classes were
   computed without InterProScan and MapMan (not finished at the time), so the classes of the new run
-  are underestimated. Rerun `scripts/run_unsupported_genes_analysis.sh` when InterProScan is done.
+  are underestimated. Done: `scripts/run_unsupported_genes_analysis.sh` was rerun on 2026-10-14, after InterProScan (finished
+  2026-10-13) and Mercator4, so the figures of the report include them; the numbers quoted in this section predate that rerun.
 - Fallbacks if the loss is not acceptable: `--mikado_braker_tracks raw` with a lower score, or an
   explicit TE filter on the loci supported only by STAR/StringTie.
 
