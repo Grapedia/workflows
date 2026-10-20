@@ -15,6 +15,7 @@ process extract_final_transcripts {
 
   output:
     path "final_transcripts.fasta", emit: transcripts_fasta
+    path "versions.yml", emit: versions
 
   script:
     """
@@ -22,6 +23,7 @@ process extract_final_transcripts {
 
     if [[ "${params.run_expression_validation}" != "true" ]]; then
       : > final_transcripts.fasta
+      printf '"%s":\n  extract_final_transcripts: "skipped"\n  container: "%s"\n' "${task.process}" "${task.container}" > versions.yml
       exit 0
     fi
 
@@ -114,12 +116,15 @@ PY
       echo "ERROR: final transcriptome extraction produced no transcripts" >&2
       exit 1
     fi
+    printf '"%s":\n  python: "%s"\n  container: "%s"\n' \\
+      "${task.process}" "\$(python3 --version | sed 's/Python //')" "${task.container}" > versions.yml
     """
 
   stub:
     """
     set -euo pipefail
     printf ">aegis_stub_tx gene_id=aegis_stub_gene\\nATGGCCATT\\n" > final_transcripts.fasta
+    printf '"%s":\n  extract_final_transcripts: "stub"\n' "${task.process}" > versions.yml
     """
 }
 

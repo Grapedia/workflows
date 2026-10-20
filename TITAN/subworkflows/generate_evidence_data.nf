@@ -80,6 +80,9 @@ workflow generate_evidence_data {
         star_genome_sa_index_nbases
         star_sjdb_gtf_file
         run_hisat2
+        // false, or the directory holding assembly_masked.EDTA.fasta / edta.TEanno.gff3 / edta.TElib.fa
+        edta_precomputed_dir
+        mask_genome_for_prediction
         // RNA-seq tuples:
         //   long:  tuple val(sample_ID), val(SRA_or_FASTQ), val(library_layout), path(local_reads)
         //   short: tuple val(sample_ID), val(SRA_or_FASTQ), val(library_layout), path(local_reads)
@@ -93,12 +96,11 @@ workflow generate_evidence_data {
         // EDTA is mandatory: AEGIS/Mikado/Helixer consume the hard-masked genome and BRAKER3 the
         // soft-masked one derived from it. --edta_precomputed_dir swaps the (multi-day) EDTA process
         // for outputs of an earlier run.
-        if (params.edta_precomputed_dir) {
-            def edta_dir = params.edta_precomputed_dir.toString()
+        if (edta_precomputed_dir) {
             edta_results = edta_precomputed(
-                file("${edta_dir}/assembly_masked.EDTA.fasta", checkIfExists: true),
-                file("${edta_dir}/edta.TEanno.gff3", checkIfExists: true),
-                file("${edta_dir}/edta.TElib.fa", checkIfExists: true)
+                file("${edta_precomputed_dir}/assembly_masked.EDTA.fasta", checkIfExists: true),
+                file("${edta_precomputed_dir}/edta.TEanno.gff3", checkIfExists: true),
+                file("${edta_precomputed_dir}/edta.TElib.fa", checkIfExists: true)
             )
         } else {
             edta_results = EDTA(
@@ -110,7 +112,7 @@ workflow generate_evidence_data {
 
         // BRAKER3 (AUGUSTUS + GeneMark-ES) is run with --softmasking, so it needs the assembly with
         // repeats in lower case. Without this, its raw models on transposable elements reach Mikado.
-        if (params.mask_genome_for_prediction) {
+        if (mask_genome_for_prediction) {
             softmask_results = soft_mask_genome(
                 new_assembly,
                 edta_results.masked_genome,

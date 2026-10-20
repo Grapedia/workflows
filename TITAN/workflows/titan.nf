@@ -234,6 +234,8 @@ workflow TITAN {
         params.STAR_genomeSAindexNbases,
         params.STAR_sjdbGTFfile,
         params.run_hisat2,
+        params.edta_precomputed_dir,
+        params.mask_genome_for_prediction,
         samples_list_long_reads,
         samples_list_short_reads,
         protein_list,
