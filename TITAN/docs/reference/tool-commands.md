@@ -26,6 +26,7 @@
 - [Mikado And TransDecoder](#mikado-and-transdecoder)
 - [AEGIS Finalization (rename/tidy of Mikado's pick)](#aegis-finalization-renametidy-of-mikados-pick)
 - [AEGIS Liftoff Gene ID Carryover](#aegis-liftoff-gene-id-carryover)
+- [Mender Split-Gene Merging](#mender-split-gene-merging)
 - [Diamond2GO](#diamond2go)
 - [eggNOG-mapper](#eggnog-mapper)
 - [InterProScan](#interproscan)
@@ -68,9 +69,10 @@ The order below follows `workflows/titan.nf`,
 7. Consolidate every evidence source into one gene set with Mikado
    (configure/prepare, TransDecoder, serialise, pick).
 8. Rename/tidy Mikado's picked annotation with AEGIS and carry old gene IDs
-   over from the Liftoff-transferred previous annotation where conserved.
+   over from the Liftoff-transferred previous annotation where conserved;
+   optionally merge split gene models with Mender (`--run_mender true`).
 9. Run functional annotation (Diamond2GO, optional eggNOG-mapper and
-   InterProScan) on the final AEGIS proteins.
+   InterProScan) on the final proteins.
 10. Run optional lncRNA and SQANTI3 branches.
 11. Validate and summarize the final annotation with expression, BUSCO, OMArk,
     AGAT, ncRNA QC, MultiQC and provenance manifests.
@@ -1239,7 +1241,57 @@ This step writes what's actually published under `${output_dir}/01_final_annotat
 `final_annotation.gff3`, `final_annotation_proteins_all.fasta`,
 `final_annotation_proteins_main.fasta` and
 `liftoff_gene_id_correspondence.tsv` (per-gene decision and match score, for
-provenance).
+provenance). With `--run_mender true` the three annotation files are published
+by `mender_split_genes` instead.
+
+## Mender Split-Gene Merging
+
+Process: `mender_split_genes` (only with `--run_mender true`)  
+Module: `modules/mender_split_genes.nf`  
+Script: `scripts/run_mender_split_genes.sh`  
+Container: `params.container_mender` (`dockerfiles/mender`)
+
+```bash
+bash scripts/run_mender_split_genes.sh \
+  --gff3 <final_annotation.gff3> \
+  --proteins-all <final_annotation_proteins_all.fasta> \
+  --proteins-main <final_annotation_proteins_main.fasta> \
+  --genome <new_assembly> \
+  --reference "<protein samplesheet FASTAs>" \
+  --long-read-bams "<Minimap2 BAMs, empty without long reads>" \
+  --threads <cpus> \
+  --evalue <params.mender_evalue> \
+  --exclude-os <params.mender_reference_exclude_os> \
+  --flags <params.mender_flags> \
+  --skip-flags <params.mender_skip_flags> \
+  --include-review <yes|no> \
+  --gene-template "<aegis_gene_id_prefix>MERGEg[GCOUNT:5]" \
+  --trans-template "<aegis_gene_id_prefix>MERGEg[GCOUNT:5]_t[TCOUNT:3]"
+```
+
+The script renames the protein headers to transcript IDs, builds the reference
+(`OS=<exclude_os>` records dropped), converts each primary long-read alignment
+with MAPQ >= 20 into an mRNA feature (`samtools view -F 0x904 -q 20 | bedtools bamtobed`),
+writes `mender.cfg` and runs:
+
+```bash
+perl /opt/mender/run_mender.pl --config mender.cfg --steps 1,2,3,4,5,6,7
+# merges with overlapping exons / CDS (overlapping source genes) reverted -> mender_reverted_merges.tsv
+perl /opt/mender/run_mender.pl --config mender.cfg --steps 8,10
+```
+
+Steps: 1 clean proteins, 2 DIAMOND blastp (`--evalue`, Mender's output format),
+3/5 long-read overlaps and spanning-read validation (skipped without BAMs), 4
+`find_split_genes.pl` (tiling candidates, `max_dist 4`, `wiggle 15`), 6
+`merge_split_genes.pl` (`--flags`, `--skip_flags`, `--fix_partial`), 7 `gt
+gff3validator`, 8 translation + MAFFT junction scoring (PASS/REVIEW/FAIL;
+non-passing merges reverted in `validated.gff`), 10 FASTA export. Step 9 (AGAT)
+is skipped: TITAN runs AGAT on the final annotation. The wrapper then writes
+`final_annotation.gff3` (input GFF3 minus the merged source genes, plus the merged
+genes from `validated.gff` with recomputed CDS phases), keeps the unchanged protein records
+and adds the merged ones (`gffread -y` on the genome; longest isoform in
+`proteins_main`), and writes `mender_merges.tsv` / `mender_summary.json`. When no
+candidate is merged, the AEGIS files are passed through unchanged.
 
 ## Diamond2GO
 
@@ -1783,6 +1835,7 @@ that documents its command or sentinel behavior.
 | `interproscan` | `modules/interproscan.nf` | InterProScan |
 | `liftoff_annotations` | `modules/liftoff_annotations.nf` | Liftoff Transfer |
 | `lncrna_candidate_annotation` | `modules/lncrna_candidate_annotation.nf` | lncRNA Candidate Annotation |
+| `mender_split_genes` | `modules/mender_split_genes.nf` | Mender Split-Gene Merging |
 | `mikado_pick` | `modules/mikado.nf` | Mikado And TransDecoder |
 | `mikado_prepare` | `modules/mikado.nf` | Mikado And TransDecoder |
 | `mikado_serialise` | `modules/mikado.nf` | Mikado And TransDecoder |

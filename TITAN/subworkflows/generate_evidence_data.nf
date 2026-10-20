@@ -71,6 +71,7 @@ workflow generate_evidence_data {
         empty_default_gtf
         empty_alt_gtf
         empty_psiclass_gtf
+        empty_long_reads_bam
         ena_download_timeout_seconds
         ena_max_download_attempts
         ena_retry_wait_seconds
@@ -231,6 +232,8 @@ workflow generate_evidence_data {
             empty_flair = flair_empty_evidence(empty_default_gtf)
             merged_flair_isoforms_gtf = empty_flair.gtf
             merged_flair_isoforms_fasta = empty_flair.fasta
+            // empty sentinel, skipped by scripts/run_mender_split_genes.sh
+            long_read_bams = Channel.value(empty_long_reads_bam)
         }
 
         if (has_long_reads) {
@@ -253,6 +256,7 @@ workflow generate_evidence_data {
               .map { sample_ID, bam_file -> bam_file }
               .collect()
               .set { concat_minimap2_bams_BRAKER3 }
+            long_read_bams = concat_minimap2_bams_BRAKER3
 
             long_reads_assemblies = assembly_transcriptome_minimap2_stringtie(
                 minimap2_aligned.samples_aligned,
@@ -380,6 +384,7 @@ workflow generate_evidence_data {
         long_reads_alt_gtf = merged_long_reads_alt_args_gtf
         flair_isoforms_gtf = merged_flair_isoforms_gtf
         flair_isoforms_fasta = merged_flair_isoforms_fasta
+        long_read_bams = long_read_bams
         trimmed_fastqs = trimmed_reads.trimmed_reads
         fastp_json_reports = trimmed_reads.fastp_json.collect()
 }

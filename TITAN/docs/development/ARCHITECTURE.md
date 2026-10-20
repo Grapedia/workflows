@@ -132,6 +132,12 @@ old IDs for genes with a confident, reciprocal-best-match correspondence via
 `aegis overlap`). There is no AEGIS-vs-Mikado comparison anymore: AEGIS's
 output is a renamed derivative of Mikado's, not an independent annotation.
 
+Optionally (`--run_mender true`), `mender_split_genes` then merges split gene
+models with Mender (DIAMOND tiling against the protein evidence minus the
+annotated genus, plus spanning Minimap2 long reads) inside the `aegis`
+subworkflow, before Diamond2GO / eggNOG-mapper / InterProScan, so the `aegis`
+emits are the merged annotation and every downstream step uses it.
+
 ## Staging And Publication
 
 Processes should consume declared `path` inputs staged by Nextflow. Internal

@@ -14,6 +14,7 @@
 - [Helixer](#helixer)
 - [Mikado Final Annotation Source](#mikado-final-annotation-source)
 - [AEGIS](#aegis)
+- [Mender Split-Gene Merging](#mender-split-gene-merging)
 - [lncRNA Candidates](#lncrna-candidates)
 - [SQANTI3 Long-Read Isoform QC](#sqanti3-long-read-isoform-qc)
 - [Diamond2GO](#diamond2go)
@@ -229,7 +230,43 @@ This step writes the files that are actually published under
 `${output_dir}/01_final_annotation/primary`: `final_annotation.gff3`,
 `final_annotation_proteins_all.fasta`, `final_annotation_proteins_main.fasta`
 and `liftoff_gene_id_correspondence.tsv` (per-gene decision and match score,
-for provenance).
+for provenance), unless `--run_mender true` (see below).
+
+## Mender Split-Gene Merging
+
+Optional (`--run_mender true`, default `false`). [Mender](https://github.com/simrbase/mender)
+detects gene models that were split in two or more pieces and merges them. It runs between
+`aegis_liftoff_gene_ids` and the functional annotation, so Diamond2GO, eggNOG-mapper,
+InterProScan, `primary_noTE` and every QC step see the merged genes.
+
+- **Evidence.** DIAMOND blastp of the main proteins against a reference proteome: neighbouring
+  genes (same strand, up to 4 genes apart) whose alignments tile end to end on the same reference
+  protein (±15 aa) are candidates, scored by the number of independent reference proteins that
+  show the same tiling. With long reads, each primary alignment (MAPQ ≥ 20) of the Minimap2 BAMs
+  becomes one Iso-Seq-like feature and reads spanning the fragments are recorded (FULL_SPAN /
+  PARTIAL_SPAN; partially supported chains are trimmed).
+- **Reference proteome.** All protein samplesheet FASTAs, minus the UniProt-style records with
+  `OS=<mender_reference_exclude_os>` in their header (default `Vitis`): a reference annotated in
+  the same genus could carry the same split and hide it. Records without `OS=` are kept.
+- **Merge policy (conservative defaults).** Only `STRONG` / `CLEAN` candidates
+  (`--mender_flags`), never those flagged `SKIPPED_GENE`, `LOW_COV`, `SINGLE_HIT`,
+  `TRANSITIVE_JOIN` or `LARGE_SPAN_EXTREME` (`--mender_skip_flags`). Each merged protein is then
+  translated and its junctions scored against reference proteins (MAFFT): only `PASS` merges are
+  kept, `REVIEW` and `FAIL` go back to their source genes (`--mender_include_review true` keeps
+  `REVIEW` too).
+- **IDs.** Merged genes get new IDs `<aegis_gene_id_prefix>MERGEg00001` (transcripts `_t001`)
+  and a `merged_from=` attribute listing the source genes; the source genes, and therefore any
+  ID carried over from Liftoff, disappear. Merges whose source genes overlap each other are undone
+  before the translation check (Mender builds a model with overlapping exons / CDS for them;
+  listed in `mender_reverted_merges.tsv`), and CDS phases of merged transcripts are recomputed.
+
+Outputs: the merged `final_annotation.gff3` and protein FASTAs replace the AEGIS ones in
+`01_final_annotation/primary/` (the pre-merge files go to
+`05_run_info/intermediate_files/aegis/pre_mender_*`), and
+`01_final_annotation/primary/split_gene_merging/` holds `mender_merges.tsv` (one row per
+merged gene), `mender_summary.json` and Mender's own reports (`mender/`: candidate table,
+`removed.gff`, translation `report.tsv`, `run_report.txt`). Container: `avelt/mender`
+(`dockerfiles/mender`, Mender pinned to a commit; Mender has no release).
 
 ## lncRNA Candidates
 

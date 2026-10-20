@@ -225,6 +225,7 @@ workflow TITAN {
         file("${projectDir}/assets/empty_default.gtf"),
         file("${projectDir}/assets/empty_alt.gtf"),
         file("${projectDir}/assets/empty_psiclass.gtf"),
+        file("${projectDir}/assets/empty_long_reads.bam"),
         params.ena_download_timeout_seconds,
         params.ena_max_download_attempts,
         params.ena_retry_wait_seconds,
@@ -293,7 +294,10 @@ workflow TITAN {
         evidence_data.masked_genome,
         mikado_results.gff3,
         evidence_data.liftoff_gff3,
-        previous_annotations
+        previous_annotations,
+        new_assembly,
+        protein_list.map { organism, filename -> file(filename) }.collect(),
+        evidence_data.long_read_bams
     )
 
     lncrna_results = lncrna_candidate_annotation(

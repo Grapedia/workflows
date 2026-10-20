@@ -93,6 +93,7 @@ ${output_dir}/
       final_annotation_proteins_main.fasta
       liftoff_gene_id_correspondence.tsv
       versions.yml
+      split_gene_merging/        (only with --run_mender true)
     primary_noTE/
       final_annotation.noTE.gff3
       final_annotation_proteins_all.noTE.fasta
@@ -206,6 +207,26 @@ translated proteins and the main representative protein set.
 `liftoff_gene_id_correspondence.tsv` records, per gene, whether its ID was
 carried over (`carried_over_from_liftoff`, with the match's overlap score)
 or freshly assigned (`new_vitvi_id`).
+
+With `--run_mender true`, split gene models are merged by Mender before the functional
+annotation (see [tools.md](../reference/tools.md#mender-split-gene-merging)); the three
+annotation files above are then the merged ones, and the folder also holds:
+
+```text
+${output_dir}/01_final_annotation/primary/split_gene_merging/
+  mender_merges.tsv          one row per merged gene: new ID, location, merged_from (source genes)
+  mender_reverted_merges.tsv merges undone before validation (source genes overlapping each other)
+  mender_summary.json        merged genes, source genes removed
+  versions.yml
+  mender/                    Mender's reports: merge_candidates.txt, isoseq_validated.txt,
+                             merges.gff, removed.gff, validated.gff, report.tsv, run_report.txt, ...
+```
+
+The pre-merge AEGIS files are kept as
+`05_run_info/intermediate_files/aegis/pre_mender_final_annotation.gff3` (and the two protein
+FASTAs). Merged genes have new `<prefix>MERGEg` IDs and a `merged_from=` attribute; their source
+genes are gone from the annotation but still listed in `liftoff_gene_id_correspondence.tsv`, which
+is written before the merge.
 
 ## Protein-Coding, TE-Cleaned Annotation (`primary_noTE`)
 

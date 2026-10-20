@@ -261,6 +261,33 @@
       "type": "boolean",
       "description": "Run SQANTI3 QC on both long-read transcript assemblies: Minimap2/StringTie and FLAIR, and add the structural-category summary to MultiQC."
     },
+    "run_mender": {
+      "type": "boolean",
+      "description": "Merge split gene models with Mender between AEGIS and the functional annotation (outputs in 01_final_annotation/primary/split_gene_merging)."
+    },
+    "mender_evalue": {
+      "type": "string",
+      "description": "DIAMOND e-value cutoff of the Mender search against the reference proteome."
+    },
+    "mender_reference_exclude_os": {
+      "type": [
+        "string",
+        "boolean"
+      ],
+      "description": "Drop protein evidence records whose header contains OS=<value> (e.g. the genus being annotated) from the Mender reference proteome; false keeps all records."
+    },
+    "mender_flags": {
+      "type": "string",
+      "description": "Comma-separated Mender evidence flags to merge (e.g. STRONG,CLEAN; 'all' for every candidate)."
+    },
+    "mender_skip_flags": {
+      "type": "string",
+      "description": "Comma-separated Mender flags whose candidates are never merged."
+    },
+    "mender_include_review": {
+      "type": "boolean",
+      "description": "Keep merges flagged REVIEW by Mender's translation / junction check (default: only PASS merges are kept)."
+    },
     "sqanti3_libbz2_path": {
       "type": [
         "string",
@@ -396,6 +423,9 @@
       "$ref": "#/definitions/container_digest"
     },
     "container_infernal": {
+      "$ref": "#/definitions/container_digest"
+    },
+    "container_mender": {
       "$ref": "#/definitions/container_digest"
     },
     "container_mikado": {

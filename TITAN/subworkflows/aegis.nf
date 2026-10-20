@@ -5,6 +5,7 @@ include { aegis_liftoff_gene_ids } from "../modules/aegis_liftoff_ids"
 include { diamond2go } from "../modules/diamond2go"
 include { eggnog_mapper } from "../modules/eggnog_mapper"
 include { interproscan } from "../modules/interproscan"
+include { mender_split_genes } from "../modules/mender_split_genes"
 
 workflow aegis {
 
@@ -21,6 +22,12 @@ workflow aegis {
     // old gene IDs over onto their corresponding new-assembly gene.
     liftoff_gff3
     previous_annotations
+    // Inputs of the optional Mender split-gene merge (params.run_mender): unmasked assembly (to
+    // translate merged CDS), protein evidence FASTAs (reference proteome) and long-read BAMs
+    // (assets/empty_long_reads.bam without long reads).
+    new_assembly
+    protein_evidence_fastas
+    long_read_bams
 
   main:
 
@@ -42,25 +49,54 @@ workflow aegis {
       apply_liftoff_ids_script
     )
 
+    // Mender merges split gene models before the functional annotation, so every downstream step
+    // (function, primary_noTE, QC) sees the merged genes.
+    if (params.run_mender) {
+      mended = mender_split_genes(
+        merged_annotation.aegis_gff,
+        merged_annotation.aegis_proteins_all,
+        merged_annotation.aegis_proteins_main,
+        new_assembly,
+        protein_evidence_fastas,
+        long_read_bams,
+        params.aegis_gene_id_prefix,
+        [
+          evalue: params.mender_evalue,
+          exclude_os: params.mender_reference_exclude_os,
+          flags: params.mender_flags,
+          skip_flags: params.mender_skip_flags,
+          include_review: params.mender_include_review
+        ],
+        file("${projectDir}/scripts/run_mender_split_genes.sh")
+      )
+      final_gff = mended.gff
+      final_proteins_all = mended.proteins_all
+      final_proteins_main = mended.proteins_main
+    } else {
+      final_gff = merged_annotation.aegis_gff
+      final_proteins_all = merged_annotation.aegis_proteins_all
+      final_proteins_main = merged_annotation.aegis_proteins_main
+    }
+
     functional_annotation = diamond2go(
-      merged_annotation.aegis_proteins_all,
-      merged_annotation.aegis_proteins_main
+      final_proteins_all,
+      final_proteins_main
     )
 
     eggnog_annotation = eggnog_mapper(
-      merged_annotation.aegis_proteins_all,
-      merged_annotation.aegis_proteins_main
+      final_proteins_all,
+      final_proteins_main
     )
 
     interproscan_annotation = interproscan(
-      merged_annotation.aegis_proteins_all,
-      merged_annotation.aegis_proteins_main
+      final_proteins_all,
+      final_proteins_main
     )
 
   emit:
-    aegis_gff            = merged_annotation.aegis_gff
-    aegis_proteins_all   = merged_annotation.aegis_proteins_all
-    aegis_proteins_main  = merged_annotation.aegis_proteins_main
+    aegis_gff            = final_gff
+    aegis_proteins_all   = final_proteins_all
+    aegis_proteins_main  = final_proteins_main
     aegis_versions       = merged_annotation.versions
     liftoff_gene_id_correspondence = merged_annotation.correspondence_tsv
     diamond2go_all       = functional_annotation.proteins_all_diamond

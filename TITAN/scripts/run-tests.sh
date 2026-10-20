@@ -66,6 +66,11 @@ run_step nextflow run main.nf -profile test -stub-run -ansi-log false \
   --RNAseq_samplesheet test-data/minimal/valid/rnaseq_samplesheet_single_sample.csv \
   --output_dir test-results/single-sample
 run_step "$PYTHON_BIN" -c 'import json; report=json.load(open("test-results/single-sample/01_final_annotation/validation/final_annotation_validation.json")); assert report["status"] == "pass", report'
+run_step nextflow run main.nf -profile test -stub-run -ansi-log false \
+  --run_mender true \
+  --output_dir test-results/mender
+run_step "$PYTHON_BIN" -c 'import json; summary=json.load(open("test-results/mender/01_final_annotation/primary/split_gene_merging/mender_summary.json")); assert "merged_genes" in summary, summary'
+
 expect_failure \
   "Nextflow rejects invalid RNA-seq samplesheet before heavy execution" \
   "library_layout must be one of" \

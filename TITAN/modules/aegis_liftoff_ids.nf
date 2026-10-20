@@ -3,15 +3,23 @@ process aegis_liftoff_gene_ids {
   tag "Carry over liftoff gene IDs onto the final annotation"
 
   container "${params.container_aegis}"
+  // With run_mender, the final annotation files come from mender_split_genes; the pre-merge
+  // versions go to the intermediate files instead.
   publishDir "${params.output_dir}/01_final_annotation/primary", mode: 'copy', saveAs: { filename ->
-    if (filename in ['final_annotation.gff3', 'final_annotation_proteins_all.fasta', 'final_annotation_proteins_main.fasta', 'liftoff_gene_id_correspondence.tsv', 'versions.yml']) {
+    if (filename in ['liftoff_gene_id_correspondence.tsv', 'versions.yml']) {
       return filename
+    }
+    if (filename in ['final_annotation.gff3', 'final_annotation_proteins_all.fasta', 'final_annotation_proteins_main.fasta']) {
+      return params.run_mender ? null : filename
     }
     return null
   }
   publishDir "${params.output_dir}/05_run_info/intermediate_files/aegis", mode: 'copy', enabled: params.publish_intermediates, saveAs: { filename ->
     if (filename == 'overlap_out') {
       return filename
+    }
+    if (params.run_mender && filename in ['final_annotation.gff3', 'final_annotation_proteins_all.fasta', 'final_annotation_proteins_main.fasta']) {
+      return "pre_mender_${filename}"
     }
     return null
   }

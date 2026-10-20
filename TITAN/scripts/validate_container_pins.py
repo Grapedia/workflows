@@ -24,6 +24,7 @@ REQUIRED_PARAMS = {
     "container_gffcompare",
     "container_hisat2",
     "container_liftoff",
+    "container_mender",
     "container_minimap2_samtools",
     "container_mikado",
     "container_omark",
