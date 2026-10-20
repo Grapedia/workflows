@@ -13,6 +13,7 @@
 - [Mikado and TransDecoder](#mikado-and-transdecoder)
 - [FLAIR](#flair)
 - [SQANTI3](#sqanti3)
+- [Mender](#mender)
 - [OMArk](#omark)
 - [BUSCO](#busco)
 - [Colmar Launcher](#colmar-launcher)
@@ -39,6 +40,7 @@ The container image pins themselves are documented in
 | Mikado + TransDecoder | on (required) | None beyond container images and pipeline evidence | No data step |
 | FLAIR | off | None beyond container image and long-read evidence | No data step |
 | SQANTI3 | off | None beyond container image and long-read evidence | No data step |
+| Mender | off | None beyond container image: reference = protein samplesheet FASTAs | No data step |
 | OMArk | off | OMAmer `omamer.h5` database | Bundled script |
 | BUSCO | off | BUSCO lineage dataset | `scripts/download_busco_data.sh` |
 
@@ -316,6 +318,25 @@ sqanti3_libbz2_path = /usr/local/lib/libbz2.so.1.0.8
 If the SQANTI3 container is changed, set this parameter to the matching
 container-visible library path or to `false` if the image already provides
 `libbz2.so.1`.
+
+## Mender
+
+Mender (split-gene merging) is optional and disabled by default. It needs no
+extra database: its reference proteome is built from the protein samplesheet
+FASTAs, minus the UniProt-style records of the annotated genus
+(`--mender_reference_exclude_os`, default `Vitis`). Long-read BAMs are used
+automatically when the RNA-seq samplesheet has `library_layout=long` rows.
+
+```bash
+--run_mender true
+```
+
+Defaults are conservative (`--mender_flags STRONG,CLEAN`, only merges that pass
+Mender's translation check; `--mender_include_review true` also keeps REVIEW
+merges). Review a sample of the merges (`split_gene_merging/mender_merges.tsv`)
+in a genome browser before relying on them: on PN40024 T2T it produced 63
+merged genes from 127 of 49,688 genes and was not kept for the final annotation. See
+[tools.md](../reference/tools.md#mender-split-gene-merging).
 
 ## OMArk
 

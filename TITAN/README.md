@@ -89,6 +89,7 @@ flowchart TD
     MIKGFF[final_mikado_annotation.gff3]:::core
     AEGIS[AEGIS rename - Vitvi IDs - + tidy]:::core
     LIFTID[AEGIS liftoff ID carryover]:::core
+    MENDER[Mender split-gene merging]:::opt
     FINAL[final_annotation.gff3 + proteins]:::core
     D2GO[Diamond2GO]:::core
     EGG[eggNOG-mapper]:::opt
@@ -137,6 +138,8 @@ flowchart TD
     AEGIS --> LIFTID
     LIFT --> LIFTID
     LIFTID --> FINAL --> D2GO
+    LIFTID -.run_mender.-> MENDER -.merged genes.-> FINAL
+    NEW & PROT & MM2 -.assembly / reference proteins / long-read BAMs.-> MENDER
     FINAL -.-> EGG & IPS
 
     FINAL --> LNC
@@ -174,7 +177,11 @@ one-to-one correspondence (via `aegis overlap`, using `previous_annotations`
 for synteny conservation); genes with no such match keep their Vitvi ID.
 See [AEGIS](docs/reference/tools.md#aegis) and
 [Mikado + TransDecoder](docs/reference/tools.md#mikado-final-annotation-source)
-for details. The optional HISAT2/StringTie tracks feed Mikado, lncRNA
+for details. With `--run_mender true` (off by default), Mender merges split gene
+models between the liftoff ID carryover and the functional annotation, so the
+final annotation and everything downstream use the merged genes (see
+[Mender](docs/reference/tools.md#mender-split-gene-merging)).
+The optional HISAT2/StringTie tracks feed Mikado, lncRNA
 candidates and provenance only when `--run_hisat2 true`; they do not feed
 AEGIS. Nextflow's per-run `-with-dag` report shows the full per-sample task
 fan-out.
@@ -245,9 +252,10 @@ flowchart TD
     FINAL -.-> EGG & IPS
 ```
 
-**2. Optional evidence branches** (Helixer, FLAIR, HISAT2, lncRNA — enabled
+**2. Optional branches** (Helixer, FLAIR, HISAT2, lncRNA, Mender — enabled
 per-project when their reference data are available; they feed into the core
-Mikado/lncRNA steps shown above):
+Mikado/lncRNA steps shown above, or, for Mender, sit between the liftoff ID
+carryover and the final annotation):
 
 ```mermaid
 flowchart TD
@@ -262,6 +270,8 @@ flowchart TD
     MM2[Minimap2 + StringTie long reads]:::core
     FINAL[final_annotation.gff3 + proteins]:::core
     MIK[Mikado + TransDecoder]:::core
+    PROT[protein_samplesheet]:::core
+    LIFTID[AEGIS liftoff ID carryover]:::core
 
     TRNA[tRNAscan-SE]:::opt
     RFAM[Infernal/Rfam]:::opt
@@ -269,6 +279,7 @@ flowchart TD
     FLAIR[FLAIR]:::opt
     HISAT[HISAT2 + StringTie]:::opt
     LNC[lncRNA candidates]:::opt
+    MENDER[Mender split-gene merging]:::opt
 
     NEW --> TRNA & RFAM & FLAIR
     RNA -.long reads.-> FLAIR
@@ -281,6 +292,9 @@ flowchart TD
     TRNA & RFAM -.exclude ncRNA overlap.-> LNC
     STAR & MM2 -.candidate transcripts.-> LNC
     HISAT -.run_hisat2 candidates.-> LNC
+
+    LIFTID -.run_mender.-> MENDER -.merged genes.-> FINAL
+    NEW & PROT & MM2 -.assembly / reference proteins / long-read BAMs.-> MENDER
 ```
 
 **3. QC and reporting** (everything feeding the final MultiQC report):
@@ -442,6 +456,7 @@ ${output_dir}/
   01_final_annotation/
     primary/                     # final annotation, proteins and
                                   # liftoff_gene_id_correspondence.tsv
+                                  # (+ split_gene_merging/ with --run_mender)
     primary_noTE/                # protein-coding annotation without ncRNA and
                                   # TE-derived genes (CDS >= 80 % in EDTA TE, no
                                   # independent support), with its filtered
@@ -500,6 +515,7 @@ Detailed behavior, setup notes and outputs are in [docs/reference/tools.md](docs
 | [Helixer](docs/reference/tools.md#helixer) | off | Optional deep-learning prediction evidence. |
 | [Mikado + TransDecoder](docs/reference/tools.md#mikado-final-annotation-source) | on (required) | Consolidates every evidence source into one non-redundant, per-locus-scored gene set. |
 | [AEGIS](docs/reference/tools.md#aegis) | on | Renames Mikado's gene set with systematic Vitvi IDs (carrying over old IDs via Liftoff where conserved) and tidies it into the final annotation. |
+| [Mender](docs/reference/tools.md#mender-split-gene-merging) | off | Optional merging of split gene models (`--run_mender true`), before functional annotation. |
 | [lncRNA candidates](docs/reference/tools.md#lncrna-candidates) | off | Optional CPAT-plant candidate layer. |
 | [SQANTI3](docs/reference/tools.md#sqanti3-long-read-isoform-qc) | off | Optional long-read isoform QC. |
 | [Diamond2GO](docs/reference/tools.md#diamond2go) | on | Annotates final AEGIS proteins. |

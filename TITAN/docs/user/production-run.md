@@ -76,7 +76,9 @@ Nextflow parameters:
 ```
 
 See [reference-data.md](reference-data.md) before enabling branches that need
-external databases.
+external databases. Split-gene merging with Mender is also opt-in
+(`--run_mender true`); it changes the final gene set, so check a sample of its
+merges first (see [reference-data.md](reference-data.md#mender)).
 
 ## Profiles
 
