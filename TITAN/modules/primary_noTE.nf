@@ -1,7 +1,9 @@
 // Protein-coding, TE-cleaned variant of the final annotation (01_final_annotation/primary_noTE).
 // Three steps: select the TE-derived candidate genes, test them for a non-Vitis homolog with
 // DIAMOND (candidates only, a few thousand proteins), then write the filtered GFF3 / proteins /
-// functional-annotation tables.  See scripts/filter_te_ncrna_final_annotation.py.
+// functional-annotation tables. The last step also removes the genes carrying a TE functional
+// annotation listed in params.noTE_te_function_terms (Liftoff genes kept).
+// See scripts/filter_te_ncrna_final_annotation.py.
 
 process select_te_candidates {
   label 'process_low'
@@ -110,7 +112,7 @@ process diamond_te_candidates {
 
 process finalize_primary_noTE {
   label 'process_low'
-  tag "Write primary_noTE (TE-derived genes and ncRNA removed)"
+  tag "Write primary_noTE (TE-derived genes, TE-function genes and ncRNA removed)"
 
   container params.container_python
   publishDir "${params.output_dir}/01_final_annotation/primary_noTE", mode: 'copy'
@@ -127,6 +129,8 @@ process finalize_primary_noTE {
     path(eggnog_main_annotations)
     path(interproscan_all_tsv)
     path(interproscan_main_tsv)
+    path(te_function_terms)
+    path(liftoff_correspondence_tsv)
     path(script)
 
   output:
@@ -153,6 +157,8 @@ process finalize_primary_noTE {
       --eggnog-main ${eggnog_main_annotations} \\
       --interproscan-all ${interproscan_all_tsv} \\
       --interproscan-main ${interproscan_main_tsv} \\
+      --te-function-terms ${te_function_terms} \\
+      --liftoff-correspondence-tsv ${liftoff_correspondence_tsv} \\
       --te-frac ${params.noTE_te_frac} \\
       --out-dir .
     script_sha256=\$(sha256sum ${script} | awk '{print \$1}')
@@ -175,6 +181,8 @@ process finalize_primary_noTE {
       --eggnog-main ${eggnog_main_annotations} \\
       --interproscan-all ${interproscan_all_tsv} \\
       --interproscan-main ${interproscan_main_tsv} \\
+      --te-function-terms ${te_function_terms} \\
+      --liftoff-correspondence-tsv ${liftoff_correspondence_tsv} \\
       --te-frac ${params.noTE_te_frac} \\
       --out-dir .
     printf '"%s":\\n  container: "not_recorded"\\n' "${task.process}" > versions.yml

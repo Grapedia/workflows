@@ -1,0 +1,39 @@
+# TE functional annotations: primary_noTE removes every gene whose main protein carries one of them,
+# unless the gene is carried over from the Liftoff reference annotation (param noTE_te_function_terms).
+# term = accession for InterPro / Pfam / PANTHER; eggNOG and Diamond2GO match the exact description in 'name'.
+# Selected by manual screening of the annotations shared by > 100 genes of the PN40024 T2T run (2026-10-23).
+source	term	name
+InterPro	IPR000477	Reverse transcriptase domain
+InterPro	IPR026960	Reverse transcriptase zinc-binding domain
+InterPro	IPR013103	Reverse transcriptase, RNA-dependent DNA polymerase
+InterPro	IPR008906	HAT, C-terminal dimerisation domain
+InterPro	IPR039537	Retrotransposon Ty1/copia-like
+InterPro	IPR018289	MULE transposase domain
+InterPro	IPR054722	Retrovirus-related Pol polyprotein from transposon TNT 1-94-like, beta-barrel domain
+InterPro	IPR025724	GAG-pre-integrase domain
+InterPro	IPR001584	Integrase, catalytic core
+InterPro	IPR004332	Transposase, MuDR, plant
+InterPro	IPR061502	Copia/RE1/RE2-like, N-terminal domain
+InterPro	IPR052343	Diverse Retrotransposon and Effector-Associated Protein
+InterPro	IPR005162	Retrotransposon-derived protein PEG10, N-terminal capsid-like domain
+Pfam	PF00078	Reverse transcriptase (RNA-dependent DNA polymerase)
+Pfam	PF13966	zinc-binding in reverse transcriptase
+Pfam	PF07727	Reverse transcriptase (RNA-dependent DNA polymerase)
+Pfam	PF05699	hAT family C-terminal dimerisation region
+Pfam	PF10551	MULE transposase domain
+Pfam	PF22936	Pol polyprotein, beta-barrel domain
+Pfam	PF13976	GAG-pre-integrase domain
+Pfam	PF03108	MuDR family transposase
+Pfam	PF14223	gag-polypeptide of LTR copia-type
+Pfam	PF03732	Retrotransposon-derived protein PEG10, N-terminal capsid-like domain
+PANTHER	PTHR33116	REVERSE TRANSCRIPTASE ZINC-BINDING DOMAIN-CONTAINING PROTEIN-RELATED-RELATED
+PANTHER	PTHR11439	GAG-POL-RELATED RETROTRANSPOSON
+PANTHER	PTHR31973	POLYPROTEIN, PUTATIVE-RELATED
+PANTHER	PTHR42648	TRANSPOSASE, PUTATIVE-RELATED
+PANTHER	PTHR19446	REVERSE TRANSCRIPTASES
+PANTHER	PTHR46890	NON-LTR RETROLELEMENT REVERSE TRANSCRIPTASE-LIKE PROTEIN-RELATED
+eggNOG		Reverse transcriptase (RNA-dependent DNA polymerase)
+eggNOG		transposition, RNA-mediated
+eggNOG		gag-polypeptide of LTR copia-type
+Diamond2GO		RNA-directed DNA polymerase (reverse transcriptase)-related family protein
+Diamond2GO		MuDR family transposase

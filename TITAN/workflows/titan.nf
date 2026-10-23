@@ -418,7 +418,8 @@ workflow TITAN {
 
     // Protein-coding, TE-cleaned variant of the final annotation: genes with >= params.noTE_te_frac of
     // their CDS in an EDTA TE and no independent support (Liftoff, BUSCO, host function, non-Vitis
-    // homolog) are removed, as are the ncRNA genes. GFF3, proteins and functional tables are filtered.
+    // homolog) are removed, as are the ncRNA genes and the non-Liftoff genes carrying a TE functional
+    // annotation of params.noTE_te_function_terms. GFF3, proteins and functional tables are filtered.
     te_candidates_results = select_te_candidates(
         aegis.out.aegis_gff,
         aegis.out.aegis_proteins_main,
@@ -449,6 +450,8 @@ workflow TITAN {
         aegis.out.eggnog_annotations_main,
         aegis.out.interproscan_all_tsv,
         aegis.out.interproscan_main_tsv,
+        file(params.noTE_te_function_terms),
+        aegis.out.liftoff_gene_id_correspondence,
         file("${projectDir}/scripts/filter_te_ncrna_final_annotation.py")
     )
 

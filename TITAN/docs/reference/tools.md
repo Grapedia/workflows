@@ -376,8 +376,11 @@ these protects it: Liftoff carry-over, >= 50 % CDS overlap with the Liftoff-tran
 BUSCO match, host functional hit (Diamond2GO GO / eggNOG description, GO or KEGG KO / informative InterProScan
 analysis, minus proteins that also match TE text), non-Vitis homolog (DIAMOND `--sensitive -e 1e-5 -k 3`, best
 hit >= 35 % identity and >= 50 % query coverage, reference = UniProt-style `OS=` records of the protein
-samplesheet FASTAs except `OS=Vitis`, queries = the candidates only). `genes_removed.tsv` lists each removed
-gene with its reason. MapMan/Mercator4 is manual and not part of this output. The quality processes are
+samplesheet FASTAs except `OS=Vitis`, queries = the candidates only). `finalize` also removes every
+non-Liftoff gene whose main protein carries a TE functional annotation of `params.noTE_te_function_terms`
+(`assets/te_function_terms.tsv`, columns `source term name`; InterPro / Pfam / PANTHER accession, exact eggNOG or
+Diamond2GO description). `genes_removed.tsv` lists each removed gene with its reason (`ncRNA`, `te_derived`,
+`te_function`). MapMan/Mercator4 is manual and not part of this output. The quality processes are
 aliases of the existing modules (`busco_primary_noTE`, `omark_primary_noTE`, `agat_stats_primary_noTE`,
 `validate_final_annotation_primary_noTE`, `expression_support_summary_primary_noTE`,
 `multiqc_report_primary_noTE`); their `publishDir` is chosen from `task.process` (suffix `_primary_noTE` ->

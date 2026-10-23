@@ -12,6 +12,9 @@ Starting from final_annotation.gff3, this removes
        - no host (non-TE) functional hit: Diamond2GO GO term, eggNOG description/GO/KEGG KO, or an
          informative InterProScan analysis (MobiDBLite/Coils do not count), unless that very
          protein also carries a TE-encoded domain/description.
+  3. with --te-function-terms, every gene whose main protein carries one of the listed TE functional
+     annotations (InterPro / Pfam / PANTHER accession, exact eggNOG or Diamond2GO description), whatever
+     its other annotations, unless it is carried over from the Liftoff reference annotation.
 It then filters the protein FASTAs and the Diamond2GO / eggNOG / InterProScan tables the same way.
 
 The original files are never modified.  MapMan/Mercator4 is a manual step outside the pipeline and is
@@ -23,7 +26,8 @@ A third sub-command, `compare`, tabulates the quality of several candidate annot
 Two steps, because the homology search sits in between (it is run only on the few thousand candidates):
   select    -> candidates.tsv + candidates.fasta (TE-derived genes not protected by any other evidence)
   finalize  -> reads the DIAMOND hits of candidates.fasta, drops the candidates without a non-Vitis
-               homolog plus the ncRNA genes, and writes the filtered GFF3 / FASTAs / functional tables.
+               homolog, the genes with a listed TE function (step 3) and the ncRNA genes, and writes the
+               filtered GFF3 / FASTAs / functional tables.
 This is the in-pipeline version of scripts/filter_te_genes.py (post-hoc analysis tool).
 """
 import argparse
@@ -313,6 +317,49 @@ def select_candidates(a):
     print("%d TE-derived candidate genes (%d proteins) of %d genes" % (len(cand), n, len(genes)))
 
 
+TE_FUNCTION_SOURCES = ("InterPro", "Pfam", "PANTHER", "eggNOG", "Diamond2GO")
+
+
+def read_te_function_terms(path):
+    """source -> set of terms; TSV with columns source, term, name (term = accession for InterPro / Pfam /
+    PANTHER, the exact description in 'name' for eggNOG / Diamond2GO)."""
+    terms = {s: set() for s in TE_FUNCTION_SOURCES}
+    with open(path, newline="") as fh:
+        for r in csv.DictReader((l for l in fh if not l.startswith("#")), delimiter="\t"):
+            src = r["source"].strip()
+            if src not in terms:
+                raise SystemExit("unknown source %r in %s (expected one of %s)" % (src, path, ", ".join(TE_FUNCTION_SOURCES)))
+            terms[src].add(r["term"].strip() if src in ("InterPro", "Pfam", "PANTHER") else r["name"].strip())
+    return terms
+
+
+def te_function_genes(terms, d2go, eggnog, ipr):
+    """Genes whose main protein carries at least one of the listed TE functional annotations."""
+    out = set()
+    with open(ipr) as fh:
+        for line in fh:
+            f = line.rstrip("\n").split("\t")
+            if len(f) < 5:
+                continue
+            if (len(f) > 11 and f[11] in terms["InterPro"]) or (f[3] in ("Pfam", "PANTHER") and f[4] in terms[f[3]]):
+                out.add(gene_of(f[0]))
+    with open(eggnog) as fh:
+        for line in fh:
+            f = line.rstrip("\n").split("\t")
+            if not line.startswith("#") and len(f) > 7 and f[7] in terms["eggNOG"]:
+                out.add(gene_of(f[0]))
+    with open(d2go) as fh:
+        for line in fh:
+            f = line.rstrip("\n").split("\t")
+            if line.startswith("#") or len(f) < 2:
+                continue
+            desc = f[1].strip()
+            desc = desc.split(" ", 1)[1].strip() if " " in desc else desc   # drop the hit accession
+            if desc in terms["Diamond2GO"]:
+                out.add(gene_of(f[0]))
+    return out
+
+
 def nonvitis_homolog_genes(hits_path):
     best = {}
     with open(hits_path) as fh:
@@ -344,12 +391,21 @@ def finalize(a):
             cand[g] = float(fr)
     rescued = nonvitis_homolog_genes(a.diamond_hits) & set(cand)
     te_drop = set(cand) - rescued
-    drop = te_drop | ncrna
+    fn_drop, n_terms = set(), 0
+    if a.te_function_terms:
+        if not a.liftoff_correspondence_tsv:
+            raise SystemExit("--te-function-terms needs --liftoff-correspondence-tsv (Liftoff genes are kept)")
+        terms = read_te_function_terms(a.te_function_terms)
+        n_terms = sum(len(v) for v in terms.values())
+        fn_drop = (te_function_genes(terms, a.diamond2go_main, a.eggnog_main, a.interproscan_main) & coding) \
+            - liftoff_carried(a.liftoff_correspondence_tsv) - te_drop
+    drop = te_drop | fn_drop | ncrna
 
     with open(os.path.join(out, "genes_removed.tsv"), "w") as fh:
         fh.write("gene_id\treason\tte_frac_cds\n")
         for g in sorted(drop):
-            fh.write("%s\t%s\t%s\n" % (g, "te_derived" if g in te_drop else "ncRNA",
+            reason = "te_derived" if g in te_drop else "te_function" if g in fn_drop else "ncRNA"
+            fh.write("%s\t%s\t%s\n" % (g, reason,
                                        "%.3f" % cand[g] if g in cand else ""))
 
     n_genes = filter_gff3(a.gff3, os.path.join(out, "final_annotation.noTE.gff3"), drop)
@@ -362,12 +418,14 @@ def finalize(a):
         filter_table(ip, os.path.join(fdir, "interproscan", "final_annotation_proteins_%s.noTE.tsv" % tag), drop)
 
     summary = {
-        "schema_version": "titan.primary_noTE.v1",
+        "schema_version": "titan.primary_noTE.v2",
         "te_frac_cds_threshold": a.te_frac,
         "genes_in": len(genes), "coding_genes_in": len(coding),
         "te_candidates": len(cand),
         "te_candidates_rescued_by_nonvitis_homolog": len(rescued),
         "te_genes_removed": len(te_drop),
+        "te_function_terms": n_terms,
+        "te_function_genes_removed": len(fn_drop),
         "ncrna_genes_removed": len(ncrna),
         "genes_out": n_genes,
         "proteins_main_out": n_main, "proteins_all_out": n_all,
@@ -495,6 +553,10 @@ def main():
     f.add_argument("--candidates-tsv", required=True)
     f.add_argument("--diamond-hits", required=True, help="DIAMOND outfmt 6 (%s)" % " ".join(DIAMOND_COLS))
     f.add_argument("--proteins-all", required=True)
+    f.add_argument("--te-function-terms", help="TSV (source, term, name) of TE functional annotations: genes "
+                   "carrying one are removed unless carried over from Liftoff")
+    f.add_argument("--liftoff-correspondence-tsv", dest="liftoff_correspondence_tsv",
+                   help="AEGIS liftoff_gene_id_correspondence.tsv (required with --te-function-terms)")
     for p in (s, f):
         p.add_argument("--diamond2go-main", required=True)
         p.add_argument("--eggnog-main", required=True, help="*.emapper.annotations")

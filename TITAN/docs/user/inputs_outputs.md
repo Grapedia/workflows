@@ -244,7 +244,7 @@ ${output_dir}/01_final_annotation/primary_noTE/
     interproscan/final_annotation_proteins_{all,main}.noTE.tsv
 ```
 
-`01_final_annotation/primary/` with two kinds of genes removed, together with their mRNA/exon/CDS
+`01_final_annotation/primary/` with three kinds of genes removed, together with their mRNA/exon/CDS
 children, proteins and functional-annotation rows:
 
 * **ncRNA genes** (genes without any mRNA child), so that the set is protein-coding only;
@@ -257,6 +257,13 @@ children, proteins and functional-annotation rows:
   (DIAMOND best hit >= 35 % identity and >= 50 % query coverage against the UniProt-style records of the
   `--protein_samplesheet` FASTAs that are not `OS=Vitis`). The DIAMOND search only runs on the few thousand
   TE-derived candidates.
+* **TE-function genes**: the main protein carries one of the TE functional annotations listed in
+  `--noTE_te_function_terms` (default `assets/te_function_terms.tsv`: 34 reverse transcriptase, MuDR / MULE and
+  hAT transposase, integrase, gag-pol / copia entries chosen by manual screening), whatever its other annotations,
+  unless the gene is carried over from Liftoff. InterPro / Pfam / PANTHER entries are matched on the accession,
+  eggNOG and Diamond2GO on the exact description. A file with only the header line turns this step off.
+
+`genes_removed.tsv` gives the reason of each removal (`ncRNA`, `te_derived`, `te_function`).
 
 The same quality analyses as for `primary/` are run on this set and published inside the folder:
 `quality_report/busco` and `omark` (on `final_annotation_proteins_main.noTE.fasta`), `quality_report/agat_stats`,
