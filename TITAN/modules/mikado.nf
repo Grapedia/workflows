@@ -51,8 +51,35 @@ process mikado_prepare {
       exit 0
     fi
 
-    # Keep only valid GFF3/comment lines before Mikado's strict parser.
-    awk -F'\\t' 'NF == 9 || /^#/' "${liftoff_gff3}" > liftoff_sanitized.gff3
+    # Keep only valid GFF3/comment lines before Mikado's strict parser, and drop Liftoff
+    # transcripts whose CDS is shorter than one codon (plus their gene when no transcript is
+    # left). Such models come from partial lifts of reference genes with a 1-nt CDS segment
+    # (e.g. Vitvi01g04428 on Riesling hap1); Mikado keeps them as reference transcripts and
+    # AEGIS then crashes when translating them (IndexError in generate_protein).
+    awk -F'\\t' '
+      function attr(s, k,   m) {
+        if (match(s, "(^|;)" k "=[^;]+")) { m = substr(s, RSTART, RLENGTH); sub("^;?" k "=", "", m); return m }
+        return ""
+      }
+      FNR == NR {
+        if (NF != 9) next
+        if (\$3 == "CDS") cds[attr(\$9, "Parent")] += \$5 - \$4 + 1
+        else if (\$3 == "mRNA") { id = attr(\$9, "ID"); gene_of[id] = attr(\$9, "Parent"); n_tx[gene_of[id]]++ }
+        next
+      }
+      FNR == 1 {
+        for (t in cds) if (cds[t] < 3) {
+          bad[t] = 1; n_bad[gene_of[t]]++
+          print "Liftoff: dropped transcript " t " (CDS " cds[t] " nt)" > "/dev/stderr"
+        }
+        for (g in n_bad) if (g != "" && n_bad[g] == n_tx[g]) bad[g] = 1
+      }
+      /^#/ { print; next }
+      NF != 9 { next }
+      { id = attr(\$9, "ID"); par = attr(\$9, "Parent") }
+      (id in bad) || (par in bad) { next }
+      { print }
+    ' "${liftoff_gff3}" "${liftoff_gff3}" > liftoff_sanitized.gff3
 
     # Priority order (highest first): egapx > liftoff > braker (braker.gff3, or raw augustus >
     # genemark) > helixer > stranded assemblies (STAR StringTie default > alt
